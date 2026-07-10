@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "tile_size": [48, 48],
+  "locked_style_prompt": "Cozy modern 2026 coffee shop pixel art for a 2D top-down game, slight readable front faces on counters robots machines and furniture, clean upper-left light, controlled warm cafe palette with graphite robot hardware and restrained cyan yellow green red status accents, crisp readable silhouette, final asset must work as 48 by 48 pixel art.",
+  "shared_negative_prompt": "isometric angle, 3D render, photorealistic, painterly, gradients, soft blur, tiny centered object, oversized cropped object, text, rustic cabin, factory, spaceship, cyberpunk lab, neon environment, muddy colors",
+  "assets": [
+    {
+      "id": "main_floor_wooden_planks",
+      "category": "tile",
+      "prompt": "Approved repeatable wooden plank floor tile for the main customer area of a cozy modern cafe, sourced from Wooden Planks sprite_06.png.",
+      "negative_prompt": "stone, wall, table, chairs, character, text, strong perspective lines",
+      "target_size": [48, 48],
+      "transparent": false,
+      "tile_role": "main_room_floor",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [48, 48],
+      "source": "assets/source/main_floor_wooden_planks_source.png"
+    },
+    {
+      "id": "stone_wall_segment",
+      "category": "tile",
+      "prompt": "Approved repeatable gray stone wall tile for the cafe room perimeter, sourced from Stone Tiles sprite_07.png.",
+      "negative_prompt": "wood planks, floor-only material, table, chairs, character, text, strong perspective lines",
+      "target_size": [48, 48],
+      "transparent": false,
+      "tile_role": "wall_segment",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [48, 48],
+      "source": "assets/source/stone_wall_segment_source.png"
+    },
+    {
+      "id": "coffee_machine_espresso",
+      "category": "prop",
+      "prompt": "Compact professional espresso machine for a cozy modern cafe, viewed in 2D top-down with a slight readable front face, wide rectangular body, top cup tray, front group head, portafilter handle, steam wand, simple buttons and one restrained status light.",
+      "negative_prompt": "isometric angle, side-view only, photorealistic, 3D render, painterly gradients, soft blur, tiny centered object, oversized cropped object, text, logo, rustic antique machine, factory, spaceship, cyberpunk lab, neon environment, busy tiny details, human, robot, cups, table, counter, floor, shadow, reflection, watermark",
+      "target_size": [48, 48],
+      "transparent": true,
+      "tile_role": "espresso_machine",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [32, 44],
+      "source": "assets/source/coffee_machine_espresso_source.png",
+      "resize_mode": "premultiplied_hard_alpha_sharp"
+    },
+    {
+      "id": "electric_kettle_modern",
+      "category": "prop",
+      "prompt": "Ultra-modern smart electric kettle for a cozy modern cafe, viewed in 2D top-down with a slight readable front face, compact squared cylindrical body, flat lid, short integrated pour lip on the left, handle on the right opposite the lip, dark charging base, and one restrained cyan or green status light.",
+      "negative_prompt": "handle on same side as lip, handle front center, lip front center, long spout, gooseneck spout, visible curved pouring neck, antique kettle, rustic kettle, stovetop kettle, teapot, ornate curved tea kettle, old fashioned, round bulbous vintage shape, isometric angle, side-view only, photorealistic, 3D render, painterly gradients, soft blur, tiny centered object, oversized cropped object, readable text, logo, brand mark, factory, spaceship, cyberpunk lab, neon environment, busy detail, human, robot, cups, table, counter, floor, shadow, reflection, watermark",
+      "target_size": [48, 48],
+      "transparent": true,
+      "tile_role": "electric_kettle",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [31, 44],
+      "source": "assets/source/electric_kettle_modern_source.png",
+      "resize_mode": "premultiplied_hard_alpha_sharp"
+    },
+    {
+      "id": "fridge_display_2x2",
+      "category": "prop",
+      "prompt": "Wide modern two-door display fridge for a cozy modern cafe, viewed in 2D top-down with a slight readable front face, 2x2 tile footprint, transparent blue-tinted glass doors, visible shelves and drinks behind the doors, short top header, dark center divider, and restrained cyan or green status light.",
+      "negative_prompt": "narrow fridge, too much side padding, top cap taking most of top tile, doors starting too low, single door fridge, opaque doors, solid metal doors, no visible shelves, no visible contents, open doors, side-view only, isometric angle, photorealistic, 3D render, painterly gradients, soft blur, tiny centered object, oversized cropped object, readable text, labels, logo, brand mark, rustic appliance, factory, spaceship, cyberpunk lab, neon environment, busy tiny details, human, robot, cups outside fridge, table, counter, floor, shadow, reflection, watermark",
+      "target_size": [96, 96],
+      "transparent": true,
+      "tile_role": "display_fridge",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [1, 48],
+      "source": "assets/source/fridge_display_2x2_source.png",
+      "resize_mode": "premultiplied_hard_alpha_sharp_fit_bounds",
+      "fit_bounds": [0, 12, 96, 96],
+      "split": [2, 2],
+      "preview": "assets/previews/fridge_display_2x2_preview.png"
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Godot 4 generated files
+.godot/
+.import/
+imported/
+
+# Godot export outputs
+export/
+exports/
+*.pck
+*.zip
+*.apk
+*.aab
+*.ipa
+*.exe
+*.dmg
+*.app/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Logs and local environment files
+*.log
+.env
+.env.*
