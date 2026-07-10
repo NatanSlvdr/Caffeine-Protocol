@@ -1,6 +1,6 @@
-[gd_resource type="TileSet" format=3 uid="uid://djaib258en6a0"]
+[gd_resource type="TileSet" format=3]
 
-[ext_resource type="Texture2D" uid="uid://cp82afrefdp7t" path="res://assets/tilesets/cafe_tiles_atlas_48.png" id="1_3443m"]
+[ext_resource type="Texture2D" path="res://assets/tilesets/cafe_tiles_atlas_48.png" id="1_3443m"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_ui4wo"]
 texture = ExtResource("1_3443m")
@@ -13,6 +13,7 @@ texture_region_size = Vector2i(48, 48)
 5:0/0 = 0
 6:0/0 = 0
 7:0/0 = 0
+8:0/0 = 0
 
 [resource]
 tile_size = Vector2i(48, 48)

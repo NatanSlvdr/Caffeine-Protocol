@@ -1,7 +1,7 @@
 {
   "version": 1,
   "tile_size": 48,
-  "columns": 8,
+  "columns": 9,
   "rows": 1,
   "source_prompt_manifest": "assets/prompts/cafe_assets_48.json",
   "style": "accepted source art converted into 48x48 atlas tiles",
@@ -268,6 +268,39 @@
       "footprint": [
         2,
         2
+      ]
+    },
+    {
+      "name": "service_counter_straight",
+      "category": "tile",
+      "file": "assets/tiles/service_counter_straight.png",
+      "source": "assets/source/service_counter_straight_source.png",
+      "size": [
+        48,
+        48
+      ],
+      "transparent": false,
+      "tags": [
+        "service_counter_straight",
+        "cafe_environment"
+      ],
+      "atlas_coord": [
+        8,
+        0
+      ],
+      "expected_bounds": [
+        48,
+        48
+      ],
+      "resize_mode": "direct",
+      "asset_id": "service_counter_straight",
+      "piece_coord": [
+        0,
+        0
+      ],
+      "footprint": [
+        1,
+        1
       ]
     }
   ]

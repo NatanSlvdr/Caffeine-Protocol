@@ -69,6 +69,20 @@
       "fit_bounds": [0, 12, 96, 96],
       "split": [2, 2],
       "preview": "assets/previews/fridge_display_2x2_preview.png"
+    },
+    {
+      "id": "service_counter_straight",
+      "category": "tile",
+      "prompt": "Close-framed modular service-counter middle segment filling the complete 48x48 tile edge to edge, viewed in 2D top-down with a slight readable front face. The pale-oak worktop occupies most of the tile, followed by a compact warm off-white front panel and charcoal recessed base. A crisp one-pixel near-black outline across the absolute top edge marks the back of the counter where the adjacent wall or floor begins. The left and right edges continue as one seamless counter run.",
+      "negative_prompt": "whole miniature counter, left end cap, right end cap, empty margin, background inside tile, transparent gap, large cabinet front, tiny countertop, sink, shelf, handles, appliance, object on top, text, logo, rustic counter, ornate trim, isometric angle, photorealistic, 3D render, painterly gradient, soft blur, watermark",
+      "target_size": [48, 48],
+      "transparent": false,
+      "tile_role": "service_counter_straight",
+      "palette_lane": "cafe_environment",
+      "expected_bounds": [48, 48],
+      "source": "assets/source/service_counter_straight_source.png",
+      "resize_mode": "direct",
+      "top_outline_color": [18, 20, 20, 255]
     }
   ]
 }

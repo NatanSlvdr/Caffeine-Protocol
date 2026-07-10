@@ -39,40 +39,56 @@ Negative prompt rules:
 - no text unless the asset spec explicitly asks for readable signage;
 - no rustic cabin, factory, spaceship, or cyberpunk-lab environment.
 
-## Approval Workflow
+## Two-Step Workflow
 
-Sprite generation must be approved step by step before project assets are
-changed.
+The user-facing workflow is intentionally only two steps:
 
-1. Generate a strong source candidate from the locked prompt direction.
-2. Convert it into the exact final gameplay size for preview before importing:
-   48x48 for single-tile assets, or the approved assembled size for multi-tile
-   props.
-3. Show the exact final-size sprite plus enlarged checker and floor-context
-   previews for user approval.
-4. Do not update `assets/source/`, `assets/tiles/`, atlases, TileSets, or Godot
-   scenes until the user approves the final-size preview.
-5. After approval, save the source, rebuild the final 48x48 tile outputs, update
-   the atlas and TileSet, and run validation.
+1. **Generate.** Create or update the source PNGs using the locked prompt
+   manifest and style direction. Put the source files in `assets/source/` and
+   update `assets/prompts/cafe_assets_48.json` when the asset specification
+   changes. For transparent props, remove the flat chroma-key background before
+   compiling.
+2. **Compile.** Run one command from the repository root:
+
+   ```bash
+   python3 scripts/assets/compile_assets.py
+   ```
+
+   Compilation converts sources, applies the correct alpha and resize rules,
+   splits multi-tile props, writes final sprites, rebuilds the atlas and
+   previews, regenerates the Godot TileSet, and validates the asset manifest,
+   atlas, TileSet, and cafe room.
+
+The compile command is the production gate. If an asset is the wrong size,
+uses soft alpha, has invalid bounds, or leaves the generated resources out of
+sync, compilation fails and no validation pass is reported. The existing
+`build_asset_approval_sheet.py` helper remains available for optional visual
+review of a candidate batch, but it is no longer required for the normal
+workflow and never needs to be a separate production step.
 
 Transparent prop sprites should be generated on a flat chroma-key background,
 have the background removed locally, then be resized with premultiplied alpha,
 hard alpha thresholding, and restrained sharpening. This keeps outlines opaque
 and crisp after conversion.
 
+When an approved design needs an exact edge after downscaling, its asset spec
+may define `top_outline_color`, `right_outline_color`,
+`bottom_outline_color`, or `left_outline_color` as an RGB or RGBA array. The
+build step applies that color to exactly one output row or column after
+resizing. Use these only for deliberate one-pixel gameplay boundaries, such as
+the back edges of counter tiles, not as a substitute for correcting the source
+composition.
+
 All candidates should be judged for distant gameplay readability. Prefer chunky,
 clear silhouettes and large details that survive downscaling; do not optimize
 for the large generated source image.
 
-## Import Workflow
+## Godot Import and Runtime Checks
 
-1. Create source PNGs using the locked prompt manifest.
-2. Save accepted source images under `assets/source/`.
-3. Run `python3 scripts/assets/build_cafe_assets_48.py`.
-4. Run Godot resource generation with
-   `res://scripts/assets/create_cafe_tileset_48_resource.gd`.
-5. Run `python3 scripts/assets/validate_48px_assets.py`.
-6. Run the Godot validation and short player smoke tests from `AGENTS.md`.
+`compile_assets.py` performs the deterministic asset and resource checks in one
+command. After a successful compile, run the broader Godot validation and
+short player smoke tests from `AGENTS.md` when a change also affects gameplay
+or scene integration.
 
 The build script should stay simple for the first art pass: resize each accepted
 source image to 48x48, save the PNG, assemble the atlas, write the preview, and

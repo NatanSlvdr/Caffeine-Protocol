@@ -3,8 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 import json
 
-import numpy as np
-from PIL import Image, ImageFilter
+from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -29,42 +28,47 @@ def asset_output_path(name: str) -> Path:
 
 
 def premultiplied_resize(source: Image.Image, size: tuple[int, int]) -> Image.Image:
-    array = np.asarray(source).astype(np.float32)
-    alpha = array[..., 3:4] / 255.0
-    premultiplied = np.concatenate(
-        [array[..., :3] * alpha, array[..., 3:4]],
-        axis=2,
-    ).astype(np.uint8)
+    red, green, blue, alpha = source.split()
+    premultiplied = Image.merge(
+        "RGBA",
+        [
+            ImageChops.multiply(red, alpha),
+            ImageChops.multiply(green, alpha),
+            ImageChops.multiply(blue, alpha),
+            alpha,
+        ],
+    )
 
-    resized = Image.fromarray(premultiplied, "RGBA").resize(
+    resized = premultiplied.resize(
         size,
         Image.Resampling.LANCZOS,
     )
-    resized_array = np.asarray(resized).astype(np.float32)
-    output = np.zeros_like(resized_array)
-    output[..., 3:4] = resized_array[..., 3:4]
-
-    alpha = resized_array[..., 3:4]
-    nonzero_alpha = alpha[..., 0] > 0
-    output_rgb = output[..., :3]
-    output_rgb[nonzero_alpha] = np.clip(
-        resized_array[..., :3][nonzero_alpha] * 255.0 / alpha[nonzero_alpha],
-        0,
-        255,
-    )
-    output[..., :3] = output_rgb
-
-    return Image.fromarray(output.astype(np.uint8), "RGBA")
+    pixels = resized.load()
+    for y in range(resized.height):
+        for x in range(resized.width):
+            red, green, blue, alpha = pixels[x, y]
+            if alpha == 0:
+                pixels[x, y] = (0, 0, 0, 0)
+                continue
+            pixels[x, y] = (
+                min(255, round(red * 255 / alpha)),
+                min(255, round(green * 255 / alpha)),
+                min(255, round(blue * 255 / alpha)),
+                alpha,
+            )
+    return resized
 
 
 def hard_alpha(image: Image.Image, threshold: int = 96) -> Image.Image:
     red, green, blue, alpha = image.split()
     alpha = alpha.point(lambda value: 255 if value >= threshold else 0)
     output = Image.merge("RGBA", (red, green, blue, alpha))
-
-    array = np.asarray(output).copy()
-    array[array[..., 3] == 0, :3] = 0
-    return Image.fromarray(array, "RGBA")
+    pixels = output.load()
+    for y in range(output.height):
+        for x in range(output.width):
+            if pixels[x, y][3] == 0:
+                pixels[x, y] = (0, 0, 0, 0)
+    return output
 
 
 def sharpen(image: Image.Image) -> Image.Image:
@@ -75,14 +79,44 @@ def sharpen(image: Image.Image) -> Image.Image:
     return Image.merge("RGBA", (*rgb.split(), alpha))
 
 
+def apply_sprite_postprocess(image: Image.Image, spec: dict) -> Image.Image:
+    output = image.copy()
+    draw = ImageDraw.Draw(output)
+    outline_lines = {
+        "top_outline_color": (0, 0, output.width - 1, 0),
+        "right_outline_color": (output.width - 1, 0, output.width - 1, output.height - 1),
+        "bottom_outline_color": (0, output.height - 1, output.width - 1, output.height - 1),
+        "left_outline_color": (0, 0, 0, output.height - 1),
+    }
+    for field, line in outline_lines.items():
+        outline_color = spec.get(field)
+        if outline_color is None:
+            continue
+        if not isinstance(outline_color, list) or len(outline_color) not in (3, 4):
+            raise ValueError(f"{spec['id']} {field} must contain 3 or 4 channels")
+        color = tuple(int(channel) for channel in outline_color)
+        if len(color) == 3:
+            color = (*color, 255)
+        draw.line(line, fill=color, width=1)
+    return output
+
+
 def make_sprite(source: Path, spec: dict) -> Image.Image:
     resize_mode = spec.get("resize_mode", "direct")
     target_size = tuple(spec.get("target_size", [TILE_SIZE, TILE_SIZE]))
     image = Image.open(source).convert("RGBA")
+    source_crop_mode = spec.get("source_crop_mode", "none")
+    if source_crop_mode == "alpha_vertical":
+        alpha_bounds = image.getchannel("A").getbbox()
+        if alpha_bounds is None:
+            raise ValueError(f"{spec['id']} source produced an empty sprite")
+        image = image.crop((0, alpha_bounds[1], image.width, alpha_bounds[3]))
+    elif source_crop_mode != "none":
+        raise ValueError(f"Unknown source_crop_mode: {source_crop_mode}")
     if resize_mode == "premultiplied_hard_alpha_sharp":
         image = premultiplied_resize(image, target_size)
         image = hard_alpha(image)
-        return sharpen(image)
+        return apply_sprite_postprocess(sharpen(image), spec)
     if resize_mode == "premultiplied_hard_alpha_sharp_fit_bounds":
         image = premultiplied_resize(image, target_size)
         image = hard_alpha(image)
@@ -98,13 +132,16 @@ def make_sprite(source: Path, spec: dict) -> Image.Image:
         fitted = hard_alpha(fitted)
         output = Image.new("RGBA", target_size, (0, 0, 0, 0))
         output.alpha_composite(fitted, (int(fit_bounds[0]), int(fit_bounds[1])))
-        return output
+        return apply_sprite_postprocess(output, spec)
     if resize_mode != "direct":
         raise ValueError(f"Unknown resize_mode: {resize_mode}")
 
-    return Image.open(source).convert("RGBA").resize(
-        target_size,
-        Image.Resampling.LANCZOS,
+    return apply_sprite_postprocess(
+        image.resize(
+            target_size,
+            Image.Resampling.LANCZOS,
+        ),
+        spec,
     )
 
 
