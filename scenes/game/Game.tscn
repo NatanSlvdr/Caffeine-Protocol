@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/game.gd" id="1_game"]
+[ext_resource type="PackedScene" path="res://scenes/game/Cafe.tscn" id="2_cafe"]
+[ext_resource type="PackedScene" path="res://scenes/game/Code.tscn" id="3_code"]
+
+[node name="Game" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_game")
+
+[node name="Layout" type="HSplitContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+split_offset = 768
+
+[node name="Cafe" parent="Layout" instance=ExtResource("2_cafe")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Code" parent="Layout" instance=ExtResource("3_code")]
+unique_name_in_owner = true
+layout_mode = 2

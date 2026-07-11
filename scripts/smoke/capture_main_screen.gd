@@ -1,6 +1,6 @@
 extends SceneTree
 
-const MAIN_SCENE := "res://scenes/MainPuzzleScreen.tscn"
+const MAIN_SCENE := "res://scenes/game/Game.tscn"
 const OUTPUT_PATH := "res://.godot/codex-main-screen.png"
 const CAPTURE_SIZE := Vector2i(1280, 720)
 

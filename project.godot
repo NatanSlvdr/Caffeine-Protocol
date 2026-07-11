@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Caffeine Protocol"
-run/main_scene="res://scenes/MainPuzzleScreen.tscn"
+run/main_scene="res://scenes/menus/MainMenu.tscn"
 config/features=PackedStringArray("4.6", "GL Compatibility")
 
 [display]
