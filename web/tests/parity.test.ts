@@ -9,7 +9,7 @@ import { blocksToText,textToBlocks,insertBlock,moveGroup,deleteBlock,moveBlock }
 const run=(i:number,source=lessons[i].solution)=>runLevel(levels[i],compileProgram(source,i+1));
 const tea=levels[3].seeds[1].customers[0],coffee=levels[3].seeds[0].customers[0];
 const exec=(source:string,customer=coffee,level=14)=>executeCustomerEvent(compileProgram(source,level),customer,'test');
-describe('Godot reference parity — all 14 complete solutions',()=>{
+describe('reference parity — all 14 complete solutions',()=>{
  for(const [i,level] of levels.entries()){
   it(`${level.id}: exact tickets, instruction traces, timing, scores and satisfaction`,()=>{
    const actual=run(i);expect(actual.passed).toBe(true);
