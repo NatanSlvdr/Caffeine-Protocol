@@ -2,73 +2,73 @@
   "lessons": [
     {
       "note": "Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open ticket details to inspect the lifecycle.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT\nCHARGE ORDER",
       "starter": "LISTEN"
     },
     {
       "note": "Niko: Eight orders, one pair of hands. The counter queue keeps growing while I brew. Query could help, once we repair the controller.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT\nCHARGE ORDER",
       "starter": "LISTEN"
     },
     {
-      "note": "Query: BOOT OK. Add Create ticket, Set item: coffee and Submit ticket after Wait for customer speech. Each test is a fresh shift.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "note": "Query: BOOT OK. Add Create ticket, Set item: coffee and Submit ticket after Wait for customer speech. Each test is a fresh shift. After submitting the complete order, charge the customer with CHARGE ORDER. Coffee costs 3 credits, tea 2, and sugar is included.",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT\nCHARGE ORDER",
       "starter": "LISTEN"
     },
     {
       "note": "Niko: Tea is on the menu. Use If heard drink is tea, then Set item: tea. In Else, set coffee. Close the branch with End, then submit.",
-      "solution": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT",
-      "starter": "LISTEN\nTICKET\nITEM coffee\nSUBMIT"
+      "solution": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nCHARGE ORDER",
+      "starter": "LISTEN\nTICKET\nITEM coffee\nSUBMIT\nCHARGE ORDER"
     },
     {
       "note": "Query: I served one customer and stopped. Put Position: listen before Wait, then Jump to listen at the end. Every customer needs a ticket.",
-      "solution": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nJUMP listen",
-      "starter": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT"
+      "solution": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nCHARGE ORDER\nJUMP listen",
+      "starter": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nCHARGE ORDER"
     },
     {
       "note": "Niko: A table for two can mean two drinks in one request. Wrap ticket creation, item selection and submission in For each heard order / End.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nCHARGE ORDER\nJUMP listen"
     },
     {
       "note": "Niko: Sweet or unsweetened? Store heard sugar in a variable, then set the ticket's sugar from that variable before submitting it.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen"
     },
     {
       "note": "Niko: Regulars use different words for the same drink. Define a build-ticket function with the heard order as its parameter. Call it inside Each; return the ticket, then submit.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen"
     },
     {
       "note": "Niko: 'The usual' is ambiguous. If speech is ambiguous, ask me for clarification before creating tickets. Without clarification, safely defer the order.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
       "note": "Query: Two sugars is more precise than yes. If a sugar count exists, store it as a number and use it. Otherwise keep the binary sugar behavior.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
       "note": "Niko: Time to tidy our routine. Keep the behavior, but share ticket building and copy whichever sugar chip exists. Compare your blocks and executed steps.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
     },
     {
       "note": "Query: Lunch rush. Larger batches, familiar chips. Your saved program carries forward. Inspect the trace if a customer gets left behind.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Our regulars mix clear orders and ambiguous requests. Keep asking for clarification before building their tickets, including numbered sugars.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Certification day. Your own saved routine faces every case: singles, pairs, sugar and regulars. The counter is yours, Query. I'll keep the kettle busy.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nCHARGE ORDER\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
     }
   ],
   "levels": [
@@ -262,11 +262,11 @@
     },
     {
       "active_tables": 3,
-      "block_target": 4,
+      "block_target": 5,
       "id": "L03",
-      "instruction_target": 18,
+      "instruction_target": 20,
       "programming_enabled": true,
-      "reference_block_count": 4,
+      "reference_block_count": 5,
       "seeds": [
         {
           "customers": [
@@ -307,16 +307,16 @@
           "id": "L03_B"
         }
       ],
-      "summary": "Wait for one customer speech event, then create one coffee ticket.",
+      "summary": "Wait for one customer speech event, then create one coffee ticket. Charge each customer at the order counter before preparation begins.",
       "title": "Level 3: Boot Sequence"
     },
     {
       "active_tables": 4,
-      "block_target": 9,
+      "block_target": 10,
       "id": "L04",
-      "instruction_target": 45,
+      "instruction_target": 48,
       "programming_enabled": true,
-      "reference_block_count": 9,
+      "reference_block_count": 10,
       "seeds": [
         {
           "customers": [
@@ -381,11 +381,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 12,
+      "block_target": 13,
       "id": "L05",
-      "instruction_target": 100,
+      "instruction_target": 111,
       "programming_enabled": true,
-      "reference_block_count": 12,
+      "reference_block_count": 13,
       "seeds": [
         {
           "customers": [
@@ -562,11 +562,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 16,
+      "block_target": 17,
       "id": "L06",
-      "instruction_target": 165,
+      "instruction_target": 175,
       "programming_enabled": true,
-      "reference_block_count": 16,
+      "reference_block_count": 17,
       "seeds": [
         {
           "customers": [
@@ -857,11 +857,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 18,
+      "block_target": 19,
       "id": "L07",
-      "instruction_target": 145,
+      "instruction_target": 156,
       "programming_enabled": true,
-      "reference_block_count": 18,
+      "reference_block_count": 19,
       "seeds": [
         {
           "customers": [
@@ -1060,11 +1060,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 24,
+      "block_target": 25,
       "id": "L08",
-      "instruction_target": 165,
+      "instruction_target": 175,
       "programming_enabled": true,
-      "reference_block_count": 24,
+      "reference_block_count": 25,
       "seeds": [
         {
           "customers": [
@@ -1247,11 +1247,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 31,
+      "block_target": 32,
       "id": "L09",
-      "instruction_target": 230,
+      "instruction_target": 239,
       "programming_enabled": true,
-      "reference_block_count": 31,
+      "reference_block_count": 32,
       "seeds": [
         {
           "customers": [
@@ -1433,11 +1433,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 38,
+      "block_target": 39,
       "id": "L10",
-      "instruction_target": 310,
+      "instruction_target": 322,
       "programming_enabled": true,
-      "reference_block_count": 34,
+      "reference_block_count": 35,
       "seeds": [
         {
           "customers": [
@@ -1654,11 +1654,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 34,
+      "block_target": 35,
       "id": "L11",
-      "instruction_target": 280,
+      "instruction_target": 296,
       "programming_enabled": true,
-      "reference_block_count": 34,
+      "reference_block_count": 35,
       "seeds": [
         {
           "customers": [
@@ -1947,11 +1947,11 @@
     },
     {
       "active_tables": 8,
-      "block_target": 40,
+      "block_target": 41,
       "id": "L12",
-      "instruction_target": 520,
+      "instruction_target": 549,
       "programming_enabled": true,
-      "reference_block_count": 34,
+      "reference_block_count": 35,
       "seeds": [
         {
           "customers": [
@@ -2444,11 +2444,11 @@
     },
     {
       "active_tables": 8,
-      "block_target": 42,
+      "block_target": 43,
       "id": "L13",
-      "instruction_target": 650,
+      "instruction_target": 682,
       "programming_enabled": true,
-      "reference_block_count": 34,
+      "reference_block_count": 35,
       "seeds": [
         {
           "customers": [
@@ -3041,11 +3041,11 @@
     },
     {
       "active_tables": 10,
-      "block_target": 48,
+      "block_target": 49,
       "id": "L14",
-      "instruction_target": 1000,
+      "instruction_target": 1045,
       "programming_enabled": true,
-      "reference_block_count": 34,
+      "reference_block_count": 35,
       "seeds": [
         {
           "customers": [

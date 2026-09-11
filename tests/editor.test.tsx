@@ -1,10 +1,11 @@
 import { afterEach,describe,it,expect,vi } from 'vitest';
 import { cleanup,render,screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { RobotRole } from '../src/domain/types';
 import { useState } from 'react';
 import { Editor } from '../src/components/Editor';
 afterEach(cleanup);
-function Harness({initial='LISTEN',locked=false,observation=false}:{initial?:string;locked?:boolean;observation?:boolean}){const [source,setSource]=useState(initial),[text,setText]=useState(false);return <><Editor source={source} onChange={setSource} level={14} locked={locked} observation={observation} textMode={text} onTextMode={setText}/><output aria-label="Current source">{source}</output></>;}
+function Harness({initial='LISTEN',locked=false,observation=false,role='query'}:{initial?:string;locked?:boolean;observation?:boolean;role?:RobotRole}){const [source,setSource]=useState(initial),[text,setText]=useState(false);return <><Editor role={role} source={source} onChange={setSource} level={32} locked={locked} observation={observation} textMode={text} onTextMode={setText}/><output aria-label="Current source">{source}</output></>;}
 describe('keyboard and mouse editor component behavior',()=>{
  it('adds a block from the library',async()=>{const user=userEvent.setup();render(<Harness/>);await user.click(screen.getByRole('button',{name:'Add block'}));expect(screen.getByLabelText('Current source').textContent).toBe('LISTEN\nTICKET');});
  it('automatically adds END for each structural opener',async()=>{const user=userEvent.setup();render(<Harness/>);for(const c of ['IF tea','EACH','FUNCTION build_ticket']){await user.selectOptions(screen.getByLabelText(/INSTRUCTION LIBRARY/),c);await user.click(screen.getByRole('button',{name:'Add block'}));expect(screen.getByLabelText('Current source').textContent).toContain(c+'\nEND');}});
@@ -15,4 +16,15 @@ describe('keyboard and mouse editor component behavior',()=>{
  it('retains comments and whitespace between views',async()=>{const user=userEvent.setup();const text='# hello\n\n LISTEN \n';render(<Harness initial={text}/>);await user.click(screen.getByRole('button',{name:'Text'}));expect((screen.getByRole('textbox',{name:'Program source'}) as HTMLTextAreaElement).value).toBe(text);await user.click(screen.getByRole('button',{name:'Blocks'}));expect(screen.getByLabelText('Current source').textContent).toBe(text);});
  it('highlights the active and failing source lines',()=>{Element.prototype.scrollIntoView=vi.fn();render(<Editor source={'LISTEN\nTICKET'} onChange={()=>{}} level={3} locked activeLine={0} failureLine={1} observation={false} textMode={false} onTextMode={()=>{}}/>);expect(document.querySelector('.block.active')?.getAttribute('data-line')).toBe('0');expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('1');});
  it('observation uses an automatic locked routine',()=>{render(<Harness observation/>);expect(screen.getByText('Automatic service')).toBeTruthy();expect((screen.getByRole('button',{name:'Add block'}) as HTMLButtonElement).disabled).toBe(true);expect(screen.queryByLabelText('Block 1',{exact:true})).toBeNull();});
+});
+
+it('edits counted cardinal movement without changing surrounding source',async()=>{
+ const user=userEvent.setup();render(<Harness role="prep" initial={'# route\nMOVE UP 3\nWAIT TICKET'}/>);
+ await user.selectOptions(screen.getByLabelText('Block 2 direction'),'RIGHT');expect(screen.getByLabelText('Current source').textContent).toBe('# route\nMOVE RIGHT 3\nWAIT TICKET');
+ const input=screen.getByLabelText('Block 2 tiles');await user.tripleClick(input);await user.keyboard('5');expect(screen.getByLabelText('Current source').textContent).toContain('MOVE RIGHT 5');
+});
+it('switches the instruction palette with the selected robot',()=>{
+ const props={source:'',onChange:()=>{},level:32,locked:false,observation:false,textMode:false,onTextMode:()=>{}};
+ const {rerender}=render(<Editor {...props} role="prep"/>);expect(screen.getByRole('option',{name:'TAKE BEANS'})).toBeTruthy();expect(screen.queryByRole('option',{name:'CHARGE'})).toBeNull();
+ rerender(<Editor {...props} role="floor"/>);expect(screen.getByRole('option',{name:'CHARGE'})).toBeTruthy();expect(screen.queryByRole('option',{name:'TAKE BEANS'})).toBeNull();
 });
