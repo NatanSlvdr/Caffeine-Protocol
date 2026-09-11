@@ -9,7 +9,7 @@ export function movementSource(from:Point,to:Point,role?:RobotRole){
 }
 export function preparationSource(level:number,batch=1){
  const at=STATIONS;const move=(a:Point,b:Point)=>movementSource(a,b,'prep');
- const recipe=[...move(STARTS.prep,at.ingredients.prep),'IF coffee','TAKE BEANS',...move(at.ingredients.prep,at.grinder.prep),'GRIND',...move(at.grinder.prep,at.water.prep),'ELSE','TAKE LEAVES',...move(at.ingredients.prep,at.water.prep),'END','FILL WATER',...move(at.water.prep,at.brewer.prep),'IF coffee','BREW','ELSE','STEEP','END',...move(at.brewer.prep,at.sugar.prep),'ADD SUGAR',...move(at.sugar.prep,STARTS.prep),'DEPOSIT'];
+ const recipe=[...move(STARTS.prep,at.ingredients.prep),'IF coffee','TAKE BEANS',...move(at.ingredients.prep,at.grinder.prep),'GRIND',...move(at.grinder.prep,at.water.prep),'ELSE','TAKE LEAVES',...move(at.ingredients.prep,at.water.prep),'END','FILL WATER',...move(at.water.prep,at.brewer.prep),'IF coffee','BREW','ELSE','STEEP','END',...move(at.brewer.prep,at.sugar.prep),'ADD SUGAR',...move(at.sugar.prep,at.pickup.prep),'DEPOSIT',...move(at.pickup.prep,STARTS.prep)];
  const waits=Array.from({length:batch},()=> 'WAIT TICKET');
  return (level>=20?[...waits,...Array.from({length:batch},()=> 'CALL recipe'),'REPEAT','FUNCTION recipe',...recipe,'RETURN','END']:[...waits,...recipe,'REPEAT']).join('\n');
 }

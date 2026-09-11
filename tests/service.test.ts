@@ -38,12 +38,12 @@ describe('movement language and execution',()=>{
   expect(compileRobot('BREW','floor').compile_error).not.toBe('');expect(compileRobot('CHARGE','prep').compile_error).not.toBe('');expect(compileRobot('CHARGE','floor',23).compile_error).not.toBe('');
  });
  it('stops before furniture and continues with the next command',()=>{
-  const r=physical('MOVE LEFT 19\nMOVE UP 1');const log=r.execution.events.filter(e=>e.actor==='prep');
-  const stopped=log.find(e=>e.command==='MOVE LEFT 19'&&e.start===e.end);expect(stopped?.completed).toBe(3);expect(stopped?.to).toEqual([-5,1]);
-  expect(log.some(e=>e.command==='MOVE UP 1'&&e.to[1]===0)).toBe(true);expect(r.failure?.reason).toContain('Unfinished work');
+  const r=physical('MOVE LEFT 19\nMOVE RIGHT 1');const log=r.execution.events.filter(e=>e.actor==='prep');
+  const stopped=log.find(e=>e.command==='MOVE LEFT 19'&&e.start===e.end);expect(stopped?.completed).toBe(0);expect(stopped?.to).toEqual(STARTS.prep);
+  expect(log.some(e=>e.command==='MOVE RIGHT 1'&&samePoint(e.to,[-2,5]))).toBe(true);expect(r.failure?.reason).toContain('Unfinished work');
  });
  it('does not enter another worker area or leave the room',()=>{
-  const r=physical('MOVE RIGHT 19\nMOVE DOWN 19');const log=r.execution.events.filter(e=>e.actor==='prep');expect(log.find(e=>e.command==='MOVE RIGHT 19')?.completed).toBe(0);expect(log.at(-2)?.to).toEqual([-2,5]);
+  const r=physical('MOVE RIGHT 19\nMOVE DOWN 19');const log=r.execution.events.filter(e=>e.actor==='prep');expect(log.find(e=>e.command==='MOVE RIGHT 19'&&e.start===e.end)?.to).toEqual([7,5]);expect(log.find(e=>e.command==='MOVE DOWN 19'&&e.start===e.end)?.to).toEqual([7,5]);expect(log.every(e=>isWalkable(e.to,'prep'))).toBe(true);
  });
  it('records one-second cardinal tile edges without customer collisions',()=>{
   const r=service({},31);for(const seed of r.execution??[])for(const e of seed.events.filter(e=>e.actor==='prep'||e.actor==='floor')){
@@ -56,7 +56,21 @@ describe('movement language and execution',()=>{
 describe('recipes, handoffs, and capacities',()=>{
  it('requires a claimed ticket and the correct station',()=>{
   expect(physical('GRIND').failure?.reason).toContain('WAIT TICKET');
-  expect(physical('WAIT TICKET\nTAKE BEANS').failure?.reason).toContain('interaction tile');
+  expect(physical('WAIT TICKET\nGRIND').failure?.reason).toContain('interaction tile');
+ });
+ it('claims tickets at the shared order counter, separately from drink pickup',()=>{
+  const atPickup=[...movementSource(STARTS.prep,STATIONS.pickup.prep,'prep'),'WAIT TICKET'].join('\n');
+  expect(physical(atPickup).failure?.reason).toContain('order handoff');
+  const result=service({},20);
+  expect(result.first_failure).toBeNull();
+  const seed=result.execution![0];
+  const claim=seed.events.find(e=>e.command==='WAIT TICKET')!;
+  expect(claim.from).toEqual(STATIONS.orders.prep);
+  const before=sampleReplay(result,seed.start+claim.start);
+  expect(before.waitingTickets.some(t=>t.ticket_id===claim.ticketId)).toBe(true);
+  const after=sampleReplay(result,seed.start+claim.end);
+  expect(after.waitingTickets.some(t=>t.ticket_id===claim.ticketId)).toBe(false);
+  expect(seed.events.filter(e=>e.command==='DEPOSIT').every(e=>samePoint(e.from,STATIONS.pickup.prep))).toBe(true);
  });
  it('rejects invalid recipe order',()=>{const commands=['WAIT TICKET',...movementSource(STARTS.prep,STATIONS.ingredients.prep,'prep'),'TAKE BEANS',...movementSource(STATIONS.ingredients.prep,STATIONS.water.prep,'prep'),'FILL WATER'];expect(physical(commands.join('\n')).failure?.reason).toContain('Invalid recipe');});
  it('validates sugar on deposited drinks',()=>{const r=service({prep:referencePrograms(32).prep.replace('ADD SUGAR','# omitted')});expect(r.first_failure?.reason).toContain('sugar');expect(r.first_failure?.role).toBe('prep');});
@@ -78,7 +92,7 @@ describe('battery, concurrency, and replay',()=>{
  });
  it('requires the dock and fails before movement at zero battery',()=>{
   expect(physical('CHARGE','floor').failure?.reason).toContain('charging dock');
-  const r=physical('MOVE UP 10\nMOVE DOWN 10\nREPEAT','floor');expect(r.failure?.reason).toContain('Battery empty');expect(r.execution.events.filter(e=>e.actor==='floor').at(-1)?.battery).toBe(0);
+  const route=[...movementSource(STARTS.floor,[3,-6],'floor'),...movementSource([3,-6],STARTS.floor,'floor'),'REPEAT'];const r=physical(route.join('\n'),'floor');expect(r.failure?.reason).toContain('Battery empty');expect(r.execution.events.filter(e=>e.actor==='floor').at(-1)?.battery).toBe(0);
  });
  it('runs the kitchen and floor concurrently while queues wait independently',()=>{
   const r=service({},31),log=r.execution![0].events;expect(log.some(a=>a.actor==='prep'&&a.end>a.start&&log.some(b=>b.actor==='floor'&&b.start<a.end&&b.end>a.start))).toBe(true);

@@ -6,7 +6,7 @@ export const ROBOT_NAMES={query:'Query',prep:'Brew',floor:'Porter'} as const;
 export const queryReference=campaign.lessons[13].solution;
 const titles=['A second pair of hands','Count the tiles','From bean to cup','Time for tea','A spoonful of precision','A recipe worth keeping','Two cups in hand','The kitchen is yours','Meet Porter','A path to the table','There and back','A clean table','A place to recharge','Enough for the journey','A tray for two','The floor is yours','Three routines, one café','The whole café is yours'];
 const notes=[
- 'Brew takes over preparation. Read the supplied recipe and complete the missing deposit. Niko still serves the room.',
+ 'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Niko still serves the room.',
  'MOVE uses screen directions and whole tile counts. A blocked move stops early and the next instruction runs. Fix the route to the ingredients.',
  'Coffee needs beans, grinding, water, then brewing. Every action happens beside its labeled station.',
  'Tea uses leaves, water, and steeping. Branch on the current ticket to choose the recipe.',

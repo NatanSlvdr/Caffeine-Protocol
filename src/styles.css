@@ -39,3 +39,8 @@
 .robot-tabs{display:flex;gap:5px;padding:8px 14px;border-top:1px solid #e0e3d6}.robot-tabs button{flex:1;font-size:11px;background:transparent}.robot-tabs button[aria-selected=true]{background:#e2ebd9;border-color:#9aaf8d;color:#486743}.robot-readout{padding:4px 16px 10px;font-size:10px;color:#7d8c70}.tile-count{width:44px;border:1px solid #c6d0b9;border-radius:4px;background:#fffdf2;color:inherit;padding:5px;font-size:11px}.block>span{font-size:9px;padding:0 4px}.world-label{font-size:7px;white-space:nowrap}
 .playback-speed{display:flex;flex-direction:column;gap:7px;min-width:130px;flex:1}.playback-speed>span{display:flex;align-items:center;gap:6px;font-size:10px;color:#6b805f}.playback-speed small{margin-left:auto;font-size:9px;color:#849078}.playback-speed input{width:100%;accent-color:#66875b}.playback-speed strong{font-variant-numeric:tabular-nums}
 .world-label{font-size:8px;font-weight:700;letter-spacing:.8px;line-height:1.4;color:#fff8df;background:#314c41e8;border-color:#f0e5c566;border-radius:4px;padding:4px 7px;pointer-events:none;box-shadow:0 2px 7px #29443b24}
+
+/* Plaques sit on the counter fascia in world space. */
+.counter-label{display:block;width:64px;padding:4px 2px;border:1px solid #c5aa77;border-radius:2px;background:#20363b;color:#f3ead5;font:600 8px/1.2 ui-monospace,monospace;letter-spacing:.35px;text-align:center;white-space:nowrap;backface-visibility:hidden}
+/* Screen-facing labels stay anchored to the counter edge without foreshortening. */
+.counter-label{width:auto;padding:3px 5px;font-size:9px;line-height:1.25;letter-spacing:.25px;box-shadow:0 1px 3px #132b3540}

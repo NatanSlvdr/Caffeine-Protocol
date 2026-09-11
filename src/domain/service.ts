@@ -1,6 +1,6 @@
 import { compileRobot } from './robotProgram';
 import { floorSource, preparationSource } from './routines';
-import { gridRoute, isWalkable, samePoint, STARTS, STATIONS, tableFront } from './layout';
+import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 
@@ -13,7 +13,7 @@ const sugarOf=(ticket:ReplayEvent['tickets'][number])=>ticket.sugar_count??(tick
 /** Execute workers on a deterministic event clock; only completed actions mutate shared queues. */
 export function simulateService(level:LevelDefinition,events:ReplayEvent[],programs:RobotPrograms,start=0):ServiceResult{
  const number=Number(level.id.slice(1)),config=configFor(level),seed=events[0]?.seed_id??level.seeds[0].id;
- const log:ExecutionEvent[]=[],jobs:Job[]=[],tableOwners=new Map<number,string>();let now=0,failure:ServiceFailure|undefined,nikoPosition:Point=number>=15?STARTS.floor:number>=3?STARTS.prep:STARTS.query,nikoBusy:Worker|undefined;
+ const log:ExecutionEvent[]=[],jobs:Job[]=[],tableOwners=new Map<number,string>();let now=0,failure:ServiceFailure|undefined,nikoPosition:Point=number>=15?STARTS.floor:number>=3?STARTS.prep:MANUAL_INTAKE,nikoBusy:Worker|undefined;
  const workers:Worker[]=(['prep','floor'] as const).map(role=>({role,actor:number>=(role==='prep'?15:23)?role:'niko',program:compileRobot(number>=(role==='prep'?15:23)?programs[role]:role==='prep'?preparationSource(32):floorSource(32),role,number>=(role==='prep'?15:23)?number:32),pc:0,stack:[],position:STARTS[role],inventory:[],battery:80,count:0,charges:0,maxLoad:0,done:false}));
  let intakeFree=0,manualIndex=0;let manualIntake:{end:number;apply:()=>void}|undefined;
  for(const [index,event] of events.entries()){
@@ -78,7 +78,7 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   const cargo=currentCargo(w),job=currentJob(w);
   let apply:()=>void=()=>{},seconds=1;
   if(c==='WAIT TICKET'){
-   if(!station(w,STATIONS.pickup.prep,'ticket station'))return false;
+   if(!station(w,STATIONS.orders.prep,'order handoff'))return false;
    if(w.inventory.length>=capacity(w)){fail(w,'Carrying capacity reached. Deposit a drink before claiming another ticket.');return false;}
    const next=nextWork(c)!;apply=()=>{next.status='claimed';w.inventory.push({ticketId:next.ticketId,table:next.table,item:next.item,stage:'claimed',sugar:0});};
   }else if(c==='WAIT DRINK'||c==='WAIT DIRTY'){
@@ -138,11 +138,11 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   for(const w of workers)if(w.pending&&w.pending.end<=now){const pending=w.pending;w.pending=undefined;pending.apply();}
   if(manualIntake&&manualIntake.end<=now){const intake=manualIntake;manualIntake=undefined;intake.apply();}
   if(number<3&&!manualIntake&&!nikoBusy&&manualIndex<events.length&&events[manualIndex].customer.arrival<=now){
-   const event=events[manualIndex++],path=gridRoute(nikoPosition,STARTS.query);let arrival=now;
+   const event=events[manualIndex++],path=gridRoute(nikoPosition,MANUAL_INTAKE);let arrival=now;
    path.slice(1).forEach((to,i)=>log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end:++arrival,line:-1,command:'WALK TO ORDER COUNTER',from:path[i],to,inventory:[],battery:80}));
    const end=arrival+9;intakeFree=end;
-   log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end,line:-1,command:'TAKE ORDER',from:STARTS.query,to:STARTS.query,inventory:[],battery:80,customerId:event.customer.customer_id});
-   manualIntake={end,apply:()=>{nikoPosition=STARTS.query;event.timing.created=end;event.timing.seated=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>t.ticket_id===job.ticketId)!.created_at=end;}}};
+   log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end,line:-1,command:'TAKE ORDER',from:MANUAL_INTAKE,to:MANUAL_INTAKE,inventory:[],battery:80,customerId:event.customer.customer_id});
+   manualIntake={end,apply:()=>{nikoPosition=MANUAL_INTAKE;event.timing.created=end;event.timing.seated=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>t.ticket_id===job.ticketId)!.created_at=end;}}};
   }
   for(const job of jobs)if(job.status==='served'&&job.dirtyAt<=now)job.status='dirty';
   for(const event of events){const group=jobs.filter(j=>j.event===event);if(group.length&&group.every(j=>['served','dirty','cleared'].includes(j.status))){const left=Math.max(...group.map(j=>j.event.timing.served))+5;event.timing.left=left;}}
