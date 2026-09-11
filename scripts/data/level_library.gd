@@ -9,7 +9,7 @@ static func levels() -> Array:
 				_customer("C2", 12, "coffee", _item("coffee")),
 				_customer("C3", 24, "coffee", _item("coffee")),
 			]),
-		], "Observe the full scripted service flow."),
+		], "Watch Niko welcome the first customers and serve their coffee."),
 		_level("L02", "Level 2: Rush", false, 0, 0, [
 			_seed("L02_A", [
 				_customer("C1", 0, "coffee", _item("coffee")),
@@ -21,8 +21,8 @@ static func levels() -> Array:
 				_customer("C7", 30, "coffee", _item("coffee")),
 				_customer("C8", 35, "coffee", _item("coffee")),
 			]),
-		], "Watch the counter bottleneck before Query is repaired."),
-		_level("L03", "Level 3: Boot Sequence", true, 4, 6, [
+		], "Watch the morning rush, then help Query take over the counter."),
+		_level("L03", "Level 3: Boot Sequence", true, 4, 18, [
 			_seed("L03_A", [
 				_customer("C1", 0, "coffee", _item("coffee")),
 			]),
@@ -30,7 +30,7 @@ static func levels() -> Array:
 				_customer("C1", 6, "coffee", _item("coffee")),
 			]),
 		], "Wait for one customer speech event, then create one coffee ticket."),
-		_level("L04", "Level 4: Coffee or Tea?", true, 9, 18, [
+		_level("L04", "Level 4: Coffee or Tea?", true, 9, 45, [
 			_seed("L04_A", [
 				_customer("C1", 0, "coffee", _item("coffee")),
 			]),
@@ -41,7 +41,7 @@ static func levels() -> Array:
 				_customer("C1", 12, "tea", _item("tea")),
 			]),
 		], "Distinguish coffee and tea intent chips."),
-		_level("L05", "Level 5: Continuous Service", true, 12, 70, [
+		_level("L05", "Level 5: Continuous Service", true, 12, 100, [
 			_seed("L05_A", [
 				_customer("C1", 0, "coffee", _item("coffee")),
 				_customer("C2", 15, "tea", _item("tea")),
@@ -60,7 +60,7 @@ static func levels() -> Array:
 				_customer("C4", 37, "coffee", _item("coffee")),
 			]),
 		], "Keep listening for the entire validation run."),
-		_level("L06", "Level 6: Table for Two", true, 16, 95, [
+		_level("L06", "Level 6: Table for Two", true, 16, 165, [
 			_seed("L06_A", [
 				_customer("C1", 0, "two coffees", _multi([_item("coffee"), _item("coffee")])),
 				_customer("C2", 12, "coffee and tea", _multi([_item("coffee"), _item("tea")])),
@@ -78,7 +78,7 @@ static func levels() -> Array:
 				_customer("C4", 30, "tea and coffee", _multi([_item("tea"), _item("coffee")])),
 			]),
 		], "Create one ticket per heard order chip in a single speech event."),
-		_level("L07", "Level 7: With or Without Sugar?", true, 18, 115, [
+		_level("L07", "Level 7: With or Without Sugar?", true, 18, 145, [
 			_seed("L07_A", [
 				_customer("C1", 0, "coffee with sugar", _binary("coffee", true)),
 				_customer("C2", 8, "tea without sugar", _binary("tea", false)),
@@ -335,6 +335,7 @@ static func get_level(index: int) -> Dictionary:
 static func _level(id: String, title: String, programming_enabled: bool, block_target: int, instruction_target: int, seeds: Array, summary: String) -> Dictionary:
 	return {
 		"id": id,
+		"active_tables": [2, 4, 3, 4, 5, 5, 5, 6, 6, 6, 6, 8, 8, 10][int(id.substr(1)) - 1],
 		"title": title,
 		"programming_enabled": programming_enabled,
 		"block_target": block_target,

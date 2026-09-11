@@ -1,0 +1,3878 @@
+{
+  "lessons": [
+    {
+      "note": "Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open ticket details to inspect the lifecycle.",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "starter": "LISTEN"
+    },
+    {
+      "note": "Niko: Eight orders, one pair of hands. The counter queue keeps growing while I brew. Query could help, once we repair the controller.",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "starter": "LISTEN"
+    },
+    {
+      "note": "Query: BOOT OK. Add Create ticket, Set item: coffee and Submit ticket after Wait for customer speech. Each test is a fresh shift.",
+      "solution": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+      "starter": "LISTEN"
+    },
+    {
+      "note": "Niko: Tea is on the menu. Use If heard drink is tea, then Set item: tea. In Else, set coffee. Close the branch with End, then submit.",
+      "solution": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT",
+      "starter": "LISTEN\nTICKET\nITEM coffee\nSUBMIT"
+    },
+    {
+      "note": "Query: I served one customer and stopped. Put Position: listen before Wait, then Jump to listen at the end. Every customer needs a ticket.",
+      "solution": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nJUMP listen",
+      "starter": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT"
+    },
+    {
+      "note": "Niko: A table for two can mean two drinks in one request. Wrap ticket creation, item selection and submission in For each heard order / End.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nJUMP listen"
+    },
+    {
+      "note": "Niko: Sweet or unsweetened? Store heard sugar in a variable, then set the ticket's sugar from that variable before submitting it.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT\nEND\nJUMP listen"
+    },
+    {
+      "note": "Niko: Regulars use different words for the same drink. Define a build-ticket function with the heard order as its parameter. Call it inside Each; return the ticket, then submit.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nSUBMIT\nEND\nJUMP listen"
+    },
+    {
+      "note": "Niko: 'The usual' is ambiguous. If speech is ambiguous, ask me for clarification before creating tickets. Without clarification, safely defer the order.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+    },
+    {
+      "note": "Query: Two sugars is more precise than yes. If a sugar count exists, store it as a number and use it. Otherwise keep the binary sugar behavior.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+    },
+    {
+      "note": "Niko: Time to tidy our routine. Keep the behavior, but share ticket building and copy whichever sugar chip exists. Compare your blocks and executed steps.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
+    },
+    {
+      "note": "Query: Lunch rush. Larger batches, familiar chips. Your saved program carries forward. Inspect the trace if a customer gets left behind.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+    },
+    {
+      "note": "Niko: Our regulars mix clear orders and ambiguous requests. Keep asking for clarification before building their tickets, including numbered sugars.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+    },
+    {
+      "note": "Niko: Certification day. Your own saved routine faces every case: singles, pairs, sugar and regulars. The counter is yours, Query. I'll keep the kettle busy.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nSUBMIT\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+    }
+  ],
+  "levels": [
+    {
+      "active_tables": 2,
+      "block_target": 0,
+      "id": "L01",
+      "instruction_target": 0,
+      "programming_enabled": false,
+      "reference_block_count": 0,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L01_A"
+        }
+      ],
+      "summary": "Watch Niko welcome the first customers and serve their coffee.",
+      "title": "Level 1: Reopening"
+    },
+    {
+      "active_tables": 4,
+      "block_target": 0,
+      "id": "L02",
+      "instruction_target": 0,
+      "programming_enabled": false,
+      "reference_block_count": 0,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 10,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 15,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 20,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 25,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 30,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C7",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 35,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C8",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L02_A"
+        }
+      ],
+      "summary": "Watch the morning rush, then help Query take over the counter.",
+      "title": "Level 2: Rush"
+    },
+    {
+      "active_tables": 3,
+      "block_target": 4,
+      "id": "L03",
+      "instruction_target": 18,
+      "programming_enabled": true,
+      "reference_block_count": 4,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L03_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L03_B"
+        }
+      ],
+      "summary": "Wait for one customer speech event, then create one coffee ticket.",
+      "title": "Level 3: Boot Sequence"
+    },
+    {
+      "active_tables": 4,
+      "block_target": 9,
+      "id": "L04",
+      "instruction_target": 45,
+      "programming_enabled": true,
+      "reference_block_count": 9,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L04_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            }
+          ],
+          "id": "L04_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            }
+          ],
+          "id": "L04_C"
+        }
+      ],
+      "summary": "Distinguish coffee and tea intent chips.",
+      "title": "Level 4: Coffee or Tea?"
+    },
+    {
+      "active_tables": 5,
+      "block_target": 12,
+      "id": "L05",
+      "instruction_target": 100,
+      "programming_enabled": true,
+      "reference_block_count": 12,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 15,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 32,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L05_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 9,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 26,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 44,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L05_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 19,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 37,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L05_C"
+        }
+      ],
+      "summary": "Keep listening for the entire validation run.",
+      "title": "Level 5: Continuous Service"
+    },
+    {
+      "active_tables": 5,
+      "block_target": 16,
+      "id": "L06",
+      "instruction_target": 165,
+      "programming_enabled": true,
+      "reference_block_count": 16,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "two coffees"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "coffee and tea"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "two teas"
+            }
+          ],
+          "id": "L06_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "tea and coffee"
+            },
+            {
+              "arrival": 9,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "two coffees"
+            },
+            {
+              "arrival": 21,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L06_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "two teas"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "coffee and tea"
+            },
+            {
+              "arrival": 18,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 30,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "tea and coffee"
+            }
+          ],
+          "id": "L06_C"
+        }
+      ],
+      "summary": "Create one ticket per heard order chip in a single speech event.",
+      "title": "Level 6: Table for Two"
+    },
+    {
+      "active_tables": 5,
+      "block_target": 18,
+      "id": "L07",
+      "instruction_target": 145,
+      "programming_enabled": true,
+      "reference_block_count": 18,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee without sugar"
+            }
+          ],
+          "id": "L07_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea with sugar"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            },
+            {
+              "arrival": 18,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee without sugar"
+            }
+          ],
+          "id": "L07_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee without sugar"
+            },
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea with sugar"
+            },
+            {
+              "arrival": 21,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            }
+          ],
+          "id": "L07_C"
+        }
+      ],
+      "summary": "Attach the binary sugar modifier to coffee and tea tickets.",
+      "title": "Level 7: With or Without Sugar?"
+    },
+    {
+      "active_tables": 6,
+      "block_target": 24,
+      "id": "L08",
+      "instruction_target": 165,
+      "programming_enabled": true,
+      "reference_block_count": 24,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea"
+            }
+          ],
+          "id": "L08_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            }
+          ],
+          "id": "L08_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea please with sugar"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee without sugar"
+            },
+            {
+              "arrival": 18,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea without sugar"
+            }
+          ],
+          "id": "L08_C"
+        }
+      ],
+      "summary": "Share ticket-building logic across source phrase variants.",
+      "title": "Level 8: Regulars"
+    },
+    {
+      "active_tables": 6,
+      "block_target": 31,
+      "id": "L09",
+      "instruction_target": 230,
+      "programming_enabled": true,
+      "reference_block_count": 31,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "coffee without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea with sugar"
+            }
+          ],
+          "id": "L09_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "tea with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 14,
+              "clarification": "coffee with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            }
+          ],
+          "id": "L09_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            },
+            {
+              "arrival": 12,
+              "clarification": "coffee with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            }
+          ],
+          "id": "L09_C"
+        }
+      ],
+      "summary": "Ask for help on ambiguous speech instead of guessing.",
+      "title": "Level 9: I Did Not Understand"
+    },
+    {
+      "active_tables": 6,
+      "block_target": 38,
+      "id": "L10",
+      "instruction_target": 310,
+      "programming_enabled": true,
+      "reference_block_count": 34,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "phrase": "coffee with 1 sugar"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            }
+          ],
+          "id": "L10_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 0
+              },
+              "phrase": "tea with 0 sugar"
+            },
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            }
+          ],
+          "id": "L10_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "one coffee with 2 sugar"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "one tea with 1 sugar"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            }
+          ],
+          "id": "L10_C"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 7,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            }
+          ],
+          "id": "L10_D"
+        }
+      ],
+      "summary": "Use numeric sugar-count chips while preserving binary sugar chips.",
+      "title": "Level 10: How Many Sugars?"
+    },
+    {
+      "active_tables": 6,
+      "block_target": 34,
+      "id": "L11",
+      "instruction_target": 280,
+      "programming_enabled": true,
+      "reference_block_count": 34,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 20,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            }
+          ],
+          "id": "L11_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 11,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 23,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea without sugar"
+            }
+          ],
+          "id": "L11_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "coffee without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 7,
+              "clarification": "tea with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "customer_id": "C2",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 24,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C4",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            }
+          ],
+          "id": "L11_C"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            },
+            {
+              "arrival": 13,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 25,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "one tea with 2 sugar"
+            }
+          ],
+          "id": "L11_D"
+        }
+      ],
+      "summary": "Keep all learned behavior passing with less duplicated logic.",
+      "title": "Level 11: Refactor Shift"
+    },
+    {
+      "active_tables": 8,
+      "block_target": 40,
+      "id": "L12",
+      "instruction_target": 520,
+      "programming_enabled": true,
+      "reference_block_count": 34,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 10,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 23,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            }
+          ],
+          "id": "L12_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 11,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            },
+            {
+              "arrival": 17,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee without sugar"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea without sugar"
+            }
+          ],
+          "id": "L12_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "phrase": "coffee with 1 sugar"
+            },
+            {
+              "arrival": 10,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 15,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 0
+              },
+              "phrase": "tea with 0 sugar"
+            },
+            {
+              "arrival": 21,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            },
+            {
+              "arrival": 28,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            }
+          ],
+          "id": "L12_C"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 9,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea"
+            },
+            {
+              "arrival": 20,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 27,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            }
+          ],
+          "id": "L12_D"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 8,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            },
+            {
+              "arrival": 13,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 18,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee without sugar"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 31,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C7",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "phrase": "coffee with 1 sugar"
+            }
+          ],
+          "id": "L12_E"
+        }
+      ],
+      "summary": "Stress-test larger clear-intent batches.",
+      "title": "Level 12: Intent Stress"
+    },
+    {
+      "active_tables": 8,
+      "block_target": 42,
+      "id": "L13",
+      "instruction_target": 650,
+      "programming_enabled": true,
+      "reference_block_count": 34,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "coffee without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "phrase": "coffee with 1 sugar"
+            },
+            {
+              "arrival": 10,
+              "clarification": "tea with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 23,
+              "clarification": "coffee with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "customer_id": "C5",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 31,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea without sugar"
+            }
+          ],
+          "id": "L13_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 9,
+              "clarification": "tea with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 15,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 22,
+              "clarification": "coffee with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "customer_id": "C5",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 30,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            }
+          ],
+          "id": "L13_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 5,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C2",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 11,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            },
+            {
+              "arrival": 17,
+              "clarification": "coffee with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "customer_id": "C4",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee without sugar"
+            },
+            {
+              "arrival": 32,
+              "clarification": "coffee with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "customer_id": "C6",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            }
+          ],
+          "id": "L13_C"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "tea with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 0
+              },
+              "phrase": "tea with 0 sugar"
+            },
+            {
+              "arrival": 10,
+              "clarification": "coffee with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea"
+            },
+            {
+              "arrival": 23,
+              "clarification": "coffee without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "customer_id": "C5",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 31,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 40,
+              "clarification": "tea with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "customer_id": "C7",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            }
+          ],
+          "id": "L13_D"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 4,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C2",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 9,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 15,
+              "clarification": "coffee with 0 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "customer_id": "C4",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 21,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 28,
+              "clarification": "tea with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "customer_id": "C6",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 36,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C7",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            }
+          ],
+          "id": "L13_E"
+        }
+      ],
+      "summary": "Preserve help behavior under mixed ambiguous and clear speech.",
+      "title": "Level 13: Ambiguous Regulars"
+    },
+    {
+      "active_tables": 10,
+      "block_target": 48,
+      "id": "L14",
+      "instruction_target": 1000,
+      "programming_enabled": true,
+      "reference_block_count": 34,
+      "seeds": [
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 10,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea"
+              },
+              "phrase": "tea"
+            },
+            {
+              "arrival": 23,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            }
+          ],
+          "id": "L14_A"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "coffee with sugar"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee without sugar"
+            },
+            {
+              "arrival": 11,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea with sugar"
+            },
+            {
+              "arrival": 17,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea without sugar"
+            },
+            {
+              "arrival": 24,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 32,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea without sugar"
+            }
+          ],
+          "id": "L14_B"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 5,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "phrase": "coffee with 1 sugar"
+            },
+            {
+              "arrival": 10,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "phrase": "coffee with 2 sugar"
+            },
+            {
+              "arrival": 16,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 0
+              },
+              "phrase": "tea with 0 sugar"
+            },
+            {
+              "arrival": 23,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            },
+            {
+              "arrival": 31,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            }
+          ],
+          "id": "L14_C"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 9,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "one tea"
+            },
+            {
+              "arrival": 15,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 22,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": true
+              },
+              "phrase": "one coffee with sugar"
+            },
+            {
+              "arrival": 30,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "one tea with 2 sugar"
+            }
+          ],
+          "id": "L14_D"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "coffee and tea"
+            },
+            {
+              "arrival": 6,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "coffee"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "two coffees"
+            },
+            {
+              "arrival": 14,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C3",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "coffee"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "coffee"
+                  }
+                ]
+              },
+              "phrase": "tea and coffee"
+            },
+            {
+              "arrival": 22,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "tickets": [
+                  {
+                    "item": "tea"
+                  },
+                  {
+                    "item": "tea"
+                  }
+                ]
+              },
+              "intent": {
+                "confidence": "clear",
+                "orders": [
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  },
+                  {
+                    "confidence": "clear",
+                    "drink": "tea"
+                  }
+                ]
+              },
+              "phrase": "two teas"
+            }
+          ],
+          "id": "L14_E"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "coffee without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "customer_id": "C1",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 5,
+              "clarification": "tea with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "customer_id": "C2",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 11,
+              "clarification": "coffee with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 18,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C4",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            },
+            {
+              "arrival": 26,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C5",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 35,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "tea with sugar"
+            }
+          ],
+          "id": "L14_F"
+        },
+        {
+          "customers": [
+            {
+              "arrival": 0,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C1",
+              "expected": {
+                "item": "coffee"
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee"
+              },
+              "phrase": "coffee"
+            },
+            {
+              "arrival": 4,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C2",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 2
+              },
+              "phrase": "tea with 2 sugar"
+            },
+            {
+              "arrival": 8,
+              "clarification": "coffee with 1 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 1
+              },
+              "customer_id": "C3",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "regular"
+            },
+            {
+              "arrival": 12,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C4",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "one coffee without sugar"
+            },
+            {
+              "arrival": 17,
+              "clarification": "tea with sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "customer_id": "C5",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "the usual"
+            },
+            {
+              "arrival": 22,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C6",
+              "expected": {
+                "item": "coffee",
+                "sugar_count": 0
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 0
+              },
+              "phrase": "coffee with 0 sugar"
+            },
+            {
+              "arrival": 27,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C7",
+              "expected": {
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "phrase": "tea please"
+            },
+            {
+              "arrival": 33,
+              "clarification": "coffee with 2 sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "sugar_count": 2
+              },
+              "customer_id": "C8",
+              "expected": {
+                "ask_help": true,
+                "item": "coffee",
+                "sugar_count": 2
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "same as yesterday"
+            },
+            {
+              "arrival": 39,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C9",
+              "expected": {
+                "item": "tea",
+                "with_sugar": true
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": true
+              },
+              "phrase": "one tea with sugar"
+            },
+            {
+              "arrival": 46,
+              "clarification": "tea without sugar",
+              "clarification_intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "with_sugar": false
+              },
+              "customer_id": "C10",
+              "expected": {
+                "ask_help": true,
+                "item": "tea",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "ambiguous"
+              },
+              "phrase": "something warm"
+            },
+            {
+              "arrival": 54,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C11",
+              "expected": {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "coffee",
+                "with_sugar": false
+              },
+              "phrase": "coffee please"
+            },
+            {
+              "arrival": 63,
+              "clarification": "",
+              "clarification_intent": {},
+              "customer_id": "C12",
+              "expected": {
+                "item": "tea",
+                "sugar_count": 1
+              },
+              "intent": {
+                "confidence": "clear",
+                "drink": "tea",
+                "sugar_count": 1
+              },
+              "phrase": "tea with 1 sugar"
+            }
+          ],
+          "id": "L14_G"
+        }
+      ],
+      "summary": "Final Act I certification for Query's order intake.",
+      "title": "Level 14: Employee of the Month"
+    }
+  ]
+}

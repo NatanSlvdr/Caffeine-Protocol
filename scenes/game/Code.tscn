@@ -3,52 +3,6 @@
 [ext_resource type="Script" path="res://scripts/ui/code_scene.gd" id="1_code"]
 
 [node name="Code" type="VBoxContainer"]
-custom_minimum_size = Vector2(380, 640)
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+custom_minimum_size = Vector2(410, 480)
+size_flags_horizontal = 3
 script = ExtResource("1_code")
-
-[node name="Title" type="Label" parent="."]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Code"
-
-[node name="LevelList" type="ItemList" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 188)
-layout_mode = 2
-
-[node name="CodeView" type="TextEdit" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 190)
-layout_mode = 2
-editable = false
-wrap_mode = 1
-
-[node name="Controls" type="HBoxContainer" parent="."]
-layout_mode = 2
-
-[node name="RunButton" type="Button" parent="Controls"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Run Validation"
-
-[node name="RestartButton" type="Button" parent="Controls"]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Restart Seed"
-
-[node name="DebugToggle" type="CheckBox" parent="."]
-unique_name_in_owner = true
-layout_mode = 2
-text = "Ticket Debug"
-
-[node name="ResultLabel" type="RichTextLabel" parent="."]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(360, 220)
-layout_mode = 2
-bbcode_enabled = true

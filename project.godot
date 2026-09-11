@@ -11,15 +11,28 @@ config_version=5
 [application]
 
 config/name="Caffeine Protocol"
+config/description="A cozy pixel-art puzzle game about teaching a robot to listen, one cup at a time."
 run/main_scene="res://scenes/menus/MainMenu.tscn"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.063, 0.122, 0.098, 1)
+boot_splash/show_image=false
+config/icon="res://assets/icon.svg"
+
+[autoload]
+
+Progress="*res://scripts/runtime/progress.gd"
+Sound="*res://scripts/runtime/audio_director.gd"
 
 [display]
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
+window/size/window_width_override=1280
+window/size/window_height_override=720
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
+window/size/min_width=1100
+window/size/min_height=720
 
 [rendering]
 
