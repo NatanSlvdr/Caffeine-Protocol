@@ -7,7 +7,6 @@ A browser-based café programming campaign with 14 shifts: two observation shift
 Requires a current Node.js release with npm.
 
 ```sh
-cd web
 npm ci
 npm run dev
 ```
@@ -32,15 +31,15 @@ Preparation, serving, and cleaning are scripted. Customers progress through orde
 
 ## Project structure
 
-- `web/src/` contains the React application, simulation, editor, and campaign data.
-- `web/public/` contains static audio and icon assets shipped with the game.
-- `web/tests/` contains unit, parity, and browser end-to-end tests.
+- `src/` contains the React application, simulation, editor, and campaign data.
+- `public/` contains static audio and icon assets shipped with the game.
+- `tests/` contains unit, parity, and browser end-to-end tests.
 - `docs/game_design/` contains the original design specification and implementation history.
 - `assets/` retains the original source art and audio used during development.
 
 ## Verification
 
-Run the focused test suite and production build from `web/`:
+Run the focused test suite and production build from the project root:
 
 ```sh
 npm test
