@@ -15,7 +15,7 @@ export interface Timing { arrival: number; created: number; seated: number; read
 export interface ReplayEvent { payment?:OrderPayment;  seed_id: string; customer: Customer; tickets: OrderTicket[]; asked_help: boolean; passed: boolean; reason?: string; trace: TraceStep[]; failure_line?: number; timing: Timing; table: number; satisfaction: number }
 export interface RunFailure { role?:RobotRole;  seed_id: string; error_line: number; customer_id: string; event_time: number; phrase: string; intent: SpeechIntent; expected: Customer['expected']; actual: OrderTicket[]; reason: string }
 export interface RunResult { execution?:SeedExecution[]; programs?:RobotPrograms;  passed: boolean; observation: boolean; events: ReplayEvent[]; block_count?: number; level_id: string; level_title: string; passed_seeds: number; required_seeds: number; tickets: OrderTicket[]; executed_instructions: number; average_satisfaction: number; stars: number; first_failure: RunFailure | null }
-export interface Settings { volume: number; music: number; effects: number; reduced_motion: boolean; fullscreen: boolean }
+export interface Settings { volume: number; music: number; effects: number; reduced_motion: boolean; pixel_art: boolean; fullscreen: boolean }
 export interface ProgressSaveV1 { version: 1; selected: number; unlocked: number; complete: boolean; drafts: Record<string,string>; solutions: Record<string,string>; stars: Record<string,number>; story: Record<string,boolean>; settings: Settings }
 
 export type RobotRole = 'query' | 'prep' | 'floor';

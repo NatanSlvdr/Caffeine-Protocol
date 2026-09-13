@@ -2,7 +2,7 @@ import { withOrderCharge } from './pricing';
 import type { ProgressSave,Settings,RobotPrograms,RobotRole } from './types';
 import { lessons, CAMPAIGN_LENGTH } from '../data';
 export const SAVE_KEY='caffeine-protocol.v1';
-export const defaultSettings:Settings={volume:.6,music:.55,effects:.65,reduced_motion:false,fullscreen:false};
+export const defaultSettings:Settings={volume:.6,music:.55,effects:.65,reduced_motion:false,pixel_art:true,fullscreen:false};
 export const newSave=(settings:Settings={...defaultSettings}):ProgressSave=>({version:2,robotDrafts:{},robotSolutions:{},selected:0,unlocked:0,complete:false,drafts:{},solutions:{},stars:{},story:{},settings:{...settings}});
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 const index=(value:unknown):value is number=>typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<CAMPAIGN_LENGTH;
@@ -24,6 +24,7 @@ export function parseSave(text:string):ProgressSave {
   if(!record(v.settings))throw new Error('Missing settings.');
   for(const k of ['volume','music','effects']){const n=v.settings[k];if(typeof n!=='number'||!Number.isFinite(n)||n<0||n>1)throw new Error('Invalid audio setting.');}
   for(const k of ['reduced_motion','fullscreen'])if(typeof v.settings[k]!=='boolean')throw new Error('Invalid display setting.');
+  if(v.settings.pixel_art!==undefined&&typeof v.settings.pixel_art!=='boolean')throw new Error('Invalid display setting.');
   const robotMaps: {robotDrafts:Record<string,RobotPrograms>;robotSolutions:Record<string,RobotPrograms>}={robotDrafts:{},robotSolutions:{}};
   if(v.version===2)for(const key of ['robotDrafts','robotSolutions'] as const){
     const entries=v[key];if(!record(entries))throw new Error(`Missing ${key} data.`);
@@ -34,7 +35,7 @@ export function parseSave(text:string):ProgressSave {
     }
   }
   if(v.version===1)for(const [flat,mapped] of [['drafts','robotDrafts'],['solutions','robotSolutions']] as const)for(const [shift,query] of Object.entries(v[flat] as Record<string,string>))robotMaps[mapped][shift]={query,prep:'',floor:''};
-  return {version:2,...robotMaps,selected:v.selected,unlocked:v.version===1&&v.complete?14:v.unlocked,complete:v.version===2&&v.complete,drafts:{...v.drafts as Record<string,string>},solutions:{...v.solutions as Record<string,string>},stars:{...v.stars as Record<string,number>},story:{...v.story as Record<string,boolean>},settings:{volume:v.settings.volume as number,music:v.settings.music as number,effects:v.settings.effects as number,reduced_motion:v.settings.reduced_motion as boolean,fullscreen:v.settings.fullscreen as boolean}};
+  return {version:2,...robotMaps,selected:v.selected,unlocked:v.version===1&&v.complete?14:v.unlocked,complete:v.version===2&&v.complete,drafts:{...v.drafts as Record<string,string>},solutions:{...v.solutions as Record<string,string>},stars:{...v.stars as Record<string,number>},story:{...v.story as Record<string,boolean>},settings:{volume:v.settings.volume as number,music:v.settings.music as number,effects:v.settings.effects as number,reduced_motion:v.settings.reduced_motion as boolean,pixel_art:v.settings.pixel_art as boolean|undefined??true,fullscreen:v.settings.fullscreen as boolean}};
 }
 export function readSave(storage:Pick<Storage,'getItem'>):{save:ProgressSave;error:string}{try{const raw=storage.getItem(SAVE_KEY);return {save:raw?parseSave(raw):newSave(),error:''};}catch{return {save:newSave(),error:'Saved progress could not be read. The original data is untouched; export a recovery copy in Settings before saving a new café.'};}}
 export function writeSave(storage:Pick<Storage,'setItem'>,save:ProgressSave):string{try{storage.setItem(SAVE_KEY,JSON.stringify(save));return '';}catch{return 'Progress could not be saved. Export your café from Settings to keep it.';}}

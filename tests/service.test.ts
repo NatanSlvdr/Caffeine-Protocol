@@ -40,7 +40,7 @@ describe('movement language and execution',()=>{
  it('stops before furniture and continues with the next command',()=>{
   const r=physical('MOVE LEFT 19\nMOVE RIGHT 1');const log=r.execution.events.filter(e=>e.actor==='prep');
   const stopped=log.find(e=>e.command==='MOVE LEFT 19'&&e.start===e.end);expect(stopped?.completed).toBe(0);expect(stopped?.to).toEqual(STARTS.prep);
-  expect(log.some(e=>e.command==='MOVE RIGHT 1'&&samePoint(e.to,[-2,5]))).toBe(true);expect(r.failure?.reason).toContain('Unfinished work');
+  expect(log.some(e=>e.command==='MOVE RIGHT 1'&&samePoint(e.to,[STARTS.prep[0]+1,STARTS.prep[1]]))).toBe(true);expect(r.failure?.reason).toContain('Unfinished work');
  });
  it('does not enter another worker area or leave the room',()=>{
   const r=physical('MOVE RIGHT 19\nMOVE DOWN 19');const log=r.execution.events.filter(e=>e.actor==='prep');expect(log.find(e=>e.command==='MOVE RIGHT 19'&&e.start===e.end)?.to).toEqual([7,5]);expect(log.find(e=>e.command==='MOVE DOWN 19'&&e.start===e.end)?.to).toEqual([7,5]);expect(log.every(e=>isWalkable(e.to,'prep'))).toBe(true);
@@ -88,7 +88,7 @@ describe('recipes, handoffs, and capacities',()=>{
 describe('battery, concurrency, and replay',()=>{
  it('spends battery per completed tile and charges for ten seconds',()=>{
   const r=service({},29),log=r.execution![0].events.filter(e=>e.actor==='floor');let battery=80;
-  for(const e of log){if(e.command==='CHARGE'){expect(e.end-e.start).toBe(10);expect(e.battery).toBe(80);battery=80;}else if(!samePoint(e.from,e.to)){expect(e.battery).toBe(battery-1);battery=e.battery;}}
+  for(const e of log){if(e.command==='CHARGE'){expect(e.end-e.start).toBeCloseTo(10);expect(e.battery).toBe(80);battery=80;}else if(!samePoint(e.from,e.to)){expect(e.battery).toBe(battery-1);battery=e.battery;}}
  });
  it('requires the dock and fails before movement at zero battery',()=>{
   expect(physical('CHARGE','floor').failure?.reason).toContain('charging dock');

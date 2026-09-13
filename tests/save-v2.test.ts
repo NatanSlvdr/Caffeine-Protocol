@@ -14,6 +14,11 @@ describe('version 2 campaign saves',()=>{
   const storage=new Map<string,string>();const adapter={getItem:(key:string)=>storage.get(key)??null,setItem:(key:string,value:string)=>{storage.set(key,value);}};
   expect(writeSave(adapter,save)).toBe('');const restored=readSave(adapter).save;expect(restored).toEqual(save);expect(incomingRobotPrograms(restored,23)).toEqual(save.robotSolutions[22]);
  });
+ it('enables pixel art when loading saves created before the display option existed',()=>{
+  const oldSave=newSave();delete (oldSave.settings as Partial<typeof oldSave.settings>).pixel_art;
+  expect(parseSave(JSON.stringify(oldSave)).settings.pixel_art).toBe(true);
+  expect(()=>parseSave(JSON.stringify({...newSave(),settings:{...newSave().settings,pixel_art:'yes'}}))).toThrow('Invalid display setting.');
+ });
  it('introduces Porter with a starter while preserving Query and Brew',()=>{
   const save=completeLevel(newSave(),21,3);save.robotSolutions[21]={...referencePrograms(22),query:'# custom Query',prep:'# custom Brew'};const next=incomingRobotPrograms(save,22);expect(next.query).toBe('# custom Query');expect(next.prep).toBe('# custom Brew');expect(next.floor).toContain('TODO');
  });
