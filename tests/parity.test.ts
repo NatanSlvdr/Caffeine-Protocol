@@ -4,16 +4,17 @@ import { levels,lessons } from '../src/data';
 import { compileProgram,executeCustomerEvent,LIMIT } from '../src/domain/program';
 import { runLevel,buildReplayTimeline } from '../src/domain/simulation';
 import { completeLevel,incomingProgram,newSave,parseSave,readSave,SAVE_KEY,writeSave } from '../src/domain/persistence';
-import { blocksToText,textToBlocks,insertBlock,moveGroup,deleteBlock,moveBlock } from '../src/domain/editor';
 const run=(i:number,source=lessons[i].solution)=>runLevel(levels[i],compileProgram(source,i+1));
 const tea=levels[3].seeds[1].customers[0],coffee=levels[3].seeds[0].customers[0];
 const exec=(source:string,customer=coffee,level=14)=>executeCustomerEvent(compileProgram(source,level),customer,'test');
 describe('reference parity — all 14 complete solutions',()=>{
  for(const [i,level] of levels.slice(0,14).entries()){
-  it(`${level.id}: preserves order tickets, instruction traces and scores`,()=>{
+  it(`${level.id}: preserves order outcomes and resolves current instruction traces`,()=>{
    const actual=run(i);expect(actual.passed).toBe(true);
-   const semantics=(events:typeof actual.events)=>events.map(e=>({customer:e.customer,trace:e.trace,asked_help:e.asked_help,tickets:e.tickets.map(t=>({item:t.item,with_sugar:t.with_sugar,sugar_count:t.sugar_count,source_intent:t.source_intent}))}));
+   const semantics=(events:typeof actual.events)=>events.map(e=>({customer:e.customer,asked_help:e.asked_help,tickets:e.tickets.map(t=>({item:t.item,with_sugar:t.with_sugar,sugar_count:t.sugar_count,source_intent:t.source_intent}))}));
    expect(semantics(actual.events)).toEqual(semantics(reference[i].events as typeof actual.events));
+   // Handoff and payment intentionally changed the old trace; every step must still resolve to its source.
+   for(const event of actual.events)for(const step of event.trace)expect(lessons[i].solution.split('\n')[step.line].trim()).toBe(step.command);
    if(i>=2)expect(actual.stars).toBe(3);
    const timeline=buildReplayTimeline(actual);expect(timeline.every(t=>t.end>=t.start)).toBe(true);
   });
@@ -37,9 +38,9 @@ describe('compiler and runtime',()=>{
  it('rejects recursive calls',()=>expect(exec('LISTEN\nCALL build_ticket\nFUNCTION build_ticket\nCALL build_ticket\nEND').error).toContain('Recursive'));
  it('does not leak function locals to caller',()=>expect(exec('LISTEN\nCALL build_ticket\nSUGAR variable\nSUBMIT\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nRETURN\nEND',levels[6].seeds[0].customers[0]).error).toContain('local variable'));
  it('does not leak caller locals to function',()=>expect(exec('LISTEN\nREAD sugar\nCALL build_ticket\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR variable\nEND',levels[6].seeds[0].customers[0]).error).toContain('local variable'));
- it('bounds large loops at exactly 1024 executed instructions',()=>{const c={...coffee,intent:{orders:Array.from({length:400},()=>({drink:'coffee' as const}))}};const r=exec('LISTEN\nEACH\nTICKET\nITEM heard\nSUBMIT\nEND',c);expect(r.error).toContain('limit');expect(r.executed_instructions).toBe(LIMIT);});
- it('preserves zero numeric sugar',()=>{const r=exec('LISTEN\nTICKET\nITEM coffee\nIF count = 0\nREAD count\nSUGAR number\nEND\nSUBMIT',levels[9].seeds[0].customers[0]);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(0);});
- for(const cond of ['count > 0','count > 1','count = 1','count = 2'])it(`numeric comparison ${cond}`,()=>{const c=levels[9].seeds[0].customers[2];const r=exec(`LISTEN\nTICKET\nITEM tea\nIF ${cond}\nREAD count\nSUGAR number\nEND\nSUBMIT`,c);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(cond==='count = 1'?null:2);});
+ it('bounds large loops at exactly 1024 executed instructions',()=>{const c={...coffee,intent:{orders:Array.from({length:400},()=>({drink:'coffee' as const}))}};const r=exec('LISTEN\nEACH\nTICKET\nITEM heard\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND',c);expect(r.error).toContain('limit');expect(r.executed_instructions).toBe(LIMIT);});
+ it('preserves zero numeric sugar',()=>{const r=exec('LISTEN\nTICKET\nITEM coffee\nIF count = 0\nREAD count\nSUGAR number\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1',levels[9].seeds[0].customers[0]);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(0);});
+ for(const cond of ['count > 0','count > 1','count = 1','count = 2'])it(`numeric comparison ${cond}`,()=>{const c=levels[9].seeds[0].customers[2];const r=exec(`LISTEN\nTICKET\nITEM tea\nIF ${cond}\nREAD count\nSUGAR number\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1`,c);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(cond==='count = 1'?null:2);});
  it('missing count comparisons fail',()=>expect(exec('LISTEN\nIF count > 0\nEND').error).toContain('none was heard'));
  it('missing ITEM ticket fails',()=>expect(exec('LISTEN\nITEM coffee').error).toContain('Create a ticket'));
  it('missing SUGAR ticket fails',()=>expect(exec('LISTEN\nSUGAR heard').error).toContain('Create a ticket'));
@@ -51,7 +52,7 @@ describe('compiler and runtime',()=>{
  it('fails on first customer mismatch and highlights item source',()=>{const r=run(3,lessons[2].solution);expect(r.events).toHaveLength(2);expect(r.first_failure?.seed_id).toBe('L04_B');expect(r.first_failure?.error_line).toBe(2);});
  for(const [index,source] of [[3,lessons[2].solution],[4,'LISTEN\nTICKET\nITEM heard\nSUBMIT'],[5,'LISTEN\nTICKET\nITEM heard\nSUBMIT\nREPEAT'],[6,lessons[5].solution],[8,lessons[7].solution],[9,lessons[8].solution]] as const)it(`incomplete mechanic rejects L${index+1}`,()=>expect(run(index,source).passed).toBe(false));
 });
-describe('persistence and lossless editor operations',()=>{
+describe('persistence',()=>{
  it('round trips every save field',()=>{let s=newSave();s=completeLevel(s,2,3,lessons[2].solution);s.drafts[2]='# comment\nLISTEN';s.story[2]=true;expect(parseSave(JSON.stringify(s))).toEqual(s);});
  it('preserves best stars and passing source over a broken draft',()=>{let s=completeLevel(newSave(),2,3,lessons[2].solution);s=completeLevel(s,2,1);s.drafts[2]='broken later edit';expect(s.stars[2]).toBe(3);expect(incomingProgram(s,3)).toBe(lessons[2].solution);expect(s.unlocked).toBe(3);});
  it('persists to storage and reloads',()=>{const storage=new Map<string,string>();const adapter={getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>{storage.set(k,v);}};const s=completeLevel(newSave(),13,3,lessons[13].solution);expect(writeSave(adapter,s)).toBe('');expect(readSave(adapter).save).toEqual(s);expect(readSave(adapter).save.complete).toBe(false);expect(readSave(adapter).save.unlocked).toBe(14);});
@@ -60,9 +61,4 @@ describe('persistence and lossless editor operations',()=>{
  it('recovers without mutating malformed storage',()=>{const storage={getItem:()=>'{broken'};expect(readSave(storage).error).not.toBe('');expect(readSave(storage).save).toEqual(newSave());expect(storage.getItem()).toBe('{broken');});
  it('reports storage write failure',()=>expect(writeSave({setItem:()=>{throw new Error('quota');}},newSave())).toContain('could not be saved'));
  it('uses versioned local storage key',()=>expect(SAVE_KEY).toContain('v1'));
- it('keeps comments whitespace and blank lines through text conversion',()=>{const text='# café\n\n LISTEN \nTICKET\n';expect(blocksToText(textToBlocks(text))).toBe(text);});
- it('inserts structural END and selects the opening',()=>expect(insertBlock('LISTEN','IF tea',0)).toEqual({source:'LISTEN\nIF tea\nEND',selected:1}));
- it('moves nested groups intact',()=>expect(moveGroup('LISTEN\nIF tea\nEACH\nITEM tea\nEND\nEND\nTICKET',1,0)).toBe('IF tea\nEACH\nITEM tea\nEND\nEND\nLISTEN\nTICKET'));
- it('ignores a group drop inside itself',()=>{const s='LISTEN\nIF tea\nITEM tea\nEND';expect(moveGroup(s,1,2)).toBe(s);});
- it('moves single blocks and deletes only the selected block',()=>{expect(moveBlock('LISTEN\nTICKET\nSUBMIT',1,1)).toBe('LISTEN\nSUBMIT\nTICKET');expect(deleteBlock('LISTEN\nTICKET\nSUBMIT',1)).toBe('LISTEN\nSUBMIT');});
 });

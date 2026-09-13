@@ -2,7 +2,13 @@ import campaign from './campaign.json' with {type:'json'};
 import labelsData from './labels.json' with {type:'json'};
 import { extensionLevels, extensionLessons } from './extension';
 import type { LevelDefinition } from '../domain/types';
-export const levels:LevelDefinition[] = [...campaign.levels as LevelDefinition[], ...extensionLevels];
+/** Include the two newly taught handoff moves in the original campaign's scoring budgets. */
+export const levels:LevelDefinition[] = [...(campaign.levels as LevelDefinition[]).map((level,i)=>{
+ if(!level.programming_enabled)return level;
+ const handoffs=campaign.lessons[i].solution.split('\n').filter(c=>c==='SUBMIT').length;
+ const tickets=level.seeds.flatMap(s=>s.customers).reduce((n,c)=>n+(c.expected.tickets?.length??(c.expected.item?1:0)),0);
+ return {...level,block_target:level.block_target+handoffs*2,reference_block_count:level.reference_block_count+handoffs*2,instruction_target:level.instruction_target+tickets*2};
+}), ...extensionLevels];
 export const lessons = [...campaign.lessons.map(l=>({...l,robotStarter:undefined,robotSolution:undefined})),...extensionLessons];
 export const CAMPAIGN_LENGTH=levels.length;
 export const MAX_STARS=levels.filter(l=>l.programming_enabled).length*3;

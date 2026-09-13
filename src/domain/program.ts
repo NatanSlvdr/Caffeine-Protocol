@@ -3,7 +3,7 @@ import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, S
 export const LIMIT = 1024;
 export const isOpening = (command: string) => command === 'EACH' || command.startsWith('IF ') || command.startsWith('FUNCTION ');
 export function availableCommands(level: number): string[] {
-  const c = ['LISTEN','TICKET','ITEM coffee','SUBMIT','CHARGE ORDER'];
+  const c = ['LISTEN','TICKET','ITEM coffee','MOVE RIGHT 1','MOVE LEFT 1','SUBMIT','CHARGE ORDER'];
   if(level>=4)c.push('IF tea','IF coffee','ELSE','END','ITEM tea','ITEM heard');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('EACH');
@@ -22,7 +22,7 @@ export function compileProgram(source: string, level = 14): Program {
   for(const [line,raw] of source.split('\n').entries()) {
     const c=raw.trim(); p.error_line=line;
     if(!c || c.startsWith('#'))continue;
-    if(!allowed.includes(c))return fail('Unknown or locked instruction: '+c);
+    if(!allowed.includes(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)))return fail('Unknown or locked instruction: '+c);
     const at=p.instructions.length; p.instructions.push(c); p.source_lines.push(line);
     if(c.startsWith('POSITION ')){const label=c.slice(9);if(label in p.positions)return fail('Duplicate position: '+label);p.positions[label]=at;}
     if(isOpening(c)){
@@ -36,7 +36,7 @@ export function compileProgram(source: string, level = 14): Program {
     }
   }
   if(stack.length)p.compile_error='Close each IF, EACH and FUNCTION with END.';
-  else if(!['LISTEN','POSITION listen'].includes(p.instructions[0]))p.compile_error='Start with Wait for customer speech, or Position: listen.';
+  else if(p.instructions[0]!=='LISTEN'&&!p.instructions[0]?.startsWith('POSITION '))p.compile_error='Start with Wait for customer speech, or a jump destination.';
   else if(p.instructions.filter(c=>c==='LISTEN').length!==1)p.compile_error='Use one Wait for customer speech; jump back to it for continuous service.';
   else if(p.instructions.includes('REPEAT')&&(p.instructions.at(-1)!=='REPEAT'||p.instructions.filter(c=>c==='REPEAT').length>1))p.compile_error='REPEAT belongs once, at the very end.';
   p.instructions.forEach((c,i)=>{if(c.startsWith('JUMP ')&&!(c.slice(5) in p.positions)){p.compile_error='Jump target has no matching Position block.';p.error_line=p.source_lines[i];}if(c.startsWith('CALL ')&&!(c.slice(5) in p.functions)){p.compile_error='Define the function before calling it.';p.error_line=p.source_lines[i];}});
@@ -53,11 +53,20 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
   if(p.compile_error){out.error_line=p.error_line;return fail(p.compile_error);}
   if(initial.stopped)return fail('Query stopped listening. Jump to the listen position after serving.');
   let intent=structuredClone(customer.intent), order=intent, vars: {with_sugar?:boolean;sugar_count?:number}={}, ticket: OrderTicket|undefined, heard=false;
+  // Checkout is automatic once the complete order is submitted and Query returns to the register.
+  const finish=()=>{
+    if(!out.error&&out.tickets.length&&!out.payment){
+      if(ticket)return fail('Submit the current ticket before finishing the order.');
+      if(out.state.counter)return fail('Move left 1 tile back to the register after submitting.');
+      out.payment={amount:orderTotal(out.tickets),ticketIds:out.tickets.map(t=>t.ticket_id)};
+    }
+    return out;
+  };
   const loops: {start:number;orders:SpeechIntent[];index:number}[]=[], calls:{return:number;variables:typeof vars;loop_depth:number}[]=[];
   while(out.state.pc<p.instructions.length){
     const pc=out.state.pc,c=p.instructions[pc];
     if(out.executed_instructions>=LIMIT)return fail('Instruction limit reached. A loop must return to Wait for customer speech.');
-    if(c==='LISTEN'&&heard)return out;
+    if(c==='LISTEN'&&heard)return finish();
     out.executed_instructions++;out.error_line=p.source_lines[pc];out.trace.push({line:p.source_lines[pc],command:c,function_depth:calls.length});
     if(!heard&&(['HELP','EACH'].includes(c)||c.startsWith('READ ')))return fail('No customer speech is available.');
     let next=pc+1;
@@ -77,7 +86,9 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
     } else if(c.startsWith('JUMP ')){
       if(calls.length||loops.length)return fail('Finish the function or EACH before jumping to listen.');next=p.positions[c.slice(5)];
     } else switch(c){
-      case 'LISTEN':heard=true;break;
+      case 'MOVE RIGHT 1':out.state.counter=1;break;
+      case 'MOVE LEFT 1':out.state.counter=0;break;
+      case 'LISTEN':if(out.state.counter)return fail('Move left 1 tile to the register before waiting for customer speech.');heard=true;break;
       case 'HELP':if(intent.confidence==='ambiguous'){out.asked_help=true;intent=structuredClone(customer.clarification_intent??{});order=intent;if(!Object.keys(intent).length){out.state={pc:0,stopped:!p.instructions.includes('REPEAT')&&!p.instructions.includes('JUMP listen')};return out;}}break;
       case 'ERROR':return fail('Query reported an unsupported order. Ask Niko for help before creating a ticket.');
       case 'EACH':{const orders=intent.orders??[intent];if(!orders.length)return fail('No order chips were heard.');loops.push({start:pc,orders,index:0});order=orders[0];break;}
@@ -93,11 +104,11 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
         if(c==='SUGAR variable'){if(vars.with_sugar===undefined)return fail('Read the sugar value into the local variable first.');ticket.with_sugar=vars.with_sugar;}
         else if(c==='SUGAR number'){if(vars.sugar_count===undefined)return fail('Read the sugar value into the local variable first.');ticket.sugar_count=vars.sugar_count;}
         else{if(c!=='SUGAR count'&&order.with_sugar!==undefined)ticket.with_sugar=order.with_sugar;if(c!=='SUGAR binary'&&order.sugar_count!==undefined)ticket.sugar_count=order.sugar_count;}break;
-      case 'SUBMIT':if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('Created ticket is missing an item.');out.tickets.push(ticket);ticket=undefined;break;
-      case 'CHARGE ORDER':if(ticket)return fail('Submit the current ticket before charging.');if(!out.tickets.length)return fail('Submit an order before charging the customer.');if(out.payment)return fail('This customer has already paid.');out.payment={amount:orderTotal(out.tickets),ticketIds:out.tickets.map(t=>t.ticket_id)};break;
-      case 'REPEAT':out.state.pc=0;return out;
+      case 'SUBMIT':if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('Created ticket is missing an item.');if(out.state.counter!==1)return fail('Move right 1 tile to the shared kitchen counter, then Submit Ticket.');out.tickets.push(ticket);ticket=undefined;break;
+      case 'CHARGE ORDER':if(out.state.counter)return fail('Move left 1 tile to the register, then make the customer pay.');if(ticket)return fail('Submit the current ticket before charging.');if(!out.tickets.length)return fail('Submit an order before charging the customer.');if(out.payment)return fail('This customer has already paid.');out.payment={amount:orderTotal(out.tickets),ticketIds:out.tickets.map(t=>t.ticket_id)};break;
+      case 'REPEAT':out.state.pc=0;return finish();
     }
     out.state.pc=next;
   }
-  out.state.stopped=true;return out;
+  out.state.stopped=true;return finish();
 }

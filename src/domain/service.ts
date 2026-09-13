@@ -16,12 +16,23 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
  const log:ExecutionEvent[]=[],jobs:Job[]=[],tableOwners=new Map<number,string>();let now=0,failure:ServiceFailure|undefined,nikoPosition:Point=number>=15?STARTS.floor:number>=3?STARTS.prep:MANUAL_INTAKE,nikoBusy:Worker|undefined;
  const workers:Worker[]=(['prep','floor'] as const).map(role=>({role,actor:number>=(role==='prep'?15:23)?role:'niko',program:compileRobot(number>=(role==='prep'?15:23)?programs[role]:role==='prep'?preparationSource(32):floorSource(32),role,number>=(role==='prep'?15:23)?number:32),pc:0,stack:[],position:STARTS[role],inventory:[],battery:80,count:0,charges:0,maxLoad:0,done:false}));
  let intakeFree=0,manualIndex=0;let manualIntake:{end:number;apply:()=>void}|undefined;
+ let queryPosition:Point=STARTS.query;
  for(const [index,event] of events.entries()){
   const created=Math.max(intakeFree,event.customer.arrival)+(level.programming_enabled?Math.max(.1,event.trace.length*.1):9);intakeFree=created;
   event.table=event.tickets.length?index%level.active_tables+1:0;
   event.timing={arrival:event.customer.arrival,created,seated:created,ready:created,served:created,left:created,cleaned:created};
-  event.trace.forEach((step,i)=>log.push({seed_id:seed,actor:level.programming_enabled?'query':'niko',role:'query',start:created-(event.trace.length-i)*.1,end:created-(event.trace.length-i-1)*.1,line:step.line,command:step.command,from:STARTS.query,to:STARTS.query,inventory:[],battery:80,customerId:event.customer.customer_id}));
-  for(const ticket of event.passed?event.tickets:[]){ticket.table_id=`T${String(event.table).padStart(2,'0')}`;ticket.status='created';ticket.created_at=created;jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:number<3?Infinity:created,status:'ticket',dirtyAt:Infinity});}
+  event.trace.forEach((step,i)=>{
+   const from=queryPosition;
+   if(step.command==='MOVE RIGHT 1')queryPosition=[STARTS.query[0]+1,STARTS.query[1]];
+   if(step.command==='MOVE LEFT 1')queryPosition=STARTS.query;
+   log.push({seed_id:seed,actor:level.programming_enabled?'query':'niko',role:'query',start:created-(event.trace.length-i)*.1,end:created-(event.trace.length-i-1)*.1,line:step.line,command:step.command,from,to:queryPosition,inventory:[],battery:80,customerId:event.customer.customer_id});
+  });
+  const submitted=log.filter(e=>e.actor==='query'&&e.command==='SUBMIT'&&e.customerId===event.customer.customer_id);
+  for(const [ticketIndex,ticket] of (event.passed?event.tickets:[]).entries()){
+   const handoff=submitted[ticketIndex]?.end??created;
+   ticket.table_id=`T${String(event.table).padStart(2,'0')}`;ticket.status='created';ticket.created_at=handoff;
+   jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:number<3?Infinity:handoff,status:'ticket',dirtyAt:Infinity});
+  }
  }
  const queryFailure=events.find(e=>!e.passed);
  const fail=(w:Worker,reason:string,line=w.program.source_lines[w.pc]??-1)=>{

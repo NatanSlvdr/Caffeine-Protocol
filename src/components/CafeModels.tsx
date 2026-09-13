@@ -15,18 +15,29 @@ export function Cup({at=[0,0,0],tea=false}:{at?:Vec3;tea?:boolean}){return <grou
 const STEEL = '#c1cfcc';
 const DARK = '#304941';
 
-/** Each appliance fits its existing station tile, with controls facing the room. */
+/** Recognizable workstation silhouettes: a two-group espresso machine and a full cash register. */
 export function Appliance({ id }: { id: StationId }) {
   switch (id) {
     case 'brewer':
     case 'grinder': return <group>
-      <SoftBox at={[0,1.48,-.12]} size={[.8,.74,.55]} radius={.12} color={CAFE_COLORS.clay}/>
-      <SoftBox at={[0,1.49,.165]} size={[.56,.46,.025]} radius={.01} color={CAFE_COLORS.charcoal}/>
-      <Box at={[.19,1.65,.185]} size={[.12,.07,.018]} color="#9bb9b0"/>
-      <Box at={[0,1.43,.25]} size={[.2,.07,.16]} color={STEEL}/>
-      <SoftBox at={[0,1.14,.12]} size={[.8,.07,.72]} radius={.034} color={CAFE_COLORS.clay}/>
-      <Cylinder at={[0,1.93,-.12]} size={[.2,.2,.18]} color="#665448"/>
-      <Cylinder at={[0,2.03,-.12]} size={[.21,.21,.025]} color="#465051"/>
+      <SoftBox at={[0,1.58,-.14]} size={[1.65,.82,.58]} radius={.1} color={CAFE_COLORS.charcoal}/>
+      <SoftBox at={[0,1.67,.17]} size={[1.49,.42,.08]} radius={.03} color={STEEL}/>
+      <SoftBox at={[0,1.15,.1]} size={[1.76,.1,.9]} radius={.035} color={STEEL}/>
+      {[-.65,-.52,-.39,-.26,-.13,0,.13,.26,.39,.52,.65].map(x=><Box key={x} at={[x,1.207,.22]} size={[.025,.012,.52]} color={CAFE_COLORS.charcoal}/>)}
+      {[-.4,.4].map(x=><group key={x}>
+        <Cylinder at={[x,1.46,.25]} size={[.13,.13,.13]} color={STEEL}/>
+        <Box at={[x,1.43,.4]} size={[.075,.07,.32]} color={CAFE_COLORS.walnut}/>
+        {[-.085,0,.085].map(dx=><Box key={dx} at={[x+dx,1.74,.22]} size={[.045,.055,.02]} color={dx===0?'#9fc4b0':CAFE_COLORS.charcoal}/>)}
+        <Cup at={[x,2.015,-.13]}/>
+      </group>)}
+      {[-.72,.72].map(x=><group key={x}>
+        <Cylinder at={[x,1.7,.22]} size={[.065,.065,.07]} color={CAFE_COLORS.charcoal}/>
+        <Box at={[x,1.47,.29]} size={[.025,.32,.025]} color={STEEL}/>
+        <Box at={[x,1.3,.35]} size={[.025,.025,.14]} color={STEEL}/>
+      </group>)}
+      <mesh position={[0,1.75,.221]} rotation-x={Math.PI/2}><cylinderGeometry args={[.085,.085,.015,24]}/><meshStandardMaterial color={CAFE_COLORS.cream}/></mesh>
+      <Box at={[.014,1.766,.235]} size={[.015,.06,.012]} color={CAFE_COLORS.charcoal}/>
+      <Box at={[0,2.015,-.14]} size={[1.61,.045,.53]} color={STEEL}/>
     </group>;
     case 'water': return <group>
       <Box at={[0,1.12,0]} size={[.9,.055,.85]} color={STEEL}/>
@@ -57,10 +68,21 @@ export function Appliance({ id }: { id: StationId }) {
       {[-.2,0,.2].map(z=><Box key={z} at={[.32,.32,z]} size={[.16,.025,.04]} color={DARK}/>)}
     </group>;
     case 'orders': return <group>
-      <Box at={[0,1.13,0]} size={[.45,.045,.4]} color="#465051"/>
-      <Box at={[0,1.3,-.07]} size={[.08,.3,.08]} color="#465051"/>
-      <SoftBox at={[0,1.51,-.07]} size={[.63,.4,.075]} radius={.035} color={CAFE_COLORS.clay}/>
-      <Box at={[0,1.51,-.025]} size={[.51,.28,.012]} color={CAFE_COLORS.sage}/>
+      <SoftBox at={[0,1.23,0]} size={[.85,.25,.72]} radius={.04} color={CAFE_COLORS.charcoal}/>
+      <Box at={[0,1.23,.368]} size={[.7,.13,.02]} color={STEEL}/>
+      <Box at={[0,1.24,.39]} size={[.25,.035,.025]} color={CAFE_COLORS.charcoal}/>
+      <SoftBox at={[0,1.46,-.13]} size={[.79,.28,.43]} radius={.05} color={CAFE_COLORS.cream}/>
+      <group position={[.1,1.57,.12]} rotation-x={-.28}>
+        <Box size={[.47,.06,.28]} color={CAFE_COLORS.charcoal}/>
+        {[0,1,2].flatMap(row=>[0,1,2,3].map(col=><Box key={row*4+col} at={[-.17+col*.11,.041,-.09+row*.085]} size={[.078,.03,.056]} color={col===3?CAFE_COLORS.sage:CAFE_COLORS.cream}/>))}
+      </group>
+      <Box at={[-.27,1.58,.1]} size={[.12,.025,.24]} color={CAFE_COLORS.charcoal}/>
+      <Box at={[-.27,1.7,.09]} size={[.1,.22,.014]} color="#fffaf0"/>
+      {[0,1,2].map(i=><Box key={i} at={[-.27,1.67+i*.035,.101]} size={[.06,.008,.007]} color={CAFE_COLORS.charcoal}/>)}
+      <Box at={[0,1.75,-.23]} size={[.07,.3,.07]} color={CAFE_COLORS.charcoal}/>
+      <SoftBox at={[0,1.9,-.23]} size={[.64,.26,.13]} radius={.025} color={CAFE_COLORS.charcoal}/>
+      <Box at={[0,1.9,-.155]} size={[.52,.16,.012]} color="#a9c7a3"/>
+      {[-.12,0,.12].map(x=><group key={x}>{[-.045,.045].map(y=><Box key={y} at={[x,1.9+y,-.144]} size={[.065,.012,.01]} color="#365547"/>)}<Box at={[x+.03,1.9,-.144]} size={[.012,.1,.01]} color="#365547"/></group>)}
     </group>;
   }
 }

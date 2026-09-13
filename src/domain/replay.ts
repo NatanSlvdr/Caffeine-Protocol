@@ -33,6 +33,6 @@ export function sampleReplay(result:RunResult,time:number){
  const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.command==='DEPOSIT'&&e.ticketId)pickup.set(e.ticketId,result.tickets.find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.command==='PICKUP'&&e.ticketId)pickup.delete(e.ticketId);}
  // A submitted ticket stays on the shared counter until prep finishes claiming it.
  const claimed=new Set(logs.filter(e=>e.command==='WAIT TICKET'&&e.end<=local).map(e=>e.ticketId));
- const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed&&e.timing.created<=local).flatMap(e=>e.tickets).filter(t=>!claimed.has(t.ticket_id));
+ const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local&&!claimed.has(t.ticket_id));
  return {actors,customers,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};
 }
