@@ -4,6 +4,17 @@ import { lessons } from '../src/data';
 import { referencePrograms } from '../src/data/extension';
 
 describe('version 2 campaign saves',()=>{
+ it.each([1,2])('removes retired payment blocks from version %i saves without losing other data',version=>{
+  const source='# CHARGE ORDER was automatic\nLISTEN\n  CHARGE ORDER  \n\nMOVE LEFT 1';
+  const expected='# CHARGE ORDER was automatic\nLISTEN\n\nMOVE LEFT 1';
+  const save={...newSave(),version,selected:3,unlocked:3,drafts:{3:source},solutions:{3:source},stars:{3:2},robotDrafts:{3:{query:source,prep:'',floor:'CHARGE'}},robotSolutions:{3:{query:source,prep:'',floor:'CHARGE'}}};
+  const migrated=parseSave(JSON.stringify(save));
+  expect(migrated.drafts[3]).toBe(expected);expect(migrated.solutions[3]).toBe(expected);
+  expect(migrated.robotDrafts[3].query).toBe(expected);expect(migrated.robotSolutions[3].query).toBe(expected);
+  expect(incomingRobotPrograms(migrated,4).query).toBe(expected);
+  expect(migrated.stars).toEqual(save.stars);expect(migrated.settings).toEqual(save.settings);
+  if(version===2)expect(migrated.robotDrafts[3].floor).toBe('CHARGE');
+ });
  it('migrates completed Act I while retaining all personal data',()=>{
   const legacy={version:1,selected:13,unlocked:13,complete:true,drafts:{13:'# my draft\nLISTEN'},solutions:{13:lessons[13].solution},stars:{13:3},story:{13:true},settings:{...newSave().settings,music:0}};
   const migrated=parseSave(JSON.stringify(legacy));expect(migrated.version).toBe(2);expect(migrated.unlocked).toBe(14);expect(migrated.selected).toBe(13);expect(migrated.complete).toBe(false);expect(migrated.robotDrafts[13].query).toBe(legacy.drafts[13]);expect(migrated.solutions).toEqual(legacy.solutions);expect(migrated.settings).toEqual(legacy.settings);expect(migrated.stars).toEqual(legacy.stars);expect(migrated.story).toEqual(legacy.story);

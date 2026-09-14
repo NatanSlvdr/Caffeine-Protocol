@@ -18,7 +18,7 @@ function validate(customer:Customer, actual:CustomerExecution):string {
     if(e.with_sugar!==undefined&&a.with_sugar!==e.with_sugar)return `Wrong binary sugar modifier on ticket ${i+1}.`;
     if(e.sugar_count!==undefined&&a.sugar_count!==e.sugar_count)return `Wrong sugar count on ticket ${i+1}.`;
   }
-  if(!actual.payment)return 'Charge the customer with CHARGE ORDER after submitting all tickets.';
+  if(!actual.payment)return 'Return to the register after submitting all tickets to finish automatic checkout.';
   if(actual.payment.amount!==orderTotal(actual.tickets)||actual.payment.ticketIds.length!==actual.tickets.length)return 'The customer payment does not match the submitted order.';
   return '';
 }
@@ -35,7 +35,7 @@ export function runLevel(level:LevelDefinition,program:Program,robotPrograms?:Ro
       else {const ticket=createTicket(customer,id);ticket.item='coffee';ticket.created_at=0;ticket.due_at=0;ticket.status='served';actual={payment:{amount:orderTotal([ticket]),ticketIds:[ticket.ticket_id]},tickets:[ticket],asked_help:false,error:'',trace:[],executed_instructions:0,state};}
       state=actual.state;seedInstructions+=actual.executed_instructions;if(seedInstructions>10000)actual.error='Instruction limit reached (10,000 per robot).';result.executed_instructions+=actual.executed_instructions;
       const reason=validate(customer,actual);let line=actual.error_line??-1;
-      if(reason&&!actual.error){const prefix=reason.includes('Charge')||reason.includes('payment')?'CHARGE ORDER':reason.includes('item')?'ITEM':reason.includes('sugar')?'SUGAR':'SUBMIT';line=actual.trace.findLast(s=>s.command.startsWith(prefix))?.line??line;}
+      if(reason&&!actual.error){const prefix=reason.includes('checkout')||reason.includes('payment')?'MOVE LEFT':reason.includes('item')?'ITEM':reason.includes('sugar')?'SUGAR':'SUBMIT';line=actual.trace.findLast(s=>s.command.startsWith(prefix))?.line??line;}
       const event:ReplayEvent={payment:actual.payment,seed_id:seed.id,customer:structuredClone(customer),tickets:actual.tickets,asked_help:actual.asked_help,passed:!reason,trace:actual.trace,timing:{arrival:0,created:0,seated:0,ready:0,served:0,left:0,cleaned:0},table:0,satisfaction:100};
       if(level.programming_enabled){event.reason=reason;event.failure_line=reason?line:-1;}
       result.events.push(event);result.tickets.push(...actual.tickets);

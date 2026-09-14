@@ -3,7 +3,6 @@ export function blockFields(command: string) {
   if (command === 'LISTEN') return { family: 'WAIT', verb: 'Wait for', value: 'Customer speech' };
   if (command === 'TICKET') return { family: 'TICKET', verb: 'Create Ticket', value: '' };
   if (command === 'SUBMIT') return { family: 'SUBMIT', verb: 'Submit Ticket', value: '' };
-  if (command === 'CHARGE ORDER') return { family: 'CHARGE ORDER', verb: 'Make customer', value: 'pay' };
   if (command.startsWith('WAIT ')) return {
     family: 'WAIT', verb: 'Wait for', value: ({ TICKET: 'Order ticket', DRINK: 'Ready drink', DIRTY: 'Dirty cups' } as Record<string, string>)[command.slice(5)] ?? command.slice(5),
   };
@@ -24,7 +23,7 @@ export function blockVariants(command: string, available: readonly string[]) {
 export function blockPrototypes(available: readonly string[]) {
   const families = new Set<string>();
   return available.filter(command => {
-    if (['END', 'ELSE', 'REPEAT', 'CHARGE ORDER', 'ITEM heard'].includes(command) || command.startsWith('POSITION ')) return false;
+    if (['END', 'ELSE', 'REPEAT', 'ITEM heard'].includes(command) || command.startsWith('POSITION ')) return false;
     const family = blockFields(command).family;
     if (families.has(family)) return false;
     families.add(family);

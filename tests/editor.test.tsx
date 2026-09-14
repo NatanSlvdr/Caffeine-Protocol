@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { Editor } from '../src/components/Editor';
@@ -31,12 +31,11 @@ describe('compact visual code', () => {
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea']);
  });
  it('uses renamed ticket actions with inline styled operands', async () => {
-  render(<Harness initial={'LISTEN\nTICKET\nITEM coffee\nCHARGE ORDER\nSUBMIT'}/>);
-  expect([...document.querySelectorAll('.block-verb')].map(e => e.textContent)).toEqual(['Wait for','Create Ticket','Add','Make customer','Submit Ticket']);
+  render(<Harness initial={'LISTEN\nTICKET\nITEM coffee\nSUBMIT'}/>);
+  expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Create Ticket','Add','Submit Ticket']);
   await choose('Block 3 value','tea');
   expect(source()).toContain('ITEM tea');
   expect(document.querySelector('[data-line="2"]')?.textContent).toContain('to ticket');
-  expect(screen.getByLabelText('Block 4 value').textContent).toContain('pay');
  });
  it('puts numbering outside tiles and renders nested branches as one scope', () => {
   render(<Harness initial={'LISTEN\nIF tea\nTICKET\nELSE\nHELP\nEND'}/>);
@@ -59,6 +58,17 @@ describe('compact visual code', () => {
   await choose('Block 2 condition','coffee');
   expect(source()).toBe('LISTEN\nIF coffee\nTICKET\nEND');
   expect(compileProgram(source()).compile_error).toBe('');
+ });
+ it('floats nested dropdowns outside block stacking contexts and keeps selection and dismissal working', async () => {
+  const user=userEvent.setup();render(<Harness initial={'LISTEN\nIF tea\nITEM coffee\nEND'}/>);
+  await user.click(screen.getByLabelText('Block 3 value'));
+  const menu=screen.getByRole('listbox');
+  expect(menu.parentElement).toBe(document.body);expect(menu.style.position).toBe('fixed');
+  await user.click(within(menu).getByRole('option',{name:'tea'}));
+  expect(source()).toContain('ITEM tea');expect(screen.queryByRole('listbox')).toBeNull();
+  await user.click(screen.getByLabelText('Block 3 value'));
+  fireEvent.pointerDown(document.body);
+  expect(screen.queryByRole('listbox')).toBeNull();
  });
  it('supports keyboard choice and Escape without committing', async () => {
   const user = userEvent.setup(); render(<Harness role="floor" initial="WAIT DRINK"/>);

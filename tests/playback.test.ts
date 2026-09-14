@@ -56,7 +56,7 @@ describe('Query counter handoff',()=>{
   expect(result.error).toContain('Move right 1 tile');
  });
  it('requires returning to the register for payment',()=>{
-  const result=executeCustomerEvent(compileProgram('LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nCHARGE ORDER'),customer,'test');
+  const result=executeCustomerEvent(compileProgram('LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT'),customer,'test');
   expect(result.error).toContain('Move left 1 tile');
  });
  it('teaches and records the complete right-submit-left handoff',()=>{
@@ -64,7 +64,7 @@ describe('Query counter handoff',()=>{
   const events=base.execution![0].events.filter(e=>e.actor==='query');
   expect(events.find(e=>e.command==='SUBMIT')?.from).toEqual([-4,5]);
   expect(events.find(e=>e.command==='MOVE RIGHT 1')?.to).toEqual([-4,5]);
-  expect(events.find(e=>e.command==='CHARGE ORDER')?.from).toEqual([-5,5]);
+  expect(events.find(e=>e.command==='MOVE LEFT 1')?.to).toEqual([-5,5]);
   const submitted=events.find(e=>e.command==='SUBMIT')!;
   expect(base.tickets[0].created_at).toBeCloseTo(submitted.end);
   expect(sampleReplay(base,submitted.end).waitingTickets.map(t=>t.ticket_id)).toContain(base.tickets[0].ticket_id);

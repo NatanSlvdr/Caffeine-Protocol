@@ -3,7 +3,7 @@ import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, S
 export const LIMIT = 1024;
 export const isOpening = (command: string) => command === 'EACH' || command.startsWith('IF ') || command.startsWith('FUNCTION ');
 export function availableCommands(level: number): string[] {
-  const c = ['LISTEN','TICKET','ITEM coffee','MOVE RIGHT 1','MOVE LEFT 1','SUBMIT','CHARGE ORDER'];
+  const c = ['LISTEN','TICKET','ITEM coffee','MOVE RIGHT 1','MOVE LEFT 1','SUBMIT'];
   if(level>=4)c.push('IF tea','IF coffee','ELSE','END','ITEM tea','ITEM heard');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('EACH');
@@ -95,7 +95,7 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
       case 'ELSE':next=p.ends[pc]+1;break;
       case 'END':{const open=p.instructions[p.ends[pc]];if(open==='EACH'){const loop=loops.at(-1);if(!loop)return fail('No active EACH block.');loop.index++;if(loop.index<loop.orders.length){order=loop.orders[loop.index];next=loop.start+1;}else{loops.pop();order=intent;}}else if(open.startsWith('FUNCTION ')){const frame=calls.pop();if(!frame)return fail('Function ended outside a call.');next=frame.return;vars=frame.variables;}break;}
       case 'RETURN':{const frame=calls.pop();if(!frame)return fail('Return belongs inside a called function.');next=frame.return;vars=frame.variables;loops.length=frame.loop_depth;break;}
-      case 'TICKET':if(out.payment)return fail('Create and submit all tickets before charging the order.');if(!heard)return fail('No customer speech is available.');if(order.confidence==='ambiguous')return fail('Ambiguous customer speech. Ask for help before creating a ticket.');if(ticket)return fail('Submit the current ticket before creating another.');ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
+      case 'TICKET':if(!heard)return fail('No customer speech is available.');if(order.confidence==='ambiguous')return fail('Ambiguous customer speech. Ask for help before creating a ticket.');if(ticket)return fail('Submit the current ticket before creating another.');ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
       case 'ITEM coffee':case 'ITEM tea':case 'ITEM heard':if(!ticket)return fail('Create a ticket before setting its item.');ticket.item=c==='ITEM heard'?(order.drink??''):c.slice(5);break;
       case 'READ sugar':if(order.with_sugar===undefined)return fail('Expected a with_sugar chip, but none was heard.');vars.with_sugar=order.with_sugar;break;
       case 'READ count':if(order.sugar_count===undefined)return fail('Expected a sugar_count chip, but none was heard.');vars.sugar_count=order.sugar_count;break;
@@ -105,7 +105,6 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
         else if(c==='SUGAR number'){if(vars.sugar_count===undefined)return fail('Read the sugar value into the local variable first.');ticket.sugar_count=vars.sugar_count;}
         else{if(c!=='SUGAR count'&&order.with_sugar!==undefined)ticket.with_sugar=order.with_sugar;if(c!=='SUGAR binary'&&order.sugar_count!==undefined)ticket.sugar_count=order.sugar_count;}break;
       case 'SUBMIT':if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('Created ticket is missing an item.');if(out.state.counter!==1)return fail('Move right 1 tile to the shared kitchen counter, then Submit Ticket.');out.tickets.push(ticket);ticket=undefined;break;
-      case 'CHARGE ORDER':if(out.state.counter)return fail('Move left 1 tile to the register, then make the customer pay.');if(ticket)return fail('Submit the current ticket before charging.');if(!out.tickets.length)return fail('Submit an order before charging the customer.');if(out.payment)return fail('This customer has already paid.');out.payment={amount:orderTotal(out.tickets),ticketIds:out.tickets.map(t=>t.ticket_id)};break;
       case 'REPEAT':out.state.pc=0;return finish();
     }
     out.state.pc=next;
