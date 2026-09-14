@@ -42,10 +42,10 @@ describe('compiler and runtime',()=>{
  it('preserves zero numeric sugar',()=>{const r=exec('LISTEN\nTICKET\nITEM coffee\nIF count = 0\nREAD count\nSUGAR number\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1',levels[9].seeds[0].customers[0]);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(0);});
  for(const cond of ['count > 0','count > 1','count = 1','count = 2'])it(`numeric comparison ${cond}`,()=>{const c=levels[9].seeds[0].customers[2];const r=exec(`LISTEN\nTICKET\nITEM tea\nIF ${cond}\nREAD count\nSUGAR number\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1`,c);expect(r.error).toBe('');expect(r.tickets[0].sugar_count).toBe(cond==='count = 1'?null:2);});
  it('missing count comparisons fail',()=>expect(exec('LISTEN\nIF count > 0\nEND').error).toContain('none was heard'));
- it('missing ITEM ticket fails',()=>expect(exec('LISTEN\nITEM coffee').error).toContain('Create a ticket'));
- it('missing SUGAR ticket fails',()=>expect(exec('LISTEN\nSUGAR heard').error).toContain('Create a ticket'));
- it('missing item fails SUBMIT',()=>expect(exec('LISTEN\nTICKET\nSUBMIT').error).toContain('missing an item'));
- it('unsubmitted tickets cannot be overwritten',()=>expect(exec('LISTEN\nTICKET\nTICKET').error).toContain('Submit the current ticket'));
+ it('missing ITEM paper fails',()=>expect(exec('LISTEN\nITEM coffee').error).toContain('Pick up the order paper'));
+ it('missing SUGAR paper fails',()=>expect(exec('LISTEN\nSUGAR heard').error).toContain('Pick up the order paper'));
+ it('missing item fails DEPOSIT',()=>expect(exec('LISTEN\nPICKUP UP\nDEPOSIT RIGHT').error).toContain('missing an item'));
+ it('unsubmitted paper cannot be overwritten',()=>expect(exec('LISTEN\nPICKUP UP\nPICKUP UP').error).toContain('Deposit the current paper'));
  it('rejects RETURN outside a function',()=>expect(exec('LISTEN\nRETURN').error).toContain('inside a called function'));
  it('rejects jumping from an active loop',()=>expect(exec('POSITION listen\nLISTEN\nEACH\nJUMP listen\nEND').error).toContain('Finish the function or EACH'));
  it('defers unresolved ambiguity without a guess',()=>{const c={...coffee,intent:{confidence:'ambiguous' as const},clarification_intent:{}};const r=exec(lessons[13].solution,c);expect(r.asked_help).toBe(true);expect(r.tickets).toEqual([]);expect(r.error).toBe('');});

@@ -23,19 +23,20 @@ describe('compact visual code', () => {
   render(<Harness/>);
   expect(screen.queryByRole('button',{name:'Insert REPEAT'})).toBeNull();
   expect(screen.queryByRole('button',{name:'Insert CHARGE ORDER'})).toBeNull();
-  expect(screen.getByRole('button',{name:'Insert TICKET'}).querySelector('.lucide-ticket')).toBeTruthy();
-  expect(screen.getByRole('button',{name:'Insert SUBMIT'}).querySelector('.lucide-ticket')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert PICKUP UP'}).querySelector('.lucide-hand')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.lucide-arrow-down-to-line')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert ITEM coffee'}).querySelector('.lucide-circle-plus')).toBeTruthy();
-  expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.lucide-arrow-left')).toBeTruthy();
-  await userEvent.click(screen.getByLabelText('Library Add value'));
+ expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.lucide-arrow-left')).toBeTruthy();
+  expect(screen.getByLabelText('Library Pick up direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
+  await userEvent.click(screen.getByLabelText('Library Write value'));
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea']);
  });
  it('uses renamed ticket actions with inline styled operands', async () => {
   render(<Harness initial={'LISTEN\nTICKET\nITEM coffee\nSUBMIT'}/>);
-  expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Create Ticket','Add','Submit Ticket']);
+  expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Pick up','Write','Deposit']);
   await choose('Block 3 value','tea');
   expect(source()).toContain('ITEM tea');
-  expect(document.querySelector('[data-line="2"]')?.textContent).toContain('to ticket');
+  expect(document.querySelector('[data-line="2"]')?.textContent).toContain('on paper');
  });
  it('puts numbering outside tiles and renders nested branches as one scope', () => {
   render(<Harness initial={'LISTEN\nIF tea\nTICKET\nELSE\nHELP\nEND'}/>);
@@ -46,12 +47,13 @@ describe('compact visual code', () => {
   expect([...document.querySelectorAll<HTMLElement>('.line-number')].map(e=>e.style.left)).toEqual(['-35px','-35px','-77px','-35px','-77px']);
   expect(document.querySelectorAll('.code-row .block-icon')).toHaveLength(5);
  });
- it('chooses operands before inserting blocks into an empty IF', async () => {
+ it('does not select a row when inserting a configured block', async () => {
   const user = userEvent.setup(); render(<Harness initial={'LISTEN\nIF tea\nEND'}/>);
   await user.click(document.querySelector('[data-line="1"] .block-verb')!);
-  await choose('Library Add value','tea');
+  await choose('Library Write value','tea');
   await user.click(screen.getByRole('button',{name:'Insert ITEM tea'}));
-  expect(source()).toBe('LISTEN\nIF tea\nITEM tea\nEND');
+  expect(source()).toBe('LISTEN\nIF tea\nEND\nITEM tea');
+  expect(document.querySelectorAll('.block.selected')).toHaveLength(0);
  });
  it('preserves branch contents when editing the condition', async () => {
   render(<Harness initial={'LISTEN\nIF tea\nTICKET\nEND'}/>);
@@ -80,19 +82,21 @@ describe('compact visual code', () => {
   expect(source()).toBe('WAIT DIRTY');
   expect(screen.queryByRole('listbox')).toBeNull();
  });
- it('offers only unlocked operands and robot movement directions', async () => {
-  render(<Harness level={4} initial={'LISTEN\nIF tea\nEND'}/>);
+ it('offers unlocked operands and all eight movement directions', async () => {
+  render(<Harness role="prep" level={4} initial={'LISTEN\nIF tea\nMOVE RIGHT 1\nEND'}/>);
   await userEvent.click(screen.getByLabelText('Block 2 condition'));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['tea','coffee']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea','sugar']);
   await userEvent.keyboard('{Escape}');
-  await userEvent.click(screen.getByLabelText('Library Move direction'));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['right','left']);
+  await userEvent.click(screen.getByLabelText('Block 3 direction'));
+  expect(screen.getAllByRole('option')).toHaveLength(8);
+  await userEvent.click(screen.getByRole('option',{name:'up left'}));
+  expect(source()).toBe('LISTEN\nIF tea\nMOVE UP_LEFT 1\nEND');
  });
  it('locks editing during replay', async () => {
   render(<Harness locked/>);
   for(const button of screen.getAllByRole('button')) expect((button as HTMLButtonElement).disabled).toBe(true);
   for(const combo of screen.getAllByRole('combobox')) expect((combo as HTMLButtonElement).disabled).toBe(true);
-  await userEvent.click(screen.getByRole('button',{name:'Insert TICKET'}));
+  await userEvent.click(screen.getByRole('button',{name:'Insert PICKUP UP'}));
   expect(source()).toBe('LISTEN');
  });
  it('connects a jump to a draggable empty marker', async () => {
@@ -144,6 +148,9 @@ describe('structural editing',()=>{
   const withElse=placeBlock(original,'HELP',3,undefined,true);
   expect(withElse).toBe('LISTEN\nIF tea\nTICKET\nELSE\nHELP\nEND');
   expect(placeBlock(withElse,'HELP',6,4)).toBe(original+'\nHELP');
+ });
+ it('populates an existing empty ELSE without adding a second delimiter',()=>{
+  expect(placeBlock('IF tea\nITEM coffee\nELSE\nEND','ITEM tea',3)).toBe('IF tea\nITEM coffee\nELSE\nITEM tea\nEND');
  });
  it('can move the final true-branch instruction into its else branch',()=>{
   expect(placeBlock('IF tea\nTICKET\nEND','TICKET',2,1,true)).toBe('IF tea\nELSE\nTICKET\nEND');

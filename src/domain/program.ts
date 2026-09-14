@@ -1,9 +1,50 @@
 import { orderTotal } from './pricing';
 import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, SpeechIntent } from './types';
+import { DIRECTIONS, normalizeDirection } from './directions';
 export const LIMIT = 1024;
 export const isOpening = (command: string) => command === 'EACH' || command.startsWith('IF ') || command.startsWith('FUNCTION ');
+const queryDirectionalPattern = new RegExp(`^(PICKUP|DEPOSIT) (${DIRECTIONS.join('|')})$`);
+const legacyQueryAction = (command: string) => command === 'TICKET' || command === 'SUBMIT' || /^MOVE (RIGHT|LEFT) 1$/.test(command);
+export const isPaperPickup = (command: string) => command === 'TICKET' || /^PICKUP (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
+export const isOrderDeposit = (command: string) => command === 'SUBMIT' || /^DEPOSIT (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
+
+/**
+ * Convert the retired Query handoff vocabulary to the paper handoff language.
+ *
+ * Older saves used `TICKET`, `MOVE RIGHT 1`, `SUBMIT`, `MOVE LEFT 1` for one
+ * order. The two movement blocks were implementation details of the old
+ * counter, so remove them only when they are the exact neighbors of SUBMIT.
+ * Comments and blank lines are kept intact so an imported draft remains
+ * recognizable to its author.
+ */
+export function migrateQuerySource(source: string): string {
+  const lines = source.split('\n');
+  const removed = new Set<number>();
+  const codeLine = (from: number, step: -1 | 1) => {
+    for (let i = from + step; i >= 0 && i < lines.length; i += step) {
+      const command = lines[i].trim();
+      if (command && !command.startsWith('#')) return i;
+    }
+    return undefined;
+  };
+  for (const [index, raw] of lines.entries()) {
+    if (raw.trim() !== 'SUBMIT') continue;
+    const before = codeLine(index, -1), after = codeLine(index, 1);
+    if (before !== undefined && after !== undefined && lines[before].trim() === 'MOVE RIGHT 1' && lines[after].trim() === 'MOVE LEFT 1') {
+      removed.add(before); removed.add(after);
+    }
+  }
+  return lines.filter((_, index) => !removed.has(index)).map(raw => {
+    const command = raw.trim();
+    if (command !== 'TICKET' && command !== 'SUBMIT') return raw;
+    const indent = raw.slice(0, raw.length - raw.trimStart().length);
+    const trailing = raw.slice(raw.trimEnd().length);
+    return indent + (command === 'TICKET' ? 'PICKUP UP' : 'DEPOSIT RIGHT') + trailing;
+  }).join('\n');
+}
 export function availableCommands(level: number): string[] {
-  const c = ['LISTEN','TICKET','ITEM coffee','MOVE RIGHT 1','MOVE LEFT 1','SUBMIT'];
+  const c = ['LISTEN','PICKUP UP','ITEM coffee','DEPOSIT RIGHT'];
+  if (level >= 3) c.push(...DIRECTIONS.filter(direction => direction !== 'UP').map(direction => `PICKUP ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `DEPOSIT ${direction}`));
   if(level>=4)c.push('IF tea','IF coffee','ELSE','END','ITEM tea','ITEM heard');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('EACH');
@@ -22,7 +63,7 @@ export function compileProgram(source: string, level = 14): Program {
   for(const [line,raw] of source.split('\n').entries()) {
     const c=raw.trim(); p.error_line=line;
     if(!c || c.startsWith('#'))continue;
-    if(!allowed.includes(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)))return fail('Unknown or locked instruction: '+c);
+    if(!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&queryDirectionalPattern.test(c)))return fail('Unknown or locked instruction: '+c);
     const at=p.instructions.length; p.instructions.push(c); p.source_lines.push(line);
     if(c.startsWith('POSITION ')){const label=c.slice(9);if(label in p.positions)return fail('Duplicate position: '+label);p.positions[label]=at;}
     if(isOpening(c)){
@@ -53,11 +94,12 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
   if(p.compile_error){out.error_line=p.error_line;return fail(p.compile_error);}
   if(initial.stopped)return fail('Query stopped listening. Jump to the listen position after serving.');
   let intent=structuredClone(customer.intent), order=intent, vars: {with_sugar?:boolean;sugar_count?:number}={}, ticket: OrderTicket|undefined, heard=false;
-  // Checkout is automatic once the complete order is submitted and Query returns to the register.
+  const legacyHandoff = p.instructions.some(c => c === 'TICKET' || c === 'SUBMIT');
+  // Checkout is automatic once the complete paper order is deposited.
   const finish=()=>{
     if(!out.error&&out.tickets.length&&!out.payment){
-      if(ticket)return fail('Submit the current ticket before finishing the order.');
-      if(out.state.counter)return fail('Move left 1 tile back to the register after submitting.');
+      if(ticket)return fail('Deposit the current paper before finishing the order.');
+      if(legacyHandoff&&out.state.counter)return fail('Move left 1 tile back to the register after submitting.');
       out.payment={amount:orderTotal(out.tickets),ticketIds:out.tickets.map(t=>t.ticket_id)};
     }
     return out;
@@ -88,23 +130,39 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
     } else switch(c){
       case 'MOVE RIGHT 1':out.state.counter=1;break;
       case 'MOVE LEFT 1':out.state.counter=0;break;
-      case 'LISTEN':if(out.state.counter)return fail('Move left 1 tile to the register before waiting for customer speech.');heard=true;break;
+      case 'LISTEN':if(legacyHandoff&&out.state.counter)return fail('Move left 1 tile to the register before waiting for customer speech.');heard=true;break;
       case 'HELP':if(intent.confidence==='ambiguous'){out.asked_help=true;intent=structuredClone(customer.clarification_intent??{});order=intent;if(!Object.keys(intent).length){out.state={pc:0,stopped:!p.instructions.includes('REPEAT')&&!p.instructions.includes('JUMP listen')};return out;}}break;
       case 'ERROR':return fail('Query reported an unsupported order. Ask Niko for help before creating a ticket.');
       case 'EACH':{const orders=intent.orders??[intent];if(!orders.length)return fail('No order chips were heard.');loops.push({start:pc,orders,index:0});order=orders[0];break;}
       case 'ELSE':next=p.ends[pc]+1;break;
       case 'END':{const open=p.instructions[p.ends[pc]];if(open==='EACH'){const loop=loops.at(-1);if(!loop)return fail('No active EACH block.');loop.index++;if(loop.index<loop.orders.length){order=loop.orders[loop.index];next=loop.start+1;}else{loops.pop();order=intent;}}else if(open.startsWith('FUNCTION ')){const frame=calls.pop();if(!frame)return fail('Function ended outside a call.');next=frame.return;vars=frame.variables;}break;}
       case 'RETURN':{const frame=calls.pop();if(!frame)return fail('Return belongs inside a called function.');next=frame.return;vars=frame.variables;loops.length=frame.loop_depth;break;}
-      case 'TICKET':if(!heard)return fail('No customer speech is available.');if(order.confidence==='ambiguous')return fail('Ambiguous customer speech. Ask for help before creating a ticket.');if(ticket)return fail('Submit the current ticket before creating another.');ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
-      case 'ITEM coffee':case 'ITEM tea':case 'ITEM heard':if(!ticket)return fail('Create a ticket before setting its item.');ticket.item=c==='ITEM heard'?(order.drink??''):c.slice(5);break;
+      case 'TICKET':
+        if(!heard)return fail('No customer speech is available.');
+        if(order.confidence==='ambiguous')return fail('Ambiguous customer speech. Ask for help before picking up paper.');
+        if(ticket)return fail('Deposit the current paper before picking up another.');
+        ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
+      case 'PICKUP UP':case 'PICKUP UP_RIGHT':case 'PICKUP RIGHT':case 'PICKUP DOWN_RIGHT':case 'PICKUP DOWN':case 'PICKUP DOWN_LEFT':case 'PICKUP LEFT':case 'PICKUP UP_LEFT':
+        if(!heard)return fail('No customer speech is available.');
+        if(order.confidence==='ambiguous')return fail('Ambiguous customer speech. Ask for help before picking up paper.');
+        if(ticket)return fail('Deposit the current paper before picking up another.');
+        if(normalizeDirection(c.split(' ').at(-1)??'')!=='UP')return fail('Pick up the order paper from above with the up direction.');
+        ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
+      case 'ITEM coffee':case 'ITEM tea':case 'ITEM heard':
+        if(!ticket)return fail('Pick up the order paper before writing its item.');
+        ticket.item=c.endsWith('heard')?(order.drink??''):c.slice(5);break;
       case 'READ sugar':if(order.with_sugar===undefined)return fail('Expected a with_sugar chip, but none was heard.');vars.with_sugar=order.with_sugar;break;
       case 'READ count':if(order.sugar_count===undefined)return fail('Expected a sugar_count chip, but none was heard.');vars.sugar_count=order.sugar_count;break;
       case 'SUGAR binary':case 'SUGAR count':case 'SUGAR heard':case 'SUGAR variable':case 'SUGAR number':
-        if(!ticket)return fail('Create a ticket before setting sugar.');
+        if(!ticket)return fail('Pick up the order paper before setting sugar.');
         if(c==='SUGAR variable'){if(vars.with_sugar===undefined)return fail('Read the sugar value into the local variable first.');ticket.with_sugar=vars.with_sugar;}
         else if(c==='SUGAR number'){if(vars.sugar_count===undefined)return fail('Read the sugar value into the local variable first.');ticket.sugar_count=vars.sugar_count;}
         else{if(c!=='SUGAR count'&&order.with_sugar!==undefined)ticket.with_sugar=order.with_sugar;if(c!=='SUGAR binary'&&order.sugar_count!==undefined)ticket.sugar_count=order.sugar_count;}break;
-      case 'SUBMIT':if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('Created ticket is missing an item.');if(out.state.counter!==1)return fail('Move right 1 tile to the shared kitchen counter, then Submit Ticket.');out.tickets.push(ticket);ticket=undefined;break;
+      case 'SUBMIT':if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('The order paper is missing an item.');if(out.state.counter!==1)return fail('Move right 1 tile to the shared kitchen counter, then deposit the paper.');out.tickets.push(ticket);ticket=undefined;break;
+      case 'DEPOSIT UP':case 'DEPOSIT UP_RIGHT':case 'DEPOSIT RIGHT':case 'DEPOSIT DOWN_RIGHT':case 'DEPOSIT DOWN':case 'DEPOSIT DOWN_LEFT':case 'DEPOSIT LEFT':case 'DEPOSIT UP_LEFT':
+        if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('The order paper is missing an item.');
+        if(normalizeDirection(c.split(' ').at(-1)??'')!=='RIGHT')return fail('Deposit the completed order to the right.');
+        out.tickets.push(ticket);ticket=undefined;break;
       case 'REPEAT':out.state.pc=0;return finish();
     }
     out.state.pc=next;

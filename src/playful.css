@@ -336,3 +336,41 @@ html[data-motion=reduced] .failure-impact{opacity:0}
 .workspace-main>.workspace-heading{margin-bottom:0;min-height:20px}
 .scene-footer .scene-next{margin-left:auto;flex-shrink:0;padding:5px 8px;font-size:10px;background:transparent;border-color:#c3aa8733}
 .scene-footer strong{font-size:11px}
+
+/* Keep the code canvas dense enough to scan while preserving touch-sized controls. */
+.editor-panel .code-row{margin-bottom:5px}
+.editor-panel .code-row .block{min-height:32px;padding:3px 7px 3px 3px;gap:5px;font-size:11px}
+.editor-panel .code-row .grip{min-width:14px;padding:3px 1px;margin-right:3px}
+.editor-panel .code-row .block-verb{font-size:11px}
+.editor-panel .code-row .block-select>button{padding:3px 5px;gap:4px;font-size:11px}
+.editor-panel .selected-operand-icon{display:grid;place-items:center}
+.editor-panel .code-row .tile-count{width:36px;padding:3px;font-size:10px}
+.editor-panel .code-row .block-suffix{font-size:10px}
+.editor-panel .block,.editor-panel .command-tile,.editor-panel .command-ghost,.editor-panel .block-verb{user-select:none}
+.editor-panel .code-row input{user-select:auto}
+
+/* An ELSE preview belongs to the same vertical flow as a populated alternative. */
+.editor-panel .insertion-anchor.else-preview{position:relative;left:0;top:0;width:max-content;margin:3px 0 7px 0;z-index:3}
+.editor-panel .insertion-anchor.else-preview .code-insertion{position:relative;top:0;width:max-content;min-width:94px;min-height:32px;height:auto;margin:0;padding:5px 10px}
+
+/* White direction squares keep the blue selection clear in both grid sizes. */
+.editor-panel .direction-select{display:inline-flex;align-items:center}
+.editor-panel .direction-select>.direction-trigger{display:grid;place-items:center;width:31px;height:31px;padding:0!important;gap:0;border:0;border-radius:3px;background:transparent;box-shadow:none}
+.editor-panel .direction-select>.direction-trigger:hover:not(:disabled){background:transparent}
+.direction-mini-grid{display:grid;grid-template-columns:repeat(3,9px);grid-template-rows:repeat(3,9px);gap:1px;width:31px;height:31px;padding:1px;background:var(--edge);border-radius:3px;overflow:hidden}
+.direction-mini-grid>span{width:9px;height:9px;border:0;background:#fff}
+.direction-mini-grid>span.empty{background:var(--tile)}
+.direction-mini-grid>span.chosen{background:#2563eb}
+.direction-menu{padding:4px!important;text-align:center}
+.direction-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;width:100%;aspect-ratio:1}
+.direction-grid>button{width:100%;height:100%;padding:0!important;border:1px solid var(--edge);background:#fff;color:var(--tile-ink);border-radius:3px}
+.direction-grid>button.focused,.direction-grid>button:hover:not(:disabled){background:#fff;outline:1px solid var(--edge);outline-offset:1px}
+.direction-grid>button[aria-selected=true]{background:#2563eb;box-shadow:none}
+.direction-grid>button[aria-selected=true]:hover:not(:disabled){background:#2563eb}
+.direction-menu>small{display:block;margin-top:5px;color:var(--tile-ink);font:600 9px ui-monospace,monospace;opacity:.7}
+
+/* Running lines use one unmistakable red play triangle; errors retain their text cue. */
+.editor-panel .code-row .block.active{outline:none;outline-offset:0;border-color:var(--edge);background:var(--tile);box-shadow:0 3px 0 var(--edge),inset 0 1px 0 #ffffff50}
+.editor-panel .code-row .block.active,.editor-panel .code-row .block.failure{padding-right:26px}
+.editor-panel .instruction-state.is-running{right:7px;top:50%;display:block;width:10px;height:12px;padding:0;border:0;border-radius:0;background:transparent;color:transparent;box-shadow:none;transform:translateY(-50%)}
+.editor-panel .instruction-state.is-running i{display:block;width:0;height:0;margin:1px 0 0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid #e34a3d;border-radius:0;background:transparent;box-shadow:none}

@@ -13,7 +13,8 @@ describe('clear execution feedback',()=>{
  it('puts a labelled execution marker inside the active instruction, separate from the number',()=>{
   render(<Editor {...editor} activeLine={2}/>);
   const active=document.querySelector('[aria-current="step"]')!;
-  expect(within(active as HTMLElement).getByText('Running')).toBeTruthy();
+  expect(within(active as HTMLElement).getByRole('img',{name:'Running'})).toBeTruthy();
+  expect(within(active as HTMLElement).getByRole('img',{name:'Running'}).textContent).toBe('');
   expect(active.querySelector('.line-number')).toBeNull();
   expect(document.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
  });

@@ -2,6 +2,8 @@ import { compileRobot } from './robotProgram';
 import { floorSource, preparationSource } from './routines';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
+import { directionVectors, normalizeDirection } from './directions';
+import { isOrderDeposit } from './program';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 
 type Job={ticketId:string;table:number;item:'coffee'|'tea';sugar:number;event:ReplayEvent;created:number;status:'ticket'|'claimed'|'ready'|'reserved'|'carried'|'served'|'dirty'|'cleared';dirtyAt:number};
@@ -27,7 +29,7 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
    if(step.command==='MOVE LEFT 1')queryPosition=STARTS.query;
    log.push({seed_id:seed,actor:level.programming_enabled?'query':'niko',role:'query',start:created-(event.trace.length-i)*.1,end:created-(event.trace.length-i-1)*.1,line:step.line,command:step.command,from,to:queryPosition,inventory:[],battery:80,customerId:event.customer.customer_id});
   });
-  const submitted=log.filter(e=>e.actor==='query'&&e.command==='SUBMIT'&&e.customerId===event.customer.customer_id);
+  const submitted=log.filter(e=>e.actor==='query'&&isOrderDeposit(e.command)&&e.customerId===event.customer.customer_id);
   for(const [ticketIndex,ticket] of (event.passed?event.tickets:[]).entries()){
    const handoff=submitted[ticketIndex]?.end??created;
    ticket.table_id=`T${String(event.table).padStart(2,'0')}`;ticket.status='created';ticket.created_at=handoff;
@@ -43,7 +45,7 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
  const currentJob=(w:Worker)=>w.role==='floor'&&w.job?w.job:jobs.find(j=>j.ticketId===currentCargo(w)?.ticketId);
  const record=(w:Worker,command:string,line:number,from:Point,end:number,extra:Partial<ExecutionEvent>={})=>log.push({seed_id:seed,actor:w.actor,role:w.role,start:now,end,line,command,from,to:w.position,inventory:structuredClone(w.inventory),battery:w.battery,customerId:currentJob(w)?.event.customer.customer_id,...extra});
  const schedule=(w:Worker,seconds:number,command:string,line:number,apply:()=>void,extra:Partial<ExecutionEvent>={})=>{
-  const actionJob=command==='DEPOSIT'||command==='ADD SUGAR'?jobs.find(j=>j.ticketId===w.inventory.find(c=>c.stage==='brewed')?.ticketId):currentJob(w)??(command.startsWith('WAIT ')?nextWork(command):undefined);
+  const actionJob=command.startsWith('DEPOSIT')||command==='ADD SUGAR'?jobs.find(j=>j.ticketId===w.inventory.find(c=>c.stage==='brewed')?.ticketId):currentJob(w)??(command.startsWith('WAIT ')?nextWork(command):undefined);
   const from=w.position,begin=now,end=Math.round((now+seconds)*10)/10;
   w.pending={end,apply:()=>{apply();log.push({seed_id:seed,actor:w.actor,role:w.role,start:begin,end,line,command,from,to:w.position,inventory:structuredClone(w.inventory),battery:w.battery,customerId:actionJob?.event.customer.customer_id,ticketId:actionJob?.ticketId,...extra});if(w.actor==='niko')nikoPosition=w.position;}};
   if(w.actor==='niko')nikoBusy=w;
@@ -77,7 +79,9 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   }
   if(++w.count>10000){fail(w,'Instruction limit reached (10,000 per robot).');return false;}
   if(c.startsWith('MOVE ')){
-   const [,dir,n]=c.split(' '),direction:Point=dir==='UP'?[0,-1]:dir==='DOWN'?[0,1]:dir==='LEFT'?[-1,0]:[1,0];
+   const [,dir,n]=c.split(' '),normalized=normalizeDirection(dir);
+   if(!normalized){fail(w,`Unknown movement direction: ${dir}`,line);return false;}
+   const direction:Point=directionVectors[normalized];
    w.move={from:w.position,direction,remaining:Number(n),requested:Number(n),completed:0,line,command:c};return true;
   }
   if(c.startsWith('IF ')){record(w,c,line,w.position,now);w.pc=condition(w,c.slice(3))?w.pc+1:(p.alternatives[w.pc]??p.ends[w.pc])+1;return true;}
@@ -95,8 +99,10 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   }else if(c==='WAIT DRINK'||c==='WAIT DIRTY'){
    if(w.job){fail(w,'Finish the claimed job before waiting for another.');return false;}
    const next=nextWork(c)!;apply=()=>{w.job=next;next.status='reserved';if(c==='WAIT DRINK')tableOwners.set(next.table,next.event.customer.customer_id);};
-  }else if(c==='PICKUP'){
+  }else if(c==='PICKUP'||c.startsWith('PICKUP ')){
    if(!station(w,STATIONS.pickup.floor,'pickup'))return false;
+   const direction=c==='PICKUP'?'DOWN':normalizeDirection(c.slice('PICKUP '.length));
+   if(direction!=='DOWN'){fail(w,'Pick up the ready drink downward from the pickup counter.');return false;}
    if(!w.job||w.job.status!=='reserved'||w.job.dirtyAt!==Infinity){fail(w,'WAIT DRINK before picking up a ready drink.');return false;}
    if(w.inventory.length>=capacity(w)){fail(w,'Tray is full. Serve a carried item first.');return false;}
    const next=w.job;apply=()=>{next.status='carried';w.inventory.push({ticketId:next.ticketId,table:next.table,item:next.item,stage:'brewed',sugar:next.sugar});w.job=undefined;};
@@ -128,12 +134,17 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
    const rule=rules[c];
    // Once brewed, sugar and deposit operate on the oldest finished drink.
    const finished=w.inventory.find(item=>item.stage==='brewed');
-   if(c==='ADD SUGAR'||c==='DEPOSIT'){
+   if(c==='ADD SUGAR'||c==='DEPOSIT'||c.startsWith('DEPOSIT ')){
     const ready=finished,readyJob=jobs.find(j=>j.ticketId===ready?.ticketId);
     if(!ready||!readyJob){fail(w,'Finish brewing before adding sugar or depositing.');return false;}
     if(!station(w,c==='ADD SUGAR'?STATIONS.sugar.prep:STATIONS.pickup.prep,c==='ADD SUGAR'?'sugar':'pickup'))return false;
     if(c==='ADD SUGAR')apply=()=>{ready.sugar=readyJob.sugar;};
-    else {if(ready.sugar!==readyJob.sugar){fail(w,'The prepared drink has the wrong sugar amount.');return false;}apply=()=>{w.inventory.splice(w.inventory.indexOf(ready),1);readyJob.status='ready';readyJob.event.timing.ready=now;};}
+    else {
+     const direction=c==='DEPOSIT'?'UP':normalizeDirection(c.slice('DEPOSIT '.length));
+     if(direction!=='UP'){fail(w,'Deposit the prepared drink upward into the pickup counter.');return false;}
+     if(ready.sugar!==readyJob.sugar){fail(w,'The prepared drink has the wrong sugar amount.');return false;}
+     apply=()=>{w.inventory.splice(w.inventory.indexOf(ready),1);readyJob.status='ready';readyJob.event.timing.ready=now;};
+    }
    }else if(rule){
     if(!station(w,rule.point,c.toLowerCase()))return false;
     if(!rule.previous.includes(cargo.stage)||rule.item&&rule.item!==cargo.item){fail(w,`Invalid recipe step: ${c} after ${cargo.stage} for ${cargo.item}.`);return false;}

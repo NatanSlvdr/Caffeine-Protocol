@@ -1,74 +1,74 @@
 {
   "lessons": [
     {
-      "note": "Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open ticket details to inspect the lifecycle.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1",
+      "note": "Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open the paper details to inspect the lifecycle.",
+      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
       "starter": "LISTEN"
     },
     {
       "note": "Niko: Eight orders, one pair of hands. The counter queue keeps growing while I brew. Query could help, once we repair the controller.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1",
+      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
       "starter": "LISTEN"
     },
     {
-      "note": "Query: BOOT OK. Wait for customer speech, Create Ticket, and Add coffee to ticket. Move right 1 tile to the shared kitchen counter, Submit Ticket, then move left 1 tile back to the register. Checkout is automatic once Query returns. Coffee costs 3 credits, tea 2; sugar is included.",
-      "solution": "LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1",
+      "note": "Query: BOOT OK. Wait for customer speech, pick up the paper, and write coffee on it. Deposit the completed paper to the right; checkout is automatic. Coffee costs 3 credits, tea 2; sugar is included.",
+      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
       "starter": "LISTEN"
     },
     {
-      "note": "Niko: Tea is on the menu. Use If heard drink is tea, then Set item: tea. In Else, set coffee. The branch is shown by indentation. Submit the completed ticket at the shared counter.",
-      "solution": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1",
-      "starter": "LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1"
+      "note": "Niko: Tea is on the menu. Pick up the paper, then use If heard drink is tea to write tea. In Else, write coffee. Deposit the completed paper to the right.",
+      "solution": "LISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT",
+      "starter": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT"
     },
     {
-      "note": "Query: I served one customer and stopped. Put Position: listen before Wait, then Jump to listen at the end. Every customer needs a ticket.",
-      "solution": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nJUMP listen",
-      "starter": "LISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1"
+      "note": "Query: I served one customer and stopped. Put Position: listen before Wait, then Jump to listen at the end. Every customer needs a paper order.",
+      "solution": "POSITION listen\nLISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nJUMP listen",
+      "starter": "LISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT"
     },
     {
-      "note": "Niko: A table for two can mean two drinks in one request. Wrap ticket creation, item selection and submission in For each heard order.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nJUMP listen"
+      "note": "Niko: A table for two can mean two drinks in one request. Wrap paper pickup, item selection and deposit in For each heard order.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nJUMP listen"
     },
     {
-      "note": "Niko: Sweet or unsweetened? Store heard sugar in a variable, then set the ticket's sugar from that variable before submitting it.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen"
+      "note": "Niko: Sweet or unsweetened? Store heard sugar in a variable, then set the paper's sugar from that variable before depositing it.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nDEPOSIT RIGHT\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nEND\nJUMP listen"
     },
     {
-      "note": "Niko: Regulars use different words for the same drink. Define a build-ticket function with the heard order as its parameter. Call it inside Each; return the ticket, then submit.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nTICKET\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen"
+      "note": "Niko: Regulars use different words for the same drink. Define a build-paper function with the heard order as its parameter. Call it inside Each; return the paper, then deposit it.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nDEPOSIT RIGHT\nEND\nJUMP listen"
     },
     {
-      "note": "Niko: 'The usual' is ambiguous. If speech is ambiguous, ask me for clarification before creating tickets. Without clarification, safely defer the order.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "note": "Niko: 'The usual' is ambiguous. If speech is ambiguous, ask me for clarification before picking up paper. Without clarification, safely defer the order.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
-      "note": "Query: Two sugars is more precise than yes. If a sugar count exists, store it as a number and use it. Otherwise keep the binary sugar behavior.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "note": "Query: Two sugars is more precise than yes. If a sugar count exists, store it as a number and use it. Otherwise keep the binary sugar behavior on the paper.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
-      "note": "Niko: Time to tidy our routine. Keep the behavior, but share ticket building and copy whichever sugar chip exists. Compare your blocks and executed steps.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
+      "note": "Niko: Time to tidy our routine. Keep the behavior, but share paper building and copy whichever sugar chip exists. Compare your blocks and executed steps.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
     },
     {
       "note": "Query: Lunch rush. Larger batches, familiar chips. Your saved program carries forward. Inspect the trace if a customer gets left behind.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Our regulars mix clear orders and ambiguous requests. Keep asking for clarification before building their tickets, including numbered sugars.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Certification day. Your own saved routine faces every case: singles, pairs, sugar and regulars. The counter is yours, Query. I'll keep the kettle busy.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTICKET\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     }
   ],
   "levels": [

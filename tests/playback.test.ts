@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildPlayback, samplePlayback, playbackClock } from '../src/domain/playback';
 import { levels, lessons } from '../src/data';
-import { compileProgram, executeCustomerEvent } from '../src/domain/program';
+import { compileProgram } from '../src/domain/program';
 import { runLevel } from '../src/domain/simulation';
 import { sampleReplay } from '../src/domain/replay';
 import type { ExecutionEvent, RunResult } from '../src/domain/types';
@@ -42,31 +42,23 @@ describe('instruction-paced playback',()=>{
   expect(samplePlayback(frames,playbackClock(frames,.05)).time).toBeCloseTo(.05);
  });
 });
-describe('Query counter handoff',()=>{
- const customer=levels[2].seeds[0].customers[0];
- it('checks out automatically without a payment block after returning to the register',()=>{
-  const source='LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1';
+describe('Query paper handoff',()=>{
+ it('checks out automatically without a payment block after depositing paper',()=>{
+  const source='LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT';
   const result=runLevel(levels[2],compileProgram(source,3));
   expect(result.passed).toBe(true);
   expect(result.events.every(e=>e.payment?.amount===3)).toBe(true);
   expect(result.events.flatMap(e=>e.trace).some(e=>e.command==='CHARGE ORDER')).toBe(false);
  });
- it('requires a step to the shared counter before submitting',()=>{
-  const result=executeCustomerEvent(compileProgram('LISTEN\nTICKET\nITEM coffee\nSUBMIT'),customer,'test');
-  expect(result.error).toContain('Move right 1 tile');
- });
- it('requires returning to the register for payment',()=>{
-  const result=executeCustomerEvent(compileProgram('LISTEN\nTICKET\nITEM coffee\nMOVE RIGHT 1\nSUBMIT'),customer,'test');
-  expect(result.error).toContain('Move left 1 tile');
- });
- it('teaches and records the complete right-submit-left handoff',()=>{
+ it('records pickup and deposit without counter movement',()=>{
   expect(base.passed).toBe(true);
   const events=base.execution![0].events.filter(e=>e.actor==='query');
-  expect(events.find(e=>e.command==='SUBMIT')?.from).toEqual([-4,5]);
-  expect(events.find(e=>e.command==='MOVE RIGHT 1')?.to).toEqual([-4,5]);
-  expect(events.find(e=>e.command==='MOVE LEFT 1')?.to).toEqual([-5,5]);
-  const submitted=events.find(e=>e.command==='SUBMIT')!;
-  expect(base.tickets[0].created_at).toBeCloseTo(submitted.end);
-  expect(sampleReplay(base,submitted.end).waitingTickets.map(t=>t.ticket_id)).toContain(base.tickets[0].ticket_id);
+  expect(events.map(e=>e.command)).toContain('PICKUP UP');
+  expect(events.map(e=>e.command)).toContain('DEPOSIT RIGHT');
+  expect(events.some(e=>e.command.startsWith('MOVE '))).toBe(false);
+  const deposited=events.find(e=>e.command==='DEPOSIT RIGHT')!;
+  expect(deposited.from).toEqual([-5,5]);
+  expect(base.tickets[0].created_at).toBeCloseTo(deposited.end);
+  expect(sampleReplay(base,deposited.end).waitingTickets.map(t=>t.ticket_id)).toContain(base.tickets[0].ticket_id);
  });
 });

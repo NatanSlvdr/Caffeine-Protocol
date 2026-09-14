@@ -5,10 +5,12 @@ import { GripVertical } from 'lucide-react';
 import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
+import { normalizeDirection } from '../domain/directions';
 import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
 import type { VisualBlock } from '../domain/visualProgram';
-import { BlockSelect } from './BlockSelect';
+import { BlockSelect, DirectionSelect } from './BlockSelect';
 import { BlockIcon } from './BlockIcon';
+import { OperandIcon } from './OperandIcon';
 import { InstructionError } from './FailureFeedback';
 import { keyboardDropSlot, pickDropSlot } from '../domain/dragPlacement';
 import type { DraggedScope } from '../domain/dragPlacement';
@@ -18,25 +20,33 @@ function category(command: string) {
   return ['FUNCTION', 'CALL', 'RETURN'].includes(family) ? 'function' : family === 'MOVE' ? 'motion' : ['IF', 'ELSE', 'EACH', 'REPEAT', 'JUMP', 'POSITION'].includes(family) ? 'flow' : ['HELP', 'ERROR'].includes(family) ? 'help' : 'action';
 }
 
+function operandOption(value: string) {
+  const label = blockFields(value).value;
+  return { value, label, icon: <OperandIcon value={label}/>, iconOnly: ['coffee', 'tea', 'customer speech', 'heard'].includes(label.toLowerCase()) };
+}
+
 function Operands({ command, options, disabled, label, onChange }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void }) {
   const fields = blockFields(command);
-  if (fields.family === 'MOVE') {
-    const [, direction, count] = command.split(' ');
+  if (['MOVE', 'PICKUP', 'DEPOSIT'].includes(fields.family)) {
+    const [, rawDirection, count = '1'] = command.split(' ');
     const query = options.includes('LISTEN');
-    const directions = [...new Set(blockVariants(command, options).map(c => c.split(' ')[1]))];
-    return <>
-      <BlockSelect label={label + ' direction'} value={direction} disabled={disabled} onChange={v => onChange('MOVE ' + v + ' ' + count)} options={directions.map(value => ({ value, label: value.toLowerCase() }))}/>
-      <input className="tile-count" type="number" min={1} max={query ? 1 : 19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled || query} onChange={e => {
+    const defaultDirection = fields.family === 'PICKUP' ? (query || !options.includes('SERVE') ? 'UP' : 'DOWN') : (query || !options.includes('BREW') ? 'RIGHT' : 'UP');
+    const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
+    const nextCommand = (value: string, nextCount = count) => fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
+    return <><DirectionSelect label={label + ' direction'} value={direction} disabled={disabled} onChange={v => onChange(nextCommand(v))}/>
+      {fields.family === 'PICKUP' && <span className="block-verb block-suffix">{query ? 'paper' : 'drink'}</span>}
+      {fields.family === 'DEPOSIT' && <span className="block-verb block-suffix">{query ? 'order' : 'drink'}</span>}
+      {fields.family === 'MOVE' && <><input className="tile-count" type="number" min={1} max={query ? 1 : 19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled || query} onChange={e => {
         const n = Number(e.target.value);
-        if (Number.isInteger(n) && n >= 1 && n <= 19) onChange('MOVE ' + direction + ' ' + n);
-      }}/><span className="block-verb block-suffix">tiles</span>
+        if (Number.isInteger(n) && n >= 1 && n <= 19) onChange(nextCommand(direction, String(n)));
+      }}/><span className="block-verb block-suffix">tiles</span></>}
     </>;
   }
   if (!fields.value || ['JUMP', 'POSITION'].includes(fields.family)) return null;
   const variants = blockVariants(command, options);
   if (!variants.includes(command) && command !== 'ITEM heard') variants.unshift(command);
   return <><BlockSelect label={label + (fields.family === 'IF' ? ' condition' : ' value')} value={command} disabled={disabled} onChange={onChange}
-    options={variants.map(value => ({ value, label: blockFields(value).value }))}/>{fields.family === 'ITEM' && <span className="block-verb block-suffix">to ticket</span>}</>;
+    options={variants.map(operandOption)}/>{fields.family === 'ITEM' && <span className="block-verb block-suffix">on paper</span>}</>;
 }
 
 function CommandTile({ initial, options, disabled, onInsert }: { initial: string; options: string[]; disabled: boolean; onInsert: (command: string) => void }) {
@@ -58,9 +68,9 @@ function Insertion({ at, disabled, alternative = false, hint = '' }: { at: numbe
   </div>;
 }
 
-function Row({ block, depth, ordinal, selected, locked, active, failure, failureMessage, onEdit, options, onSelect, onReplace }: {
-  block: VisualBlock; depth: number; ordinal: number; selected: boolean; locked: boolean; active: boolean; failure: boolean; options: string[];
-  onSelect: () => void; onReplace: (c: string) => void;
+function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onEdit, options, onReplace }: {
+  block: VisualBlock; depth: number; ordinal: number; locked: boolean; active: boolean; failure: boolean; options: string[];
+  onReplace: (c: string) => void;
   failureMessage?: string; onEdit?: () => void;
 }) {
   const { line: id, command } = block;
@@ -71,12 +81,13 @@ function Row({ block, depth, ordinal, selected, locked, active, failure, failure
   }, [active, failure]);
   return <div className="code-row">
     <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">{String(ordinal).padStart(2, '0')}</span>
-    <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...(target ? attributes : {})} {...(target ? listeners : {})} className={['block', category(command), target ? 'jump-target' : '', selected ? 'selected' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
-      onClick={onSelect} onFocus={onSelect} aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
+    <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...(target ? attributes : {})} {...(target ? listeners : {})} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
+      aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
       <button className="grip" aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} disabled={locked} {...attributes} {...listeners}><GripVertical size={13}/></button>
       {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} onChange={onReplace}/></>}
       {target && <span className="sr-only">Jump destination</span>}
-      {(active || failure) && <span className={'instruction-state ' + (failure ? 'is-error' : 'is-running')}><i aria-hidden="true"/>{failure ? 'Error' : 'Running'}</span>}
+      {active && !failure && <span className="instruction-state is-running" role="img" aria-label="Running" title="Running"><i aria-hidden="true"/></span>}
+      {failure && <span className="instruction-state is-error" role="img" aria-label="Error" title="Error"><i aria-hidden="true"/>Error</span>}
     </div>
     {failure && failureMessage && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
   </div>;
@@ -139,12 +150,11 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   activeLine?: number; failureLine?: number; textMode: boolean;
   failureMessage?: string; onEdit?: () => void;
 }) {
-  const [selection, setSelection] = useState<{ at: number; alternative?: boolean } | null>(null), [dragged, setDragged] = useState('');
+  const [dragged, setDragged] = useState('');
   const root = useRef<HTMLDivElement>(null), codeArea = useRef<HTMLDivElement>(null), pointer = useRef<{ x: number; y: number } | null>(null);
   const dragScope = useRef<DraggedScope | undefined>(undefined), lastSlot = useRef<string | undefined>(undefined);
   const [draggedLine, setDraggedLine] = useState<number | null>(null);
   const options = robotCommands(role, level), disabled = locked || observation;
-  useEffect(() => { setSelection(null); }, [role]);
   const keyboardCoordinates: KeyboardCoordinateGetter = (event, { context, currentCoordinates }) => {
     const rect = context.collisionRect;
     if (!rect || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code)) return;
@@ -161,25 +171,22 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   };
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }));
   const change = (value: string) => { if (!disabled) onChange(value); };
-  const insert = (command: string) => {
-    change(placeBlock(source, command, selection?.at ?? (source ? source.split('\n').length : 0), undefined, selection?.alternative));
-    setSelection(null);
-  };
+  const insert = (command: string) => change(placeBlock(source, command, source ? source.split('\n').length : 0));
   const tree = visualProgram(source);
   const elseBlock = (block: VisualBlock): VisualBlock => ({ line: block.elseLine!, command: 'ELSE', end: block.end - 1 });
   const flatten = (blocks: VisualBlock[]): VisualBlock[] => blocks.flatMap(b => [b, ...flatten(b.children ?? []), ...(b.alternative?.length ? [elseBlock(b), ...flatten(b.alternative)] : [])]);
   const rows = flatten(tree);
   const visibleFailureLine = failureLine < 0 ? -1 : (rows.find(r => r.line === failureLine) ?? rows.findLast(r => r.line <= failureLine) ?? rows[0])?.line ?? -1;
   const renderBlocks = (blocks: VisualBlock[], depth = 0): React.ReactNode => blocks.map(block => <div className={(block.children ? 'code-scope ' + category(block.command) : 'code-statement') + (draggedLine === block.line ? ' drag-source' : '')} key={block.line}>
-    <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} selected={selection?.at === block.line + 1} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit}
-      onSelect={() => setSelection({ at: block.line + 1 })} onReplace={c => { const lines = source.split('\n'); lines[block.line] = c; change(lines.join('\n')); }}/>
+    <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit}
+      onReplace={c => { const lines = source.split('\n'); lines[block.line] = c; change(lines.join('\n')); }}/>
     {block.children && <div className="scope-body">
       <Insertion at={block.line + 1} disabled={disabled} hint={block.children.length ? '' : 'Drop a block here'}/>
       {renderBlocks(block.children, depth + 1)}
     </div>}
     {!!block.alternative?.length && <div className={'else-body' + (draggedLine === block.elseLine ? ' drag-source' : '')}>
-      <Row block={elseBlock(block)} depth={depth} ordinal={rows.findIndex(r => r.line === block.elseLine) + 1} options={options} locked={disabled} selected={selection?.at === block.elseLine! + 1} active={activeLine === block.elseLine} failure={visibleFailureLine === block.elseLine} failureMessage={failureMessage} onEdit={onEdit}
-        onSelect={() => setSelection({ at: block.elseLine! + 1 })} onReplace={() => {}}/>
+      <Row block={elseBlock(block)} depth={depth} ordinal={rows.findIndex(r => r.line === block.elseLine) + 1} options={options} locked={disabled} active={activeLine === block.elseLine} failure={visibleFailureLine === block.elseLine} failureMessage={failureMessage} onEdit={onEdit}
+        onReplace={() => {}}/>
       <div className="scope-body"><Insertion at={block.elseLine! + 1} disabled={disabled}/>{renderBlocks(block.alternative, depth + 1)}</div>
     </div>}
     {block.command.startsWith('IF ') && !block.alternative?.length && dragged && <Insertion at={block.end} alternative={block.elseLine === undefined} disabled={disabled} hint="Else"/>}
@@ -215,13 +222,12 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
       const dataAt = active.data.current?.at, line = typeof dataAt === 'number' ? dataAt : Number(active.id);
       const bounds = codeArea.current?.getBoundingClientRect(), point = pointer.current;
       if (!library && bounds && point && (point.x < bounds.left || point.x > bounds.right || point.y < bounds.top || point.y > bounds.bottom)) {
-        if (Number.isInteger(line)) change(removeVisualBlock(source, line)); setSelection(null); return;
+        if (Number.isInteger(line)) change(removeVisualBlock(source, line)); return;
       }
       if (!over) return;
       const at = over.data.current?.at; if (typeof at !== 'number') return;
       const command = library ? String(active.data.current?.command ?? '') : rows.find(r => r.line === line)?.command;
       if (command) change(placeBlock(source, command, at, library ? undefined : line, !!over.data.current?.alternative));
-      setSelection(null);
     }}>
     <section className="palette compact-palette" aria-label="Available code blocks"><div className="command-library">{blockPrototypes(options).map(c => <CommandTile key={role + ':' + level + ':' + c} initial={c} options={options} disabled={disabled} onInsert={insert}/>)}</div></section>
     <div className="editor-body" aria-label="Code zone" ref={codeArea}>
