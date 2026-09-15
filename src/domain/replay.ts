@@ -17,7 +17,7 @@ export function sampleReplay(result:RunResult,time:number){
   const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local).at(-1),last=history.at(-1)!;
   let position=settled?.to??last.from;
   if(motion&&motion.end>local){const t=Math.max(0,Math.min(1,(local-motion.start)/(motion.end-motion.start)));position=[motion.from[0]+(motion.to[0]-motion.from[0])*t,motion.from[1]+(motion.to[1]-motion.from[1])*t];}
-  actors[id]={position,inventory:settled?.inventory??[],role:last.role};
+  actors[id]={position,inventory:settled?.inventory??[],heldPaper:settled?.heldPaper,role:last.role};
  }
  const customers=result.events.map((event,index)=>({event,index})).filter(({event})=>event.seed_id===seed?.seed_id&&local>=event.timing.arrival-STREET_APPROACH_SECONDS&&local<Math.max(event.timing.left,event.timing.created)+STREET_EXIT_SECONDS).map(({event,index})=>{
   const front=tableFront(Math.max(0,event.table-1));let from:Point=ENTRANCE,to:Point=STATIONS.orders.floor,begin=event.timing.arrival,end=event.timing.created;

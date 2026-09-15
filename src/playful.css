@@ -252,7 +252,7 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 @media(max-width:560px){.app-header{padding:0 16px}.brand{font-size:17px}.brand small{display:none}.header-actions{gap:5px}.star-total{padding:7px;font-size:11px}.rail{width:46px}.rail button{padding:9px}.workspace-main{padding:12px}.workspace-heading{align-items:flex-start;gap:10px}.workspace-heading h1{font-size:23px}.workspace-tools button{font-size:10px;padding:8px;gap:4px}.workspace-tools button svg{width:13px}.shift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shift-card strong{font-size:13px}.page-heading h1{font-size:30px}.page-heading{gap:12px;flex-wrap:wrap}.block{min-width:270px}.program-start small{display:none}.editor-panel{height:740px}.cafe-panel{min-height:360px}.scene-space{min-height:280px}}
 
 /* Compact tiles, separate line gutter, and connected scopes on the coffee blueprint. */
-.editor-panel .visual-program{width:max-content;min-width:100%;padding:20px 105px 60px 48px;overflow:visible}
+.editor-panel .visual-program{width:max-content;min-width:100%;padding:20px 40px 60px 48px;overflow:visible}
 .code-row{position:relative;width:max-content;margin-bottom:8px;z-index:1}
 .line-number{position:absolute;width:22px;text-align:right;top:14px;font:10px ui-monospace,monospace;color:#bca58b;pointer-events:none}
 .editor-panel .code-row .block{display:flex;width:max-content;min-width:0;gap:8px;margin:0;min-height:43px;padding:5px 12px 5px 4px;border-left-width:1px;font:650 12px/1.3 ui-monospace,monospace}
@@ -296,7 +296,6 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 /* Execution feedback follows the current line. */
 .editor-panel .code-row .block.active{outline:1px solid #fff6dd;outline-offset:1px;border-color:#fff4d4;background:color-mix(in srgb,var(--tile) 80%,#fff8e8);box-shadow:0 3px 0 var(--edge),0 0 0 4px #fce9b91a,0 5px 23px #ffd88b38,inset 0 1px 0 #fff8eb;z-index:2}
 .editor-panel .block.active:after,.editor-panel .block.failure:after{display:none}
-.code-row:has(>.block[aria-current=step])>.line-number{color:#fff0c6;font-weight:800}
 .editor-panel .code-row .block.failure{outline:1px solid #ff8e7b;outline-offset:1px;border-color:#ffb09e;background:color-mix(in srgb,var(--tile) 65%,#ffc1b1);box-shadow:0 3px 0 #b26153,0 0 0 4px #f17d651c,0 3px 24px #ff654d40;z-index:2;animation:instruction-error-bloom .7s ease-out both}
 .workbench{position:relative;isolation:isolate}
 @keyframes instruction-error-bloom{from{box-shadow:0 0 0 5px #ff9b7250,0 0 32px #ff654d88}to{box-shadow:0 3px 0 #b26153,0 0 0 4px #f17d651c,0 3px 24px #ff654d40}}
@@ -430,15 +429,52 @@ html[data-motion=reduced] .receipt-modal,html[data-motion=reduced] .editor-panel
 
 
 /* The speech tail stays attached to its customer as the camera and customer move. */
-.customer-speech{position:relative;transform:translateY(-50%);width:max-content;max-width:240px;padding:13px 16px;background:#fffbed;color:#423f35;border:1px solid #cbbda4;border-radius:20px;box-shadow:0 3px 0 #b4a28b55;pointer-events:none;text-align:center}
-.customer-speech:after{content:"";position:absolute;left:calc(50% - 8px);bottom:-9px;width:16px;height:16px;background:#fffbed;border-right:1px solid #cbbda4;border-bottom:1px solid #cbbda4;transform:rotate(45deg)}
-.customer-speech blockquote{margin:0;font:650 13px/1.45 Inter,sans-serif;color:#423f35;overflow-wrap:anywhere}
-.customer-speech ul{list-style:none;margin:9px 0 0;padding:8px 0 0;border-top:1px dashed #d9ccb5;display:flex;flex-wrap:wrap;justify-content:center;gap:5px}
-.customer-speech li{padding:4px 7px;border-radius:7px;background:#e5ecdd;color:#36513c;font:600 11px/1.35 Inter,sans-serif}
+.customer-speech{position:relative;transform:translateY(-50%);width:max-content;max-width:220px;padding:8px;border:1px solid #cbbda4;border-radius:12px;background:#fffbedf5;color:#423f35;box-shadow:0 2px 0 #b4a28b55;pointer-events:auto;text-align:center}
+.customer-speech:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-6px;width:9px;height:9px;transform:rotate(45deg);background:#fffbed;border-right:1px solid #cbbda4;border-bottom:1px solid #cbbda4}
+.customer-speech blockquote{margin:0;font:600 12px/1.4 Inter,sans-serif;color:#423f35;overflow-wrap:anywhere}
+.customer-speech ul{list-style:none;margin:5px 0 0;padding:0;display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.customer-speech li{position:relative;display:grid;place-items:center;width:46px;height:46px;color:#68543c}
+.customer-speech .model-thumbnail{width:42px;height:42px}
+.order-quantity{position:absolute;right:-2px;top:0;padding:1px 3px;border-radius:5px;background:#e5ecdd;color:#36513c;font:800 11px/1.2 Inter,sans-serif}
+.order-sugar{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:2px;padding:1px 3px;border-radius:3px;background:#fffbed;font:700 10px/1.2 Inter,sans-serif}
+.customer-speech .customer-clarification{display:flex;gap:5px;width:auto;height:auto;max-width:100%;font:600 11px/1.3 Inter,sans-serif}
 
 /* A warm red rounded marker follows the current instruction without covering its block. */
-.execution-cursor{position:fixed;left:0;top:0;z-index:1200;display:grid;place-items:center;width:26px;height:26px;pointer-events:none;border-radius:9px;background:#d65b4b;border:1px solid #963d34;box-shadow:0 2px 0 #7d332d55,0 0 0 2px #fff4dc88;transition-property:transform;transition-timing-function:cubic-bezier(.65,0,.35,1);will-change:transform}
-.execution-cursor svg{display:block;fill:#fff4dc;stroke:#963d34;stroke-width:1;stroke-linejoin:round}
-@media(prefers-reduced-motion:reduce){.execution-cursor{transition:none!important}}
-html[data-motion=reduced] .execution-cursor{transition:none!important}
-.code-row:has(>.block[aria-current=step])>.line-number{color:#fff0c6;font-weight:800}
+.execution-cursor{position:absolute;left:0;top:0;z-index:50;display:block;width:32px;height:32px;pointer-events:none;transition-property:transform;transition-timing-function:cubic-bezier(.8,0,.2,1);will-change:transform}
+.execution-cursor svg{display:block;fill:#dc463c;stroke:#dc463c;stroke-width:3;stroke-linejoin:round}
+@media(prefers-reduced-motion:reduce){.execution-cursor,.execution-line-highlight{transition:none!important}}
+html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution-line-highlight{transition:none!important}
+
+/* Comparison operands wrap within the library instead of widening its pane. */
+.editor-panel .compact-palette .command-tile:has(.if-comparison-operands){flex-wrap:wrap;height:auto;min-width:0}
+.editor-panel .compact-palette .if-comparison-operands{flex-wrap:wrap;max-width:100%}
+.editor-panel .compact-palette .if-comparison-operands .block-select{max-width:100%}
+.editor-panel .compact-palette .if-comparison-operands .block-select>button{max-width:100%;height:auto;white-space:normal;text-align:left}
+
+/* Fit code to the pane; operands wrap instead of creating a horizontal canvas. */
+.editor-panel .editor-body{overflow-x:hidden;min-width:0}
+.editor-panel .visual-program{width:100%;min-width:0;box-sizing:border-box}
+.editor-panel .visual-program :is(.code-statement,.code-scope,.code-row,.else-body){max-width:100%;min-width:0}
+.editor-panel .visual-program :is(.code-statement,.code-scope,.else-body){width:100%}
+.editor-panel .visual-program .scope-body{min-width:0}
+.editor-panel .visual-program .code-row .block{width:fit-content;max-width:100%;box-sizing:border-box;flex-wrap:wrap;height:auto}
+.editor-panel .visual-program .if-comparison-operands{flex-wrap:wrap;max-width:100%}
+.editor-panel .visual-program .block-select{max-width:100%;min-width:0}
+.editor-panel .visual-program .block-select>button{max-width:100%;height:auto;white-space:normal;text-align:left;overflow-wrap:anywhere}
+.editor-panel .visual-program .code-row .block:is([data-jump],[data-target]){width:84px}
+.editor-panel .visual-program .code-insertion.with-hint{max-width:100%;min-width:0;white-space:normal;height:auto}
+.editor-panel .code-input{min-width:0;width:100%;white-space:pre-wrap;overflow-wrap:anywhere}
+
+/* The scrollport includes a transparent strip for the marker outside the pane edge. */
+.workspace .editor-panel{overflow:visible}
+.editor-panel .editor-body{margin-left:-16px;padding-left:16px;background-clip:content-box;border-radius:0 0 9px 9px}
+.editor-panel .visual-program .code-row{width:100%}
+.execution-line-highlight{position:absolute;left:16px;background:#ffe6ad12;pointer-events:none;z-index:-1;transition-property:top,height;transition-duration:inherit;transition-timing-function:inherit}
+
+.robot-holding{position:relative;transform:translateY(-50%);width:max-content;max-width:160px;padding:4px;border:1px solid #cbbda4;border-radius:12px;background:#fffbedf5;color:#68543c;box-shadow:0 2px 0 #b4a28b55;pointer-events:auto}
+.robot-holding:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-6px;width:9px;height:9px;transform:rotate(45deg);background:#fffbed;border-right:1px solid #cbbda4;border-bottom:1px solid #cbbda4}
+.robot-holding ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:3px}
+.robot-holding li{position:relative;display:grid;place-items:center;width:42px;height:42px}
+.robot-holding .model-thumbnail{width:42px;height:42px}
+.robot-holding .holding-badge{position:absolute;right:0;bottom:0;background:#fffbed;border-radius:3px}
+.holding-sugar{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:1px;padding:1px 2px;border-radius:3px;background:#fffbed;font:700 10px/1.2 Inter,sans-serif}

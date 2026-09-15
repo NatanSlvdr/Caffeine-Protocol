@@ -62,7 +62,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
         step = interpreter.next();
       }
       const actual = step.value;
-      if (pending) { position = pending.to; pending = undefined; }
+      if (pending) { pending.heldPaper = actual.heldPaper ? structuredClone(actual.heldPaper) : undefined; position = pending.to; pending = undefined; }
       event.trace = [...actual.trace]; event.asked_help = actual.asked_help;
       for (const ticket of actual.tickets) if (!event.tickets.some(t => t.ticket_id === ticket.ticket_id)) {
         ticket.created_at = now; ticket.table_id = `T${String(event.table).padStart(2, '0')}`;

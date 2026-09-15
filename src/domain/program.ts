@@ -182,6 +182,7 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
         out.tickets.push(ticket);ticket=undefined;break;
       case 'REPEAT':out.state.pc=0;return finish();
     }
+    out.heldPaper=ticket;
     out.state.pc=next;
   }
   out.state.stopped=true;return finish();

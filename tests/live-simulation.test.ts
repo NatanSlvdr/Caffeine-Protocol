@@ -26,6 +26,20 @@ describe('live service',()=>{
   expect(run.advance(1).result.events[0].trace).toHaveLength(1);
   expect(run.advance(.5).result.events[0].trace).toHaveLength(2);
  });
+ it('records paper pickup, writing and deposit without changing earlier snapshots',()=>{
+  const run=createLiveRun(levels[2],programs(2));
+  const {result}=finish(run);
+  const events=result.execution![0].events.filter(event=>event.actor==='query');
+  const take=events.find(event=>event.command==='TAKE UP')!;
+  const write=events.find(event=>event.command==='ITEM coffee')!;
+  const deposit=events.find(event=>event.command==='DEPOSIT RIGHT')!;
+  expect(take.heldPaper?.item).toBe('');
+  expect(write.heldPaper?.item).toBe('coffee');
+  expect(deposit.heldPaper).toBeUndefined();
+  expect(sampleReplay(result,take.end+.01).actors.query?.heldPaper?.item).toBe('');
+  expect(sampleReplay(result,write.end+.01).actors.query?.heldPaper?.item).toBe('coffee');
+  expect(sampleReplay(result,deposit.end+.01).actors.query?.heldPaper).toBeUndefined();
+ });
  it('records a zero-duration wait while an automatic worker is idle',()=>{
   const run=createLiveRun(levels[2],programs(2));
   const frame=run.advance(2+levels[2].seeds[0].customers[0].arrival);

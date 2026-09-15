@@ -42,7 +42,7 @@ const conditionLabels: Record<string, string> = {
 function conditionOption(value: string) {
   return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
 }
-function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void) {
+function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (key: string, value: string) => void, mask: (key: string, value: string) => string) {
   const condition = parseComparison(command);
   if (!condition) return null;
   const values = CONDITION_VALUES.filter(value => value === condition.left || options.some(candidate => candidate === `IF ${value}` || parseComparison(candidate)?.left === value));
@@ -51,13 +51,19 @@ function comparisonOperands(command: string, options: string[], disabled: boolea
   const operators = CONDITION_OPERATORS.includes(condition.operator as typeof CONDITION_OPERATORS[number]) ? CONDITION_OPERATORS : [condition.operator, ...CONDITION_OPERATORS];
   const next = (left: string, operator: string, right: string) => `IF ${left} ${operator} ${right}`;
   return <span className="if-comparison-operands">
-    <BlockSelect label={label + ' value'} value={condition.left} disabled={disabled} onChange={value => onChange(next(value, condition.operator, condition.right))} options={values.map(conditionOption)}/>
-    <BlockSelect label={label + ' operator'} value={condition.operator} disabled={disabled} onChange={operator => onChange(next(condition.left, operator, condition.right))} options={operators.map(conditionOption)}/>
-    <BlockSelect label={label + ' source'} value={condition.right} disabled={disabled} onChange={right => onChange(next(condition.left, condition.operator, right))} options={sources.map(conditionOption)}/>
+    <BlockSelect label={label + ' value'} value={mask('value', condition.left)} disabled={disabled} onChange={value => onChange('value', next(value, condition.operator, condition.right))} options={values.map(conditionOption)}/>
+    <BlockSelect label={label + ' operator'} value={mask('operator', condition.operator)} disabled={disabled} onChange={operator => onChange('operator', next(condition.left, operator, condition.right))} options={operators.map(conditionOption)}/>
+    <BlockSelect label={label + ' source'} value={mask('source', condition.right)} disabled={disabled} onChange={right => onChange('source', next(condition.left, condition.operator, right))} options={sources.map(conditionOption)}/>
   </span>;
 }
 
-function Operands({ command, options, disabled, label, onChange }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void }) {
+function Operands({ command, options, disabled, label, onChange, library = false }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean }) {
+  const [chosen, setChosen] = useState<ReadonlySet<string>>(() => new Set());
+  const mask = (key: string, value: string) => library && !chosen.has(key) ? '' : value;
+  const select = (key: string, value: string) => {
+    setChosen(current => new Set([...current, key]));
+    onChange(value);
+  };
   const fields = blockFields(command);
   if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
@@ -65,21 +71,21 @@ function Operands({ command, options, disabled, label, onChange }: { command: st
     const defaultDirection = fields.family === 'TAKE' ? (options.includes('SERVE') ? 'DOWN' : 'UP') : (query || !options.includes('BREW') ? 'RIGHT' : 'UP');
     const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
     const nextCommand = (value: string, nextCount = count) => fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
-    return <><DirectionSelect label={label + ' direction'} value={direction} disabled={disabled} onChange={v => onChange(nextCommand(v))}/>
-      {fields.family === 'MOVE' && <><input onKeyDown={e => e.stopPropagation()} className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled} onChange={e => {
+    return <><DirectionSelect label={label + ' direction'} value={mask('direction', direction)} disabled={disabled} onChange={v => select('direction', nextCommand(v))}/>
+      {fields.family === 'MOVE' && <><input onKeyDown={e => e.stopPropagation()} className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={mask('count', count)} disabled={disabled} onChange={e => {
         const n = Number(e.target.value);
-        if (Number.isInteger(n) && n >= 1 && n <= 19) onChange(nextCommand(direction, String(n)));
+        if (Number.isInteger(n) && n >= 1 && n <= 19) select('count', nextCommand(direction, String(n)));
       }}/><span className="block-verb block-suffix">tiles</span></>}
     </>;
   }
   if (fields.family === 'IF') {
-    const comparison = comparisonOperands(command, options, disabled, label, onChange);
+    const comparison = comparisonOperands(command, options, disabled, label, select, mask);
     if (comparison) return comparison;
   }
   if (!fields.value || ['JUMP', 'POSITION'].includes(fields.family)) return null;
   const variants = blockVariants(command, options);
   if (!variants.includes(command) && command !== 'ITEM heard') variants.unshift(command);
-  return <><BlockSelect label={label + (fields.family === 'IF' ? ' condition' : ' value')} value={command} disabled={disabled} onChange={onChange}
+  return <><BlockSelect label={label + (fields.family === 'IF' ? ' condition' : ' value')} value={mask('value', command)} disabled={disabled} onChange={value => select('value', value)}
     options={variants.map(operandOption)}/>{fields.family === 'ITEM' && <span className="block-verb block-suffix">on paper</span>}</>;
 }
 
@@ -89,7 +95,7 @@ function CommandTile({ initial, options, disabled, onInsert }: { initial: string
   const fields = blockFields(command);
   return <div ref={setNodeRef} className={'command-tile ' + category(command)} style={{ opacity: isDragging ? .4 : 1 }}>
     <button type="button" disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.verb}</button>
-    <Operands command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={setCommand}/>
+    <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={setCommand}/>
   </div>;
 }
 
@@ -138,8 +144,8 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
   const { attributes, listeners, setNodeRef } = useDraggable({ id: String(id), data: { at: id }, disabled: locked });
   const rowRef = useRef<HTMLDivElement | null>(null), target = command.startsWith('POSITION ');
   useEffect(() => {
-    if (active || failure) (failure ? rowRef.current?.parentElement : rowRef.current)?.scrollIntoView?.({ block: 'nearest', behavior: 'instant' });
-  }, [active, failure]);
+    if (failure) rowRef.current?.parentElement?.scrollIntoView?.({ block: 'nearest', behavior: 'instant' });
+  }, [failure]);
   return <div className="code-row" onClickCapture={failure ? onDismissFailure : undefined}>
     <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">{String(ordinal).padStart(2, '0')}</span>
     <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...attributes} {...listeners} aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} aria-disabled={locked} tabIndex={locked ? -1 : 0} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
@@ -177,7 +183,8 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
           const rect = block.getBoundingClientRect(), middle = rect.top - bounds.top + rect.height / 2;
           return middle >= Math.min(y1, y2) && middle <= Math.max(y1, y2) ? Math.max(right, rect.right - bounds.left) : right;
         }, Math.max(x1, x2));
-        const bend = clearance + 24 + Math.min(110, Math.abs(y2 - y1) * .22) + index * 8;
+        // Route within the fixed pane width, including long and repeated jumps.
+        const bend = Math.min(bounds.width - 8, clearance + 16 + Math.min(16, index * 4));
         const r = Math.min(18, Math.abs(y2 - y1) / 2);
         const s = y2 >= y1 ? 1 : -1;
         const d = r < 1 ? 'M ' + x1 + ' ' + y1 + ' H ' + x2
@@ -199,9 +206,9 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
   return <svg className="jump-arrows" aria-label="Jump connections"><defs><marker id={marker} viewBox="0 0 12 12" refX="9" refY="6" markerWidth="6" markerHeight="6" orient="auto"><path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker></defs>{links.map((l, i) => <path key={i} d={l.d} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" markerEnd={'url(#' + marker + ')'}/>)}</svg>;
 }
 
-export function Editor({ role = 'query', source, onChange, level, locked, observation, activeLine = -1, failureLine = -1, failureMessage, onEdit, textMode, onDismissFailure, stepSeconds = 1.5 }: {
+export function Editor({ role = 'query', source, onChange, level, locked, observation, activeLine = -1, instructionProgress = 0, failureLine = -1, failureMessage, onEdit, textMode, onDismissFailure, stepSeconds = 1.5 }: {
   role?: RobotRole; source: string; onChange: (v: string) => void; level: number; locked: boolean; observation: boolean;
-  activeLine?: number; failureLine?: number; textMode: boolean; stepSeconds?: number;
+  activeLine?: number; instructionProgress?: number; failureLine?: number; textMode: boolean; stepSeconds?: number;
   failureMessage?: string; onEdit?: () => void; onDismissFailure?: () => void;
 }) {
   const [dragged, setDragged] = useState('');
@@ -231,6 +238,14 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   const flatten = (blocks: VisualBlock[]): VisualBlock[] => blocks.flatMap(b => [b, ...flatten(b.children ?? []), ...(b.alternative?.length ? [elseBlock(b), ...flatten(b.alternative)] : [])]);
   const rows = flatten(tree);
   const visibleFailureLine = failureLine < 0 ? -1 : (rows.find(r => r.line === failureLine) ?? rows.findLast(r => r.line <= failureLine) ?? rows[0])?.line ?? -1;
+  // Playback time drives jumps, so pausing and speed changes preserve the midpoint.
+  const activeCommand = source.split('\n')[activeLine]?.trim();
+  const jumpDestination = activeCommand?.startsWith('JUMP ') && instructionProgress >= .5
+    ? rows.find(row => row.command === `POSITION ${activeCommand.slice(5)}`)?.line : undefined;
+  // Structural delimiters have no tile; retain a visible anchor instead of blinking out.
+  const visibleActiveLine = ['END', 'ELSE'].includes(activeCommand ?? '') && !rows.some(row => row.line === activeLine)
+    ? rows.findLast(row => row.line < activeLine)?.line ?? activeLine : activeLine;
+  const markerLine = jumpDestination ?? visibleActiveLine;
   const renderBlocks = (blocks: VisualBlock[], depth = 0): React.ReactNode => blocks.map(block => <div className={(block.children ? 'code-scope ' + category(block.command) : 'code-statement') + (draggedLine === block.line ? ' drag-source' : '')} key={block.line}>
     <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit} onDismissFailure={onDismissFailure}
       onReplace={c => { const lines = source.split('\n'); lines[block.line] = c; change(lines.join('\n')); }}/>
@@ -297,7 +312,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
       {failureMessage && (textMode || !rows.length) && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
       {observation ? null : textMode ? <textarea onClick={failureLine >= 0 ? onDismissFailure : undefined} spellCheck={false} aria-label="Program source" value={source} onChange={e => change(e.target.value)} readOnly={locked} className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}/> :
         <ProgramSurface root={root}>
-          <ExecutionCursor root={root} line={failureLine >= 0 ? -1 : activeLine} stepSeconds={stepSeconds}/>
+          <ExecutionCursor root={root} line={failureLine >= 0 ? -1 : markerLine} stepSeconds={stepSeconds}/>
           <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'}/>
           {renderBlocks(tree)}<JumpArrows root={root} source={source} dragging={!!dragged}/>
         </ProgramSurface>}

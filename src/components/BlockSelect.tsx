@@ -73,9 +73,9 @@ const directionGrid: (Direction | null)[] = ['UP_LEFT', 'UP', 'UP_RIGHT', 'LEFT'
 export function DirectionSelect({ value, label, disabled, onChange }: {
   value: string; label: string; disabled: boolean; onChange: (value: Direction) => void;
 }) {
-  const selected = normalizeDirection(value) ?? 'RIGHT';
+  const selected = normalizeDirection(value);
   const [phase, setPhase] = useState<'closed' | 'open' | 'closing'>('closed');
-  const [focused, setFocused] = useState(Math.max(0, DIRECTIONS.indexOf(selected)));
+  const [focused, setFocused] = useState(Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT')));
   const open = phase === 'open', expanded = phase !== 'closed';
   const root = useRef<HTMLDivElement>(null), trigger = useRef<HTMLButtonElement>(null), menu = useRef<HTMLDivElement>(null), id = useId();
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
@@ -117,8 +117,8 @@ export function DirectionSelect({ value, label, disabled, onChange }: {
       : <span key={direction} className={direction === selected ? 'chosen' : ''}/>
     : <span className="direction-player" key={`center-${i}`}><ModelThumbnail model="robot"/></span>);
   return <div className={'direction-select block-select' + (expanded ? ' is-expanded' : '')} ref={root} onKeyDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget) && !menu.current?.contains(e.relatedTarget)) close(); }}>
-    <button ref={trigger} type="button" className="direction-trigger" role="combobox" aria-label={label} aria-expanded={open} aria-controls={id} aria-haspopup="listbox" title={directionLabel(selected)} disabled={disabled}
-      onClick={() => { setFocused(Math.max(0, DIRECTIONS.indexOf(selected))); if (open) close(); else setPhase('open'); }}
+    <button ref={trigger} type="button" className="direction-trigger" role="combobox" aria-label={label} aria-expanded={open} aria-controls={id} aria-haspopup="listbox" title={selected ? directionLabel(selected) : 'Choose direction'} disabled={disabled}
+      onClick={() => { setFocused(Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT'))); if (open) close(); else setPhase('open'); }}
       onKeyDown={e => {
         if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
           e.preventDefault(); setPhase('open');
@@ -127,7 +127,7 @@ export function DirectionSelect({ value, label, disabled, onChange }: {
         else if (open && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); choose(DIRECTIONS[focused]); }
       }} aria-activedescendant={open ? `${id}-${DIRECTIONS[focused]}` : undefined}>
       <span className="direction-mini-grid" aria-hidden="true">{cells(false)}</span>
-      <span className="sr-only">{directionLabel(selected)}</span>
+      <span className="sr-only">{selected ? directionLabel(selected) : 'Choose direction'}</span>
     </button>
     {expanded && createPortal(<div ref={menu} id={id} role="listbox" aria-label={label} aria-hidden={!open} className={'direction-menu direction-' + phase} style={menuStyle}
       onAnimationEnd={() => { if (phase === 'closing') setPhase('closed'); }}>

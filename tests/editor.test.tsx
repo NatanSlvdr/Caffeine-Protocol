@@ -32,6 +32,19 @@ describe('compact visual code', () => {
   await userEvent.click(screen.getByLabelText('Library Write value'));
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea']);
  });
+ it('leaves shop operands unselected until individually chosen', async () => {
+  render(<Harness/>);
+  for (const name of ['Library Write value','Library If value','Library If operator','Library If source']) {
+   expect(screen.getByLabelText(name).textContent).toBe('');
+  }
+  expect(screen.getByLabelText('Library Move tiles').getAttribute('value')).toBe('');
+  expect(screen.getByLabelText('Library Take direction').querySelector('.chosen')).toBeNull();
+  await userEvent.click(screen.getByLabelText('Library If value'));
+  await userEvent.click(screen.getByRole('option',{name:'Tea'}));
+  expect(screen.getByLabelText('Library If value').textContent).toContain('Tea');
+  expect(screen.getByLabelText('Library If operator').textContent).toBe('');
+  expect(screen.getByLabelText('Library If source').textContent).toBe('');
+ });
  it('shows operand text alongside shared-model miniatures and keeps keyboard selection local', async () => {
   const user = userEvent.setup();
   render(<Harness initial={'LISTEN\nITEM coffee\nMOVE RIGHT 1'}/>);
@@ -156,6 +169,21 @@ describe('compact visual code', () => {
   expect(screen.getByLabelText('Drag jump destination')).toBeTruthy();
   expect(document.querySelector('[data-target] .block-verb')).toBeNull();
   expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+ });
+ it('keeps long and numerous jump connections inside the reserved right gutter', () => {
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
+   if (this.classList.contains('visual-program')) return DOMRect.fromRect({width:405,height:12000});
+   return DOMRect.fromRect({x:80,y:Number(this.dataset.line ?? 0)*500,width:220,height:38});
+  });
+  render(<Harness initial={'POSITION listen\nLISTEN\n' + Array(20).fill('JUMP listen').join('\n')}/>);
+  const paths = [...document.querySelectorAll('.jump-arrows > path')];
+  expect(paths).toHaveLength(20);
+  for (const path of paths) {
+   const coordinates = path.getAttribute('d')!.split(' ');
+   const bend = Number(coordinates[coordinates.indexOf('Q') + 1]);
+   expect(bend).toBeGreaterThan(300);
+   expect(bend).toBeLessThan(405 - 8);
+  }
  });
  it('draws saved jump connections on first mount and after returning from text mode', () => {
   const props={source:'POSITION listen\nLISTEN\nJUMP listen',onChange:vi.fn(),level:8,locked:false,observation:false};

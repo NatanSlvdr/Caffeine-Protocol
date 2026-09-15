@@ -6,11 +6,12 @@ import { CanvasTexture, Group, SRGBColorSpace } from 'three';
 import { PixelArtEffect } from './PixelArtEffect';
 import { Street, StreetClip } from './Street';
 import { CustomerSpeech } from './CustomerSpeech';
+import { RobotHolding } from './RobotHolding';
 import { CafeFloor } from './CafeFloor';
 import { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS } from './CafeModels';
 import type { Vec3 } from './CafeModels';
 import type { StationId } from '../domain/layout';
-import type { RunResult } from '../domain/types';
+import type { ActorId, ActorSnapshot, RunResult } from '../domain/types';
 import { sampleReplay } from '../domain/replay';
 import { cameraZoom, TABLE_LAYOUT, FURNITURE, STATIONS, STARTS, CAMERA_POSITION, CAMERA_TARGET, ENTRANCE, STAFF_ENTRY, ROOM, tableSeat } from '../domain/layout';
 import type { Point } from '../domain/layout';
@@ -99,11 +100,11 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView}
  const speakingId=state?.seed?.events.findLast(e=>e.role==='query'&&e.start<=state.local)?.customerId;
  const speaking=result?.events.find(e=>e.seed_id===state?.seed?.seed_id&&e.customer.customer_id===speakingId);
  const showSpeech=!!state&&!!speaking&&state.local>=speaking.timing.arrival&&state.local<=speaking.timing.created+2;
- const actors=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{niko:{position:STARTS.query,inventory:[],role:'query' as const}}),prep:{position:STARTS.prep,inventory:[],role:'prep' as const},floor:{position:STARTS.floor,inventory:[],role:'floor' as const}};
+ const actors:Partial<Record<ActorId,ActorSnapshot>>=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{niko:{position:STARTS.query,inventory:[],role:'query' as const}}),prep:{position:STARTS.prep,inventory:[],role:'prep' as const},floor:{position:STARTS.floor,inventory:[],role:'floor' as const}};
 
  const gateOpen=!!state?.seed?.events.some(e=>e.actor==='niko'&&e.from[0]===STAFF_ENTRY[0]&&e.to[0]===STAFF_ENTRY[0]&&e.from[1]!==e.to[1]&&(e.from[1]===STAFF_ENTRY[1]||e.to[1]===STAFF_ENTRY[1])&&state.local>=e.start-.3&&state.local<=e.end+.2);
  return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit serviceView={serviceView} reduced={reduced}/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
- {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={id==='query'?-Math.PI/2:0} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
+ {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={id==='query'?-Math.PI/2:0} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{serviceView&&state&&(id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23)&&(actor.heldPaper||actor.inventory.length>0)&&<Html position={[actor.position[0],2.8,actor.position[1]]} center zIndexRange={[10,0]} style={{pointerEvents:'none'}}><RobotHolding name={id==='query'?'Query':id==='prep'?'Brew':'Porter'} inventory={actor.inventory} paper={actor.heldPaper}/></Html>}{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
  {state?.waitingTickets.slice(0,4).map((ticket,i)=><group key={ticket.ticket_id} position={[STATIONS.orders.cell[0]+.2,1.12+i*.015,STATIONS.orders.cell[1]+.18]}>
   <Box size={[.32,.012,.4]} color="#fff3d5"/>
   <Box at={[0,.009,-.08]} size={[.2,.006,.025]} color="#405d61"/>
