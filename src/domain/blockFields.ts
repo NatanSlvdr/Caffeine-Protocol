@@ -1,3 +1,5 @@
+import { isComparisonCondition } from './program';
+
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
   if (command.startsWith('POSITION ')) return { family: 'POSITION', verb: '', value: '' };
@@ -20,7 +22,10 @@ export function blockFields(command: string) {
 
 export function blockVariants(command: string, available: readonly string[]) {
   const family = blockFields(command).family;
-  return available.filter(candidate => candidate !== 'ITEM heard' && blockFields(candidate).family === family);
+  return available.filter(candidate => candidate !== 'ITEM heard' && blockFields(candidate).family === family
+    // Legacy IF blocks keep their compact single selector; comparison blocks
+    // expose their three operands separately in the editor.
+    && !(family === 'IF' && isComparisonCondition(candidate)));
 }
 
 /** One library block per action; operands are chosen inside that block. */

@@ -28,12 +28,25 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
       table: i % level.active_tables + 1, satisfaction: 100,
       timing: { arrival: customer.arrival, created: Infinity, seated: Infinity, ready: Infinity, served: Infinity, left: Infinity, cleaned: Infinity },
     }));
+    const listenIndex = program.instructions.findIndex(command => command === 'LISTEN');
+    const listenLine = listenIndex >= 0 ? program.source_lines[listenIndex] : -1;
     let index = 0, state: RuntimeState = { pc: 0, stopped: false }, queryNext = seed.customers[0]?.arrival ?? Infinity;
     let interpreter: ReturnType<typeof streamCustomerEvent> | undefined;
     let position = STARTS.query;
     let pending: ExecutionEvent | undefined;
+    const markWaiting = (now: number, log: ExecutionEvent[]) => {
+      if (listenLine < 0) return;
+      const previous = log.at(-1);
+      if (previous?.actor === 'query' && previous.line === listenLine && previous.command === 'LISTEN' && previous.start === now && previous.end === now) return;
+      log.push({seed_id: seed.id, actor: 'query', role: 'query', start: now, end: now, line: listenLine, command: 'LISTEN', from: position, to: position, inventory: []});
+    };
     const pump = (now: number, log: ExecutionEvent[]) => {
-      if (now + 1e-8 < queryNext || index >= result.events.length) return;
+      // A zero-duration LISTEN event keeps the cursor on the real waiting
+      // instruction between customers, without masking a block currently being read.
+      if (now + 1e-8 < queryNext || index >= result.events.length) {
+        if (!pending && !interpreter) markWaiting(now, log);
+        return;
+      }
       const event = result.events[index];
       const id = `${seed.id}_T${String(index + 1).padStart(2, '0')}`;
       let step: IteratorResult<CustomerExecution, CustomerExecution>;

@@ -5,6 +5,7 @@ import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
 import { normalizeDirection } from '../domain/directions';
+import { CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, parseComparison } from '../domain/program';
 import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
 import type { VisualBlock } from '../domain/visualProgram';
 import { BlockSelect, DirectionSelect } from './BlockSelect';
@@ -33,6 +34,29 @@ function operandOption(value: string) {
   return { value, label, icon: <OperandIcon value={label}/> };
 }
 
+const conditionLabels: Record<string, string> = {
+  coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar requested', count: 'Sugar count', ambiguous: 'Ambiguous speech',
+  'CUSTOMER SPEECH': 'Customer speech', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
+  IN: 'in', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
+};
+function conditionOption(value: string) {
+  return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
+}
+function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void) {
+  const condition = parseComparison(command);
+  if (!condition) return null;
+  const values = CONDITION_VALUES.filter(value => value === condition.left || options.some(candidate => candidate === `IF ${value}` || parseComparison(candidate)?.left === value));
+  const hasCount = options.some(candidate => candidate === 'IF count' || candidate.startsWith('IF count ')) || condition.left === 'count' || condition.right === 'SUGAR COUNT';
+  const sources = CONDITION_SOURCES.filter(value => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount);
+  const operators = CONDITION_OPERATORS.includes(condition.operator as typeof CONDITION_OPERATORS[number]) ? CONDITION_OPERATORS : [condition.operator, ...CONDITION_OPERATORS];
+  const next = (left: string, operator: string, right: string) => `IF ${left} ${operator} ${right}`;
+  return <span className="if-comparison-operands">
+    <BlockSelect label={label + ' value'} value={condition.left} disabled={disabled} onChange={value => onChange(next(value, condition.operator, condition.right))} options={values.map(conditionOption)}/>
+    <BlockSelect label={label + ' operator'} value={condition.operator} disabled={disabled} onChange={operator => onChange(next(condition.left, operator, condition.right))} options={operators.map(conditionOption)}/>
+    <BlockSelect label={label + ' source'} value={condition.right} disabled={disabled} onChange={right => onChange(next(condition.left, condition.operator, right))} options={sources.map(conditionOption)}/>
+  </span>;
+}
+
 function Operands({ command, options, disabled, label, onChange }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void }) {
   const fields = blockFields(command);
   if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
@@ -47,6 +71,10 @@ function Operands({ command, options, disabled, label, onChange }: { command: st
         if (Number.isInteger(n) && n >= 1 && n <= 19) onChange(nextCommand(direction, String(n)));
       }}/><span className="block-verb block-suffix">tiles</span></>}
     </>;
+  }
+  if (fields.family === 'IF') {
+    const comparison = comparisonOperands(command, options, disabled, label, onChange);
+    if (comparison) return comparison;
   }
   if (!fields.value || ['JUMP', 'POSITION'].includes(fields.family)) return null;
   const variants = blockVariants(command, options);

@@ -101,6 +101,16 @@ describe('compact visual code', () => {
   expect(source()).toBe('LISTEN\nIF coffee\nTICKET\nEND');
   expect(compileProgram(source()).compile_error).toBe('');
  });
+ it('edits IF comparisons with separate value, operator and source selectors', async () => {
+  render(<Harness level={4} initial={'LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND'}/>);
+  expect(screen.getByRole('combobox', {name:'Block 2 value'}).textContent).toContain('Coffee');
+  await userEvent.click(screen.getByRole('combobox', {name:'Block 2 operator'}));
+  expect(screen.getByRole('listbox', {name:'Block 2 operator'}).textContent).toContain('!=');
+  await userEvent.click(within(screen.getByRole('listbox', {name:'Block 2 operator'})).getByRole('option', {name:'!='}));
+  expect(source()).toBe('LISTEN\nIF coffee != CUSTOMER SPEECH\nEND');
+  await userEvent.click(screen.getByRole('combobox', {name:'Block 2 source'}));
+  expect(screen.getByRole('listbox', {name:'Block 2 source'}).textContent).toContain('Customer speech');
+ });
  it('floats nested dropdowns outside block stacking contexts and keeps selection and dismissal working', async () => {
   const user=userEvent.setup();render(<Harness initial={'LISTEN\nIF tea\nITEM coffee\nEND'}/>);
   await user.click(screen.getByLabelText('Block 3 value'));

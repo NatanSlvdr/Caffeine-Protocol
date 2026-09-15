@@ -26,6 +26,11 @@ describe('reference parity — all 14 complete solutions',()=>{
 describe('compiler and runtime',()=>{
  it('takes only the true branch',()=>{const r=exec(lessons[3].solution,tea,4);expect(r.tickets[0].item).toBe('tea');expect(r.trace.some(t=>t.command==='ITEM coffee')).toBe(false);});
  it('takes the else branch',()=>expect(exec(lessons[3].solution).tickets[0].item).toBe('coffee'));
+ it('compares a selected drink against customer speech',()=>{
+  const source='LISTEN\nIF coffee IN CUSTOMER SPEECH\nTICKET\nITEM coffee\nELSE\nTICKET\nITEM tea\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
+  expect(exec(source,coffee,4).tickets[0].item).toBe('coffee');
+  expect(exec(source,tea,4).tickets[0].item).toBe('tea');
+ });
  it('resumes the next speech without stale intent',()=>{const p=compileProgram(lessons[4].solution,5);const a=executeCustomerEvent(p,coffee,'a');const b=executeCustomerEvent(p,tea,'b',a.state);expect(b.error).toBe('');expect(b.tickets[0].item).toBe('tea');});
  for(const source of ['', 'LISTEN\nEND','LISTEN\nEACH','LISTEN\nEACH\nEACH\nEND\nEND','LISTEN\nREPEAT\nTICKET','LISTEN\nBOGUS','TICKET\nLISTEN','LISTEN\nELSE','LISTEN\nIF tea\nELSE\nELSE\nEND','LISTEN\nCALL build_ticket','LISTEN\nJUMP listen','POSITION listen\nLISTEN\nPOSITION listen','LISTEN\nLISTEN','LISTEN\nIF tea\nFUNCTION build_ticket\nEND\nEND'])it(`rejects structural invalidity ${JSON.stringify(source)}`,()=>expect(compileProgram(source).compile_error).not.toBe(''));
  it('gates locked instructions',()=>expect(compileProgram('LISTEN\nHELP',3).compile_error).toContain('locked'));

@@ -16,6 +16,7 @@ describe('clear execution feedback',()=>{
   });
   const {rerender}=render(<Editor {...editor} activeLine={0}/>);
   const cursor=screen.getByRole('img',{name:'Current instruction'});
+  expect(cursor.parentElement).toBe(document.body);
   expect(cursor.style.transform).toContain('-33px, 102px');
   expect(document.querySelector('[data-line="0"]')?.parentElement?.querySelector('.line-number')?.textContent).toBe('01');
   rerender(<Editor {...editor} activeLine={2}/>);

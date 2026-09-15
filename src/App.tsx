@@ -52,8 +52,12 @@ function Workspace({index,save,update,onNext,saveError}:{index:number;save:Progr
  const [showFailure,setShowFailure]=useState(false);
  const time=replayTime;
  const sampled=result?sampleReplay(result,time):undefined;
- const displayedTrace=sampled?.seed?.events.findLast(e=>e.role===role&&e.start<=time&&e.end>time);
- const activeLine=running&&result?.passed?(displayedTrace?.line??-1):-1;
+ const displayedTrace=sampled?.seed?.events.findLast(e=>e.role===role&&e.start<=sampled.local&&(e.end>sampled.local||e.start===e.end));
+ const firstInstructionLine=source.split('\n').findIndex(line=>line.trim()&&!line.trim().startsWith('#'));
+ const waitingLine=source.split('\n').findIndex(line=>/^(LISTEN|WAIT )/.test(line.trim()));
+ // Keep the marker visible during startup and idle gaps: LISTEN is the real
+ // instruction waiting for the next customer when no action is in flight.
+ const activeLine=running&&(!result||result.passed)?(displayedTrace?.line??(waitingLine>=0?waitingLine:firstInstructionLine)):-1;
  const failureLine=showFailure&&result&&!result.passed&&result.first_failure?.role===role?(result.first_failure?.error_line??-1):-1;
  const change=(next:string)=>{if(running)return;const updated={...programs,[role]:next};setPrograms(updated);setResult(null);update(s=>saveRobotDraft(s,index,updated));};
  const stop=()=>{liveRun.current=null;setRunning(false);setPaused(false);setShowFailure(false);};

@@ -5,6 +5,25 @@ import { samePoint, STARTS, STATIONS } from './layout';
 import { interactionTarget, moveQuery, queryPosition } from './queryMovement';
 export const LIMIT = 1024;
 export const isOpening = (command: string) => command === 'EACH' || command.startsWith('IF ') || command.startsWith('FUNCTION ');
+/** Operators offered by the current IF block editor. */
+export const CONDITION_OPERATORS = ['IN', '=', '!='] as const;
+/** Retained only so existing saved numeric-comparison programs keep running. */
+const LEGACY_CONDITION_OPERATORS = ['<', '>', '<=', '>='] as const;
+export const CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'count', 'ambiguous'] as const;
+export const CONDITION_SOURCES = ['CUSTOMER SPEECH', 'SUGAR COUNT', '0', '1', '2', 'TRUE', 'FALSE'] as const;
+export type ConditionOperator = typeof CONDITION_OPERATORS[number] | typeof LEGACY_CONDITION_OPERATORS[number];
+export interface ComparisonCondition { left: typeof CONDITION_VALUES[number]; operator: ConditionOperator; right: typeof CONDITION_SOURCES[number] }
+const comparisonPattern = /^IF (coffee|tea|sugar|count|ambiguous) (IN|!=|<=|>=|=|<|>) (CUSTOMER SPEECH|SUGAR COUNT|0|1|2|TRUE|FALSE)$/;
+export function parseComparison(command: string): ComparisonCondition | undefined {
+  const match = comparisonPattern.exec(command);
+  return match ? { left: match[1] as ComparisonCondition['left'], operator: match[2] as ConditionOperator, right: match[3] as ComparisonCondition['right'] } : undefined;
+}
+export function isComparisonCondition(command: string) { return !!parseComparison(command); }
+const comparisonUsesCount = (condition: ComparisonCondition) => condition.left === 'count' || condition.right === 'SUGAR COUNT' || ['0', '1', '2'].includes(condition.right);
+export function comparisonUnlocked(command: string, level: number) {
+  const condition = parseComparison(command);
+  return !!condition && level >= (comparisonUsesCount(condition) ? 10 : 4);
+}
 const queryDirectionalPattern = new RegExp(`^(TAKE|PICKUP|DEPOSIT) (${DIRECTIONS.join('|')})$`);
 const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
 const legacyQueryAction = (command: string) => command === 'TICKET' || command === 'SUBMIT' || /^MOVE (RIGHT|LEFT) 1$/.test(command);
@@ -30,7 +49,7 @@ export function migrateQuerySource(source: string): string {
 export function availableCommands(level: number): string[] {
   const c = ['LISTEN','TAKE UP','ITEM coffee','MOVE RIGHT 1','DEPOSIT RIGHT'];
   if (level >= 3) c.push(...DIRECTIONS.filter(direction => direction !== 'UP').map(direction => `TAKE ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `DEPOSIT ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `MOVE ${direction} 1`));
-  if(level>=4)c.push('IF tea','IF coffee','ELSE','END','ITEM tea','ITEM heard');
+  if(level>=4)c.push('IF coffee IN CUSTOMER SPEECH','IF tea','IF coffee','ELSE','END','ITEM tea','ITEM heard');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('EACH');
   if(level>=7)c.push('READ sugar','SUGAR variable','SUGAR binary','IF sugar');
@@ -48,7 +67,7 @@ export function compileProgram(source: string, level = 14): Program {
   for(const [line,raw] of source.split('\n').entries()) {
     const c=raw.trim(); p.error_line=line;
     if(!c || c.startsWith('#'))continue;
-    if(!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(queryDirectionalPattern.test(c)||movePattern.test(c))))return fail('Unknown or locked instruction: '+c);
+    if(!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(queryDirectionalPattern.test(c)||movePattern.test(c)))&&!comparisonUnlocked(c, level))return fail('Unknown or locked instruction: '+c);
     const at=p.instructions.length; p.instructions.push(c); p.source_lines.push(line);
     if(c.startsWith('POSITION ')){const label=c.slice(9);if(label in p.positions)return fail('Duplicate position: '+label);p.positions[label]=at;}
     if(isOpening(c)){
@@ -99,11 +118,17 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
     if(c.startsWith('IF ')){
       if(!heard)return fail('No customer speech is available.');
       const cond=c.slice(3);let yes=false;
-      if(cond==='tea'||cond==='coffee')yes=order.drink===cond;
-      if(cond==='sugar')yes=!!order.with_sugar;
-      if(cond==='ambiguous')yes=intent.confidence==='ambiguous';
-      if(cond==='count')yes=order.sugar_count!==undefined;
-      if(cond.startsWith('count ')){if(order.sugar_count===undefined)return fail('Expected a sugar count chip, but none was heard.');yes=cond.includes('=')?order.sugar_count===Number(cond.at(-1)):order.sugar_count>Number(cond.at(-1));}
+      const comparison=parseComparison(c);
+      if(comparison){
+        if(comparisonUsesCount(comparison)&&order.sugar_count===undefined)return fail('Expected a sugar count chip, but none was heard.');
+        yes=evaluateComparison(comparison, order, intent);
+      } else {
+        if(cond==='tea'||cond==='coffee')yes=order.drink===cond;
+        if(cond==='sugar')yes=!!order.with_sugar;
+        if(cond==='ambiguous')yes=intent.confidence==='ambiguous';
+        if(cond==='count')yes=order.sugar_count!==undefined;
+        if(cond.startsWith('count ')){if(order.sugar_count===undefined)return fail('Expected a sugar count chip, but none was heard.');yes=cond.includes('=')?order.sugar_count===Number(cond.at(-1)):order.sugar_count>Number(cond.at(-1));}
+      }
       if(!yes)next=(p.alternatives[pc]??p.ends[pc])+1;
     } else if(c.startsWith('FUNCTION '))next=p.ends[pc]+1;
     else if(c.startsWith('CALL ')){
@@ -160,6 +185,44 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
     out.state.pc=next;
   }
   out.state.stopped=true;return finish();
+}
+
+/** Evaluate a comparison against the structured chips extracted from speech. */
+export function evaluateComparison(condition: ComparisonCondition, order: SpeechIntent, intent = order) {
+  const speechValue = () => condition.left === 'coffee' || condition.left === 'tea' ? order.drink
+    : condition.left === 'sugar' ? order.with_sugar
+      : condition.left === 'count' ? order.sugar_count
+        : intent.confidence === 'ambiguous';
+  const left = speechValue();
+  if (condition.operator === 'IN') {
+    if (condition.right === 'CUSTOMER SPEECH') {
+      return condition.left === 'coffee' || condition.left === 'tea' ? order.drink === condition.left
+        : condition.left === 'sugar' ? order.with_sugar === true
+          : condition.left === 'count' ? order.sugar_count !== undefined
+            : intent.confidence === 'ambiguous';
+    }
+    if (condition.right === 'SUGAR COUNT') return condition.left === 'count' && left !== undefined;
+    const number = Number(condition.right);
+    return typeof left === 'number' ? left === number : false;
+  }
+  if (condition.right === 'CUSTOMER SPEECH') {
+    // A direct equality against speech is useful for drink and boolean chips.
+    const present = condition.left === 'coffee' || condition.left === 'tea' ? order.drink === condition.left
+      : condition.left === 'sugar' ? order.with_sugar === true
+        : condition.left === 'count' ? order.sugar_count !== undefined
+          : intent.confidence === 'ambiguous';
+    return condition.operator === '=' ? present : condition.operator === '!=' ? !present : false;
+  }
+  const right = condition.right === 'SUGAR COUNT' ? order.sugar_count : ['TRUE', 'FALSE'].includes(condition.right) ? condition.right === 'TRUE' : Number(condition.right);
+  if (left === undefined || right === undefined) return false;
+  if (condition.operator === '=') return left === right;
+  if (condition.operator === '!=') return left !== right;
+  if (typeof left !== 'number' || typeof right !== 'number') return false;
+  if (condition.operator === '<') return left < right;
+  if (condition.operator === '>') return left > right;
+  if (condition.operator === '<=') return left <= right;
+  if (condition.operator === '>=') return left >= right;
+  return false;
 }
 
 /** Offline validation drains the same interpreter used by the live game. */

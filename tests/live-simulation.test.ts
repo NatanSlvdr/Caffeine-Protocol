@@ -26,6 +26,11 @@ describe('live service',()=>{
   expect(run.advance(1).result.events[0].trace).toHaveLength(1);
   expect(run.advance(.5).result.events[0].trace).toHaveLength(2);
  });
+ it('records a zero-duration wait while an automatic worker is idle',()=>{
+  const run=createLiveRun(levels[2],programs(2));
+  const frame=run.advance(2+levels[2].seeds[0].customers[0].arrival);
+  expect(frame.result.execution?.[0].events.some(e=>e.actor==='prep'&&e.command==='WAIT TICKET'&&e.start===e.end)).toBe(true);
+ });
  it('reaches a bad instruction after the preceding blocks instead of jumping to failure',()=>{
   const run=createLiveRun(levels[2],{query:'LISTEN\nITEM coffee',prep:'',floor:''});
   const first=run.advance(2+levels[2].seeds[0].customers[0].arrival);

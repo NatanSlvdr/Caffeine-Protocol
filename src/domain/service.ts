@@ -4,7 +4,7 @@ import { floorSource, preparationSource } from './routines';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import { directionVectors, normalizeDirection } from './directions';
-import { isOrderDeposit } from './program';
+import { evaluateComparison, isOrderDeposit, parseComparison } from './program';
 import { moveQuery } from './queryMovement';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 
@@ -63,15 +63,21 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
  };
  const station=(w:Worker,p:Point,name:string)=>{if(!samePoint(w.position,p)){fail(w,`Move to the ${name} interaction tile (${p.join(', ')}) first.`);return false;}return true;};
  const capacity=(w:Worker)=>w.role==='prep'?config.prepCapacity:config.floorCapacity;
- const condition=(w:Worker,c:string)=>{const job=currentJob(w);return c==='coffee'?job?.item==='coffee':c==='tea'?job?.item==='tea':c==='sugar'?(job?.sugar??0)>0:c.startsWith('TABLE ')?job?.table===Number(c.slice(6)):false;};
+ const condition=(w:Worker,c:string)=>{const job=currentJob(w);const comparison=parseComparison(`IF ${c}`);if(comparison){const speech={drink:job?.item,with_sugar:(job?.sugar??0)>0,sugar_count:job?.sugar};return evaluateComparison(comparison,speech,speech);}return c==='coffee'?job?.item==='coffee':c==='tea'?job?.item==='tea':c==='sugar'?(job?.sugar??0)>0:c.startsWith('TABLE ')?job?.table===Number(c.slice(6)):false;};
  const canClaimDrink=(j:Job)=>j.status==='ready'&&(!tableOwners.has(j.table)||tableOwners.get(j.table)===j.event.customer.customer_id);
  const nextWork=(c:string)=>c==='WAIT TICKET'?jobs.find(j=>j.status==='ticket'&&j.created<=now):c==='WAIT DRINK'?jobs.find(canClaimDrink):jobs.find(j=>j.status==='dirty'&&j.dirtyAt<=now);
+ const markWaiting=(w:Worker,line:number,command:string)=>{
+  if(!live)return;
+  const previous=log.at(-1);
+  if(previous?.actor===w.actor&&previous.line===line&&previous.command===command&&previous.start===now&&previous.end===now)return;
+  log.push({seed_id:seed,actor:w.actor,role:w.role,start:now,end:now,line,command,from:w.position,to:w.position,inventory:structuredClone(w.inventory),customerId:currentJob(w)?.event.customer.customer_id});
+ };
  const step=(w:Worker):boolean=>{
   if(w.done||w.pending||failure)return false;
   const p=w.program,c=p.instructions[w.pc],line=p.source_lines[w.pc]??-1;
   if(p.compile_error){fail(w,p.compile_error,p.error_line);return false;}
   if(c===undefined){w.done=true;return true;}
-  if(c.startsWith('WAIT ')&&!nextWork(c))return false;
+  if(c.startsWith('WAIT ')&&!nextWork(c)){markWaiting(w,line,c);return false;}
   if(w.move){
    const move=w.move,next:Point=[w.position[0]+move.direction[0],w.position[1]+move.direction[1]];
    if(!move.remaining||!isWalkable(next,w.role)){
