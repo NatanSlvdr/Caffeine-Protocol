@@ -1,7 +1,7 @@
-import { STARTS, ENTRANCE, gridRoute, STATIONS, tableFront, tableSeat } from './layout';
-import type { Point } from './layout';
+import { STARTS, STATIONS, tableFront } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
-import { customerApproach, customerExit, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
+import { directionVectors, normalizeDirection } from './directions';
+import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
 /** Sample immutable execution records; presentation never invents a robot route. */
 export function sampleReplay(result:RunResult,time:number){
  const seed=(time<0?result.execution?.[0]:result.execution?.find(s=>time>=s.start&&time<s.start+s.duration))??result.execution?.at(-1);
@@ -17,22 +17,47 @@ export function sampleReplay(result:RunResult,time:number){
   const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local).at(-1),last=history.at(-1)!;
   let position=settled?.to??last.from;
   if(motion&&motion.end>local){const t=Math.max(0,Math.min(1,(local-motion.start)/(motion.end-motion.start)));position=[motion.from[0]+(motion.to[0]-motion.from[0])*t,motion.from[1]+(motion.to[1]-motion.from[1])*t];}
-  actors[id]={position,inventory:settled?.inventory??[],heldPaper:settled?.heldPaper,role:last.role};
+  const directional=history.findLast(event=>event.command==='LISTEN'||/^(MOVE|TAKE|PICKUP|DEPOSIT) /.test(event.command)&&normalizeDirection(event.command.split(' ')[1]));
+  const direction=directional?normalizeDirection(directional.command.split(' ')[1]??''):undefined;
+  const vector=direction?directionVectors[direction]:undefined;
+  const facing=directional?.command==='LISTEN'?-Math.PI/2:vector?Math.atan2(vector[0],vector[1]):id==='query'?-Math.PI/2:0;
+  const reach=/^(TAKE|PICKUP|DEPOSIT)( |$)/.test(last.command)&&last.end>local?Math.sin(Math.PI*(local-last.start)/Math.max(.001,last.end-last.start)):0;
+  actors[id]={position,facing,reach,walking:!!motion&&motion.end>local,inventory:settled?.inventory??[],heldPaper:settled?.heldPaper,role:last.role};
  }
- const customers=result.events.map((event,index)=>({event,index})).filter(({event})=>event.seed_id===seed?.seed_id&&local>=event.timing.arrival-STREET_APPROACH_SECONDS&&local<Math.max(event.timing.left,event.timing.created)+STREET_EXIT_SECONDS).map(({event,index})=>{
-  const front=tableFront(Math.max(0,event.table-1));let from:Point=ENTRANCE,to:Point=STATIONS.orders.floor,begin=event.timing.arrival,end=event.timing.created;
-  if(local>=event.timing.created){from=STATIONS.orders.floor;to=front;begin=event.timing.created;end=begin+gridRoute(from,to).length-1;}
-  const leaving=local>=event.timing.left&&event.timing.left>event.timing.created;
-  if(leaving){from=front;to=ENTRANCE;begin=event.timing.left;end=begin+STREET_EXIT_SECONDS;}
-  const approaching=local<event.timing.created;
-  if(approaching){begin=event.timing.arrival-STREET_APPROACH_SECONDS;if(!Number.isFinite(end))end=event.timing.arrival;}
-  const path=approaching?customerApproach(index):leaving?customerExit(from,index):gridRoute(from,to);
-  const seated=event.table>0&&to===front&&local>=end&&local<event.timing.left;
-  return {id:event.customer.customer_id,position:seated?tableSeat(event.table-1,index%2 as 0|1):samplePath(path,(local-begin)/Math.max(.1,end-begin)),seated,side:index%2 as 0|1};
+ const servedTimes=new Map(logs.filter(log=>log.command==='SERVE'&&log.ticketId&&log.end<=local).map(log=>[log.ticketId!,log.end]));
+ const collected=new Set(logs.filter(log=>log.command==='COLLECT'&&log.end<=local).map(log=>log.ticketId));
+ const customers=result.events.map((event,index)=>({event,index})).filter(({event})=>event.seed_id===seed?.seed_id&&local>=event.timing.arrival-STREET_APPROACH_SECONDS&&local<event.timing.left+STREET_EXIT_SECONDS).map(({event,index})=>{
+  const side=index%2 as 0|1, timing=event.timing;
+  const hasSeat=Number.isFinite(timing.seated)&&event.table>0;
+  const seating=timing.seating??timing.created;
+  const leaving=local>=timing.left;
+  let path=customerApproach(index), progress=(local-(timing.arrival-STREET_APPROACH_SECONDS))/STREET_APPROACH_SECONDS;
+  let sit=0;
+  if(hasSeat&&local>=seating){
+   path=customerSeatPath(event.table-1,side);
+   progress=(local-seating-SEAT_CHOICE_SECONDS)/(pathDistance(path)/CUSTOMER_WALK_SPEED);
+   sit=Math.max(0,Math.min(1,(local-(timing.seated-SIT_SECONDS))/SIT_SECONDS));
+  }
+  if(leaving){
+   const front=hasSeat?tableFront(event.table-1):STATIONS.orders.floor;
+   const seatPath=hasSeat?customerSeatPath(event.table-1,side):[];
+   path=hasSeat?[...seatPath.slice(-2).reverse(),...customerExit(front,index)]:customerExit(front,index);
+   const stand=hasSeat?SIT_SECONDS:0;
+   progress=(local-timing.left-stand)/(STREET_EXIT_SECONDS-stand);
+   sit=hasSeat?Math.max(0,1-(local-timing.left)/SIT_SECONDS):0;
+  }
+  const position=samplePath(path,progress), ahead=samplePath(path,progress+.001);
+  const walking=progress>0&&progress<1;
+  const facing=walking?Math.atan2(ahead[0]-position[0],ahead[1]-position[1]):hasSeat&&local>=timing.seated-SIT_SECONDS?(side===0?Math.PI/2:-Math.PI/2):Math.PI/2;
+  const drinks=event.tickets.filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id));
+  const sipping=drinks.find(ticket=>local<servedTimes.get(ticket.ticket_id)!+DRINK_SECONDS);
+  return {id:event.customer.customer_id,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
  });
  const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
  // A submitted ticket stays on the shared counter until prep finishes claiming it.
  const claimed=new Set(logs.filter(e=>e.command==='WAIT TICKET'&&e.end<=local).map(e=>e.ticketId));
  const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local&&!claimed.has(t.ticket_id));
- return {actors,customers,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};
+ const sippingIds=new Set(customers.map(customer=>customer.sippingId));
+ const tableDrinks=result.events.filter(event=>event.seed_id===seed?.seed_id).flatMap(event=>event.tickets.filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id)&&!sippingIds.has(ticket.ticket_id)).map(ticket=>({id:ticket.ticket_id,item:ticket.item,table:event.table})));
+ return {actors,customers,tableDrinks,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};
 }

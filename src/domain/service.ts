@@ -1,3 +1,4 @@
+import { seatingDuration, DRINK_SECONDS, STREET_EXIT_SECONDS } from './street';
 import { BLOCK_SECONDS } from './playback';
 import { compileRobot } from './robotProgram';
 import { floorSource, preparationSource } from './routines';
@@ -30,7 +31,7 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
  if(!live)for(const [index,event] of events.entries()){
   const created=Math.max(intakeFree,event.customer.arrival)+(level.programming_enabled?Math.max(.1,event.trace.length*.1):9);intakeFree=created;
   event.table=event.tickets.length?index%level.active_tables+1:0;
-  event.timing={arrival:event.customer.arrival,created,seated:created,ready:created,served:created,left:created,cleaned:created};
+  event.timing={arrival:event.customer.arrival,created,seated:Infinity,ready:Infinity,served:Infinity,left:event.tickets.length?Infinity:created,cleaned:event.tickets.length?Infinity:created};
   event.trace.forEach((step,i)=>{
    const from=queryPosition;
    if(step.command.startsWith('MOVE '))queryPosition=moveQuery(queryPosition,step.command);
@@ -64,7 +65,7 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
  const station=(w:Worker,p:Point,name:string)=>{if(!samePoint(w.position,p)){fail(w,`Move to the ${name} interaction tile (${p.join(', ')}) first.`);return false;}return true;};
  const capacity=(w:Worker)=>w.role==='prep'?config.prepCapacity:config.floorCapacity;
  const condition=(w:Worker,c:string)=>{const job=currentJob(w);const comparison=parseComparison(`IF ${c}`);if(comparison){const speech={drink:job?.item,with_sugar:(job?.sugar??0)>0,sugar_count:job?.sugar};return evaluateComparison(comparison,speech,speech);}return c==='coffee'?job?.item==='coffee':c==='tea'?job?.item==='tea':c==='sugar'?(job?.sugar??0)>0:c.startsWith('TABLE ')?job?.table===Number(c.slice(6)):false;};
- const canClaimDrink=(j:Job)=>j.status==='ready'&&(!tableOwners.has(j.table)||tableOwners.get(j.table)===j.event.customer.customer_id);
+ const canClaimDrink=(j:Job)=>j.status==='ready'&&j.event.timing.seated<=now&&tableOwners.get(j.table)===j.event.customer.customer_id;
  const nextWork=(c:string)=>c==='WAIT TICKET'?jobs.find(j=>j.status==='ticket'&&j.created<=now):c==='WAIT DRINK'?jobs.find(canClaimDrink):jobs.find(j=>j.status==='dirty'&&j.dirtyAt<=now);
  const markWaiting=(w:Worker,line:number,command:string)=>{
   if(!live)return;
@@ -124,7 +125,12 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
   }else if(c==='SERVE'){
    if(!cargo||cargo.stage!=='brewed'||!job){fail(w,'Carry a ready drink before serving.');return false;}
    if(!station(w,tableFront(cargo.table-1),`table ${cargo.table}`))return false;
-   apply=()=>{w.inventory.shift();job.status='served';job.dirtyAt=now+5;job.event.timing.served=now;job.event.tickets.find(t=>t.ticket_id===job.ticketId)!.status='served';};
+   if(job.event.timing.seated>now){markWaiting(w,line,c);return false;}
+   apply=()=>{
+    w.inventory.shift();job.status='served';job.dirtyAt=now+DRINK_SECONDS;job.event.timing.served=now;job.event.tickets.find(t=>t.ticket_id===job.ticketId)!.status='served';
+    const group=jobs.filter(j=>j.event===job.event);
+    if(group.length===job.event.tickets.length&&job.event.tickets.every(ticket=>ticket.status==='served'))job.event.timing.left=Math.max(...group.map(served=>served.dirtyAt));
+   };
   }else if(c==='COLLECT'){
    if(!w.job||w.job.dirtyAt>now){fail(w,'WAIT DIRTY before collecting a used cup.');return false;}
    if(!station(w,tableFront(w.job.table-1),`table ${w.job.table}`))return false;
@@ -191,11 +197,19 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
    path.slice(1).forEach((to,i)=>log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end:++arrival,line:-1,command:'WALK TO ORDER COUNTER',from:path[i],to,inventory:[]}));
    const end=arrival+9;intakeFree=end;
    log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end,line:-1,command:'TAKE ORDER',from:MANUAL_INTAKE,to:MANUAL_INTAKE,inventory:[],customerId:event.customer.customer_id});
-   manualIntake={end,apply:()=>{nikoPosition=MANUAL_INTAKE;event.timing.created=end;event.timing.seated=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>t.ticket_id===job.ticketId)!.created_at=end;}}};
+   manualIntake={end,apply:()=>{nikoPosition=MANUAL_INTAKE;event.timing.created=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>t.ticket_id===job.ticketId)!.created_at=end;}}};
   }
   for(const job of jobs)if(job.status==='served'&&job.dirtyAt<=now)job.status='dirty';
-  for(const event of events){const group=jobs.filter(j=>j.event===event);if(group.length&&group.every(j=>['served','dirty','cleared'].includes(j.status))){const left=Math.max(...group.map(j=>j.event.timing.served))+5;event.timing.left=left;}}
-  if((!live||live.done())&&finished()&&workers.every(w=>!w.pending)&&workers.every(w=>!w.move)&&now>=intakeFree){
+  // Reserve a table as the customer chooses it; delivery waits for the seated timestamp.
+  for(const [index,event] of events.entries()){
+   if(event.timing.created<=now&&event.tickets.length&&event.timing.seated===Infinity&&!tableOwners.has(event.table)){
+    tableOwners.set(event.table,event.customer.customer_id);
+    event.timing.seating=now;
+    event.timing.seated=now+seatingDuration(event.table-1,index%2 as 0|1);
+   }
+   if(!config.clearing&&event.timing.left<=now&&tableOwners.get(event.table)===event.customer.customer_id)tableOwners.delete(event.table);
+  }
+  if((!live||live.done())&&finished()&&workers.every(w=>!w.pending)&&workers.every(w=>!w.move)&&now>=intakeFree&&(config.objective!=='serve'||events.every(event=>!event.tickets.length||now>=event.timing.left+STREET_EXIT_SECONDS))){
    const floor=workers[1],loadWorker=number<23?workers[0]:floor;
    if((config.minLoad??0)>loadWorker.maxLoad){fail(loadWorker,`This shift requires carrying ${config.minLoad} items together.`);break;}
    else break;
@@ -203,7 +217,7 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
   let advanced=false;for(const w of workers){if(config.objective==='prepare'&&w.role==='floor')continue;advanced=step(w)||advanced;}
   if(failure)break;
   if(advanced)continue;
-  const future=[...(live?[live.next()]:[]),...(queryFailure&&queryFailure.timing.created>now?[queryFailure.timing.created]:[]),...(manualIntake?[manualIntake.end]:[]),...(!live&&number<3&&manualIndex<events.length?[events[manualIndex].customer.arrival]:[]),...workers.flatMap(w=>w.pending?[w.pending.end]:[]),...jobs.filter(j=>j.status==='ticket'&&j.created>now).map(j=>j.created),...jobs.filter(j=>j.status==='served'&&j.dirtyAt>now).map(j=>j.dirtyAt)].filter(t=>Number.isFinite(t)&&t>now);
+  const future=[...events.flatMap(event=>[event.timing.created,event.timing.seated,event.timing.left,event.timing.left+STREET_EXIT_SECONDS]).filter(t=>t>now),...(live?[live.next()]:[]),...(queryFailure&&queryFailure.timing.created>now?[queryFailure.timing.created]:[]),...(manualIntake?[manualIntake.end]:[]),...(!live&&number<3&&manualIndex<events.length?[events[manualIndex].customer.arrival]:[]),...workers.flatMap(w=>w.pending?[w.pending.end]:[]),...jobs.filter(j=>j.status==='ticket'&&j.created>now).map(j=>j.created),...jobs.filter(j=>j.status==='served'&&j.dirtyAt>now).map(j=>j.dirtyAt)].filter(t=>Number.isFinite(t)&&t>now);
   if(!future.length){if(!finished())fail(workers.find(w=>!w.done)??workers[0],'Unfinished work: no worker can advance. Check event waits, routes, and repeat instructions.');break;}
   const next=Math.min(...future);
   yield next;

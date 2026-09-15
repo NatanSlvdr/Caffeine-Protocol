@@ -1,8 +1,8 @@
-import { BOUNDS, ENTRANCE, gridRoute, ROOM, STATIONS } from './layout';
+import { BOUNDS, ENTRANCE, gridRoute, ROOM, STATIONS, tableFront, tableSeat } from './layout';
 import type { Point } from './layout';
 
 export const STREET_APPROACH_SECONDS=6;
-export const STREET_EXIT_SECONDS=8;
+export const STREET_EXIT_SECONDS=5;
 export const SIDEWALK_X=-9.6;
 /** Street and sidewalk end flush with the café's front and back floor edges. */
 export const STREET_BOUNDS={minZ:BOUNDS.minZ-.5,maxZ:BOUNDS.maxZ+.5,length:ROOM[1],centerZ:(BOUNDS.minZ+BOUNDS.maxZ)/2};
@@ -25,3 +25,15 @@ export function samplePath(path:readonly Point[],progress:number):Point{
  }
  return path.at(-1)??ENTRANCE;
 }
+
+export const CUSTOMER_WALK_SPEED = 2.8;
+export const SEAT_CHOICE_SECONDS = .6;
+export const SIT_SECONDS = .5;
+export const DRINK_SECONDS = 12;
+/** Walk around the table to the chair, never across the tabletop. */
+export function customerSeatPath(table: number, side: 0 | 1): Point[] {
+ const front = tableFront(table), seat = tableSeat(table, side);
+ return [...gridRoute(STATIONS.orders.floor, front), [seat[0], front[1]], seat];
+}
+export const pathDistance = (path: readonly Point[]) => path.slice(1).reduce((sum, point, i) => sum + Math.hypot(point[0]-path[i][0], point[1]-path[i][1]), 0);
+export const seatingDuration = (table: number, side: 0 | 1) => SEAT_CHOICE_SECONDS + pathDistance(customerSeatPath(table, side)) / CUSTOMER_WALK_SPEED + SIT_SECONDS;

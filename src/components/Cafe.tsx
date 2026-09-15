@@ -69,17 +69,51 @@ function Room({evening,gateOpen,showLabels}:{evening:boolean;gateOpen:boolean;sh
   {id==='orders'?<TicketTray/>:<Appliance id={id as StationId}/>}
  </group>)}
  <group position={[STATIONS.orders.customerCounter[0],0,STATIONS.orders.customerCounter[1]]} rotation-y={Math.PI/2}><Appliance id="orders"/></group>
+ {/* Query takes paper from the counter one tile above its starting position. */}
+ <group position={[STARTS.query[0],1.11,STARTS.query[1]-1]}>
+  {Array.from({length:7},(_,i)=><group key={i} position={[(i%3-1)*.018,i*.024,0]} rotation-y={(i%2?1:-1)*.025}>
+   <Box size={[.58,.018,.7]} color={i===6?'#fffbed':'#e4d5b7'}/>
+  </group>)}
+ </group>
  <CounterGate open={gateOpen}/>
  {showLabels&&<><FloorLabel at={STATIONS.orders.prep} label="ORDER HANDOFF"/><FloorLabel at={STATIONS.ingredients.prep} label="STORAGE"/><FloorLabel at={STATIONS.grinder.prep} label="COFFEE MACHINE"/><FloorLabel at={STATIONS.sugar.prep} label="SUGAR"/><FloorLabel at={STATIONS.pickup.floor} label="DRINK PICKUP"/><FloorLabel at={STATIONS.returns.floor} label="SINK"/><FloorLabel at={ENTRANCE} label="ENTER"/></>}
  {TABLE_LAYOUT.map((t,i)=><group key={t.id}><Table point={[t.x,t.z+(t.depth-1)/2]} depth={t.depth}/><Chair at={[tableSeat(i,0)[0],0,tableSeat(i,0)[1]]} rotation={Math.PI/2}/><Chair at={[tableSeat(i,1)[0],0,tableSeat(i,1)[1]]} rotation={-Math.PI/2}/></group>)}
  </group>;}
-function Character({at,color='#c28563',robot=false,label,animate=false,phase=0,reduced=false,seated=false,facing=0}:{at:Point;color?:string;robot?:boolean;label?:string;animate?:boolean;phase?:number;reduced?:boolean;seated?:boolean;facing?:number}){
-  const ref=useRef<Group>(null);const last=useRef<Point>(at);
-  useFrame(()=>{if(!ref.current||seated)return;const dx=at[0]-last.current[0],dz=at[1]-last.current[1];if(Math.hypot(dx,dz)>.00001)ref.current.rotation.y=Math.atan2(dx,dz);last.current=at;});
-  const bob=animate&&!reduced?Math.sin(phase*150)*.035:0;
-  return <group position={[at[0],seated?0:bob,at[1]]}><group ref={ref} rotation-y={facing}>
-    {robot?<RobotModel color={color}/>:<><Cylinder at={[0,seated?1.02:.76,0]} size={[.24,.31,.64]} color={color}/><mesh position={[0,seated?1.63:1.37,0]} castShadow><sphereGeometry args={[.3,10,8]}/><meshStandardMaterial color="#deb28b"/></mesh><mesh position={[0,seated?1.78:1.52,-.04]} castShadow><sphereGeometry args={[.3,10,6,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#664d38"/></mesh><Box at={[0,seated?1:.74,.25]} size={[.34,.46,.05]} color="#e7d7af"/></>}
-    {!robot&&[-1,1].map(i=>seated?<group key={i}><Box at={[i*.17,.62,.2]} size={[.17,.17,.48]} color="#4b5543"/><Box at={[i*.17,.38,.42]} size={[.17,.45,.17]} color="#4b5543"/><Box at={[i*.18,.13,.51]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,1.03,0]} size={[.14,.44,.17]} color={color}/></group>:<group key={i}><Box at={[i*.17,.23,0]} size={[.17,.4,.19]} color="#4b5543"/><Box at={[i*.18,.07,.09]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,.78,0]} size={[.14,.44,.17]} color={color}/></group>)}
+/** Smooth heading changes, hinged walking legs, and a seated sipping pose share replay time. */
+function Character({at,color='#c28563',robot=false,label,animate=false,walking=false,phase=0,reduced=false,sit=0,facing=0,drinking=false,tea=false,reach=0}:{at:Point;color?:string;robot?:boolean;label?:string;animate?:boolean;walking?:boolean;phase?:number;reduced?:boolean;sit?:number;facing?:number;drinking?:boolean;tea?:boolean;reach?:number}){
+  const ref=useRef<Group>(null),initialFacing=useRef(facing);
+  useFrame((_,delta)=>{
+    if(!ref.current)return;
+    const difference=Math.atan2(Math.sin(facing-ref.current.rotation.y),Math.cos(facing-ref.current.rotation.y));
+    ref.current.rotation.y+=difference*(reduced||!animate?1:1-Math.exp(-delta*18));
+  });
+  const stride=walking&&!reduced?Math.sin(phase*10):0;
+  const bob=walking&&!reduced?Math.abs(stride)*.035:0;
+  const sip=drinking&&!reduced?(1-Math.cos(phase*1.6))/2:0;
+  const hip=.51+sit*.21;
+  return <group position={[at[0],bob,at[1]]}><group ref={ref} rotation-y={initialFacing.current}>
+    {robot?<RobotModel color={color} stride={stride} reach={reduced?0:reach}/>:<>
+      <Cylinder at={[0,.76+sit*.26,0]} size={[.24,.31,.64]} color={color}/>
+      <group position={[0,1.37+sit*.26,0]} rotation-x={sip*.12}>
+        <mesh castShadow><sphereGeometry args={[.3,10,8]}/><meshStandardMaterial color="#deb28b"/></mesh>
+        <mesh position={[0,.15,-.04]} castShadow><sphereGeometry args={[.3,10,6,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#664d38"/></mesh>
+      </group>
+      <Box at={[0,.74+sit*.26,.25]} size={[.34,.46,.05]} color="#e7d7af"/>
+      {[-1,1].map(side=><group key={side}>
+        <group position={[side*.17,hip,0]} rotation-x={-sit*Math.PI/2+stride*side*.5*(1-sit)}>
+          <Box at={[0,-.12,0]} size={[.17,.25,.19]} color="#4b5543"/>
+          <group position={[0,-.25,0]} rotation-x={sit*Math.PI/2+Math.max(0,-stride*side)*.35*(1-sit)}>
+            <Box at={[0,-.12,0]} size={[.17,.25,.17]} color="#4b5543"/>
+            <Box at={[0,-.2,.09]} size={[.23,.14,.35]} color="#394538"/>
+          </group>
+        </group>
+        <group position={[side*.36,1+sit*.26,0]} rotation-x={drinking&&side===1?-1.05-sip*.7:-sit*.75-stride*side*.4}>
+          <Box at={[0,-.2,0]} size={[.14,.44,.17]} color={color}/>
+          <mesh position={[0,-.43,0]}><sphereGeometry args={[.09,8,6]}/><meshStandardMaterial color="#deb28b"/></mesh>
+        </group>
+      </group>)}
+      {drinking&&<group position={[.22,1.26+sip*.27,.43-sip*.19]} rotation-x={-sip*.3} scale={.72}><Cup tea={tea}/></group>}
+    </>}
   </group>{label&&<Html position={[0,2.1,0]} center zIndexRange={[6,0]}><span className="actor-label">{label}</span></Html>}</group>;
 }
 /** Ease into a wider, ten-degree view for service, then return to the coding grid. */
@@ -104,16 +138,17 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView}
 
  const gateOpen=!!state?.seed?.events.some(e=>e.actor==='niko'&&e.from[0]===STAFF_ENTRY[0]&&e.to[0]===STAFF_ENTRY[0]&&e.from[1]!==e.to[1]&&(e.from[1]===STAFF_ENTRY[1]||e.to[1]===STAFF_ENTRY[1])&&state.local>=e.start-.3&&state.local<=e.end+.2);
  return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit serviceView={serviceView} reduced={reduced}/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
- {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={id==='query'?-Math.PI/2:0} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{serviceView&&state&&(id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23)&&(actor.heldPaper||actor.inventory.length>0)&&<Html position={[actor.position[0],2.8,actor.position[1]]} center zIndexRange={[10,0]} style={{pointerEvents:'none'}}><RobotHolding name={id==='query'?'Query':id==='prep'?'Brew':'Porter'} inventory={actor.inventory} paper={actor.heldPaper}/></Html>}{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
+ {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={actor.facing??(id==='query'?-Math.PI/2:0)} walking={moving&&actor.walking} reach={actor.reach} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{serviceView&&state&&(id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23)&&(actor.heldPaper||actor.inventory.length>0)&&<Html position={[actor.position[0],2.8,actor.position[1]]} center zIndexRange={[10,0]} style={{pointerEvents:'none'}}><RobotHolding name={id==='query'?'Query':id==='prep'?'Brew':'Porter'} inventory={actor.inventory} paper={actor.heldPaper}/></Html>}{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
  {state?.waitingTickets.slice(0,4).map((ticket,i)=><group key={ticket.ticket_id} position={[STATIONS.orders.cell[0]+.2,1.12+i*.015,STATIONS.orders.cell[1]+.18]}>
   <Box size={[.32,.012,.4]} color="#fff3d5"/>
   <Box at={[0,.009,-.08]} size={[.2,.006,.025]} color="#405d61"/>
   <Box at={[-.035,.009,.02]} size={[.13,.006,.025]} color="#b77959"/>
  </group>)}
  {state?.pickup.slice(0,2).map(([id,item],i)=><Cup key={id} at={[STATIONS.pickup.cell[0]-.2+i*.4,1.16,STATIONS.pickup.cell[1]]} tea={item==='tea'}/>)}
+ {state?.tableDrinks.map((drink,index)=><Cup key={drink.id} at={[TABLE_LAYOUT[drink.table-1].x-.2+(index%2)*.4,1.33,TABLE_LAYOUT[drink.table-1].z]} tea={drink.item==='tea'}/>)}
  <Street evening={evening} paused={!!result&&!moving} reduced={reduced}/>
  <StreetClip>{state?.customers.map((c,i)=><group key={c.id}>
-  <Character at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} seated={c.seated} animate={moving&&!c.seated} phase={time} reduced={reduced} facing={c.side===0?Math.PI/2:-Math.PI/2}/>
+  <Character at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} sit={c.sit} walking={moving&&c.walking} animate={moving} phase={time} reduced={reduced} facing={c.facing} drinking={c.drinking} tea={c.drink==='tea'}/>
   {showSpeech&&speaking.customer.customer_id===c.id&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={speaking.customer}/></Html>}
  </group>)}</StreetClip>
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;

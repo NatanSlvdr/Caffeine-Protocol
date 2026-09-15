@@ -3,6 +3,8 @@ import { createLiveRun } from '../src/domain/liveSimulation';
 import { levels, lessons } from '../src/data';
 import { referencePrograms } from '../src/data/extension';
 import { sampleReplay } from '../src/domain/replay';
+import { STATIONS, tableSeat } from '../src/domain/layout';
+import { DRINK_SECONDS, SIT_SECONDS } from '../src/domain/street';
 
 function programs(index: number) {
  return index >= 14 ? referencePrograms(index+1) : {query:lessons[index].solution,prep:'',floor:''};
@@ -39,6 +41,37 @@ describe('live service',()=>{
   expect(sampleReplay(result,take.end+.01).actors.query?.heldPaper?.item).toBe('');
   expect(sampleReplay(result,write.end+.01).actors.query?.heldPaper?.item).toBe('coffee');
   expect(sampleReplay(result,deposit.end+.01).actors.query?.heldPaper).toBeUndefined();
+ });
+ it('waits for seating, keeps customers in their chairs while drinking, and stands before leaving',()=>{
+  const {result}=finish(createLiveRun(levels[2],programs(2)));
+  const event=result.events[0], timing=event.timing;
+  const customer=(time:number)=>sampleReplay(result,time).customers.find(customer=>customer.id===event.customer.customer_id)!;
+  expect(customer(timing.arrival+.01).position).toEqual(STATIONS.orders.floor);
+  expect(timing.seated).toBeGreaterThan(timing.created);
+  expect(customer(timing.seated).position).toEqual(tableSeat(event.table-1,0));
+  expect(customer(timing.seated).seated).toBe(true);
+  const claims=result.execution![0].events.filter(log=>log.command==='WAIT DRINK'&&log.ticketId===event.tickets[0].ticket_id&&log.end>log.start);
+  expect(claims.length).toBeGreaterThan(0);
+  expect(claims.every(log=>log.start>=timing.seated)).toBe(true);
+  expect(timing.served).toBeGreaterThanOrEqual(timing.seated);
+  expect(timing.left-timing.served).toBeCloseTo(DRINK_SECONDS);
+  expect(customer(timing.served+.1).drinking).toBe(true);
+  expect(customer(timing.left+SIT_SECONDS/2).sit).toBeCloseTo(.5);
+  expect(customer(timing.left+SIT_SECONDS/2).position).toEqual(tableSeat(event.table-1,0));
+  expect(customer(timing.left+SIT_SECONDS+.1).walking).toBe(true);
+ });
+ it('turns Query toward paper pickup and movement and only walks during movement',()=>{
+  const {result}=finish(createLiveRun(levels[2],programs(2)));
+  const logs=result.execution![0].events.filter(event=>event.actor==='query');
+  const take=logs.find(event=>event.command==='TAKE UP')!;
+  const move=logs.find(event=>event.command==='MOVE RIGHT 1')!;
+  const atTake=sampleReplay(result,(take.start+take.end)/2).actors.query!;
+  expect(atTake.facing).toBe(Math.PI);
+  expect(atTake.walking).toBe(false);
+  expect(atTake.reach).toBeCloseTo(1);
+  const atMove=sampleReplay(result,(move.start+move.end)/2).actors.query!;
+  expect(atMove.facing).toBe(Math.PI/2);
+  expect(atMove.walking).toBe(true);
  });
  it('records a zero-duration wait while an automatic worker is idle',()=>{
   const run=createLiveRun(levels[2],programs(2));

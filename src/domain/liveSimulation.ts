@@ -70,7 +70,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
       }
       if (step.done) {
         state = actual.state; event.payment = actual.payment;
-        event.timing.created = now; event.timing.seated = now;
+        event.timing.created = now;
         result.executed_instructions += actual.executed_instructions;
         const reason = result.executed_instructions > 10000 ? 'Instruction limit reached (10,000 per robot).' : validate(event.customer, actual);
         if (reason) {

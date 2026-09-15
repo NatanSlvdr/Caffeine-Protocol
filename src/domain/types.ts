@@ -10,7 +10,7 @@ export interface OrderTicket { ticket_id: string; customer_id: string; table_id:
 export interface RuntimeState { pc: number; stopped: boolean; counter?: 0 | 1 }
 export interface OrderPayment { amount:number; ticketIds:string[] }
 export interface CustomerExecution { heldPaper?:OrderTicket; payment?:OrderPayment;  tickets: OrderTicket[]; asked_help: boolean; error: string; error_line?: number; executed_instructions: number; trace: TraceStep[]; state: RuntimeState }
-export interface Timing { arrival: number; created: number; seated: number; ready: number; served: number; left: number; cleaned: number }
+export interface Timing { seating?: number; arrival: number; created: number; seated: number; ready: number; served: number; left: number; cleaned: number }
 export interface ReplayEvent { payment?:OrderPayment;  seed_id: string; customer: Customer; tickets: OrderTicket[]; asked_help: boolean; passed: boolean; reason?: string; trace: TraceStep[]; failure_line?: number; timing: Timing; table: number; satisfaction: number }
 export interface RunFailure { role?:RobotRole;  seed_id: string; error_line: number; customer_id: string; event_time: number; phrase: string; intent: SpeechIntent; expected: Customer['expected']; actual: OrderTicket[]; reason: string }
 export interface RunResult { execution?:SeedExecution[]; programs?:RobotPrograms;  passed: boolean; observation: boolean; events: ReplayEvent[]; block_count?: number; level_id: string; level_title: string; passed_seeds: number; required_seeds: number; tickets: OrderTicket[]; executed_instructions: number; average_satisfaction: number; stars: number; first_failure: RunFailure | null }
@@ -21,7 +21,7 @@ export type RobotRole = 'query' | 'prep' | 'floor';
 export type ActorId = RobotRole | 'niko';
 export type RobotPrograms = Record<RobotRole,string>;
 export interface Cargo { ticketId:string; table:number; item:Drink; stage:'claimed'|'beans'|'ground'|'leaves'|'water'|'brewed'|'dirty'; sugar:number }
-export interface ActorSnapshot { heldPaper?:OrderTicket; position:readonly [number,number]; inventory:Cargo[]; role:RobotRole }
+export interface ActorSnapshot { facing?:number; walking?:boolean; reach?:number; heldPaper?:OrderTicket; position:readonly [number,number]; inventory:Cargo[]; role:RobotRole }
 export interface ExecutionEvent { heldPaper?:OrderTicket; ticketId?:string;  seed_id:string; actor:ActorId; role:RobotRole; start:number; end:number; line:number; command:string; from:readonly [number,number]; to:readonly [number,number]; inventory:Cargo[]; requested?:number; completed?:number; error?:string; customerId?:string }
 export interface SeedExecution { seed_id:string; start:number; duration:number; events:ExecutionEvent[] }
 export interface ServiceConfig { prepCapacity:number; floorCapacity:number; clearing:boolean; objective:'serve'|'prepare'|'pickup'; minLoad?:number }
