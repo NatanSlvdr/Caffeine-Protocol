@@ -18,7 +18,7 @@ function thumbnail(model: Model) {
       const root = createRoot(canvas);
       const robot = model === 'robot';
       await root.configure({
-        size: { width: 128, height: 128, top: 0, left: 0 }, dpr: 1,
+        size: { width: 128, height: 128, top: 0, left: 0 }, dpr: 2,
         gl: { alpha: true, antialias: true, preserveDrawingBuffer: true },
         orthographic: true, camera: { position: [2, 3, 5], zoom: robot ? 56 : 205, near: .1, far: 50 },
       });

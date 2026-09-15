@@ -2,7 +2,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Editor } from '../src/components/Editor';
-import { FailureImpact, explainFailure } from '../src/components/FailureFeedback';
 import { CodingPaneHeader } from '../src/components/CodingPaneHeader';
 import { shiftBriefs } from '../src/data/shiftBriefs';
 import { levels } from '../src/data';
@@ -10,23 +9,13 @@ import { levels } from '../src/data';
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 const editor={source:'LISTEN\nTICKET\nITEM coffee',onChange:()=>{},level:4,locked:true,observation:false,textMode:false};
 describe('clear execution feedback',()=>{
- it('puts a labelled execution marker inside the active instruction, separate from the number',()=>{
-  render(<Editor {...editor} activeLine={2}/>);
-  const active=document.querySelector('[aria-current="step"]')!;
-  expect(within(active as HTMLElement).getByRole('img',{name:'Running'})).toBeTruthy();
-  expect(within(active as HTMLElement).getByRole('img',{name:'Running'}).textContent).toBe('');
-  expect(active.querySelector('.line-number')).toBeNull();
-  expect(document.querySelectorAll('[aria-current="step"]')).toHaveLength(1);
- });
- it('anchors actionable errors beneath the failing block and allows returning to edit',async()=>{
-  const onEdit=vi.fn(),message=explainFailure('Wrong item on ticket 1: expected tea, got coffee.');
-  render(<Editor {...editor} failureLine={2} failureMessage={message} onEdit={onEdit}/>);
+ it('marks the full failing block and places the warning outside the code pane',()=>{
+  render(<Editor {...editor} failureLine={2} failureMessage="Careful, an error here."/>);
+  expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');
+  expect(document.querySelector('.block.failure')?.parentElement?.querySelector('.line-number')?.textContent).toBe('03');
   const error=screen.getByRole('alert');
-  expect(error.closest('.code-row')?.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');
-  expect(error.textContent).toContain('This guest asked for tea');
-  expect(error.textContent).toContain('Check the If condition');
-  await userEvent.click(within(error).getByRole('button',{name:'Edit program'}));
-  expect(onEdit).toHaveBeenCalledOnce();
+  expect(error.parentElement).toBe(document.body);
+  expect(error.textContent).toContain('Careful, an error here.');
  });
  it('keeps compile errors visible in empty code and text mode',()=>{
   const {rerender}=render(<Editor {...editor} source="" failureLine={0} failureMessage="Add an instruction."/>);
@@ -43,25 +32,7 @@ describe('clear execution feedback',()=>{
   render(<Editor {...editor} source={'ITEM coffee\nMOVE RIGHT 1'}/>);
   expect(document.querySelectorAll('.code-row .block-verb.block-suffix')).toHaveLength(2);
  });
- it('plays one brief screen impact and cancels it on unmount',()=>{
-  const cancel=vi.fn(),animate=vi.fn(()=>({cancel}));
-  Object.defineProperty(Element.prototype,'animate',{configurable:true,value:animate});
-  const {unmount}=render(<div><FailureImpact reduced={false}/></div>);
-  expect(animate).toHaveBeenCalledOnce();
-  expect(animate.mock.calls[0]?.length).toBe(2);
-  unmount();expect(cancel).toHaveBeenCalledOnce();
-  delete (Element.prototype as Partial<Element>).animate;
- });
- it('honors both reduced-motion settings without losing static error feedback',()=>{
-  const animate=vi.fn();
-  Object.defineProperty(Element.prototype,'animate',{configurable:true,value:animate});
-  const {rerender}=render(<div><FailureImpact reduced/></div>);
-  expect(animate).not.toHaveBeenCalled();
-  vi.stubGlobal('matchMedia',()=>({matches:true}));
-  rerender(<div><FailureImpact reduced={false}/></div>);
-  expect(animate).not.toHaveBeenCalled();
-  delete (Element.prototype as Partial<Element>).animate;
- });
+
 });
 describe('story-led, compact shift header',()=>{
  it('places compact help and options beside the title, with story before goal',async()=>{

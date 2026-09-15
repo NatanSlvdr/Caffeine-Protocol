@@ -2,7 +2,7 @@ import type { RobotRole } from './types';
 export type Point = readonly [number, number];
 export const ROOM = [16,12] as const;
 export const BOUNDS={minX:-8,maxX:7,minZ:-6,maxZ:5} as const;
-export const CAMERA_ELEVATION = 65*Math.PI/180;
+export const CAMERA_ELEVATION = 70*Math.PI/180;
 // Adjust this value in degrees to change the slight sideways view.
 export const CAMERA_ANGLE_DEGREES = 0;
 export const CAMERA_AZIMUTH = CAMERA_ANGLE_DEGREES*Math.PI/180;

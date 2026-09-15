@@ -4,7 +4,7 @@ import type { RobotPrograms } from './types';
 import { createTicket, executeCustomerEvent } from './program';
 import type { Customer, CustomerExecution, LevelDefinition, Program, ReplayEvent, RunFailure, RunResult } from './types';
 const round = (n:number)=>Math.round(n*10)/10;
-function validate(customer:Customer, actual:CustomerExecution):string {
+export function validate(customer:Customer, actual:CustomerExecution):string {
   const expected=customer.expected, tickets=expected.tickets??(expected.item?[expected]:[]);
   if(actual.error)return actual.error;
   if(expected.ask_help&&!actual.asked_help)return 'Expected Query to ask for help.';

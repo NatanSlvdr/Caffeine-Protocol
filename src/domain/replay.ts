@@ -1,4 +1,4 @@
-import { STARTS, ENTRANCE, MANUAL_INTAKE, gridRoute, STATIONS, tableFront, tableSeat } from './layout';
+import { STARTS, ENTRANCE, gridRoute, STATIONS, tableFront, tableSeat } from './layout';
 import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { customerApproach, customerExit, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
@@ -8,10 +8,10 @@ export function sampleReplay(result:RunResult,time:number){
  const local=time-(seed?.start??0),level=Number(result.level_id.slice(1));
  const actors:Partial<Record<ActorId,ActorSnapshot>>={};
  if(level>=3)actors.query={position:STARTS.query,inventory:[],role:'query'};
- if(level>=15)actors.prep={position:STARTS.prep,inventory:[],role:'prep'};
- if(level>=23)actors.floor={position:STARTS.floor,inventory:[],role:'floor'};
- if(level<23)actors.niko={position:level>=15?STARTS.floor:level>=3?STARTS.prep:MANUAL_INTAKE,inventory:[],role:level>=15?'floor':level>=3?'prep':'query'};
- const logs=seed?.events??[];
+ actors.prep={position:STARTS.prep,inventory:[],role:'prep'};
+ actors.floor={position:STARTS.floor,inventory:[],role:'floor'};
+ if(level<3)actors.niko={position:STARTS.query,inventory:[],role:'query'};
+ const logs=[...(seed?.events??[])].sort((a,b)=>a.start-b.start||a.end-b.end);
  for(const id of ['query','prep','floor','niko'] as const){
   const history=logs.filter(e=>e.actor===id&&e.start<=local);if(!history.length)continue;
   const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local).at(-1),last=history.at(-1)!;
@@ -25,7 +25,7 @@ export function sampleReplay(result:RunResult,time:number){
   const leaving=local>=event.timing.left&&event.timing.left>event.timing.created;
   if(leaving){from=front;to=ENTRANCE;begin=event.timing.left;end=begin+STREET_EXIT_SECONDS;}
   const approaching=local<event.timing.created;
-  if(approaching)begin=event.timing.arrival-STREET_APPROACH_SECONDS;
+  if(approaching){begin=event.timing.arrival-STREET_APPROACH_SECONDS;if(!Number.isFinite(end))end=event.timing.arrival;}
   const path=approaching?customerApproach(index):leaving?customerExit(from,index):gridRoute(from,to);
   const seated=event.table>0&&to===front&&local>=end&&local<event.timing.left;
   return {id:event.customer.customer_id,position:seated?tableSeat(event.table-1,index%2 as 0|1):samplePath(path,(local-begin)/Math.max(.1,end-begin)),seated,side:index%2 as 0|1};

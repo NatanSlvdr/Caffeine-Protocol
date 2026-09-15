@@ -16,7 +16,7 @@ const source = () => screen.getByLabelText('Current source').textContent ?? '';
 async function choose(label: string, option: string) {
  const user = userEvent.setup();
  await user.click(screen.getByRole('combobox', { name: label }));
- await user.click(within(screen.getByRole('listbox', { name: label })).getByRole('option', { name: option }));
+ await user.click(within(screen.getByRole('listbox', { name: label })).getByRole('option', { name: option === 'coffee' ? 'Coffee' : option === 'tea' ? 'Tea' : option }));
 }
 describe('compact visual code', () => {
  it('offers the simplified library and matching action icons', async () => {
@@ -30,13 +30,13 @@ describe('compact visual code', () => {
  expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.jump-icon')).toBeTruthy();
   expect(screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
   await userEvent.click(screen.getByLabelText('Library Write value'));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea']);
  });
  it('shows operand text alongside shared-model miniatures and keeps keyboard selection local', async () => {
   const user = userEvent.setup();
   render(<Harness initial={'LISTEN\nITEM coffee\nMOVE RIGHT 1'}/>);
   expect(screen.getByLabelText('Block 1 value').textContent).toContain('Customer speech');
-  expect(screen.getByLabelText('Block 2 value').textContent).toContain('coffee');
+  expect(screen.getByLabelText('Block 2 value').textContent).toContain('Coffee');
   expect(screen.getByLabelText('Block 2 value').querySelector('.model-coffee')).toBeTruthy();
   screen.getByLabelText('Block 3 direction').focus();
   await user.keyboard('{ArrowDown}');
@@ -51,8 +51,8 @@ describe('compact visual code', () => {
   vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(DOMRect.fromRect({x:320,y:180,width:28,height:28}));
   await user.click(trigger);
   const grid = screen.getByRole('listbox', {name:'Block 1 direction'});
-  expect(grid.style.left).toBe('320px');expect(grid.style.top).toBe('180px');
-  expect(grid.style.width).toBe('28px');expect(grid.style.height).toBe('28px');
+  expect(grid.style.left).toBe('264px');expect(grid.style.top).toBe('124px');
+  expect(grid.style.width).toBe('140px');expect(grid.style.height).toBe('140px');
   expect([...grid.querySelector('.direction-mini-grid')!.children].map(cell=>cell.getAttribute('aria-label'))).toEqual(['up left','up','up right','left',null,'right','down left','down','down right']);
   expect(grid.querySelector('small')).toBeNull();
   await user.click(within(grid).getByRole('option',{name:'up left'}));
@@ -106,7 +106,7 @@ describe('compact visual code', () => {
   await user.click(screen.getByLabelText('Block 3 value'));
   const menu=screen.getByRole('listbox');
   expect(menu.parentElement).toBe(document.body);expect(menu.style.position).toBe('fixed');
-  await user.click(within(menu).getByRole('option',{name:'tea'}));
+  await user.click(within(menu).getByRole('option',{name:'Tea'}));
   expect(source()).toContain('ITEM tea');expect(screen.queryByRole('listbox')).toBeNull();
   await user.click(screen.getByLabelText('Block 3 value'));
   fireEvent.pointerDown(document.body);
@@ -125,7 +125,7 @@ describe('compact visual code', () => {
  it('offers unlocked operands and all eight movement directions', async () => {
   render(<Harness role="prep" level={4} initial={'LISTEN\nIF tea\nMOVE RIGHT 1\nEND'}/>);
   await userEvent.click(screen.getByLabelText('Block 2 condition'));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea','sugar']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea','sugar']);
   await userEvent.keyboard('{Escape}');
   await userEvent.click(screen.getByLabelText('Block 3 direction'));
   expect(screen.getAllByRole('option')).toHaveLength(8);

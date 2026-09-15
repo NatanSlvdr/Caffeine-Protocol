@@ -73,7 +73,7 @@ export function createTicket(customer: Customer, id: string, intent: SpeechInten
   return {ticket_id:id,customer_id:customer.customer_id,table_id:null,source_phrase:customer.phrase,source_intent:structuredClone(intent),item:'',with_sugar:null,sugar_count:null,status:'created',created_at:customer.arrival,due_at:customer.arrival+30,debug_notes:''};
 }
 /** Resume at the next speech event, returning a new state without mutating inputs. */
-export function executeCustomerEvent(p: Program, customer: Customer, id: string, initial: RuntimeState = {pc:0,stopped:false}): CustomerExecution {
+export function* streamCustomerEvent(p: Program, customer: Customer, id: string, initial: RuntimeState = {pc:0,stopped:false}, checkWrittenOrder = false): Generator<CustomerExecution, CustomerExecution> {
   const out: CustomerExecution={tickets:[],asked_help:false,error:'',executed_instructions:0,trace:[],state:{...initial}};
   const fail=(message:string)=>{out.error=message;return out;};
   if(p.compile_error){out.error_line=p.error_line;return fail(p.compile_error);}
@@ -93,6 +93,7 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
     if(out.executed_instructions>=LIMIT)return fail('Instruction limit reached. A loop must return to Wait for customer speech.');
     if(c==='LISTEN'&&heard)return finish();
     out.executed_instructions++;out.error_line=p.source_lines[pc];out.trace.push({line:p.source_lines[pc],command:p.instructions[pc],function_depth:calls.length});
+    if(!checkWrittenOrder||!['END','ELSE'].includes(c)&&!c.startsWith('POSITION '))yield out;
     if(!heard&&(['HELP','EACH'].includes(c)||c.startsWith('READ ')))return fail('No customer speech is available.');
     let next=pc+1;
     if(c.startsWith('IF ')){
@@ -135,7 +136,12 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
         ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`,order);break;
       case 'ITEM coffee':case 'ITEM tea':case 'ITEM heard':
         if(!ticket)return fail('Take the order paper before writing its item.');
-        ticket.item=c.endsWith('heard')?(order.drink??''):c.slice(5);break;
+        ticket.item=c.endsWith('heard')?(order.drink??''):c.slice(5);
+        if(checkWrittenOrder){
+          const expected=(customer.expected.tickets??[customer.expected])[out.tickets.length];
+          if(expected?.item&&ticket.item!==expected.item)return fail(`Wrong item on ticket ${out.tickets.length+1}: expected ${expected.item}, got ${ticket.item}.`);
+        }
+        break;
       case 'READ sugar':if(order.with_sugar===undefined)return fail('Expected a with_sugar chip, but none was heard.');vars.with_sugar=order.with_sugar;break;
       case 'READ count':if(order.sugar_count===undefined)return fail('Expected a sugar_count chip, but none was heard.');vars.sugar_count=order.sugar_count;break;
       case 'SUGAR binary':case 'SUGAR count':case 'SUGAR heard':case 'SUGAR variable':case 'SUGAR number':
@@ -154,4 +160,12 @@ export function executeCustomerEvent(p: Program, customer: Customer, id: string,
     out.state.pc=next;
   }
   out.state.stopped=true;return finish();
+}
+
+/** Offline validation drains the same interpreter used by the live game. */
+export function executeCustomerEvent(p: Program, customer: Customer, id: string, initial: RuntimeState = {pc:0,stopped:false}): CustomerExecution {
+  const execution = streamCustomerEvent(p, customer, id, initial);
+  let step = execution.next();
+  while (!step.done) step = execution.next();
+  return step.value;
 }

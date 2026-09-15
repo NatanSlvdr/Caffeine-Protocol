@@ -1,3 +1,4 @@
+import { BLOCK_SECONDS } from './playback';
 import { compileRobot } from './robotProgram';
 import { floorSource, preparationSource } from './routines';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
@@ -8,19 +9,25 @@ import { moveQuery } from './queryMovement';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 
 type Job={ticketId:string;table:number;item:'coffee'|'tea';sugar:number;event:ReplayEvent;created:number;status:'ticket'|'claimed'|'ready'|'reserved'|'carried'|'served'|'dirty'|'cleared';dirtyAt:number};
-type Worker={role:'prep'|'floor';actor:ActorId;program:Program;pc:number;stack:number[];position:Point;inventory:Cargo[];job?:Job;count:number;maxLoad:number;done:boolean;pending?:{end:number;apply:()=>void};move?:{from:Point;direction:Point;remaining:number;requested:number;completed:number;line:number;command:string}};
+type Worker={role:'prep'|'floor';actor:ActorId;program:Program;pc:number;stack:number[];position:Point;inventory:Cargo[];job?:Job;count:number;maxLoad:number;done:boolean;pending?:{end:number;apply:()=>void};move?:{started:number;from:Point;direction:Point;remaining:number;requested:number;completed:number;line:number;command:string}};
 export interface ServiceFailure {role:RobotRole;line:number;time:number;reason:string;event?:ReplayEvent}
 export interface ServiceResult {execution:SeedExecution;failure?:ServiceFailure;instructions:number}
 const configFor=(level:LevelDefinition)=>level.service??{prepCapacity:1,floorCapacity:1,clearing:true,objective:'serve' as const};
 const sugarOf=(ticket:ReplayEvent['tickets'][number])=>ticket.sugar_count??(ticket.with_sugar?1:0);
+export interface LiveService {
+ pump: (time:number, log:ExecutionEvent[]) => void;
+ next: () => number;
+ done: () => boolean;
+ attach: (execution:SeedExecution) => void;
+}
 /** Execute workers on a deterministic event clock; only completed actions mutate shared queues. */
-export function simulateService(level:LevelDefinition,events:ReplayEvent[],programs:RobotPrograms,start=0):ServiceResult{
+export function* streamService(level:LevelDefinition,events:ReplayEvent[],programs:RobotPrograms,start=0,live?:LiveService):Generator<number,ServiceResult>{
  const number=Number(level.id.slice(1)),config=configFor(level),seed=events[0]?.seed_id??level.seeds[0].id;
- const log:ExecutionEvent[]=[],jobs:Job[]=[],tableOwners=new Map<number,string>();let now=0,failure:ServiceFailure|undefined,nikoPosition:Point=number>=15?STARTS.floor:number>=3?STARTS.prep:MANUAL_INTAKE,nikoBusy:Worker|undefined;
- const workers:Worker[]=(['prep','floor'] as const).map(role=>({role,actor:number>=(role==='prep'?15:23)?role:'niko',program:compileRobot(number>=(role==='prep'?15:23)?programs[role]:role==='prep'?preparationSource(32):floorSource(32),role,number>=(role==='prep'?15:23)?number:32),pc:0,stack:[],position:STARTS[role],inventory:[],count:0,maxLoad:0,done:false}));
+ const log:ExecutionEvent[]=[],jobs:Job[]=[],tableOwners=new Map<number,string>();let now=0,failure:ServiceFailure|undefined,nikoPosition:Point=MANUAL_INTAKE;
+ const workers:Worker[]=(['prep','floor'] as const).map(role=>({role,actor:role,program:compileRobot(number>=(role==='prep'?15:23)?programs[role]:role==='prep'?preparationSource(32):floorSource(32),role,number>=(role==='prep'?15:23)?number:32),pc:0,stack:[],position:STARTS[role],inventory:[],count:0,maxLoad:0,done:false}));
  let intakeFree=0,manualIndex=0;let manualIntake:{end:number;apply:()=>void}|undefined;
  let queryPosition:Point=STARTS.query;
- for(const [index,event] of events.entries()){
+ if(!live)for(const [index,event] of events.entries()){
   const created=Math.max(intakeFree,event.customer.arrival)+(level.programming_enabled?Math.max(.1,event.trace.length*.1):9);intakeFree=created;
   event.table=event.tickets.length?index%level.active_tables+1:0;
   event.timing={arrival:event.customer.arrival,created,seated:created,ready:created,served:created,left:created,cleaned:created};
@@ -36,7 +43,8 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
    jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:number<3?Infinity:handoff,status:'ticket',dirtyAt:Infinity});
   }
  }
- const queryFailure=events.find(e=>!e.passed);
+ let queryFailure=events.find(e=>!e.passed);
+ live?.attach({seed_id:seed,start,duration:Infinity,events:log});
  const fail=(w:Worker,reason:string,line=w.program.source_lines[w.pc]??-1)=>{
   failure={role:w.role,line,time:now,reason,event:w.job?.event??jobs.find(j=>j.ticketId===w.inventory[0]?.ticketId)?.event??events[0]};
   log.push({seed_id:seed,actor:w.actor,role:w.role,start:now,end:now,line,command:w.program.instructions[w.pc]??'END OF PROGRAM',from:w.position,to:w.position,inventory:structuredClone(w.inventory),error:reason});
@@ -46,9 +54,12 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
  const record=(w:Worker,command:string,line:number,from:Point,end:number,extra:Partial<ExecutionEvent>={})=>log.push({seed_id:seed,actor:w.actor,role:w.role,start:now,end,line,command,from,to:w.position,inventory:structuredClone(w.inventory),customerId:currentJob(w)?.event.customer.customer_id,...extra});
  const schedule=(w:Worker,seconds:number,command:string,line:number,apply:()=>void,extra:Partial<ExecutionEvent>={})=>{
   const actionJob=command.startsWith('DEPOSIT')||command==='ADD SUGAR'?jobs.find(j=>j.ticketId===w.inventory.find(c=>c.stage==='brewed')?.ticketId):currentJob(w)??(command.startsWith('WAIT ')?nextWork(command):undefined);
-  const from=w.position,begin=now,end=Math.round((now+seconds)*10)/10;
-  w.pending={end,apply:()=>{apply();log.push({seed_id:seed,actor:w.actor,role:w.role,start:begin,end,line,command,from,to:w.position,inventory:structuredClone(w.inventory),customerId:actionJob?.event.customer.customer_id,ticketId:actionJob?.ticketId,...extra});if(w.actor==='niko')nikoPosition=w.position;}};
-  if(w.actor==='niko')nikoBusy=w;
+  const automatic=number<(w.role==='prep'?15:23);
+  const duration=live?(automatic?seconds/12:BLOCK_SECONDS/(w.move?.requested??1)):seconds;
+  const from=w.position,begin=now,end=now+duration;
+  const preview:ExecutionEvent={seed_id:seed,actor:w.actor,role:w.role,start:begin,end,line,command,from,to:w.move?[from[0]+w.move.direction[0],from[1]+w.move.direction[1]]:from,inventory:structuredClone(w.inventory),customerId:actionJob?.event.customer.customer_id,ticketId:actionJob?.ticketId,...extra};
+  if(live)log.push(preview);
+  w.pending={end,apply:()=>{apply();if(live){preview.to=w.position;preview.inventory=structuredClone(w.inventory);}else log.push({seed_id:seed,actor:w.actor,role:w.role,start:begin,end,line,command,from,to:w.position,inventory:structuredClone(w.inventory),customerId:actionJob?.event.customer.customer_id,ticketId:actionJob?.ticketId,...extra});}};
  };
  const station=(w:Worker,p:Point,name:string)=>{if(!samePoint(w.position,p)){fail(w,`Move to the ${name} interaction tile (${p.join(', ')}) first.`);return false;}return true;};
  const capacity=(w:Worker)=>w.role==='prep'?config.prepCapacity:config.floorCapacity;
@@ -56,23 +67,21 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
  const canClaimDrink=(j:Job)=>j.status==='ready'&&(!tableOwners.has(j.table)||tableOwners.get(j.table)===j.event.customer.customer_id);
  const nextWork=(c:string)=>c==='WAIT TICKET'?jobs.find(j=>j.status==='ticket'&&j.created<=now):c==='WAIT DRINK'?jobs.find(canClaimDrink):jobs.find(j=>j.status==='dirty'&&j.dirtyAt<=now);
  const step=(w:Worker):boolean=>{
-  if(w.done||w.pending||failure||manualIntake&&w.actor==='niko')return false;
-  if(w.actor==='niko'&&nikoBusy&&nikoBusy!==w)return false;
+  if(w.done||w.pending||failure)return false;
   const p=w.program,c=p.instructions[w.pc],line=p.source_lines[w.pc]??-1;
   if(p.compile_error){fail(w,p.compile_error,p.error_line);return false;}
   if(c===undefined){w.done=true;return true;}
-  if(c.startsWith('WAIT ')&&!nextWork(c)){if(nikoBusy===w)nikoBusy=undefined;return false;}
-  if(w.actor==='niko')nikoBusy=w;
-  if(w.actor==='niko'&&!samePoint(nikoPosition,w.position)){
-   // One Niko travels between duties; he never appears in two areas at once.
-   const path=gridRoute(nikoPosition,w.position);let t=now;
-   path.slice(1).forEach((to,i)=>{log.push({seed_id:seed,actor:'niko',role:w.role,start:t,end:++t,line:-1,command:'WALK TO WORKSTATION',from:path[i],to,inventory:[]});});
-   nikoBusy=w;w.pending={end:t,apply:()=>{nikoPosition=w.position;}};return true;
-  }
+  if(c.startsWith('WAIT ')&&!nextWork(c))return false;
   if(w.move){
    const move=w.move,next:Point=[w.position[0]+move.direction[0],w.position[1]+move.direction[1]];
    if(!move.remaining||!isWalkable(next,w.role)){
-    record(w,move.command,move.line,move.from,now,{requested:move.requested,completed:move.completed,from:w.position});w.move=undefined;w.pc++;return true;
+    const complete=()=>{record(w,move.command,move.line,move.from,now,{requested:move.requested,completed:move.completed,from:w.position});w.move=undefined;w.pc++;};
+    const end=move.started+BLOCK_SECONDS;
+    if(live&&number>=(w.role==='prep'?15:23)&&end>now+1e-8){
+     log.push({seed_id:seed,actor:w.actor,role:w.role,start:now,end,line:move.line,command:move.command,from:w.position,to:w.position,inventory:structuredClone(w.inventory),requested:move.requested,completed:move.completed});
+     w.pending={end,apply:complete};
+    }else complete();
+    return true;
    }
    schedule(w,1,move.command,line,()=>{w.position=next;move.remaining--;move.completed++;},{requested:move.requested,completed:move.completed+1});return true;
   }
@@ -81,14 +90,15 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
    const [,dir,n]=c.split(' '),normalized=normalizeDirection(dir);
    if(!normalized){fail(w,`Unknown movement direction: ${dir}`,line);return false;}
    const direction:Point=directionVectors[normalized];
-   w.move={from:w.position,direction,remaining:Number(n),requested:Number(n),completed:0,line,command:c};return true;
+   w.move={started:now,from:w.position,direction,remaining:Number(n),requested:Number(n),completed:0,line,command:c};return true;
   }
-  if(c.startsWith('IF ')){record(w,c,line,w.position,now);w.pc=condition(w,c.slice(3))?w.pc+1:(p.alternatives[w.pc]??p.ends[w.pc])+1;return true;}
+  const control=(apply:()=>void)=>{if(live)schedule(w,1,c,line,apply);else{record(w,c,line,w.position,now);apply();}return true;};
+  if(c.startsWith('IF ')){return control(()=>{w.pc=condition(w,c.slice(3))?w.pc+1:(p.alternatives[w.pc]??p.ends[w.pc])+1;});}
   if(c==='ELSE'){record(w,c,line,w.position,now);w.pc=p.ends[w.pc]+1;return true;}
   if(c.startsWith('FUNCTION ')){w.pc=p.ends[w.pc]+1;return true;}
-  if(c.startsWith('CALL ')){if(w.stack.length){fail(w,'Recursive calls are not supported.');return false;}record(w,c,line,w.position,now);w.stack.push(w.pc+1);w.pc=p.functions[c.slice(5)]+1;return true;}
-  if(c==='RETURN'||c==='END'&&p.instructions[p.ends[w.pc]]?.startsWith('FUNCTION ')){const back=w.stack.pop();if(back===undefined){fail(w,'RETURN requires an active function.');return false;}record(w,c,line,w.position,now);w.pc=back;return true;}
-  if(c==='END'||c==='REPEAT'){record(w,c,line,w.position,now);w.pc=c==='REPEAT'?0:w.pc+1;if(c==='REPEAT'&&nikoBusy===w)nikoBusy=undefined;return true;}
+  if(c.startsWith('CALL ')){if(w.stack.length){fail(w,'Recursive calls are not supported.');return false;}return control(()=>{w.stack.push(w.pc+1);w.pc=p.functions[c.slice(5)]+1;});}
+  if(c==='RETURN'||c==='END'&&p.instructions[p.ends[w.pc]]?.startsWith('FUNCTION ')){const back=w.stack.pop();if(back===undefined){fail(w,'RETURN requires an active function.');return false;}return control(()=>{w.pc=back;});}
+  if(c==='END'||c==='REPEAT'){return control(()=>{w.pc=c==='REPEAT'?0:w.pc+1;});}
   const cargo=currentCargo(w),job=currentJob(w);
   let apply:()=>void=()=>{},seconds=1;
   if(c==='WAIT TICKET'){
@@ -159,10 +169,18 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
  const finished=()=>jobs.every(j=>config.objective==='prepare'?['ready','reserved','carried','served','dirty','cleared'].includes(j.status):config.objective==='pickup'?['carried','served','dirty','cleared'].includes(j.status):config.clearing?j.status==='cleared':['served','dirty','cleared'].includes(j.status));
  let transitions=0;
  while(!failure&&now<=3600&&transitions++<200000){
-  if(queryFailure&&now>=queryFailure.timing.created){failure={role:'query',line:queryFailure.failure_line??0,time:now,reason:queryFailure.reason??'Order program failed.',event:queryFailure};log.push({seed_id:seed,actor:'query',role:'query',start:now,end:now,line:failure.line,command:queryFailure.trace.at(-1)?.command??'COMPILE',from:STARTS.query,to:STARTS.query,inventory:[],error:failure.reason,customerId:queryFailure.customer.customer_id});break;}
+  if(live){
+   live.pump(now,log);
+   queryFailure=events.find(e=>!e.passed);
+   for(const event of events)for(const ticket of event.tickets){
+    if(jobs.some(j=>j.ticketId===ticket.ticket_id))continue;
+    jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:ticket.created_at,status:'ticket',dirtyAt:Infinity});
+   }
+  }
+  if(queryFailure&&now>=queryFailure.timing.created){const position=log.findLast(e=>e.actor==='query')?.to??STARTS.query;failure={role:'query',line:queryFailure.failure_line??0,time:now,reason:queryFailure.reason??'Order program failed.',event:queryFailure};log.push({seed_id:seed,actor:'query',role:'query',start:now,end:now,line:failure.line,command:queryFailure.trace.at(-1)?.command??'COMPILE',from:position,to:position,inventory:[],error:failure.reason,customerId:queryFailure.customer.customer_id});break;}
   for(const w of workers)if(w.pending&&w.pending.end<=now){const pending=w.pending;w.pending=undefined;pending.apply();}
   if(manualIntake&&manualIntake.end<=now){const intake=manualIntake;manualIntake=undefined;intake.apply();}
-  if(number<3&&!manualIntake&&!nikoBusy&&manualIndex<events.length&&events[manualIndex].customer.arrival<=now){
+  if(!live&&number<3&&!manualIntake&&manualIndex<events.length&&events[manualIndex].customer.arrival<=now){
    const event=events[manualIndex++],path=gridRoute(nikoPosition,MANUAL_INTAKE);let arrival=now;
    path.slice(1).forEach((to,i)=>log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end:++arrival,line:-1,command:'WALK TO ORDER COUNTER',from:path[i],to,inventory:[]}));
    const end=arrival+9;intakeFree=end;
@@ -171,7 +189,7 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   }
   for(const job of jobs)if(job.status==='served'&&job.dirtyAt<=now)job.status='dirty';
   for(const event of events){const group=jobs.filter(j=>j.event===event);if(group.length&&group.every(j=>['served','dirty','cleared'].includes(j.status))){const left=Math.max(...group.map(j=>j.event.timing.served))+5;event.timing.left=left;}}
-  if(finished()&&workers.every(w=>!w.pending)&&workers.every(w=>!w.move)&&now>=intakeFree){
+  if((!live||live.done())&&finished()&&workers.every(w=>!w.pending)&&workers.every(w=>!w.move)&&now>=intakeFree){
    const floor=workers[1],loadWorker=number<23?workers[0]:floor;
    if((config.minLoad??0)>loadWorker.maxLoad){fail(loadWorker,`This shift requires carrying ${config.minLoad} items together.`);break;}
    else break;
@@ -179,13 +197,27 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   let advanced=false;for(const w of workers){if(config.objective==='prepare'&&w.role==='floor')continue;advanced=step(w)||advanced;}
   if(failure)break;
   if(advanced)continue;
-  const future=[...(queryFailure&&queryFailure.timing.created>now?[queryFailure.timing.created]:[]),...(manualIntake?[manualIntake.end]:[]),...(number<3&&manualIndex<events.length?[events[manualIndex].customer.arrival]:[]),...workers.flatMap(w=>w.pending?[w.pending.end]:[]),...jobs.filter(j=>j.status==='ticket'&&j.created>now).map(j=>j.created),...jobs.filter(j=>j.status==='served'&&j.dirtyAt>now).map(j=>j.dirtyAt)].filter(t=>Number.isFinite(t)&&t>now);
+  const future=[...(live?[live.next()]:[]),...(queryFailure&&queryFailure.timing.created>now?[queryFailure.timing.created]:[]),...(manualIntake?[manualIntake.end]:[]),...(!live&&number<3&&manualIndex<events.length?[events[manualIndex].customer.arrival]:[]),...workers.flatMap(w=>w.pending?[w.pending.end]:[]),...jobs.filter(j=>j.status==='ticket'&&j.created>now).map(j=>j.created),...jobs.filter(j=>j.status==='served'&&j.dirtyAt>now).map(j=>j.dirtyAt)].filter(t=>Number.isFinite(t)&&t>now);
   if(!future.length){if(!finished())fail(workers.find(w=>!w.done)??workers[0],'Unfinished work: no worker can advance. Check event waits, routes, and repeat instructions.');break;}
-  now=Math.min(...future);
+  const next=Math.min(...future);
+  yield next;
+  now=next;
  }
  if(!failure&&(now>3600||transitions>=200000))fail(workers[0],'Simulation limit reached (3,600 seconds).');
- for(const event of events)event.satisfaction=Math.round(Math.max(0,100-(event.timing.created-event.timing.arrival)*.6-(event.timing.served-event.timing.created)*.05)*10)/10;
+ for(const event of events){
+  const created=Number.isFinite(event.timing.created)?event.timing.created:Math.max(now,event.timing.arrival);
+  const served=Number.isFinite(event.timing.served)?event.timing.served:Math.max(now,created);
+  event.satisfaction=Math.round(Math.max(0,100-(created-event.timing.arrival)*.6-(served-created)*.05)*10)/10;
+ }
  if(failure){for(let i=log.length-1;i>=0;i--)if(log[i].start>failure.time)log.splice(i,1);}
  log.sort((a,b)=>a.start-b.start||a.end-b.end);
- return {execution:{seed_id:seed,start,duration:failure?Math.max(.1,Math.min(failure.time,3600)):Math.max(1,Math.min(now,3600),...log.map(e=>e.end)),events:log},failure,instructions:workers.filter(w=>w.actor!=='niko').reduce((n,w)=>n+w.count,0)};
+ return {execution:{seed_id:seed,start,duration:failure?Math.max(.1,Math.min(failure.time,3600)):Math.max(1,Math.min(now,3600),...log.map(e=>e.end)),events:log},failure,instructions:workers.filter(w=>number>=(w.role==='prep'?15:23)).reduce((n,w)=>n+w.count,0)};
+}
+
+/** Batch validation uses the exact service rules without presentation delays. */
+export function simulateService(level:LevelDefinition,events:ReplayEvent[],programs:RobotPrograms,start=0):ServiceResult {
+ const execution=streamService(level,events,programs,start);
+ let step=execution.next();
+ while(!step.done)step=execution.next();
+ return step.value;
 }

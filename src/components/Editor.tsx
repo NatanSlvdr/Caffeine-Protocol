@@ -100,7 +100,7 @@ function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivEleme
   return <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>{children}</div>;
 }
 
-function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onEdit, options, onReplace }: {
+function Row({ block, depth, ordinal, locked, active, failure, failureMessage, options, onReplace }: {
   block: VisualBlock; depth: number; ordinal: number; locked: boolean; active: boolean; failure: boolean; options: string[];
   onReplace: (c: string) => void;
   failureMessage?: string; onEdit?: () => void;
@@ -118,10 +118,8 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
 
       {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} onChange={onReplace}/></>}
       {target && <span className="sr-only">Jump destination</span>}
-      {active && !failure && <span className="instruction-state is-running" role="img" aria-label="Running" title="Running"><i aria-hidden="true"/></span>}
-      {failure && <span className="instruction-state is-error" role="img" aria-label="Error" title="Error"><i aria-hidden="true"/>Error</span>}
     </div>
-    {failure && failureMessage && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
+    {failure && failureMessage && <InstructionError message={failureMessage} anchor={rowRef}/>}
   </div>;
 }
 

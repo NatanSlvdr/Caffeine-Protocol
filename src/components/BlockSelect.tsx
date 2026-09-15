@@ -87,7 +87,7 @@ export function DirectionSelect({ value, label, disabled, onChange }: {
       if (!button) return;
       const rect = button.getBoundingClientRect(), theme = getComputedStyle(button);
       setMenuStyle({
-        position: 'fixed', left: rect.left, top: rect.top, width: rect.width, height: rect.height,
+        position: 'fixed', left: Math.max(8, Math.min(rect.left - rect.width * 2, window.innerWidth - rect.width * 5 - 8)), top: Math.max(8, Math.min(rect.top - rect.height * 2, window.innerHeight - rect.height * 5 - 8)), width: rect.width * 5, height: rect.height * 5,
         '--tile': theme.getPropertyValue('--tile'), '--edge': theme.getPropertyValue('--edge'), '--tile-ink': theme.getPropertyValue('--tile-ink'),
       } as CSSProperties);
     };

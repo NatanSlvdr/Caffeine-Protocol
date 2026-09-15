@@ -71,14 +71,14 @@ describe('shared café geometry',()=>{
   }
  });
  it('gives workers disjoint areas',()=>{for(let x=-8;x<=7;x++)for(let z=-6;z<=BOUNDS.maxZ;z++){const roles=['query','prep','floor'] as const;expect(roles.filter(r=>isWalkable([x,z],r)).length).toBeLessThanOrEqual(1);}});
- it('reveals the side wall while keeping the complete diorama inside the camera',()=>{
+ it('keeps the coding view aligned and the complete diorama inside the camera',()=>{
   const dx=CAMERA_POSITION[0]-CAMERA_TARGET[0],dy=CAMERA_POSITION[1]-CAMERA_TARGET[1],dz=CAMERA_POSITION[2]-CAMERA_TARGET[2];
   expect(Math.atan2(dx,dz)).toBeCloseTo(CAMERA_AZIMUTH);
   expect(Math.atan2(dy,Math.hypot(dx,dz))).toBeCloseTo(CAMERA_ELEVATION);
-  expect(dx).toBeGreaterThan(0);
-  for(const [width,height] of [[660,440],[490,440],[340,300]]){
+  expect(dx).toBe(0);
+  for(const angle of [0,10])for(const [width,height] of [[660,440],[490,440],[340,300]]){
    const camera=new OrthographicCamera(-width/2,width/2,height/2,-height/2,.1,150);
-   camera.position.set(...CAMERA_POSITION);camera.lookAt(...CAMERA_TARGET);camera.zoom=cameraZoom(width,height);camera.updateProjectionMatrix();camera.updateMatrixWorld();
+   camera.position.set(CAMERA_TARGET[0]+Math.sin(angle*Math.PI/180)*dz,CAMERA_POSITION[1],CAMERA_TARGET[2]+Math.cos(angle*Math.PI/180)*dz);camera.lookAt(...CAMERA_TARGET);camera.zoom=cameraZoom(width,height)*(angle?.8:1);camera.updateProjectionMatrix();camera.updateMatrixWorld();
    for(const x of [-15.3,7.5])for(const z of [-6.7,5.5])for(const y of [-.8,3.1]){
     const projected=new Vector3(x,y,z).project(camera);
     expect(Math.abs(projected.x)).toBeLessThanOrEqual(1);

@@ -10,7 +10,19 @@ export function SoftBox({at=[0,0,0],size,color,radius=.08}:{at?:Vec3;size:Vec3;c
 }
 export function Box({at=[0,0,0],size=[1,1,1],color='#d8b38b',rotation=0}:{at?:Vec3;size?:Vec3;color?:string;rotation?:number}){return <mesh position={at} rotation-y={rotation} castShadow receiveShadow><boxGeometry args={size}/><meshStandardMaterial color={color} roughness={.82}/></mesh>;}
 export function Cylinder({at,size=[.3,.3,1],color='#d3b690'}:{at:Vec3;size?:Vec3;color?:string}){return <mesh position={at} castShadow receiveShadow><cylinderGeometry args={[...size,12]}/><meshStandardMaterial color={color} roughness={.8}/></mesh>;}
-export function Cup({at=[0,0,0],tea=false}:{at?:Vec3;tea?:boolean}){return <group position={at}><Cylinder at={[0,.025,0]} size={[.24,.24,.045]} color="#ece3ce"/><Cylinder at={[0,.15,0]} size={[.16,.13,.24]} color="#f9ebd2"/><mesh position={[0,.279,0]} rotation-x={Math.PI/2}><torusGeometry args={[.145,.018,5,16]}/><meshStandardMaterial color="#fff3d9" roughness={.35}/></mesh><Cylinder at={[0,.277,0]} size={[.13,.13,.012]} color={tea?'#af8045':'#573528'}/><mesh position={[.17,.16,0]} rotation-x={Math.PI/2}><torusGeometry args={[.09,.027,5,10]}/><meshStandardMaterial color="#f9ebd2"/></mesh></group>;}
+/** Coffee uses a low ivory cup; tea uses a tall green mug with a hanging tea tag. */
+export function Cup({at=[0,0,0],tea=false}:{at?:Vec3;tea?:boolean}){
+ const color=tea?'#5d9977':'#f9ebd2',height=tea?.36:.22,radius=tea?.145:.19;
+ return <group position={at}>
+  {!tea&&<Cylinder at={[0,.025,0]} size={[.28,.28,.045]} color="#ece3ce"/>}
+  <Cylinder at={[0,height/2+.05,0]} size={[radius,radius*.8,height]} color={color}/>
+  <Cylinder at={[0,height+.052,0]} size={[radius*.86,radius*.86,.012]} color={tea?'#c88a32':'#573528'}/>
+  <mesh position={[0,height+.055,0]} rotation-x={Math.PI/2}><torusGeometry args={[radius*.94,.016,8,32]}/><meshStandardMaterial color={color}/></mesh>
+  <mesh position={[radius+.04,height*.6,0]} rotation-x={Math.PI/2}><torusGeometry args={[.085,.027,8,20]}/><meshStandardMaterial color={color}/></mesh>
+  {tea&&<><Box at={[-.045,height-.005,radius+.006]} size={[.008,.13,.008]} color="#fff4cf"/><Box at={[-.045,height-.09,radius+.015]} size={[.085,.075,.015]} color="#f5d275"/></>}
+ </group>;
+}
+
 
 const STEEL = '#c1cfcc';
 const DARK = '#304941';

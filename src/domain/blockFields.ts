@@ -13,7 +13,7 @@ export function blockFields(command: string) {
   const [verb, ...parts] = command.split(' ');
   if (['IF', 'ITEM', 'SUGAR', 'READ', 'TAKE', 'FILL', 'ADD', 'MOVE', 'FUNCTION', 'CALL', 'POSITION', 'JUMP'].includes(verb)) {
     const operand = parts.join(' ');
-    return { family: verb, verb: verb === 'ITEM' ? 'Write' : verb[0] + verb.slice(1).toLowerCase(), value: operand.toLowerCase().replaceAll('_', ' ') };
+    return { family: verb, verb: verb === 'ITEM' ? 'Write' : verb[0] + verb.slice(1).toLowerCase(), value: operand === 'coffee' ? 'Coffee' : operand === 'tea' ? 'Tea' : operand.toLowerCase().replaceAll('_', ' ') };
   }
   return { family: command, verb: command[0] + command.slice(1).toLowerCase(), value: '' };
 }
