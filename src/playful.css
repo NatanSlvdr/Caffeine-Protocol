@@ -252,7 +252,7 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 @media(max-width:560px){.app-header{padding:0 16px}.brand{font-size:17px}.brand small{display:none}.header-actions{gap:5px}.star-total{padding:7px;font-size:11px}.rail{width:46px}.rail button{padding:9px}.workspace-main{padding:12px}.workspace-heading{align-items:flex-start;gap:10px}.workspace-heading h1{font-size:23px}.workspace-tools button{font-size:10px;padding:8px;gap:4px}.workspace-tools button svg{width:13px}.shift-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shift-card strong{font-size:13px}.page-heading h1{font-size:30px}.page-heading{gap:12px;flex-wrap:wrap}.block{min-width:270px}.program-start small{display:none}.editor-panel{height:740px}.cafe-panel{min-height:360px}.scene-space{min-height:280px}}
 
 /* Compact tiles, separate line gutter, and connected scopes on the coffee blueprint. */
-.editor-panel .visual-program{width:max-content;min-width:100%;padding:20px 105px 60px 48px;overflow:visible}
+.editor-panel .visual-program{width:max-content;min-width:100%;padding:20px 105px 60px 70px;overflow:visible}
 .code-row{position:relative;width:max-content;margin-bottom:8px;z-index:1}
 .line-number{position:absolute;width:22px;text-align:right;top:14px;font:10px ui-monospace,monospace;color:#bca58b;pointer-events:none}
 .editor-panel .code-row .block{display:flex;width:max-content;min-width:0;gap:8px;margin:0;min-height:43px;padding:5px 12px 5px 4px;border-left-width:1px;font:650 12px/1.3 ui-monospace,monospace}
@@ -342,7 +342,7 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 .direction-mini-grid>span.chosen{background:#2563eb}
 /* Running lines use one unmistakable red play triangle; errors retain their text cue. */
 .editor-panel .code-row .block.active{outline:none;outline-offset:0;border-color:var(--edge);background:var(--tile);box-shadow:0 3px 0 var(--edge),inset 0 1px 0 #ffffff50}
-.editor-panel .code-row .block.active,.editor-panel .code-row .block.failure{padding-right:26px}
+.editor-panel .code-row .block.active,.editor-panel .code-row .block.failure{padding-right:9px}
 
 /* One shared gutter frames every side of the workspace. */
 .workspace-main{--workspace-padding:22px;padding:var(--workspace-padding);gap:0}
@@ -431,9 +431,9 @@ html[data-motion=reduced] .receipt-modal,html[data-motion=reduced] .editor-panel
 .customer-speech ul{list-style:none;margin:9px 0 0;padding:8px 0 0;border-top:1px dashed #d9ccb5;display:flex;flex-wrap:wrap;justify-content:center;gap:5px}
 .customer-speech li{padding:4px 7px;border-radius:7px;background:#e5ecdd;color:#36513c;font:600 11px/1.35 Inter,sans-serif}
 
-/* A warm red triangle follows the current instruction without covering its block. */
-.execution-cursor{position:absolute;left:0;top:0;z-index:5;display:block;width:16px;height:18px;pointer-events:none;transition-property:transform;transition-timing-function:cubic-bezier(.65,0,.35,1);will-change:transform}
-.execution-cursor svg{display:block;fill:#d65040;stroke:#913d31;stroke-width:1;stroke-linejoin:round}
+/* A warm red rounded marker follows the current instruction without covering its block. */
+.execution-cursor{position:absolute;left:0;top:0;z-index:5;display:grid;place-items:center;width:26px;height:26px;pointer-events:none;border-radius:9px;background:#d65b4b;border:1px solid #963d34;box-shadow:0 2px 0 #7d332d55,0 0 0 2px #fff4dc88;transition-property:transform;transition-timing-function:cubic-bezier(.65,0,.35,1);will-change:transform}
+.execution-cursor svg{display:block;fill:#fff4dc;stroke:#963d34;stroke-width:1;stroke-linejoin:round}
 @media(prefers-reduced-motion:reduce){.execution-cursor{transition:none!important}}
 html[data-motion=reduced] .execution-cursor{transition:none!important}
-.code-row:has(>.block[aria-current=step])>.line-number{visibility:hidden}
+.code-row:has(>.block[aria-current=step])>.line-number{color:#fff0c6;font-weight:800}

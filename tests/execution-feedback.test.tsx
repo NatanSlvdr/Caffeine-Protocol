@@ -16,14 +16,16 @@ describe('clear execution feedback',()=>{
   });
   const {rerender}=render(<Editor {...editor} activeLine={0}/>);
   const cursor=screen.getByRole('img',{name:'Current instruction'});
-  expect(cursor.style.transform).toContain('106px');
+  expect(cursor.style.transform).toContain('-33px, 102px');
+  expect(document.querySelector('[data-line="0"]')?.parentElement?.querySelector('.line-number')?.textContent).toBe('01');
   rerender(<Editor {...editor} activeLine={2}/>);
   expect(screen.getByRole('img',{name:'Current instruction'})).toBe(cursor);
-  expect(cursor.style.transform).toContain('206px');
+  expect(cursor.style.transform).toContain('-33px, 202px');
   expect(cursor.style.transitionDuration).toBe('360ms');
   rerender(<Editor {...editor} activeLine={1} stepSeconds={.125}/>);
+  expect(cursor.style.transform).toContain('-33px, 152px');
   expect(cursor.style.transitionDuration).toBe('75ms');
- });
+});
  it('marks the full failing block and places the warning outside the code pane',()=>{
   render(<Editor {...editor} failureLine={2} failureMessage="Careful, an error here."/>);
   expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');
