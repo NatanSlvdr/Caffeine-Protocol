@@ -1,10 +1,11 @@
 import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig } from '../domain/types';
 import { preparationSource, floorSource } from '../domain/routines';
+import { TABLE_LAYOUT } from '../domain/layout';
 import campaign from './campaign.json' with {type:'json'};
 import targets from './service-targets.json' with {type:'json'};
 export const ROBOT_NAMES={query:'Query',prep:'Brew',floor:'Porter'} as const;
 export const queryReference=campaign.lessons[13].solution;
-const titles=['A second pair of hands','Count the tiles','From bean to cup','Time for tea','A spoonful of precision','A recipe worth keeping','Two cups in hand','The kitchen is yours','Meet Porter','A path to the table','There and back','A clean table','A place to recharge','Enough for the journey','A tray for two','The floor is yours','Three routines, one café','The whole café is yours'];
+const titles=['A second pair of hands','Count the tiles','From bean to cup','Time for tea','A spoonful of precision','A recipe worth keeping','Two cups in hand','The kitchen is yours','Meet Porter','A path to the table','There and back','A clean table','Keep the room moving','A clear route','A tray for two','The floor is yours','Three routines, one café','The whole café is yours'];
 const notes=[
  'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Niko still serves the room.',
  'MOVE uses screen directions and whole tile counts. A blocked move stops early and the next instruction runs. Fix the route to the ingredients.',
@@ -18,18 +19,18 @@ const notes=[
  'Read the assigned TABLE, count the route, and SERVE beside that table. Furniture blocks movement; customers do not.',
  'Return to pickup before the next delivery. The same floor plan and tile coordinates remain across every shift.',
  'WAIT DIRTY selects a used cup. COLLECT at its table, then RETURN CUPS at the return station.',
- 'Movement costs one battery unit per tile. Visit the dock and CHARGE to restore 80 units in ten seconds.',
- 'Plan delivery and clearing routes with enough charge to reach the dock. A zero battery cannot move.',
+ 'Keep Porter moving between pickup and the tables. Finish each delivery and return for the next drink.',
+ 'Plan the complete delivery and clearing route. Return used cups before starting the next round.',
  'Porter now holds two items. Take two drinks before serving, then clear both tables. FIFO keeps the tray predictable.',
- 'Combine routes, clearing, batching, and charging. Each robot works in its own area.',
+ 'Combine routes, clearing, and batching. Each robot works in its own area.',
  'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
- 'The final service combines groups, clarification, both recipes, sugar, two-item trays, clearing, and charging.',
+ 'The final service combines groups, clarification, both recipes, sugar, two-item trays, and clearing.',
 ];
-export function referencePrograms(level:number):RobotPrograms{return {query:queryReference,prep:preparationSource(level,level>=21?2:1),floor:floorSource(level,level>=29?2:1,level>=31?10:level>=29?4:level>=24?2:1)};}
+export function referencePrograms(level:number):RobotPrograms{return {query:queryReference,prep:preparationSource(level,level>=21?2:1),floor:floorSource(level,level>=29?2:1,level>=31?TABLE_LAYOUT.length:level>=29?4:level>=24?2:1)};}
 export const extensionLevels:LevelDefinition[]=titles.map((title,i)=>{
  const level=i+15,batch=level>=21?2:1;
- const service:ServiceConfig={prepCapacity:batch,floorCapacity:level>=29?2:1,battery:level>=27,clearing:true,objective:'serve',minCharges:level>=27?1:0,minLoad:level===21||level===29?2:0};
- const active_tables=level>=31?10:level>=29?4:level>=24?2:1;
+ const service:ServiceConfig={prepCapacity:batch,floorCapacity:level>=29?2:1,clearing:true,objective:'serve',minLoad:level===21||level===29?2:0};
+ const active_tables=level>=31?TABLE_LAYOUT.length:level>=29?4:level>=24?2:1;
  const seeds=Array.from({length:3},(_,seed)=>{
   const count=level>=31?12:level>=29?8:level>=21?4:2;
   const customers:Customer[]=Array.from({length:count},(_,n)=>{
@@ -48,7 +49,7 @@ export const extensionLevels:LevelDefinition[]=titles.map((title,i)=>{
 });
 export const extensionLessons=extensionLevels.map((_,i)=>{
  const level=i+15,role=level<23?'prep':'floor',programs=referencePrograms(level),starter={...programs};
- const omissions=['DEPOSIT','MOVE UP','GRIND','STEEP','ADD SUGAR','CALL recipe','WAIT TICKET','DEPOSIT','TAKE','SERVE','MOVE UP','COLLECT','CHARGE','CHARGE','TAKE','RETURN CUPS','ADD SUGAR','CHARGE'];
+ const omissions=['DEPOSIT','MOVE UP','GRIND','STEEP','ADD SUGAR','CALL recipe','WAIT TICKET','DEPOSIT','TAKE','SERVE','MOVE UP','COLLECT','SERVE','RETURN CUPS','TAKE','RETURN CUPS','ADD SUGAR','SERVE'];
  const needle=omissions[i];starter[role]=starter[role].replace(new RegExp(`^${needle}[^\\n]*$`,'m'),`# TODO: ${needle}`);
  if(level>=31){starter.query=campaign.lessons[2].solution;starter.prep=programs.prep.replace('ADD SUGAR','# TODO: apply requested sugar');}
  return {note:notes[i],starter:starter.query,solution:programs.query,robotStarter:starter,robotSolution:programs};

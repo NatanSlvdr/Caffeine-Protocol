@@ -61,12 +61,6 @@ export function Appliance({ id }: { id: StationId }) {
     </group>;
     case 'pickup': return <SoftBox at={[0,1.12,0]} size={[.86,.035,.78]} radius={.016} color={CAFE_COLORS.clay}/>;
     case 'returns': return null;
-    case 'dock': return <group>
-      <Box at={[.32,.16,0]} size={[.3,.3,.9]} color="#466d62"/>
-      <Box at={[.49,.25,0]} size={[.03,.12,.65]} color="#96df98"/>
-      {[-.27,.27].map(z=><Box key={z} at={[.12,.08,z]} size={[.14,.07,.12]} color="#d8b875"/>)}
-      {[-.2,0,.2].map(z=><Box key={z} at={[.32,.32,z]} size={[.16,.025,.04]} color={DARK}/>)}
-    </group>;
     case 'orders': return <group>
       <SoftBox at={[0,1.23,0]} size={[.85,.25,.72]} radius={.04} color={CAFE_COLORS.charcoal}/>
       <Box at={[0,1.23,.368]} size={[.7,.13,.02]} color={STEEL}/>
@@ -118,3 +112,10 @@ export function TicketTray(){return <group>
  {[-.37,.37].map(z=><Box key={z} at={[0,1.17,z]} size={[.85,.075,.045]} color="#9bb9b0"/>)}
  <Box at={[-.26,1.15,0]} size={[.1,.035,.55]} color="#334e53"/>
 </group>;}
+
+/** Shared robot silhouette for the café and direction selector. */
+export function RobotModel({color="#80a889"}:{color?:string}){return <><RoundedBox args={[.62,.55,.46]} radius={.09} position={[0,.74,0]} castShadow><meshStandardMaterial color={color}/></RoundedBox><RoundedBox args={[.75,.55,.57]} radius={.1} position={[0,1.29,0]} castShadow><meshStandardMaterial color="#f1dfb5"/></RoundedBox><Box at={[0,1.3,.29]} size={[.58,.28,.04]} color="#263f37"/>{[-.16,.16].map(x=><Box key={x} at={[x,1.32,.32]} size={[.07,.08,.025]} color="#b6e4bc"/>)}<Cylinder at={[0,1.69,0]} size={[.025,.025,.25]} color="#728774"/><mesh position={[0,1.84,0]}><sphereGeometry args={[.075,8,6]}/><meshStandardMaterial color="#e1a251"/></mesh><Box at={[0,.93,.25]} size={[.25,.08,.02]} color="#f1db9f"/>{[-1,1].map(side => <group key={side}>
+ <Box at={[side*.17,.23,0]} size={[.17,.4,.19]} color="#4b5543"/>
+ <Box at={[side*.18,.07,.09]} size={[.23,.14,.35]} color="#394538"/>
+ <Box at={[side*.4,.78,0]} size={[.14,.44,.17]} color={color}/>
+ </group>)}</>;}

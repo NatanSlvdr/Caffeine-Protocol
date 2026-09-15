@@ -1,17 +1,17 @@
 import { Component, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
-import { Html, OrthographicCamera, RoundedBox } from '@react-three/drei';
+import { Html, OrthographicCamera } from '@react-three/drei';
 import { CanvasTexture, Group, SRGBColorSpace } from 'three';
 import { PixelArtEffect } from './PixelArtEffect';
-import { Street } from './Street';
+import { Street, StreetClip } from './Street';
 import { CafeFloor } from './CafeFloor';
-import { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, CAFE_COLORS } from './CafeModels';
+import { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS } from './CafeModels';
 import type { Vec3 } from './CafeModels';
 import type { StationId } from '../domain/layout';
 import type { RunResult } from '../domain/types';
 import { sampleReplay } from '../domain/replay';
-import { cameraZoom, TABLE_LAYOUT, FURNITURE, STATIONS, STARTS, CAMERA_POSITION, CAMERA_TARGET, ENTRANCE, MANUAL_INTAKE, STAFF_ENTRY, ROOM, tableFront, tableSeat } from '../domain/layout';
+import { cameraZoom, TABLE_LAYOUT, FURNITURE, STATIONS, STARTS, CAMERA_POSITION, CAMERA_TARGET, ENTRANCE, MANUAL_INTAKE, STAFF_ENTRY, ROOM, tableSeat } from '../domain/layout';
 import type { Point } from '../domain/layout';
 
 function Plant({at,scale=1}:{at:Vec3;scale?:number}){return <group position={at} scale={scale}><Cylinder at={[0,.32,0]} size={[.35,.25,.62]} color="#c26b50"/><Cylinder at={[0,.65,0]} size={[.29,.29,.04]} color="#514439"/><Cylinder at={[0,1.08,0]} size={[.035,.045,.9]} color="#5f6c43"/>{Array.from({length:7},(_,i)=><mesh key={i} position={[Math.sin(i*2.4)*.26,.9+i*.11,Math.cos(i*2.4)*.24]} rotation={[i*.2,i*2.4,.6]} scale={[.22,.55,.11]} castShadow><icosahedronGeometry args={[1,0]}/><meshStandardMaterial color={i%2?'#6a895b':'#93a86d'}/></mesh>)}</group>;}
@@ -47,16 +47,17 @@ function CounterGate({open}:{open:boolean}){
  return <group position={[STAFF_ENTRY[0]-.47,0,STAFF_ENTRY[1]]} ref={ref}><SoftBox at={[.47,1.03,0]} size={[.94,.12,.82]} radius={.055} color={CAFE_COLORS.sand}/><SoftBox at={[.47,.58,0]} size={[.86,.74,.08]} radius={.035} color={CAFE_COLORS.walnut}/><Box at={[.78,.62,-.055]} size={[.11,.045,.035]} color="#465051"/></group>;
 }
 /** Floor zones, furniture, and station positions share the simulation's tile model. */
-function Room({tables,evening,gateOpen,showLabels}:{tables:number;evening:boolean;gateOpen:boolean;showLabels:boolean}){return <group>
- <Box at={[-.5,-.42,-.5]} size={[16,.7,ROOM[1]]} color={CAFE_COLORS.walnut}/>
+function Room({evening,gateOpen,showLabels}:{evening:boolean;gateOpen:boolean;showLabels:boolean}){return <group>
+ <Box at={[-.55,-.42,-.55]} size={[16.1,.7,ROOM[1]+.1]} color={CAFE_COLORS.walnut}/>
  <CafeFloor editing={showLabels}/>
- <Box at={[-.5,1.3,-6.6]} size={[16,2.7,.2]} color={CAFE_COLORS.wall}/><CafeMural/>
- <Box at={[-8.6,1.3,-1.1]} size={[.2,2.7,10.8]} color={CAFE_COLORS.wall}/>
- <Box at={[-8.6,2.48,4.9]} size={[.24,.34,1.2]} color={CAFE_COLORS.walnut}/>
- <Box at={[-8.6,1.14,4.3]} size={[.25,2.3,.1]} color={CAFE_COLORS.walnut}/>
- <Box at={[-8.6,1.14,5.5]} size={[.25,2.3,.1]} color={CAFE_COLORS.walnut}/>
- <Box at={[-8.65,.035,4.95]} size={[.6,.025,1]} color={CAFE_COLORS.sage}/>
- {[-4,0,2.8].map(z=><group key={z}><Box at={[-8.48,1.7,z]} size={[.1,1.8,2]} color={CAFE_COLORS.walnut}/><Box at={[-8.41,1.7,z]} size={[.04,1.5,1.7]} color={evening?'#aa99a2':'#c7e3df'}/><Box at={[-8.37,1.7,z]} size={[.06,1.55,.055]} color={CAFE_COLORS.walnut}/><Box at={[-8.37,1.7,z]} size={[.06,.055,1.7]} color={CAFE_COLORS.walnut}/><Box at={[-8.28,.88,z]} size={[.35,.09,2.12]} color={CAFE_COLORS.clay}/></group>)}
+ <Box at={[-.6,1.3,-6.6]} size={[16.2,2.7,.2]} color={CAFE_COLORS.wall}/><CafeMural/>
+ <Box at={[-8.6,1.3,-1.6]} size={[.2,2.7,10.2]} color={CAFE_COLORS.wall}/>
+ <Box at={[-8.6,2.48,4.5]} size={[.24,.34,2]} color={CAFE_COLORS.walnut}/>
+ <Box at={[-8.6,1.14,3.45]} size={[.25,2.3,.1]} color={CAFE_COLORS.walnut}/>
+ <Box at={[-8.6,1.14,5.55]} size={[.25,2.3,.1]} color={CAFE_COLORS.walnut}/>
+ {/* The two-tile sliding entrance stays fully open, with its panels recessed into the wall. */}
+ <Box at={[-8.6,.035,4.5]} size={[.6,.025,2]} color={CAFE_COLORS.sand}/>
+ {[-4,0,2.3].map(z=><group key={z}><Box at={[-8.48,1.7,z]} size={[.1,1.8,2]} color={CAFE_COLORS.walnut}/><Box at={[-8.41,1.7,z]} size={[.04,1.5,1.7]} color={evening?'#aa99a2':'#c7e3df'}/><Box at={[-8.37,1.7,z]} size={[.06,1.55,.055]} color={CAFE_COLORS.walnut}/><Box at={[-8.37,1.7,z]} size={[.06,.055,1.7]} color={CAFE_COLORS.walnut}/><Box at={[-8.28,.88,z]} size={[.35,.09,2.12]} color={CAFE_COLORS.clay}/></group>)}
  {FURNITURE.filter(f=>f.kind!=='table'&&f.kind!=='chair'&&f.id!=='storage').map(f=><group key={f.id} position={[f.x+(f.width-1)/2,0,f.z+(f.depth-1)/2]}>{f.kind==='plant'?<Plant at={[0,0,0]}/>:<>
   <SoftBox at={[0,.54,0]} size={[f.width,.98,f.depth]} radius={.16} color={CAFE_COLORS.walnut}/>
   <SoftBox at={[0,1.04,0]} size={[f.width,.12,f.depth]} radius={.059} color={CAFE_COLORS.sand}/>
@@ -65,29 +66,27 @@ function Room({tables,evening,gateOpen,showLabels}:{tables:number;evening:boolea
  {Object.entries(STATIONS).map(([id,station])=>id==='returns'||id==='brewer'?null:<group key={id} position={[station.cell[0],0,station.cell[1]]}>
   {id==='orders'?<TicketTray/>:<Appliance id={id as StationId}/>}
  </group>)}
- <mesh rotation-x={-Math.PI/2} position={[STATIONS.dock.floor[0],.04,STATIONS.dock.floor[1]]}><ringGeometry args={[.27,.39,4]}/><meshBasicMaterial color="#548c66"/></mesh>
  <group position={[STATIONS.orders.customerCounter[0],0,STATIONS.orders.customerCounter[1]]} rotation-y={Math.PI/2}><Appliance id="orders"/></group>
  <CounterGate open={gateOpen}/>
- <Box at={[ENTRANCE[0],.04,ENTRANCE[1]]} size={[.8,.015,.8]} color="#45666b"/>
- {showLabels&&<><FloorLabel at={STATIONS.orders.prep} label="ORDER HANDOFF"/><FloorLabel at={STATIONS.ingredients.prep} label="STORAGE"/><FloorLabel at={STATIONS.grinder.prep} label="COFFEE MACHINE"/><FloorLabel at={STATIONS.sugar.prep} label="SUGAR"/><FloorLabel at={STATIONS.pickup.floor} label="DRINK PICKUP"/><FloorLabel at={STATIONS.returns.floor} label="SINK"/><FloorLabel at={STATIONS.dock.floor} label="CHARGE"/><FloorLabel at={ENTRANCE} label="ENTER"/></>}
- {TABLE_LAYOUT.map((t,i)=><group key={t.id}><Table point={[t.x,t.z+(t.depth-1)/2]} depth={t.depth}/><Chair at={[tableSeat(i,0)[0],0,tableSeat(i,0)[1]]} rotation={Math.PI/2}/><Chair at={[tableSeat(i,1)[0],0,tableSeat(i,1)[1]]} rotation={-Math.PI/2}/><Box at={[tableFront(i)[0],.06,tableFront(i)[1]]} size={[.25,.035,.25]} color={i<tables?'#88a978':'#bba886'}/></group>)}
+ {showLabels&&<><FloorLabel at={STATIONS.orders.prep} label="ORDER HANDOFF"/><FloorLabel at={STATIONS.ingredients.prep} label="STORAGE"/><FloorLabel at={STATIONS.grinder.prep} label="COFFEE MACHINE"/><FloorLabel at={STATIONS.sugar.prep} label="SUGAR"/><FloorLabel at={STATIONS.pickup.floor} label="DRINK PICKUP"/><FloorLabel at={STATIONS.returns.floor} label="SINK"/><FloorLabel at={ENTRANCE} label="ENTER"/></>}
+ {TABLE_LAYOUT.map((t,i)=><group key={t.id}><Table point={[t.x,t.z+(t.depth-1)/2]} depth={t.depth}/><Chair at={[tableSeat(i,0)[0],0,tableSeat(i,0)[1]]} rotation={Math.PI/2}/><Chair at={[tableSeat(i,1)[0],0,tableSeat(i,1)[1]]} rotation={-Math.PI/2}/></group>)}
  </group>;}
 function Character({at,color='#c28563',robot=false,label,animate=false,phase=0,reduced=false,seated=false,facing=0}:{at:Point;color?:string;robot?:boolean;label?:string;animate?:boolean;phase?:number;reduced?:boolean;seated?:boolean;facing?:number}){
   const ref=useRef<Group>(null);const last=useRef<Point>(at);
   useFrame(()=>{if(!ref.current||seated)return;const dx=at[0]-last.current[0],dz=at[1]-last.current[1];if(Math.hypot(dx,dz)>.00001)ref.current.rotation.y=Math.atan2(dx,dz);last.current=at;});
   const bob=animate&&!reduced?Math.sin(phase*150)*.035:0;
   return <group position={[at[0],seated?0:bob,at[1]]}><group ref={ref} rotation-y={facing}>
-    {robot?<><RoundedBox args={[.62,.55,.46]} radius={.09} position={[0,.74,0]} castShadow><meshStandardMaterial color={color}/></RoundedBox><RoundedBox args={[.75,.55,.57]} radius={.1} position={[0,1.29,0]} castShadow><meshStandardMaterial color="#f1dfb5"/></RoundedBox><Box at={[0,1.3,.29]} size={[.58,.28,.04]} color="#263f37"/>{[-.16,.16].map(x=><Box key={x} at={[x,1.32,.32]} size={[.07,.08,.025]} color="#b6e4bc"/>)}<Cylinder at={[0,1.69,0]} size={[.025,.025,.25]} color="#728774"/><mesh position={[0,1.84,0]}><sphereGeometry args={[.075,8,6]}/><meshStandardMaterial color="#e1a251"/></mesh><Box at={[0,.93,.25]} size={[.25,.08,.02]} color="#f1db9f"/></>:<><Cylinder at={[0,seated?1.02:.76,0]} size={[.24,.31,.64]} color={color}/><mesh position={[0,seated?1.63:1.37,0]} castShadow><sphereGeometry args={[.3,10,8]}/><meshStandardMaterial color="#deb28b"/></mesh><mesh position={[0,seated?1.78:1.52,-.04]} castShadow><sphereGeometry args={[.3,10,6,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#664d38"/></mesh><Box at={[0,seated?1:.74,.25]} size={[.34,.46,.05]} color="#e7d7af"/></>}
-    {[-1,1].map(i=>seated?<group key={i}><Box at={[i*.17,.62,.2]} size={[.17,.17,.48]} color="#4b5543"/><Box at={[i*.17,.38,.42]} size={[.17,.45,.17]} color="#4b5543"/><Box at={[i*.18,.13,.51]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,1.03,0]} size={[.14,.44,.17]} color={color}/></group>:<group key={i}><Box at={[i*.17,.23,0]} size={[.17,.4,.19]} color="#4b5543"/><Box at={[i*.18,.07,.09]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,.78,0]} size={[.14,.44,.17]} color={color}/></group>)}
+    {robot?<RobotModel color={color}/>:<><Cylinder at={[0,seated?1.02:.76,0]} size={[.24,.31,.64]} color={color}/><mesh position={[0,seated?1.63:1.37,0]} castShadow><sphereGeometry args={[.3,10,8]}/><meshStandardMaterial color="#deb28b"/></mesh><mesh position={[0,seated?1.78:1.52,-.04]} castShadow><sphereGeometry args={[.3,10,6,0,Math.PI*2,0,Math.PI/2]}/><meshStandardMaterial color="#664d38"/></mesh><Box at={[0,seated?1:.74,.25]} size={[.34,.46,.05]} color="#e7d7af"/></>}
+    {!robot&&[-1,1].map(i=>seated?<group key={i}><Box at={[i*.17,.62,.2]} size={[.17,.17,.48]} color="#4b5543"/><Box at={[i*.17,.38,.42]} size={[.17,.45,.17]} color="#4b5543"/><Box at={[i*.18,.13,.51]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,1.03,0]} size={[.14,.44,.17]} color={color}/></group>:<group key={i}><Box at={[i*.17,.23,0]} size={[.17,.4,.19]} color="#4b5543"/><Box at={[i*.18,.07,.09]} size={[.23,.14,.35]} color="#394538"/><Box at={[i*.4,.78,0]} size={[.14,.44,.17]} color={color}/></group>)}
   </group>{label&&<Html position={[0,2.1,0]} center zIndexRange={[6,0]}><span className="actor-label">{label}</span></Html>}</group>;
 }
 function CameraFit(){const {size,camera}=useThree();useEffect(()=>{if('zoom' in camera){camera.zoom=cameraZoom(size.width,size.height);camera.lookAt(...CAMERA_TARGET);camera.updateProjectionMatrix();}},[size,camera]);return null;}
-function World({tables,evening,result,time,reduced,moving,level,showLabels}:{tables:number;evening:boolean;result?:RunResult;time:number;reduced:boolean;moving:boolean;level:number;showLabels:boolean}){
+function World({evening,result,time,reduced,moving,level,showLabels}:{evening:boolean;result?:RunResult;time:number;reduced:boolean;moving:boolean;level:number;showLabels:boolean}){
  const state=result?sampleReplay(result,time):undefined;
- const actors=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],battery:80,role:'query' as const}}:{}),...(level>=15?{prep:{position:STARTS.prep,inventory:[],battery:80,role:'prep' as const}}:{}),...(level>=23?{floor:{position:STARTS.floor,inventory:[],battery:80,role:'floor' as const}}:{niko:{position:level>=15?STARTS.floor:level>=3?STARTS.prep:MANUAL_INTAKE,inventory:[],battery:80,role:level>=15?'floor' as const:'prep' as const}})};
+ const actors=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{}),...(level>=15?{prep:{position:STARTS.prep,inventory:[],role:'prep' as const}}:{}),...(level>=23?{floor:{position:STARTS.floor,inventory:[],role:'floor' as const}}:{niko:{position:level>=15?STARTS.floor:level>=3?STARTS.prep:MANUAL_INTAKE,inventory:[],role:level>=15?'floor' as const:'prep' as const}})};
 
  const gateOpen=!!state?.seed?.events.some(e=>e.actor==='niko'&&e.from[0]===STAFF_ENTRY[0]&&e.to[0]===STAFF_ENTRY[0]&&e.from[1]!==e.to[1]&&(e.from[1]===STAFF_ENTRY[1]||e.to[1]===STAFF_ENTRY[1])&&state.local>=e.start-.3&&state.local<=e.end+.2);
- return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room tables={tables} evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
+ return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
  {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id!=='niko'} facing={id==='query'?-Math.PI/2:0} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
  {state?.waitingTickets.slice(0,4).map((ticket,i)=><group key={ticket.ticket_id} position={[STATIONS.orders.cell[0]+.2,1.12+i*.015,STATIONS.orders.cell[1]+.18]}>
   <Box size={[.32,.012,.4]} color="#fff3d5"/>
@@ -96,11 +95,11 @@ function World({tables,evening,result,time,reduced,moving,level,showLabels}:{tab
  </group>)}
  {state?.pickup.slice(0,2).map(([id,item],i)=><Cup key={id} at={[STATIONS.pickup.cell[0]-.2+i*.4,1.16,STATIONS.pickup.cell[1]]} tea={item==='tea'}/>)}
  <Street evening={evening} paused={!!result&&!moving} reduced={reduced}/>
- {state?.customers.map((c,i)=><Character key={c.id} at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} seated={c.seated} animate={moving&&!c.seated} phase={time} reduced={reduced} facing={c.side===0?Math.PI/2:-Math.PI/2}/>)}
+ <StreetClip>{state?.customers.map((c,i)=><Character key={c.id} at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} seated={c.seated} animate={moving&&!c.seated} phase={time} reduced={reduced} facing={c.side===0?Math.PI/2:-Math.PI/2}/>)}</StreetClip>
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;
 }
 class SceneBoundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}render(){return this.state.failed?<div className="webgl-fallback"><strong>The café is still open.</strong><p>3D graphics are unavailable on this device. You can still program Query, run service, and inspect every order using the panels.</p></div>:this.props.children;}}
-export function Cafe({tables=4,evening=false,result,time=0,reduced=false,pixelArt=true,moving=false,level=32,showLabels=false}:{tables?:number;evening?:boolean;result?:RunResult;time?:number;reduced?:boolean;pixelArt?:boolean;moving?:boolean;level?:number;showLabels?:boolean}){
+export function Cafe({evening=false,result,time=0,reduced=false,pixelArt=true,moving=false,level=32,showLabels=false}:{evening?:boolean;result?:RunResult;time?:number;reduced?:boolean;pixelArt?:boolean;moving?:boolean;level?:number;showLabels?:boolean}){
  const [lost,setLost]=useState(false);
- return <div className="cafe-canvas" aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room">{lost?<div className="webgl-fallback">The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.</div>:<SceneBoundary><Suspense fallback={<div className="scene-loading">Warming up the café…</div>}><Canvas key={pixelArt?'pixelated':'smooth'} shadows dpr={[1,1.5]} gl={{antialias:!pixelArt,alpha:true}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',()=>setLost(true))}><World tables={tables} evening={evening} result={result} time={time} reduced={reduced} moving={moving} level={level} showLabels={showLabels}/>{pixelArt&&<PixelArtEffect/>}</Canvas></Suspense></SceneBoundary>}</div>;
+ return <div className="cafe-canvas" aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room">{lost?<div className="webgl-fallback">The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.</div>:<SceneBoundary><Suspense fallback={<div className="scene-loading">Warming up the café…</div>}><Canvas key={pixelArt?'pixelated':'smooth'} shadows dpr={[1,1.5]} gl={{antialias:!pixelArt,alpha:true,localClippingEnabled:true}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',()=>setLost(true))}><World evening={evening} result={result} time={time} reduced={reduced} moving={moving} level={level} showLabels={showLabels}/>{pixelArt&&<PixelArtEffect/>}</Canvas></Suspense></SceneBoundary>}</div>;
 }

@@ -1,5 +1,6 @@
 import type { Program, RobotRole } from './types';
 import { availableCommands, compileProgram } from './program';
+import { TABLE_LAYOUT } from './layout';
 import { DIRECTIONS } from './directions';
 export const MOVING_ROLES = ['prep','floor'] as const;
 const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
@@ -10,7 +11,7 @@ export function robotCommands(role:RobotRole,level:number):string[]{
  if(role==='query')return availableCommands(Math.min(level,14));
  const common=[...DIRECTIONS.map(direction=>`MOVE ${direction} 1`),'REPEAT','IF coffee','IF tea','IF sugar','ELSE','END'];
  if(role==='prep')return [...common,'WAIT TICKET',...DIRECTIONS.map(direction=>`TAKE ${direction}`),'GRIND','FILL WATER','BREW','STEEP','ADD SUGAR','DEPOSIT UP',...DIRECTIONS.filter(direction=>direction!=='UP').map(direction=>`DEPOSIT ${direction}`),...(level>=20?['FUNCTION recipe','CALL recipe','RETURN']:[])];
- return [...common,'FUNCTION deliver','CALL deliver','FUNCTION clear','CALL clear','RETURN','WAIT DRINK','TAKE DOWN',...DIRECTIONS.filter(direction=>direction!=='DOWN').map(direction=>`TAKE ${direction}`),'SERVE',...Array.from({length:10},(_,i)=>`IF TABLE ${i+1}`),...(level>=23?['WAIT DIRTY','COLLECT','RETURN CUPS']:[]),...(level>=27?['CHARGE','IF BATTERY < 40']:[])];
+ return [...common,'FUNCTION deliver','CALL deliver','FUNCTION clear','CALL clear','RETURN','WAIT DRINK','TAKE DOWN',...DIRECTIONS.filter(direction=>direction!=='DOWN').map(direction=>`TAKE ${direction}`),'SERVE',...Array.from({length:TABLE_LAYOUT.length},(_,i)=>`IF TABLE ${i+1}`),...(level>=23?['WAIT DIRTY','COLLECT','RETURN CUPS']:[])];
 }
 export function compileRobot(source:string,role:RobotRole,level=32):Program{
  if(role==='query')return compileProgram(source,Math.min(level,14));

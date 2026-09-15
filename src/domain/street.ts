@@ -6,7 +6,8 @@ export const STREET_EXIT_SECONDS=8;
 export const SIDEWALK_X=-9.6;
 /** Street and sidewalk end flush with the café's front and back floor edges. */
 export const STREET_BOUNDS={minZ:BOUNDS.minZ-.5,maxZ:BOUNDS.maxZ+.5,length:ROOM[1],centerZ:(BOUNDS.minZ+BOUNDS.maxZ)/2};
-const sidewalkEnds=[STREET_BOUNDS.minZ+.4,STREET_BOUNDS.maxZ-.4] as const;
+// Spawn and finish outside the clipping planes, so customers cross the boundary naturally.
+const sidewalkEnds=[STREET_BOUNDS.minZ-1,STREET_BOUNDS.maxZ+1] as const;
 /** Outdoor presentation paths meet the existing indoor navigation at the doorway. */
 export function customerApproach(index:number):Point[]{
  return [[SIDEWALK_X,sidewalkEnds[index%2?0:1]],[SIDEWALK_X,ENTRANCE[1]],ENTRANCE,...gridRoute(ENTRANCE,STATIONS.orders.floor).slice(1)];

@@ -8,6 +8,22 @@ export const newSave=(settings:Settings={...defaultSettings}):ProgressSave=>({ve
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 /** Migrate retired payment instructions without changing comments or other commands. */
 function removeOrderCharge(source:string){return source.split('\n').filter(line=>line.trim()!=='CHARGE ORDER').join('\n');}
+/** Retire charging from saved floor routines while keeping comments and non-charging branches. */
+function cleanFloor(source:string){
+ const lines=source.split('\n');
+ for(let i=lines.length-1;i>=0;i--){
+  if(lines[i].trim()!=='IF BATTERY < 40')continue;
+  let depth=1,end=i+1,alternative=-1;
+  for(;end<lines.length;end++){
+   const command=lines[end].trim();
+   if(/^(IF |FUNCTION |EACH$)/.test(command))depth++;
+   if(command==='ELSE'&&depth===1)alternative=end;
+   if(command==='END'&&!--depth)break;
+  }
+  if(end<lines.length)lines.splice(i,end-i+1,...(alternative<0?[]:lines.slice(alternative+1,end)));
+ }
+ return lines.filter(line=>line.trim()!=='CHARGE').join('\n');
+}
 const cleanQuery=(source:string)=>migrateQuerySource(removeOrderCharge(source));
 const cleanQueryMap=(programs:Record<string,string>)=>Object.fromEntries(Object.entries(programs).map(([shift,source])=>[shift,cleanQuery(source)]));
 const index=(value:unknown):value is number=>typeof value==='number'&&Number.isInteger(value)&&value>=0&&value<CAMPAIGN_LENGTH;
@@ -36,7 +52,7 @@ export function parseSave(text:string):ProgressSave {
     for(const [shift,programs] of Object.entries(entries)){
       if(!/^\d+$/.test(shift)||!index(Number(shift))||!record(programs))throw new Error('Invalid robot program collection.');
       for(const role of ['query','prep','floor'])if(typeof programs[role]!=='string'||programs[role].length>100_000)throw new Error('Invalid robot source.');
-      robotMaps[key][shift]={query:cleanQuery(programs.query as string),prep:programs.prep as string,floor:programs.floor as string};
+      robotMaps[key][shift]={query:cleanQuery(programs.query as string),prep:programs.prep as string,floor:cleanFloor(programs.floor as string)};
     }
   }
   if(v.version===1)for(const [flat,mapped] of [['drafts','robotDrafts'],['solutions','robotSolutions']] as const)for(const [shift,query] of Object.entries(v[flat] as Record<string,string>))robotMaps[mapped][shift]={query:cleanQuery(query),prep:'',floor:''};
@@ -51,7 +67,7 @@ export function completeLevel(save:ProgressSave,index:number,stars:number,source
 export function incomingRobotPrograms(save:ProgressSave,index:number):RobotPrograms{
  const lesson=lessons[index],defaults=lesson.robotStarter??{query:incomingProgram(save,index),prep:'',floor:''};
  const previous=save.robotSolutions[index-1]??save.robotDrafts[index-1];
- return {query:cleanQuery(save.drafts[index]??previous?.query??incomingProgram(save,index)),prep:index===14?defaults.prep:previous?.prep??defaults.prep,floor:index===22?defaults.floor:previous?.floor??defaults.floor};
+ return {query:cleanQuery(save.drafts[index]??previous?.query??incomingProgram(save,index)),prep:index===14?defaults.prep:previous?.prep??defaults.prep,floor:cleanFloor(index===22?defaults.floor:previous?.floor??defaults.floor)};
 }
 export function saveRobotDraft(save:ProgressSave,index:number,programs:RobotPrograms):ProgressSave{return {...save,selected:index,drafts:{...save.drafts,[index]:programs.query},robotDrafts:{...save.robotDrafts,[index]:programs}};}
 export function robotSource(save:ProgressSave,index:number,role:RobotRole){return (save.robotDrafts[index]??incomingRobotPrograms(save,index))[role];}

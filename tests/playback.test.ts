@@ -8,7 +8,7 @@ import type { ExecutionEvent, RunResult } from '../src/domain/types';
 
 const base = runLevel(levels[2], compileProgram(lessons[2].solution,3));
 function event(patch: Partial<ExecutionEvent>): ExecutionEvent {
- return {seed_id:'test',actor:'query',role:'query',start:0,end:.1,line:0,command:'TICKET',from:[0,0],to:[0,0],inventory:[],battery:80,...patch};
+ return {seed_id:'test',actor:'query',role:'query',start:0,end:.1,line:0,command:'TICKET',from:[0,0],to:[0,0],inventory:[],...patch};
 }
 function playback(events: ExecutionEvent[], duration=10) {
  const result:RunResult={...base,execution:[{seed_id:'test',start:0,duration,events}]};

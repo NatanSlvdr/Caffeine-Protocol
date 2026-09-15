@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { Editor } from '../src/components/Editor';
@@ -7,7 +7,7 @@ import { CodingPaneHeader } from '../src/components/CodingPaneHeader';
 import { compileProgram } from '../src/domain/program';
 import { placeBlock, removeVisualBlock, visualProgram } from '../src/domain/visualProgram';
 import type { RobotRole } from '../src/domain/types';
-afterEach(cleanup);
+afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 function Harness({ initial = 'LISTEN', locked = false, role = 'query', level = 32 }: { initial?: string; locked?: boolean; role?: RobotRole; level?: number }) {
  const [source, setSource] = useState(initial);
  return <><Editor role={role} source={source} onChange={setSource} level={level} locked={locked} observation={false} textMode={false}/><output aria-label="Current source">{source}</output></>;
@@ -25,12 +25,42 @@ describe('compact visual code', () => {
   expect(screen.queryByRole('button',{name:'Insert CHARGE ORDER'})).toBeNull();
   expect(screen.getByRole('button',{name:'Insert TAKE UP'}).querySelector('.lucide-hand')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert MOVE RIGHT 1'})).toBeTruthy();
-  expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.lucide-arrow-down-to-line')).toBeTruthy();
-  expect(screen.getByRole('button',{name:'Insert ITEM coffee'}).querySelector('.lucide-circle-plus')).toBeTruthy();
- expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.lucide-arrow-left')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.deposit-icon')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert ITEM coffee'}).querySelector('.lucide-pen-line')).toBeTruthy();
+ expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.jump-icon')).toBeTruthy();
   expect(screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
   await userEvent.click(screen.getByLabelText('Library Write value'));
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea']);
+ });
+ it('shows operand text alongside shared-model miniatures and keeps keyboard selection local', async () => {
+  const user = userEvent.setup();
+  render(<Harness initial={'LISTEN\nITEM coffee\nMOVE RIGHT 1'}/>);
+  expect(screen.getByLabelText('Block 1 value').textContent).toContain('Customer speech');
+  expect(screen.getByLabelText('Block 2 value').textContent).toContain('coffee');
+  expect(screen.getByLabelText('Block 2 value').querySelector('.model-coffee')).toBeTruthy();
+  screen.getByLabelText('Block 3 direction').focus();
+  await user.keyboard('{ArrowDown}');
+  expect(screen.getByRole('listbox').querySelector('.model-robot')).toBeTruthy();
+  expect(document.querySelector('.visual-program.is-dragging')).toBeNull();
+  await user.keyboard('{Enter}');
+  expect(source()).toContain('MOVE DOWN_RIGHT 1');
+ });
+ it('expands the direction grid at the trigger and shrinks it back after selection', async () => {
+  const user = userEvent.setup(); render(<Harness initial="MOVE RIGHT 1"/>);
+  const trigger = screen.getByLabelText('Block 1 direction');
+  vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(DOMRect.fromRect({x:320,y:180,width:28,height:28}));
+  await user.click(trigger);
+  const grid = screen.getByRole('listbox', {name:'Block 1 direction'});
+  expect(grid.style.left).toBe('320px');expect(grid.style.top).toBe('180px');
+  expect(grid.style.width).toBe('28px');expect(grid.style.height).toBe('28px');
+  expect([...grid.querySelector('.direction-mini-grid')!.children].map(cell=>cell.getAttribute('aria-label'))).toEqual(['up left','up','up right','left',null,'right','down left','down','down right']);
+  expect(grid.querySelector('small')).toBeNull();
+  await user.click(within(grid).getByRole('option',{name:'up left'}));
+  expect(source()).toBe('MOVE UP_LEFT 1');
+  expect(grid.classList.contains('direction-closing')).toBe(true);
+  expect(trigger.querySelector('.direction-mini-grid>span.chosen')).toBe(trigger.querySelector('.direction-mini-grid')?.firstElementChild);
+  fireEvent.animationEnd(grid);
+  expect(document.querySelector('.direction-menu')).toBeNull();
  });
  it('uses renamed ticket actions with inline styled operands', async () => {
   render(<Harness initial={'LISTEN\nTICKET\nITEM coffee\nSUBMIT'}/>);
@@ -104,7 +134,7 @@ describe('compact visual code', () => {
  });
  it('locks editing during replay', async () => {
   render(<Harness locked/>);
-  for(const button of screen.getAllByRole('button')) expect((button as HTMLButtonElement).disabled).toBe(true);
+  for(const button of screen.getAllByRole('button')) expect(button instanceof HTMLButtonElement ? button.disabled : button.getAttribute('aria-disabled') === 'true').toBe(true);
   for(const combo of screen.getAllByRole('combobox')) expect((combo as HTMLButtonElement).disabled).toBe(true);
   await userEvent.click(screen.getByRole('button',{name:'Insert TAKE UP'}));
   expect(source()).toBe('LISTEN');
@@ -116,6 +146,67 @@ describe('compact visual code', () => {
   expect(screen.getByLabelText('Drag jump destination')).toBeTruthy();
   expect(document.querySelector('[data-target] .block-verb')).toBeNull();
   expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+ });
+ it('draws saved jump connections on first mount and after returning from text mode', () => {
+  const props={source:'POSITION listen\nLISTEN\nJUMP listen',onChange:vi.fn(),level:8,locked:false,observation:false};
+  const {rerender,unmount}=render(<Editor {...props} textMode={false}/>);
+  expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+  const marker=document.querySelector('.jump-arrows marker')?.id;
+  expect(marker).toMatch(/^jump-[a-zA-Z0-9_-]+$/);
+  expect(document.querySelector('.jump-arrows>path')?.getAttribute('marker-end')).toBe(`url(#${marker})`);
+  rerender(<Editor {...props} textMode/>);
+  rerender(<Editor {...props} textMode={false}/>);
+  expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+  unmount();render(<Editor {...props} textMode={false}/>);
+  expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+  expect(props.onChange).not.toHaveBeenCalled();
+ });
+ it('previews a moved jump destination, updates its connector, and cancels without changing source', async () => {
+  const initial = 'POSITION listen\nLISTEN\nITEM coffee\nJUMP listen';
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
+   if (this.style.position === 'fixed') return DOMRect.fromRect({x:parseFloat(this.style.left) || 0,y:parseFloat(this.style.top) || 0,width:200,height:38});
+   const slot = this.dataset.dropSlot;
+   const projectionSlot = this.closest('.drop-projection')?.parentElement?.querySelector<HTMLElement>('[data-drop-slot]')?.dataset.dropSlot;
+   const line = Number((projectionSlot ?? slot)?.split(':')[1] ?? this.dataset.line ?? 0);
+   const top = 100 + line * 43;
+   return DOMRect.fromRect(this.classList.contains('editor-body') || this.classList.contains('visual-program')
+    ? {x:0,y:0,width:600,height:700} : {x:48,y:top,width:150,height:slot ? 0 : 38});
+  });
+  const user = userEvent.setup(); render(<Harness initial={initial}/>);
+  const path = document.querySelector('.jump-arrows > path')?.getAttribute('d');
+  screen.getByLabelText('Drag jump destination').focus();
+  await user.keyboard(' {ArrowDown}{ArrowDown}');
+  await waitFor(() => expect(document.querySelector('.drop-projection [data-target="listen"]')).toBeTruthy());
+  expect(source()).toBe(initial);
+  expect(document.querySelector('.floating-code-preview')?.textContent).toBe('');
+  expect(document.querySelector('.drop-projection')?.textContent).toBe('');
+  await waitFor(() => expect(document.querySelector('.jump-arrows > path')?.getAttribute('d')).not.toBe(path));
+  await user.keyboard('{Escape}');
+  expect(source()).toBe(initial);
+  expect(document.querySelector('.drop-projection')).toBeNull();
+ });
+ it('previews a full nested branch inside Else and commits it there', async () => {
+  const initial = 'IF tea\nTICKET\nEND\nIF coffee\nHELP\nEND';
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
+   if (this.classList.contains('editor-body') || this.classList.contains('visual-program')) return DOMRect.fromRect({x:0,y:0,width:600,height:800});
+   if (this.style.position === 'fixed') return DOMRect.fromRect({x:parseFloat(this.style.left) || 0,y:parseFloat(this.style.top) || 0,width:200,height:38});
+   const slot = this.dataset.dropSlot;
+   const line = Number(slot?.split(':')[1] ?? this.dataset.line ?? 0);
+   return DOMRect.fromRect({x:48,y:slot === 'else:2' ? 270 : 100 + line * 80,width:200,height:slot ? 12 : 38});
+  });
+  vi.stubGlobal('PointerEvent', class extends MouseEvent { readonly isPrimary = true; readonly pointerId = 1; });
+  render(<Harness initial={initial}/>);
+  const tile = screen.getByLabelText('Drag block 3 and its group');
+  fireEvent.pointerDown(tile, {button:0,buttons:1,clientX:60,clientY:355});
+  fireEvent.pointerMove(document, {clientX:60,clientY:280});
+  fireEvent.pointerMove(document, {clientX:60,clientY:276});
+  await waitFor(() => expect(document.querySelector('[data-drop-slot="else:2"] .drop-projection .code-scope .scope-body')).toBeTruthy());
+  expect(source()).toBe(initial);
+  fireEvent.pointerUp(document);
+  expect(source()).toBe('IF tea\nTICKET\nELSE\nIF coffee\nHELP\nEND\nEND');
+  expect(document.querySelector('.else-body .scope-body .code-scope')).toBeTruthy();
+  // dnd-kit briefly suppresses the click following a pointer drop.
+  await new Promise(resolve => setTimeout(resolve, 60));
  });
  it('preserves source comments and whitespace in the text view', () => {
   const original='# morning\n\n LISTEN \n';

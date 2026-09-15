@@ -13,7 +13,13 @@ describe('version 2 campaign saves',()=>{
   expect(migrated.robotDrafts[3].query).toBe(expected);expect(migrated.robotSolutions[3].query).toBe(expected);
   expect(incomingRobotPrograms(migrated,4).query).toBe(expected);
   expect(migrated.stars).toEqual(save.stars);expect(migrated.settings).toEqual(save.settings);
-  if(version===2)expect(migrated.robotDrafts[3].floor).toBe('CHARGE');
+  if(version===2)expect(migrated.robotDrafts[3].floor).toBe('');
+ });
+ it('keeps the non-charging path when importing an old Porter routine',()=>{
+  const source='# my route\nWAIT DRINK\nIF BATTERY < 40\nMOVE LEFT 2\nCHARGE\nMOVE RIGHT 2\nELSE\nTAKE DOWN\nEND\nSERVE';
+  const save={...newSave(),robotDrafts:{0:{query:'LISTEN',prep:'',floor:source}}};
+  const restored=parseSave(JSON.stringify(save));
+  expect(restored.robotDrafts[0].floor).toBe('# my route\nWAIT DRINK\nTAKE DOWN\nSERVE');
  });
  it('migrates completed Act I while retaining all personal data',()=>{
   const legacy={version:1,selected:13,unlocked:13,complete:true,drafts:{13:'# my draft\nLISTEN'},solutions:{13:lessons[13].solution},stars:{13:3},story:{13:true},settings:{...newSave().settings,music:0}};

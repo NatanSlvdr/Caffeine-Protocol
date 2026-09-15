@@ -21,8 +21,8 @@ export type RobotRole = 'query' | 'prep' | 'floor';
 export type ActorId = RobotRole | 'niko';
 export type RobotPrograms = Record<RobotRole,string>;
 export interface Cargo { ticketId:string; table:number; item:Drink; stage:'claimed'|'beans'|'ground'|'leaves'|'water'|'brewed'|'dirty'; sugar:number }
-export interface ActorSnapshot { position:readonly [number,number]; inventory:Cargo[]; battery:number; role:RobotRole }
-export interface ExecutionEvent { ticketId?:string;  seed_id:string; actor:ActorId; role:RobotRole; start:number; end:number; line:number; command:string; from:readonly [number,number]; to:readonly [number,number]; inventory:Cargo[]; battery:number; requested?:number; completed?:number; error?:string; customerId?:string }
+export interface ActorSnapshot { position:readonly [number,number]; inventory:Cargo[]; role:RobotRole }
+export interface ExecutionEvent { ticketId?:string;  seed_id:string; actor:ActorId; role:RobotRole; start:number; end:number; line:number; command:string; from:readonly [number,number]; to:readonly [number,number]; inventory:Cargo[]; requested?:number; completed?:number; error?:string; customerId?:string }
 export interface SeedExecution { seed_id:string; start:number; duration:number; events:ExecutionEvent[] }
-export interface ServiceConfig { prepCapacity:number; floorCapacity:number; battery:boolean; clearing:boolean; objective:'serve'|'prepare'|'pickup'; minCharges?:number; minLoad?:number }
+export interface ServiceConfig { prepCapacity:number; floorCapacity:number; clearing:boolean; objective:'serve'|'prepare'|'pickup'; minLoad?:number }
 export interface ProgressSave extends Omit<ProgressSaveV1,'version'> { version:2; robotDrafts:Record<string,RobotPrograms>; robotSolutions:Record<string,RobotPrograms> }

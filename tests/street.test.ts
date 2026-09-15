@@ -7,21 +7,19 @@ import { runLevel } from '../src/domain/simulation';
 import { customerApproach, customerExit, samplePath, SIDEWALK_X, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, STREET_BOUNDS } from '../src/domain/street';
 
 describe('street customer routes', () => {
-  it('matches the café length and keeps sidewalk paths inside its edges', () => {
+  it('matches the café length and places customer spawning beyond the clipped edges', () => {
     expect(STREET_BOUNDS.length).toBe(ROOM[1]);
     expect(STREET_BOUNDS.minZ).toBe(BOUNDS.minZ - .5);
     expect(STREET_BOUNDS.maxZ).toBe(BOUNDS.maxZ + .5);
     for (const index of [0, 1]) {
-      for (const point of [...customerApproach(index), ...customerExit(tableFront(0), index)]) {
-        expect(point[1]).toBeGreaterThanOrEqual(STREET_BOUNDS.minZ);
-        expect(point[1]).toBeLessThanOrEqual(STREET_BOUNDS.maxZ);
-      }
+      const first = customerApproach(index)[0], last = customerExit(tableFront(0), index).at(-1)!;
+      for (const point of [first, last]) expect(point[1] < STREET_BOUNDS.minZ - .5 || point[1] > STREET_BOUNDS.maxZ + .5).toBe(true);
     }
   });
   it('approaches from both sidewalk ends and enters through the doorway', () => {
     for (const index of [0, 1]) {
       const path = customerApproach(index);
-      expect(path[0]).toEqual([SIDEWALK_X, index % 2 ? STREET_BOUNDS.minZ + .4 : STREET_BOUNDS.maxZ - .4]);
+      expect(path[0]).toEqual([SIDEWALK_X, index % 2 ? STREET_BOUNDS.minZ - 1 : STREET_BOUNDS.maxZ + 1]);
       expect(path.slice(1, 3)).toEqual([[SIDEWALK_X, ENTRANCE[1]], ENTRANCE]);
       expect(path.at(-1)).toEqual(STATIONS.orders.floor);
       path.slice(1).forEach((point, i) => expect(point[0] === path[i][0] || point[1] === path[i][1]).toBe(true));
@@ -31,7 +29,7 @@ describe('street customer routes', () => {
   it('returns from the tables through the same door onto the sidewalk', () => {
     const path = customerExit(tableFront(0), 0);
     expect(path[0]).toEqual(tableFront(0));
-    expect(path.slice(-3)).toEqual([ENTRANCE, [SIDEWALK_X, ENTRANCE[1]], [SIDEWALK_X, STREET_BOUNDS.minZ + .4]]);
+    expect(path.slice(-3)).toEqual([ENTRANCE, [SIDEWALK_X, ENTRANCE[1]], [SIDEWALK_X, STREET_BOUNDS.minZ - 1]]);
   });
 
   it('samples by distance without jumping at waypoint boundaries', () => {

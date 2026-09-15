@@ -287,16 +287,9 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 .editor-panel .compact-palette{overflow:visible;position:relative;z-index:40}
 .editor-panel .command-tile{font-size:11px!important;white-space:nowrap}
 .editor-panel .command-tile .block-select>button{padding:4px 6px}
-.editor-panel .code-row .jump-target{width:90px;min-height:31px;background:var(--tile);border:1px solid var(--edge);box-shadow:0 3px 0 var(--edge);color:var(--tile-ink);cursor:grab;touch-action:none}
+.editor-panel .code-row .jump-target{width:84px;min-height:31px;background:var(--tile);border:1px solid var(--edge);box-shadow:0 3px 0 var(--edge);color:var(--tile-ink);cursor:grab;touch-action:none}
 .editor-panel .code-row .jump-target:active{cursor:grabbing}
 .jump-arrows{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;color:#f49b83;filter:drop-shadow(0 2px 0 #291c19);z-index:0}
-.jump-handles{position:absolute;inset:0;pointer-events:none;overflow:visible;z-index:2}
-.jump-handle{position:absolute;width:14px;height:14px;border-radius:50%;background:#f49b83;border:2px solid #291c19;box-shadow:0 2px 0 #291c19;pointer-events:auto;cursor:grab;transform:translate(-50%,-50%);padding:0;touch-action:none}
-.jump-handle:hover:not(:disabled){transform:translate(-50%,-50%) scale(1.2)}
-.jump-handle:active:not(:disabled){cursor:grabbing}
-.jump-handle:focus-visible{outline:2px solid #fff4db;outline-offset:2px}
-.jump-handle.is-dragging{opacity:.5}
-.jump-handle:disabled{cursor:default;pointer-events:none}
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 
 /* Execution is part of the tile, never an arrow laid over the line-number gutter. */
@@ -361,16 +354,70 @@ html[data-motion=reduced] .failure-impact{opacity:0}
 .direction-mini-grid>span{width:9px;height:9px;border:0;background:#fff}
 .direction-mini-grid>span.empty{background:var(--tile)}
 .direction-mini-grid>span.chosen{background:#2563eb}
-.direction-menu{padding:4px!important;text-align:center}
-.direction-grid{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:2px;width:100%;aspect-ratio:1}
-.direction-grid>button{width:100%;height:100%;padding:0!important;border:1px solid var(--edge);background:#fff;color:var(--tile-ink);border-radius:3px}
-.direction-grid>button.focused,.direction-grid>button:hover:not(:disabled){background:#fff;outline:1px solid var(--edge);outline-offset:1px}
-.direction-grid>button[aria-selected=true]{background:#2563eb;box-shadow:none}
-.direction-grid>button[aria-selected=true]:hover:not(:disabled){background:#2563eb}
-.direction-menu>small{display:block;margin-top:5px;color:var(--tile-ink);font:600 9px ui-monospace,monospace;opacity:.7}
-
 /* Running lines use one unmistakable red play triangle; errors retain their text cue. */
 .editor-panel .code-row .block.active{outline:none;outline-offset:0;border-color:var(--edge);background:var(--tile);box-shadow:0 3px 0 var(--edge),inset 0 1px 0 #ffffff50}
 .editor-panel .code-row .block.active,.editor-panel .code-row .block.failure{padding-right:26px}
 .editor-panel .instruction-state.is-running{right:7px;top:50%;display:block;width:10px;height:12px;padding:0;border:0;border-radius:0;background:transparent;color:transparent;box-shadow:none;transform:translateY(-50%)}
 .editor-panel .instruction-state.is-running i{display:block;width:0;height:0;margin:1px 0 0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:8px solid #e34a3d;border-radius:0;background:transparent;box-shadow:none}
+
+/* One shared gutter frames every side of the workspace. */
+.workspace-main{--workspace-padding:22px;padding:var(--workspace-padding);gap:0}
+.workspace .workbench{height:100%;min-height:0}
+.workspace .editor-panel{border:1px solid #77604a;border-radius:9px;box-shadow:none}
+.workspace .workspace-heading{align-self:stretch;padding-top:0}
+.playback-toolbar{border:0;box-shadow:none}
+.playback-toolbar .run-button{box-shadow:none;transition:background-color .15s ease}
+.playback-toolbar .run-button:hover:not(:disabled){background:#684631;border-color:#684631;color:white;transform:none;box-shadow:none}
+.playback-toolbar .run-button.stop-button{box-shadow:none}
+.playback-toolbar .run-button.stop-button:hover:not(:disabled){background:#b94d3b;border-color:#b94d3b}
+
+/* Every command has the same height and symmetric corners, including direction operands. */
+.editor-panel .code-row .block,.editor-panel .compact-palette .command-tile{height:38px;min-height:38px;border-radius:7px;padding:3px 9px;gap:6px;font:650 11px/1.3 ui-monospace,monospace}
+.editor-panel .code-row .block{cursor:grab;touch-action:none}
+.editor-panel .code-row .block:active{cursor:grabbing}
+.editor-panel .code-row .block[aria-disabled=true]{cursor:default}
+.editor-panel .block-verb,.editor-panel .code-row .block-verb,.editor-panel .code-row .block-suffix{font:inherit;padding:0}
+.editor-panel .block:before{display:none}
+.editor-panel .code-row .block:is([data-jump],[data-target]){width:84px;height:38px;min-height:38px}
+.editor-panel .line-number{top:12px}
+.editor-panel .direction-select>.direction-trigger{width:28px;height:28px;border-radius:5px;overflow:hidden}
+.direction-mini-grid{width:28px;height:28px;padding:0;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);border-radius:5px}
+.direction-mini-grid>span{width:auto;height:auto}
+.model-thumbnail{display:inline-block;width:21px;height:21px;flex-shrink:0;vertical-align:middle}
+.model-thumbnail img{display:block;width:100%;height:100%;object-fit:contain}
+/* The floating copy is pixel-for-pixel the inset grid, scaled at its original position. */
+.direction-select.is-expanded .direction-trigger>.direction-mini-grid{visibility:hidden}
+.direction-menu{z-index:1000;transform-origin:center;animation:direction-grow .18s ease-out both}
+.direction-menu .direction-mini-grid{width:100%;height:100%}
+.direction-menu .direction-mini-grid>button{display:block;min-width:0;min-height:0;padding:0;gap:0;border:0;border-radius:0;background:white;box-shadow:none;transform:none}
+.direction-menu .direction-mini-grid>button.chosen{background:#2563eb}
+.direction-menu .direction-mini-grid>button:hover,.direction-menu .direction-mini-grid>button.focused{box-shadow:inset 0 0 0 .5px var(--edge)}
+.direction-menu.direction-closing{animation:direction-shrink .18s ease-in both;pointer-events:none}
+.direction-mini-grid>.direction-player{display:grid;place-items:center;overflow:hidden;background:var(--tile)}
+.direction-player .model-thumbnail{width:100%;height:100%}
+.direction-open .direction-player .model-thumbnail{animation:robot-idle 1.8s ease-in-out infinite}
+@keyframes direction-grow{from{transform:scale(1)}to{transform:scale(5)}}
+@keyframes direction-shrink{from{transform:scale(5)}to{transform:scale(1)}}
+@keyframes robot-idle{0%,100%{transform:translateY(3%) rotate(-3deg)}50%{transform:translateY(-3%) rotate(3deg)}}
+
+/* Landing previews occupy their final scope, so the code and jump paths move together. */
+.has-drop-preview .drag-source{height:0;opacity:0;overflow:hidden;pointer-events:none}
+.insertion-anchor:has(>.drop-projection){height:auto}
+.drop-projection{position:relative;opacity:.65;pointer-events:none}
+.editor-panel .insertion-anchor.else-preview .code-insertion{display:block;width:max-content;height:auto;min-height:0;padding:0;border:0;box-shadow:none;background:transparent;opacity:.65}
+.editor-panel .insertion-anchor.else-preview .code-insertion.drop-target{opacity:1}
+.editor-panel .insertion-anchor.else-preview .code-insertion:after{display:none}
+.empty-scope{display:flex;align-items:center;height:38px;min-width:150px;margin-bottom:5px;padding:0 9px;border:1px dashed #bca58b55;border-radius:7px;color:#bca58b;font:650 11px/1.3 ui-monospace,monospace}
+.editor-panel .code-insertion.drop-target:not(.else-option){height:0;min-height:0;padding:0;margin:0;border:0}
+.editor-panel .code-insertion.drop-target:not(.else-option):after{display:none}
+@media(prefers-reduced-motion:reduce){.direction-menu,.direction-player .model-thumbnail{animation:none}.direction-menu{transform:scale(5)}.direction-menu.direction-closing{transform:scale(1)}}
+html[data-motion=reduced] .direction-menu{transform:scale(5)}
+html[data-motion=reduced] .direction-menu.direction-closing{transform:scale(1)}
+@media(max-width:900px){.workspace .workbench{height:auto}.workspace .editor-panel{height:760px;border-top:1px solid #77604a;border-radius:9px}}
+
+.drop-projection button:disabled,.floating-code-preview button:disabled{opacity:1}
+.floating-code-preview{font:650 11px/1.3 ui-monospace,monospace}
+
+@media(min-width:1500px){.workspace-main{--workspace-padding:28px}}
+@media(max-width:1100px){.workspace-main{--workspace-padding:18px}}
+@media(max-width:560px){.workspace-main{--workspace-padding:12px}}

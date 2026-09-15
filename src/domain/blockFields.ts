@@ -1,5 +1,6 @@
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
+  if (command.startsWith('POSITION ')) return { family: 'POSITION', verb: '', value: '' };
   if (command === 'LISTEN') return { family: 'WAIT', verb: 'Wait for', value: 'Customer speech' };
   if (command === 'TICKET') return { family: 'TAKE', verb: 'Take', value: '' };
   if (command === 'SUBMIT') return { family: 'DEPOSIT', verb: 'Deposit', value: '' };

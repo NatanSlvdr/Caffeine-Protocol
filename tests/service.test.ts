@@ -27,7 +27,7 @@ function service(overrides:Partial<RobotPrograms>,shift=32,patch:Partial<LevelDe
 }
 function physical(source:string,role:'prep'|'floor'='prep'){
  const event:ReplayEvent={seed_id:'test',customer:{customer_id:'C1',arrival:0,phrase:'coffee',intent:{drink:'coffee'},expected:{item:'coffee'}},tickets:[{ticket_id:'one',customer_id:'C1',table_id:'T01',source_phrase:'coffee',source_intent:{drink:'coffee'},item:'coffee',with_sugar:false,sugar_count:0,status:'created',created_at:0,due_at:30,debug_notes:''}],asked_help:false,passed:true,trace:[],timing:{arrival:0,created:0,seated:0,ready:0,served:0,left:0,cleaned:0},table:1,satisfaction:100};
- const level={...levels[31],service:{...levels[31].service!,prepCapacity:1,floorCapacity:1,minLoad:0,minCharges:0}};
+ const level={...levels[31],service:{...levels[31].service!,prepCapacity:1,floorCapacity:1,minLoad:0}};
  return simulateService(level,[event],{...referencePrograms(32),prep:referencePrograms(20).prep,floor:referencePrograms(27).floor,[role]:source});
 }
 
@@ -85,15 +85,7 @@ describe('recipes, handoffs, and capacities',()=>{
  it('clears only collected cups at the return station',()=>{expect(physical('RETURN CUPS','floor').failure?.reason).toContain('cup return interaction tile');const r=service({},30);expect(r.events.every(e=>e.timing.cleaned>e.timing.served)).toBe(true);});
 });
 
-describe('battery, concurrency, and replay',()=>{
- it('spends battery per completed tile and charges for ten seconds',()=>{
-  const r=service({},29),log=r.execution![0].events.filter(e=>e.actor==='floor');let battery=80;
-  for(const e of log){if(e.command==='CHARGE'){expect(e.end-e.start).toBeCloseTo(10);expect(e.battery).toBe(80);battery=80;}else if(!samePoint(e.from,e.to)){expect(e.battery).toBe(battery-1);battery=e.battery;}}
- });
- it('requires the dock and fails before movement at zero battery',()=>{
-  expect(physical('CHARGE','floor').failure?.reason).toContain('charging dock');
-  const route=[...movementSource(STARTS.floor,[3,-6],'floor'),...movementSource([3,-6],STARTS.floor,'floor'),'REPEAT'];const r=physical(route.join('\n'),'floor');expect(r.failure?.reason).toContain('Battery empty');expect(r.execution.events.filter(e=>e.actor==='floor').at(-1)?.battery).toBe(0);
- });
+describe('concurrency and replay',()=>{
  it('runs the kitchen and floor concurrently while queues wait independently',()=>{
   const r=service({},31),log=r.execution![0].events;expect(log.some(a=>a.actor==='prep'&&a.end>a.start&&log.some(b=>b.actor==='floor'&&b.start<a.end&&b.end>a.start))).toBe(true);
  });

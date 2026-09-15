@@ -1,7 +1,6 @@
-import { useRef, useState, useEffect, useLayoutEffect, useId } from 'react';
-import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
+import { useRef, useState, useEffect, useId, createContext, useContext } from 'react';
+import { DndContext, DragOverlay, useDndContext, KeyboardSensor, MeasuringStrategy, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
-import { GripVertical } from 'lucide-react';
 import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
@@ -15,6 +14,14 @@ import { InstructionError } from './FailureFeedback';
 import { keyboardDropSlot, pickDropSlot } from '../domain/dragPlacement';
 import type { DraggedScope } from '../domain/dragPlacement';
 
+/** Drag the whole tile while leaving operand controls to handle their own input. */
+class BlockPointerSensor extends PointerSensor {
+  static activators = [{ eventName: 'onPointerDown' as const, handler: (event: React.PointerEvent, options: ConstructorParameters<typeof PointerSensor>[0]['options']) => {
+    if ((event.target as HTMLElement).closest('input, [role="combobox"]')) return false;
+    return PointerSensor.activators[0].handler(event, options);
+  } }];
+}
+
 function category(command: string) {
   const family = blockFields(command).family;
   return ['FUNCTION', 'CALL', 'RETURN'].includes(family) ? 'function' : family === 'MOVE' ? 'motion' : ['IF', 'ELSE', 'EACH', 'REPEAT', 'JUMP', 'POSITION'].includes(family) ? 'flow' : ['HELP', 'ERROR'].includes(family) ? 'help' : 'action';
@@ -22,7 +29,7 @@ function category(command: string) {
 
 function operandOption(value: string) {
   const label = blockFields(value).value;
-  return { value, label, icon: <OperandIcon value={label}/>, iconOnly: ['coffee', 'tea', 'customer speech', 'heard'].includes(label.toLowerCase()) };
+  return { value, label, icon: <OperandIcon value={label}/> };
 }
 
 function Operands({ command, options, disabled, label, onChange }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void }) {
@@ -34,7 +41,7 @@ function Operands({ command, options, disabled, label, onChange }: { command: st
     const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
     const nextCommand = (value: string, nextCount = count) => fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
     return <><DirectionSelect label={label + ' direction'} value={direction} disabled={disabled} onChange={v => onChange(nextCommand(v))}/>
-      {fields.family === 'MOVE' && <><input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled} onChange={e => {
+      {fields.family === 'MOVE' && <><input onKeyDown={e => e.stopPropagation()} className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled} onChange={e => {
         const n = Number(e.target.value);
         if (Number.isInteger(n) && n >= 1 && n <= 19) onChange(nextCommand(direction, String(n)));
       }}/><span className="block-verb block-suffix">tiles</span></>}
@@ -57,13 +64,40 @@ function CommandTile({ initial, options, disabled, onInsert }: { initial: string
   </div>;
 }
 
+const DragPreview = createContext<{ blocks: VisualBlock[]; options: string[] }>({ blocks: [], options: [] });
+
+/** The landing preview uses the same rows and nested spacing as the committed program. */
+function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
+  const { options } = useContext(DragPreview);
+  return blocks.map(block => <div key={block.line} className={block.children ? 'code-scope ' + category(block.command) : 'code-statement'}>
+    <div className="code-row"><div className={'block ' + category(block.command) + (block.command.startsWith('POSITION ') ? ' jump-target' : '')}
+      data-jump={block.command.startsWith('JUMP ') ? block.command.slice(5) : undefined} data-target={block.command.startsWith('POSITION ') ? block.command.slice(9) : undefined} data-line={block.line}>
+      {!block.command.startsWith('POSITION ') && <><BlockIcon command={block.command}/><strong className="block-verb">{blockFields(block.command).verb}</strong><Operands command={block.command} options={options} disabled label="Preview" onChange={() => {}}/></>}
+    </div></div>
+    {block.children && <div className="scope-body">{block.children.length ? <ProjectedBlocks blocks={block.children}/> : <div className="empty-scope">Drop a block here</div>}</div>}
+    {!!block.alternative?.length && <><div className="code-row"><div className="block flow"><BlockIcon command="ELSE"/><strong className="block-verb">Else</strong></div></div><div className="scope-body"><ProjectedBlocks blocks={block.alternative}/></div></>}
+  </div>);
+}
+
 function Insertion({ at, disabled, alternative = false, hint = '' }: { at: number; disabled: boolean; alternative?: boolean; hint?: string }) {
   const { setNodeRef, isOver } = useDroppable({ id: (alternative ? 'else:' : 'gap:') + at, data: { at, alternative }, disabled });
-  return <div className={'insertion-anchor ' + (hint ? 'with-hint ' : '') + (hint === 'Else' ? 'else-preview' : '')}>
-    <div ref={setNodeRef} aria-label={hint === 'Else' ? 'Else branch drop target' : hint || undefined} className={'code-insertion ' + (hint ? 'with-hint ' : '') + (hint === 'Else' ? 'else-option block flow ' : '') + (isOver ? 'drop-target' : '')}>
-      {hint === 'Else' ? <><BlockIcon command="ELSE"/><strong className="block-verb">Else</strong></> : hint}
+  const { blocks } = useContext(DragPreview);
+  const isElse = hint === 'Else';
+  const preview = isOver && !!blocks.length;
+  return <div className={'insertion-anchor ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-preview' : '')}>
+    <div ref={setNodeRef} data-drop-slot={(alternative ? 'else:' : 'gap:') + at} aria-label={isElse ? 'Else branch drop target' : hint || undefined} className={'code-insertion ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-option ' : '') + (isOver ? 'drop-target' : '')}>
+      {isElse ? <><div className="code-row"><div className="block flow"><BlockIcon command="ELSE"/><strong className="block-verb">Else</strong></div></div><div className="scope-body">
+        {preview ? <div className="drop-projection"><ProjectedBlocks blocks={blocks[0]?.command === 'ELSE' ? blocks[0].children ?? [] : blocks}/></div> : <div className="empty-scope">Drop a block here</div>}
+      </div></> : !preview && hint}
     </div>
+    {!isElse && preview && <div className="drop-projection"><ProjectedBlocks blocks={blocks}/></div>}
   </div>;
+}
+
+/** Hide the original group only while a landing slot displays its full-size preview. */
+function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivElement | null>; children: React.ReactNode }) {
+  const { active, over } = useDndContext();
+  return <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>{children}</div>;
 }
 
 function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onEdit, options, onReplace }: {
@@ -79,9 +113,9 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
   }, [active, failure]);
   return <div className="code-row">
     <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">{String(ordinal).padStart(2, '0')}</span>
-    <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...(target ? attributes : {})} {...(target ? listeners : {})} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
+    <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...attributes} {...listeners} aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} aria-disabled={locked} tabIndex={locked ? -1 : 0} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
       aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
-      <button className="grip" aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} disabled={locked} {...attributes} {...listeners}><GripVertical size={13}/></button>
+
       {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} onChange={onReplace}/></>}
       {target && <span className="sr-only">Jump destination</span>}
       {active && !failure && <span className="instruction-state is-running" role="img" aria-label="Running" title="Running"><i aria-hidden="true"/></span>}
@@ -91,56 +125,51 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
   </div>;
 }
 
-/** Small grab points at each end of a jump connector move the same block its grip moves. */
-function JumpHandle({ id, line, x, y, label, disabled }: {
-  id: string; line: number; x: number; y: number; label: string; disabled: boolean;
-}) {
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id, data: { at: line }, disabled });
-  return <button type="button" ref={setNodeRef} {...attributes} {...listeners} disabled={disabled}
-    className={'jump-handle' + (isDragging ? ' is-dragging' : '')} style={{ left: x, top: y }}
-    aria-label={label} title={label}/>;
-}
-
-interface JumpConnection { d: string; x1: number; y1: number; x2: number; y2: number; jumpLine: number; targetLine: number }
+interface JumpConnection { d: string }
 
 /** Jump connectors share the code's scroll surface and track their movable empty targets. */
-function JumpArrows({ root, source, rows, disabled }: { root: React.RefObject<HTMLDivElement | null>; source: string; rows: VisualBlock[]; disabled: boolean }) {
-  const [links, setLinks] = useState<JumpConnection[]>([]), marker = useId().replaceAll(':', '');
-  useLayoutEffect(() => {
+function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivElement | null>; source: string; dragging: boolean }) {
+  const [links, setLinks] = useState<JumpConnection[]>([]), marker = 'jump-' + useId().replace(/[^a-zA-Z0-9_-]/g, '');
+  useEffect(() => {
+    // Parent host refs are attached before passive effects, including on a saved-program reload.
     const element = root.current;
     if (!element) return;
     const measure = () => {
       const bounds = element.getBoundingClientRect();
-      setLinks([...element.querySelectorAll<HTMLElement>('[data-jump]')].flatMap((jump, index) => {
-        const target = [...element.querySelectorAll<HTMLElement>('[data-target]')].find(t => t.dataset.target === jump.dataset.jump);
+      const next = [...element.querySelectorAll<HTMLElement>('[data-jump]')].filter(node => !node.closest('.has-drop-preview .drag-source')).flatMap((jump, index) => {
+        const target = [...element.querySelectorAll<HTMLElement>('[data-target]')].find(t => t.dataset.target === jump.dataset.jump && !t.closest('.has-drop-preview .drag-source'));
         if (!target) return [];
         const jumpLine = Number(jump.getAttribute('data-line')), targetLine = Number(target.getAttribute('data-line'));
         if (!Number.isInteger(jumpLine) || !Number.isInteger(targetLine)) return [];
         const a = jump.getBoundingClientRect(), b = target.getBoundingClientRect();
         const x1 = a.right - bounds.left + 3, y1 = a.top - bounds.top + a.height / 2;
         const x2 = b.right - bounds.left + 5, y2 = b.top - bounds.top + b.height / 2;
-        const bend = Math.max(bounds.width - 36 - index * 14, Math.max(x1, x2) + 20);
-        const r = Math.min(10, Math.abs(y2 - y1) / 2);
+        // Route beyond every intervening tile, including wider operands and nested scopes.
+        const clearance = [...element.querySelectorAll<HTMLElement>('.code-row .block')].reduce((right, block) => {
+          if (block.closest('.has-drop-preview .drag-source')) return right;
+          const rect = block.getBoundingClientRect(), middle = rect.top - bounds.top + rect.height / 2;
+          return middle >= Math.min(y1, y2) && middle <= Math.max(y1, y2) ? Math.max(right, rect.right - bounds.left) : right;
+        }, Math.max(x1, x2));
+        const bend = clearance + 24 + Math.min(110, Math.abs(y2 - y1) * .22) + index * 8;
+        const r = Math.min(18, Math.abs(y2 - y1) / 2);
         const s = y2 >= y1 ? 1 : -1;
         const d = r < 1 ? 'M ' + x1 + ' ' + y1 + ' H ' + x2
           : 'M ' + x1 + ' ' + y1 + ' H ' + (bend - r) + ' Q ' + bend + ' ' + y1 + ' ' + bend + ' ' + (y1 + s * r) + ' V ' + (y2 - s * r) + ' Q ' + bend + ' ' + y2 + ' ' + (bend - r) + ' ' + y2 + ' H ' + x2;
-        return [{ d, x1, y1, x2, y2, jumpLine, targetLine }];
-      }));
+        return [{ d }];
+      });
+      setLinks(current => JSON.stringify(current) === JSON.stringify(next) ? current : next);
     };
     measure();
     const observer = typeof ResizeObserver === 'undefined' ? undefined : new ResizeObserver(measure);
     observer?.observe(element);
+    element.querySelectorAll('.code-row .block').forEach(block => observer?.observe(block));
     window.addEventListener('resize', measure);
-    return () => { observer?.disconnect(); window.removeEventListener('resize', measure); };
-  }, [root, source]);
-  const ordinal = (line: number) => rows.findIndex(r => r.line === line) + 1;
-  return <>
-    <svg className="jump-arrows" aria-label="Jump connections"><defs><marker id={marker} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10" fill="currentColor"/></marker></defs>{links.map((l, i) => <path key={i} d={l.d} fill="none" stroke="currentColor" strokeWidth="2.5" markerEnd={'url(#' + marker + ')'}/>)}</svg>
-    <div className="jump-handles">{links.flatMap((l, i) => [
-      <JumpHandle key={'start:' + i} id={'jump-handle:start:' + l.jumpLine + ':' + i} line={l.jumpLine} x={l.x1} y={l.y1} disabled={disabled} label={'Drag jump arrow start for block ' + ordinal(l.jumpLine)}/>,
-      <JumpHandle key={'end:' + i} id={'jump-handle:end:' + l.targetLine + ':' + i} line={l.targetLine} x={l.x2} y={l.y2} disabled={disabled} label={'Drag jump arrow end for destination ' + ordinal(l.targetLine)}/>,
-    ])}</div>
-  </>;
+    let frame = 0;
+    const track = () => { measure(); frame = requestAnimationFrame(track); };
+    if (dragging) frame = requestAnimationFrame(track);
+    return () => { cancelAnimationFrame(frame); observer?.disconnect(); window.removeEventListener('resize', measure); };
+  }, [root, source, dragging]);
+  return <svg className="jump-arrows" aria-label="Jump connections"><defs><marker id={marker} viewBox="0 0 12 12" refX="9" refY="6" markerWidth="6" markerHeight="6" orient="auto"><path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker></defs>{links.map((l, i) => <path key={i} d={l.d} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" markerEnd={'url(#' + marker + ')'}/>)}</svg>;
 }
 
 export function Editor({ role = 'query', source, onChange, level, locked, observation, activeLine = -1, failureLine = -1, failureMessage, onEdit, textMode }: {
@@ -167,7 +196,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
     lastSlot.current = slot.id;
     return { x: currentCoordinates.x + slot.left - point.x, y: currentCoordinates.y + slot.top + slot.height / 2 - point.y };
   };
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }));
+  const sensors = useSensors(useSensor(BlockPointerSensor, { activationConstraint: { distance: 6 } }), useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }));
   const change = (value: string) => { if (!disabled) onChange(value); };
   const insert = (command: string) => change(placeBlock(source, command, source ? source.split('\n').length : 0));
   const tree = visualProgram(source);
@@ -191,12 +220,19 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
     <Insertion at={block.end + 1} disabled={disabled}/>
   </div>);
 
+  const previewBlock = rows.find(block => block.line === draggedLine);
+  const previewBlocks = draggedLine === null ? visualProgram(dragged) : previewBlock ? [previewBlock.command === 'ELSE'
+    ? { ...previewBlock, children: rows.find(block => block.elseLine === draggedLine)?.alternative }
+    : previewBlock] : [];
+
   const resetDrag = () => { setDragged(''); setDraggedLine(null); dragScope.current = undefined; lastSlot.current = undefined; };
   return <DndContext sensors={sensors} measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} collisionDetection={args => {
       pointer.current = args.pointerCoordinates;
       const point = args.pointerCoordinates ?? { x: args.collisionRect.left, y: args.collisionRect.top + args.collisionRect.height / 2 };
       const bounds = codeArea.current?.getBoundingClientRect();
       if (!bounds || point.x < bounds.left || point.x > bounds.right || point.y < bounds.top || point.y > bounds.bottom) { lastSlot.current = undefined; return []; }
+      const landing = root.current?.querySelector('.drop-projection')?.getBoundingClientRect();
+      if (landing && lastSlot.current && point.x >= landing.left - 20 && point.x <= landing.right + 40 && point.y >= landing.top - 10 && point.y <= landing.bottom + 10) return [{ id: lastSlot.current }];
       const slots = args.droppableContainers.flatMap(container => {
         const rect = args.droppableRects.get(container.id), data = container.data.current;
         return rect && typeof data?.at === 'number' ? [{ id: String(container.id), at: data.at, alternative: !!data.alternative, left: rect.left, top: rect.top, height: rect.height }] : [];
@@ -206,6 +242,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
       return slot ? [{ id: slot.id }] : [];
     }}
     onDragStart={({ active }) => {
+      pointer.current = null;
       const dataAt = active.data.current?.at, line = typeof dataAt === 'number' ? dataAt : Number(active.id);
       const row = rows.find(r => r.line === line);
       setDragged(active.data.current?.command ?? row?.command ?? '');
@@ -227,15 +264,17 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
       const command = library ? String(active.data.current?.command ?? '') : rows.find(r => r.line === line)?.command;
       if (command) change(placeBlock(source, command, at, library ? undefined : line, !!over.data.current?.alternative));
     }}>
+    <DragPreview.Provider value={{ blocks: previewBlocks, options }}>
     <section className="palette compact-palette" aria-label="Available code blocks"><div className="command-library">{blockPrototypes(options).map(c => <CommandTile key={role + ':' + level + ':' + c} initial={c} options={options} disabled={disabled} onInsert={insert}/>)}</div></section>
     <div className="editor-body" aria-label="Code zone" ref={codeArea}>
       {failureMessage && (textMode || !rows.length) && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
       {observation ? null : textMode ? <textarea spellCheck={false} aria-label="Program source" value={source} onChange={e => change(e.target.value)} readOnly={locked} className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}/> :
-        <div className={'block-list visual-program ' + (dragged ? 'is-dragging' : '')} ref={root}>
+        <ProgramSurface root={root}>
           <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'}/>
-          {renderBlocks(tree)}<JumpArrows root={root} source={source} rows={rows} disabled={disabled}/>
-        </div>}
+          {renderBlocks(tree)}<JumpArrows root={root} source={source} dragging={!!dragged}/>
+        </ProgramSurface>}
     </div>
-    <DragOverlay dropAnimation={null}>{dragged && <div className={'command-ghost drag-preview ' + category(dragged)}><BlockIcon command={dragged}/>{blockFields(dragged).verb} {blockFields(dragged).value}</div>}</DragOverlay>
+    <DragOverlay dropAnimation={null}>{dragged && <div className="drag-preview floating-code-preview"><ProjectedBlocks blocks={previewBlocks}/></div>}</DragOverlay>
+    </DragPreview.Provider>
   </DndContext>;
 }
