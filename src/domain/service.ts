@@ -4,6 +4,7 @@ import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tabl
 import type { Point } from './layout';
 import { directionVectors, normalizeDirection } from './directions';
 import { isOrderDeposit } from './program';
+import { moveQuery } from './queryMovement';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 
 type Job={ticketId:string;table:number;item:'coffee'|'tea';sugar:number;event:ReplayEvent;created:number;status:'ticket'|'claimed'|'ready'|'reserved'|'carried'|'served'|'dirty'|'cleared';dirtyAt:number};
@@ -25,8 +26,7 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   event.timing={arrival:event.customer.arrival,created,seated:created,ready:created,served:created,left:created,cleaned:created};
   event.trace.forEach((step,i)=>{
    const from=queryPosition;
-   if(step.command==='MOVE RIGHT 1')queryPosition=[STARTS.query[0]+1,STARTS.query[1]];
-   if(step.command==='MOVE LEFT 1')queryPosition=STARTS.query;
+   if(step.command.startsWith('MOVE '))queryPosition=moveQuery(queryPosition,step.command);
    log.push({seed_id:seed,actor:level.programming_enabled?'query':'niko',role:'query',start:created-(event.trace.length-i)*.1,end:created-(event.trace.length-i-1)*.1,line:step.line,command:step.command,from,to:queryPosition,inventory:[],battery:80,customerId:event.customer.customer_id});
   });
   const submitted=log.filter(e=>e.actor==='query'&&isOrderDeposit(e.command)&&e.customerId===event.customer.customer_id);
@@ -99,11 +99,11 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
   }else if(c==='WAIT DRINK'||c==='WAIT DIRTY'){
    if(w.job){fail(w,'Finish the claimed job before waiting for another.');return false;}
    const next=nextWork(c)!;apply=()=>{w.job=next;next.status='reserved';if(c==='WAIT DRINK')tableOwners.set(next.table,next.event.customer.customer_id);};
-  }else if(c==='PICKUP'||c.startsWith('PICKUP ')){
+  }else if(w.role==='floor'&&(c==='PICKUP'||c.startsWith('PICKUP ')||c.startsWith('TAKE '))){
    if(!station(w,STATIONS.pickup.floor,'pickup'))return false;
-   const direction=c==='PICKUP'?'DOWN':normalizeDirection(c.slice('PICKUP '.length));
-   if(direction!=='DOWN'){fail(w,'Pick up the ready drink downward from the pickup counter.');return false;}
-   if(!w.job||w.job.status!=='reserved'||w.job.dirtyAt!==Infinity){fail(w,'WAIT DRINK before picking up a ready drink.');return false;}
+   const direction=c==='PICKUP'?'DOWN':normalizeDirection(c.split(' ')[1]);
+   if(direction!=='DOWN'){fail(w,'Take the ready drink downward from the pickup counter.');return false;}
+   if(!w.job||w.job.status!=='reserved'||w.job.dirtyAt!==Infinity){fail(w,'WAIT DRINK before taking a ready drink.');return false;}
    if(w.inventory.length>=capacity(w)){fail(w,'Tray is full. Serve a carried item first.');return false;}
    const next=w.job;apply=()=>{next.status='carried';w.inventory.push({ticketId:next.ticketId,table:next.table,item:next.item,stage:'brewed',sugar:next.sugar});w.job=undefined;};
   }else if(c==='SERVE'){
@@ -131,7 +131,13 @@ export function simulateService(level:LevelDefinition,events:ReplayEvent[],progr
     'BREW':{point:STATIONS.brewer.prep,stage:'brewed',previous:['water'],item:'coffee',duration:6},
     'STEEP':{point:STATIONS.brewer.prep,stage:'brewed',previous:['water'],item:'tea',duration:7},
    };
-   const rule=rules[c];
+   let recipeCommand=c;
+   if(c.startsWith('TAKE ')&&normalizeDirection(c.slice(5))){
+    if(!station(w,STATIONS.ingredients.prep,'ingredients'))return false;
+    if(normalizeDirection(c.slice(5))!=='UP'){fail(w,'Take ingredients upward from the storage counter.');return false;}
+    recipeCommand=job.item==='coffee'?'TAKE BEANS':'TAKE LEAVES';
+   }
+   const rule=rules[recipeCommand];
    // Once brewed, sugar and deposit operate on the oldest finished drink.
    const finished=w.inventory.find(item=>item.stage==='brewed');
    if(c==='ADD SUGAR'||c==='DEPOSIT'||c.startsWith('DEPOSIT ')){

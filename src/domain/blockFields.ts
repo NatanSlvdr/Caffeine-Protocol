@@ -1,12 +1,11 @@
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
   if (command === 'LISTEN') return { family: 'WAIT', verb: 'Wait for', value: 'Customer speech' };
-  if (command === 'TICKET') return { family: 'PICKUP', verb: 'Pick up', value: 'paper' };
+  if (command === 'TICKET') return { family: 'TAKE', verb: 'Take', value: '' };
   if (command === 'SUBMIT') return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
-  if (command === 'PICKUP') return { family: 'PICKUP', verb: 'Pick up', value: '' };
-  if (/^PICKUP /.test(command)) return { family: 'PICKUP', verb: 'Pick up', value: 'paper' };
+  if (command === 'PICKUP' || /^(PICKUP|TAKE) /.test(command)) return { family: 'TAKE', verb: 'Take', value: '' };
   if (command === 'DEPOSIT') return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
-  if (/^DEPOSIT /.test(command)) return { family: 'DEPOSIT', verb: 'Deposit', value: 'order' };
+  if (/^DEPOSIT /.test(command)) return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
   if (command.startsWith('WAIT ')) return {
     family: 'WAIT', verb: 'Wait for', value: ({ TICKET: 'Order ticket', DRINK: 'Ready drink', DIRTY: 'Dirty cups' } as Record<string, string>)[command.slice(5)] ?? command.slice(5),
   };

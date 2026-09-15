@@ -14,13 +14,13 @@ const notes=[
  'Move a repeated recipe into FUNCTION recipe. CALL recipe handles the oldest unfinished ticket.',
  'Brew now holds two cups. Claim two tickets before preparing them. Finished drinks leave in pickup order.',
  'Keep Query and Brew working through mixed tickets and sugar requests. Niko owns delivery until Porter arrives.',
- 'Porter owns floor work now. WAIT DRINK claims a delivery; PICKUP collects it from the outside of the kitchen counter.',
+ 'Porter owns floor work now. WAIT DRINK claims a delivery; TAKE down collects it from the outside of the kitchen counter.',
  'Read the assigned TABLE, count the route, and SERVE beside that table. Furniture blocks movement; customers do not.',
  'Return to pickup before the next delivery. The same floor plan and tile coordinates remain across every shift.',
  'WAIT DIRTY selects a used cup. COLLECT at its table, then RETURN CUPS at the return station.',
  'Movement costs one battery unit per tile. Visit the dock and CHARGE to restore 80 units in ten seconds.',
  'Plan delivery and clearing routes with enough charge to reach the dock. A zero battery cannot move.',
- 'Porter now holds two items. Pick up two drinks before serving, then clear both tables. FIFO keeps the tray predictable.',
+ 'Porter now holds two items. Take two drinks before serving, then clear both tables. FIFO keeps the tray predictable.',
  'Combine routes, clearing, batching, and charging. Each robot works in its own area.',
  'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
  'The final service combines groups, clarification, both recipes, sugar, two-item trays, clearing, and charging.',
@@ -48,7 +48,7 @@ export const extensionLevels:LevelDefinition[]=titles.map((title,i)=>{
 });
 export const extensionLessons=extensionLevels.map((_,i)=>{
  const level=i+15,role=level<23?'prep':'floor',programs=referencePrograms(level),starter={...programs};
- const omissions=['DEPOSIT','MOVE UP','GRIND','STEEP','ADD SUGAR','CALL recipe','WAIT TICKET','DEPOSIT','PICKUP','SERVE','MOVE UP','COLLECT','CHARGE','CHARGE','PICKUP','RETURN CUPS','ADD SUGAR','CHARGE'];
+ const omissions=['DEPOSIT','MOVE UP','GRIND','STEEP','ADD SUGAR','CALL recipe','WAIT TICKET','DEPOSIT','TAKE','SERVE','MOVE UP','COLLECT','CHARGE','CHARGE','TAKE','RETURN CUPS','ADD SUGAR','CHARGE'];
  const needle=omissions[i];starter[role]=starter[role].replace(new RegExp(`^${needle}[^\\n]*$`,'m'),`# TODO: ${needle}`);
  if(level>=31){starter.query=campaign.lessons[2].solution;starter.prep=programs.prep.replace('ADD SUGAR','# TODO: apply requested sugar');}
  return {note:notes[i],starter:starter.query,solution:programs.query,robotStarter:starter,robotSolution:programs};

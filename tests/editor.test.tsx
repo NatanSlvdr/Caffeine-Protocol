@@ -23,20 +23,30 @@ describe('compact visual code', () => {
   render(<Harness/>);
   expect(screen.queryByRole('button',{name:'Insert REPEAT'})).toBeNull();
   expect(screen.queryByRole('button',{name:'Insert CHARGE ORDER'})).toBeNull();
-  expect(screen.getByRole('button',{name:'Insert PICKUP UP'}).querySelector('.lucide-hand')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert TAKE UP'}).querySelector('.lucide-hand')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert MOVE RIGHT 1'})).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.lucide-arrow-down-to-line')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert ITEM coffee'}).querySelector('.lucide-circle-plus')).toBeTruthy();
  expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.lucide-arrow-left')).toBeTruthy();
-  expect(screen.getByLabelText('Library Pick up direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
+  expect(screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
   await userEvent.click(screen.getByLabelText('Library Write value'));
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['coffee','tea']);
  });
  it('uses renamed ticket actions with inline styled operands', async () => {
   render(<Harness initial={'LISTEN\nTICKET\nITEM coffee\nSUBMIT'}/>);
-  expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Pick up','Write','Deposit']);
+  expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Take','Write','Deposit']);
   await choose('Block 3 value','tea');
   expect(source()).toContain('ITEM tea');
   expect(document.querySelector('[data-line="2"]')?.textContent).toContain('on paper');
+ });
+ it('keeps Take and Deposit generic and lets Query edit movement', async () => {
+  render(<Harness initial={'LISTEN\nTAKE UP\nMOVE RIGHT 1\nDEPOSIT RIGHT'}/>);
+  expect(document.querySelector('[data-line="1"] .block-suffix')).toBeNull();
+  expect(document.querySelector('[data-line="3"] .block-suffix')).toBeNull();
+  await choose('Block 2 direction', 'up left');
+  fireEvent.change(screen.getByLabelText('Block 3 tiles'), { target: { value: '2' } });
+  expect(source()).toBe('LISTEN\nTAKE UP_LEFT\nMOVE RIGHT 2\nDEPOSIT RIGHT');
+  expect(compileProgram(source()).compile_error).toBe('');
  });
  it('puts numbering outside tiles and renders nested branches as one scope', () => {
   render(<Harness initial={'LISTEN\nIF tea\nTICKET\nELSE\nHELP\nEND'}/>);
@@ -96,7 +106,7 @@ describe('compact visual code', () => {
   render(<Harness locked/>);
   for(const button of screen.getAllByRole('button')) expect((button as HTMLButtonElement).disabled).toBe(true);
   for(const combo of screen.getAllByRole('combobox')) expect((combo as HTMLButtonElement).disabled).toBe(true);
-  await userEvent.click(screen.getByRole('button',{name:'Insert PICKUP UP'}));
+  await userEvent.click(screen.getByRole('button',{name:'Insert TAKE UP'}));
   expect(source()).toBe('LISTEN');
  });
  it('connects a jump to a draggable empty marker', async () => {

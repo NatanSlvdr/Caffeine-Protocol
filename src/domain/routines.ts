@@ -9,7 +9,7 @@ export function movementSource(from:Point,to:Point,role?:RobotRole){
 }
 export function preparationSource(level:number,batch=1){
  const at=STATIONS;const move=(a:Point,b:Point)=>movementSource(a,b,'prep');
- const recipe=[...move(STARTS.prep,at.ingredients.prep),'IF coffee','TAKE BEANS',...move(at.ingredients.prep,at.grinder.prep),'GRIND',...move(at.grinder.prep,at.water.prep),'ELSE','TAKE LEAVES',...move(at.ingredients.prep,at.water.prep),'END','FILL WATER',...move(at.water.prep,at.brewer.prep),'IF coffee','BREW','ELSE','STEEP','END',...move(at.brewer.prep,at.sugar.prep),'ADD SUGAR',...move(at.sugar.prep,at.pickup.prep),'DEPOSIT UP',...move(at.pickup.prep,STARTS.prep)];
+ const recipe=[...move(STARTS.prep,at.ingredients.prep),'IF coffee','TAKE UP',...move(at.ingredients.prep,at.grinder.prep),'GRIND',...move(at.grinder.prep,at.water.prep),'ELSE','TAKE UP',...move(at.ingredients.prep,at.water.prep),'END','FILL WATER',...move(at.water.prep,at.brewer.prep),'IF coffee','BREW','ELSE','STEEP','END',...move(at.brewer.prep,at.sugar.prep),'ADD SUGAR',...move(at.sugar.prep,at.pickup.prep),'DEPOSIT UP',...move(at.pickup.prep,STARTS.prep)];
  const waits=Array.from({length:batch},()=> 'WAIT TICKET');
  return (level>=20?[...waits,...Array.from({length:batch},()=> 'CALL recipe'),'REPEAT','FUNCTION recipe',...recipe,'RETURN','END']:[...waits,...recipe,'REPEAT']).join('\n');
 }
@@ -18,5 +18,5 @@ export function floorSource(level:number,batch=1,tableCount=10){
  const serve=Array.from({length:tableCount},(_,i)=>['IF TABLE '+(i+1),...move(start,tableFront(i)),'SERVE',...move(tableFront(i),start),'END']).flat();
  const clear=['WAIT DIRTY',...Array.from({length:tableCount},(_,i)=>['IF TABLE '+(i+1),...move(start,tableFront(i)),'COLLECT',...move(tableFront(i),STATIONS.returns.floor),'RETURN CUPS',...move(STATIONS.returns.floor,start),'END']).flat()];
  const charge=level>=27?[...move(start,STATIONS.dock.floor),'CHARGE',...move(STATIONS.dock.floor,start)]:[];
- return [...Array.from({length:batch},()=>['WAIT DRINK','PICKUP DOWN']).flat(),...Array.from({length:batch},()=>['CALL deliver',...charge]).flat(),...(level>=23?Array.from({length:batch},()=>['CALL clear',...charge]).flat():[]),'REPEAT','FUNCTION deliver',...serve,'RETURN','END',...(level>=23?['FUNCTION clear',...clear,'RETURN','END']:[])].join('\n');
+ return [...Array.from({length:batch},()=>['WAIT DRINK','TAKE DOWN']).flat(),...Array.from({length:batch},()=>['CALL deliver',...charge]).flat(),...(level>=23?Array.from({length:batch},()=>['CALL clear',...charge]).flat():[]),'REPEAT','FUNCTION deliver',...serve,'RETURN','END',...(level>=23?['FUNCTION clear',...clear,'RETURN','END']:[])].join('\n');
 }

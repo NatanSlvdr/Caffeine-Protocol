@@ -27,16 +27,14 @@ function operandOption(value: string) {
 
 function Operands({ command, options, disabled, label, onChange }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void }) {
   const fields = blockFields(command);
-  if (['MOVE', 'PICKUP', 'DEPOSIT'].includes(fields.family)) {
+  if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
     const query = options.includes('LISTEN');
-    const defaultDirection = fields.family === 'PICKUP' ? (query || !options.includes('SERVE') ? 'UP' : 'DOWN') : (query || !options.includes('BREW') ? 'RIGHT' : 'UP');
+    const defaultDirection = fields.family === 'TAKE' ? (options.includes('SERVE') ? 'DOWN' : 'UP') : (query || !options.includes('BREW') ? 'RIGHT' : 'UP');
     const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
     const nextCommand = (value: string, nextCount = count) => fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
     return <><DirectionSelect label={label + ' direction'} value={direction} disabled={disabled} onChange={v => onChange(nextCommand(v))}/>
-      {fields.family === 'PICKUP' && <span className="block-verb block-suffix">{query ? 'paper' : 'drink'}</span>}
-      {fields.family === 'DEPOSIT' && <span className="block-verb block-suffix">{query ? 'order' : 'drink'}</span>}
-      {fields.family === 'MOVE' && <><input className="tile-count" type="number" min={1} max={query ? 1 : 19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled || query} onChange={e => {
+      {fields.family === 'MOVE' && <><input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={count} disabled={disabled} onChange={e => {
         const n = Number(e.target.value);
         if (Number.isInteger(n) && n >= 1 && n <= 19) onChange(nextCommand(direction, String(n)));
       }}/><span className="block-verb block-suffix">tiles</span></>}

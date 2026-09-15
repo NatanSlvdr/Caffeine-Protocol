@@ -3,14 +3,14 @@ import { availableCommands, compileProgram } from './program';
 import { DIRECTIONS } from './directions';
 export const MOVING_ROLES = ['prep','floor'] as const;
 const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
-const directionalPickupPattern = new RegExp(`^PICKUP (${DIRECTIONS.join('|')})$`);
+const directionalPickupPattern = new RegExp(`^(TAKE|PICKUP) (${DIRECTIONS.join('|')})$`);
 const directionalDepositPattern = new RegExp(`^DEPOSIT (${DIRECTIONS.join('|')})$`);
 /** Commands are role-gated; numbered MOVE operands are edited separately in the block editor. */
 export function robotCommands(role:RobotRole,level:number):string[]{
  if(role==='query')return availableCommands(Math.min(level,14));
  const common=[...DIRECTIONS.map(direction=>`MOVE ${direction} 1`),'REPEAT','IF coffee','IF tea','IF sugar','ELSE','END'];
- if(role==='prep')return [...common,'WAIT TICKET','TAKE BEANS','TAKE LEAVES','GRIND','FILL WATER','BREW','STEEP','ADD SUGAR','DEPOSIT UP',...DIRECTIONS.filter(direction=>direction!=='UP').map(direction=>`DEPOSIT ${direction}`),...(level>=20?['FUNCTION recipe','CALL recipe','RETURN']:[])];
- return [...common,'FUNCTION deliver','CALL deliver','FUNCTION clear','CALL clear','RETURN','WAIT DRINK','PICKUP DOWN',...DIRECTIONS.filter(direction=>direction!=='DOWN').map(direction=>`PICKUP ${direction}`),'PICKUP','SERVE',...Array.from({length:10},(_,i)=>`IF TABLE ${i+1}`),...(level>=23?['WAIT DIRTY','COLLECT','RETURN CUPS']:[]),...(level>=27?['CHARGE','IF BATTERY < 40']:[])];
+ if(role==='prep')return [...common,'WAIT TICKET',...DIRECTIONS.map(direction=>`TAKE ${direction}`),'GRIND','FILL WATER','BREW','STEEP','ADD SUGAR','DEPOSIT UP',...DIRECTIONS.filter(direction=>direction!=='UP').map(direction=>`DEPOSIT ${direction}`),...(level>=20?['FUNCTION recipe','CALL recipe','RETURN']:[])];
+ return [...common,'FUNCTION deliver','CALL deliver','FUNCTION clear','CALL clear','RETURN','WAIT DRINK','TAKE DOWN',...DIRECTIONS.filter(direction=>direction!=='DOWN').map(direction=>`TAKE ${direction}`),'SERVE',...Array.from({length:10},(_,i)=>`IF TABLE ${i+1}`),...(level>=23?['WAIT DIRTY','COLLECT','RETURN CUPS']:[]),...(level>=27?['CHARGE','IF BATTERY < 40']:[])];
 }
 export function compileRobot(source:string,role:RobotRole,level=32):Program{
  if(role==='query')return compileProgram(source,Math.min(level,14));
@@ -19,8 +19,8 @@ export function compileRobot(source:string,role:RobotRole,level=32):Program{
  const fail=(message:string,line:number)=>{p.compile_error=message;p.error_line=line;return p;};
  for(const [line,raw] of source.split('\n').entries()){
   const c=raw.trim();if(!c||c.startsWith('#'))continue;
-  const legacyDeposit = role==='prep' && c==='DEPOSIT';
-  if(!allowed.includes(c)&&!movePattern.test(c)&&!(role==='prep'&&directionalDepositPattern.test(c))&&!(role==='floor'&&directionalPickupPattern.test(c))&&!legacyDeposit)return fail(`Unknown or locked ${role} instruction: ${c}`,line);
+  const legacyAction = role==='prep' ? ['DEPOSIT','TAKE BEANS','TAKE LEAVES'].includes(c) : c==='PICKUP';
+  if(!allowed.includes(c)&&!movePattern.test(c)&&!(role==='prep'&&directionalDepositPattern.test(c))&&!(role==='floor'&&directionalPickupPattern.test(c))&&!legacyAction)return fail(`Unknown or locked ${role} instruction: ${c}`,line);
   const i=p.instructions.length;p.instructions.push(c);p.source_lines.push(line);
   if(c.startsWith('IF ')||c.startsWith('FUNCTION ')){
    if(c.startsWith('FUNCTION ')){if(stack.length||p.functions[c.slice(9)]!==undefined)return fail('Functions must be unique and outside other blocks.',line);p.functions[c.slice(9)]=i;}

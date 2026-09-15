@@ -33,8 +33,8 @@ function physical(source:string,role:'prep'|'floor'='prep'){
 
 describe('movement language and execution',()=>{
  for(const command of ['MOVE UP 0','MOVE LEFT -1','MOVE DOWN 1.5','MOVE RIGHT 20','MOVE DIAGONAL 2'])it(`rejects ${command}`,()=>expect(compileRobot(command,'prep').compile_error).toContain('Unknown'));
- it('keeps Query stationary and gates station actions by role',()=>{
-  expect(compileRobot('LISTEN\nMOVE UP 1','query').compile_error).not.toBe('');
+ it('allows Query movement and gates station actions by role',()=>{
+  expect(compileRobot('LISTEN\nMOVE UP 1','query').compile_error).toBe('');
   expect(compileRobot('BREW','floor').compile_error).not.toBe('');expect(compileRobot('CHARGE','prep').compile_error).not.toBe('');expect(compileRobot('CHARGE','floor',23).compile_error).not.toBe('');
  });
  it('stops before furniture and continues with the next command',()=>{

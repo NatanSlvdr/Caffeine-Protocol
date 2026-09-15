@@ -2,73 +2,73 @@
   "lessons": [
     {
       "note": "Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open the paper details to inspect the lifecycle.",
-      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
+      "solution": "LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
       "starter": "LISTEN"
     },
     {
       "note": "Niko: Eight orders, one pair of hands. The counter queue keeps growing while I brew. Query could help, once we repair the controller.",
-      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
+      "solution": "LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
       "starter": "LISTEN"
     },
     {
-      "note": "Query: BOOT OK. Wait for customer speech, pick up the paper, and write coffee on it. Deposit the completed paper to the right; checkout is automatic. Coffee costs 3 credits, tea 2; sugar is included.",
-      "solution": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT",
+      "note": "Query: BOOT OK. Wait for customer speech, Take up from the paper stack, and write coffee on it. Move right 1 tile, then Deposit right into the handoff counter. Move left 1 tile to hear the next customer. Take and Deposit work with the item in the selected direction; Query handles paper. Checkout is automatic. Coffee costs 3 credits, tea 2; sugar is included.",
+      "solution": "LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
       "starter": "LISTEN"
     },
     {
-      "note": "Niko: Tea is on the menu. Pick up the paper, then use If heard drink is tea to write tea. In Else, write coffee. Deposit the completed paper to the right.",
-      "solution": "LISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT",
-      "starter": "LISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT"
+      "note": "Niko: Tea is on the menu. Take up from the paper stack, then use If heard drink is tea to write tea. In Else, write coffee. Move right, Deposit right, then move left to return to the register.",
+      "solution": "LISTEN\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
+      "starter": "LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
     },
     {
       "note": "Query: I served one customer and stopped. Put Position: listen before Wait, then Jump to listen at the end. Every customer needs a paper order.",
-      "solution": "POSITION listen\nLISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nJUMP listen",
-      "starter": "LISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT"
+      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+      "starter": "LISTEN\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
     },
     {
-      "note": "Niko: A table for two can mean two drinks in one request. Wrap paper pickup, item selection and deposit in For each heard order.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nJUMP listen"
+      "note": "Niko: A table for two can mean two drinks in one request. Wrap taking paper, item selection and deposit in For each heard order.",
+      "solution": "POSITION listen\nLISTEN\nEACH\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
     },
     {
       "note": "Niko: Sweet or unsweetened? Store heard sugar in a variable, then set the paper's sugar from that variable before depositing it.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nDEPOSIT RIGHT\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nDEPOSIT RIGHT\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nEACH\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen"
     },
     {
       "note": "Niko: Regulars use different words for the same drink. Define a build-paper function with the heard order as its parameter. Call it inside Each; return the paper, then deposit it.",
-      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nPICKUP UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nDEPOSIT RIGHT\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nTAKE UP\nIF tea\nITEM tea\nELSE\nITEM coffee\nEND\nREAD sugar\nSUGAR variable\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen"
     },
     {
       "note": "Niko: 'The usual' is ambiguous. If speech is ambiguous, ask me for clarification before picking up paper. Without clarification, safely defer the order.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
       "note": "Query: Two sugars is more precise than yes. If a sugar count exists, store it as a number and use it. Otherwise keep the binary sugar behavior on the paper.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nREAD sugar\nSUGAR variable\nRETURN\nEND"
     },
     {
       "note": "Niko: Time to tidy our routine. Keep the behavior, but share paper building and copy whichever sugar chip exists. Compare your blocks and executed steps.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nIF count\nREAD count\nSUGAR number\nELSE\nSUGAR binary\nEND\nRETURN\nEND"
     },
     {
       "note": "Query: Lunch rush. Larger batches, familiar chips. Your saved program carries forward. Inspect the trace if a customer gets left behind.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Our regulars mix clear orders and ambiguous requests. Keep asking for clarification before building their tickets, including numbered sugars.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     },
     {
       "note": "Niko: Certification day. Your own saved routine faces every case: singles, pairs, sugar and regulars. The counter is yours, Query. I'll keep the kettle busy.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nDEPOSIT RIGHT\nEND\nJUMP listen\nFUNCTION build_ticket\nPICKUP UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous\nHELP\nEND\nEACH\nCALL build_ticket\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nEND\nJUMP listen\nFUNCTION build_ticket\nTAKE UP\nITEM heard\nSUGAR heard\nRETURN\nEND"
     }
   ],
   "levels": [
@@ -262,11 +262,11 @@
     },
     {
       "active_tables": 3,
-      "block_target": 5,
+      "block_target": 7,
       "id": "L03",
-      "instruction_target": 20,
+      "instruction_target": 24,
       "programming_enabled": true,
-      "reference_block_count": 5,
+      "reference_block_count": 7,
       "seeds": [
         {
           "customers": [
@@ -312,11 +312,11 @@
     },
     {
       "active_tables": 4,
-      "block_target": 10,
+      "block_target": 12,
       "id": "L04",
-      "instruction_target": 48,
+      "instruction_target": 54,
       "programming_enabled": true,
-      "reference_block_count": 10,
+      "reference_block_count": 12,
       "seeds": [
         {
           "customers": [
@@ -381,11 +381,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 13,
+      "block_target": 15,
       "id": "L05",
-      "instruction_target": 111,
+      "instruction_target": 133,
       "programming_enabled": true,
-      "reference_block_count": 13,
+      "reference_block_count": 15,
       "seeds": [
         {
           "customers": [
@@ -562,11 +562,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 17,
+      "block_target": 19,
       "id": "L06",
-      "instruction_target": 175,
+      "instruction_target": 211,
       "programming_enabled": true,
-      "reference_block_count": 17,
+      "reference_block_count": 19,
       "seeds": [
         {
           "customers": [
@@ -857,11 +857,11 @@
     },
     {
       "active_tables": 5,
-      "block_target": 19,
+      "block_target": 21,
       "id": "L07",
-      "instruction_target": 156,
+      "instruction_target": 178,
       "programming_enabled": true,
-      "reference_block_count": 19,
+      "reference_block_count": 21,
       "seeds": [
         {
           "customers": [
@@ -1060,11 +1060,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 25,
+      "block_target": 27,
       "id": "L08",
-      "instruction_target": 175,
+      "instruction_target": 195,
       "programming_enabled": true,
-      "reference_block_count": 25,
+      "reference_block_count": 27,
       "seeds": [
         {
           "customers": [
@@ -1247,11 +1247,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 32,
+      "block_target": 34,
       "id": "L09",
-      "instruction_target": 239,
+      "instruction_target": 257,
       "programming_enabled": true,
-      "reference_block_count": 32,
+      "reference_block_count": 34,
       "seeds": [
         {
           "customers": [
@@ -1433,11 +1433,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 39,
+      "block_target": 41,
       "id": "L10",
-      "instruction_target": 322,
+      "instruction_target": 344,
       "programming_enabled": true,
-      "reference_block_count": 35,
+      "reference_block_count": 37,
       "seeds": [
         {
           "customers": [
@@ -1654,11 +1654,11 @@
     },
     {
       "active_tables": 6,
-      "block_target": 35,
+      "block_target": 37,
       "id": "L11",
-      "instruction_target": 296,
+      "instruction_target": 328,
       "programming_enabled": true,
-      "reference_block_count": 35,
+      "reference_block_count": 37,
       "seeds": [
         {
           "customers": [
@@ -1947,11 +1947,11 @@
     },
     {
       "active_tables": 8,
-      "block_target": 41,
+      "block_target": 43,
       "id": "L12",
-      "instruction_target": 549,
+      "instruction_target": 607,
       "programming_enabled": true,
-      "reference_block_count": 35,
+      "reference_block_count": 37,
       "seeds": [
         {
           "customers": [
@@ -2444,11 +2444,11 @@
     },
     {
       "active_tables": 8,
-      "block_target": 43,
+      "block_target": 45,
       "id": "L13",
-      "instruction_target": 682,
+      "instruction_target": 746,
       "programming_enabled": true,
-      "reference_block_count": 35,
+      "reference_block_count": 37,
       "seeds": [
         {
           "customers": [
@@ -3041,11 +3041,11 @@
     },
     {
       "active_tables": 10,
-      "block_target": 49,
+      "block_target": 51,
       "id": "L14",
-      "instruction_target": 1045,
+      "instruction_target": 1143,
       "programming_enabled": true,
-      "reference_block_count": 35,
+      "reference_block_count": 37,
       "seeds": [
         {
           "customers": [
