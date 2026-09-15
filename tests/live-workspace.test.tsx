@@ -39,7 +39,7 @@ describe('live workspace lifecycle',()=>{
   act(()=>{vi.advanceTimersByTime(120000);});
   expect(savedStars()['2']).toBeUndefined();
  });
- it('reveals an error only when reached, and dismisses its animation on an outside click',()=>{
+ it('reveals an error only when reached, and keeps its animation until the failing line is clicked',()=>{
   open('LISTEN\nITEM coffee');
   expect([...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))).toBeUndefined();
   for(let i=0;i<30&&![...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'));i++)act(()=>{vi.advanceTimersByTime(1000);});
@@ -48,7 +48,13 @@ describe('live workspace lifecycle',()=>{
   expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('false');
   expect(screen.getByRole('button',{name:/Run service/})).toBeTruthy();
   expect(screen.getByRole('combobox',{name:'Block 2 value'}).hasAttribute('disabled')).toBe(false);
-  fireEvent.pointerDown(document.body);
+  fireEvent.click(document.body);
+  fireEvent.keyDown(document.body,{key:'Shift'});
+  const failed=[...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))!;
+  expect(failed).toBeTruthy();
+  act(()=>{vi.advanceTimersByTime(5000);});
+  expect(failed.classList.contains('failure')).toBe(true);
+  fireEvent.click(failed);
   expect([...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))).toBeUndefined();
   expect(screen.queryByRole('alert')).toBeNull();
   expect(savedStars()['2']).toBeUndefined();

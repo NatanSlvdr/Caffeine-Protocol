@@ -9,6 +9,21 @@ import { levels } from '../src/data';
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
 const editor={source:'LISTEN\nTICKET\nITEM coffee',onChange:()=>{},level:4,locked:true,observation:false,textMode:false};
 describe('clear execution feedback',()=>{
+ it('keeps the same moving cursor and adapts its travel time to playback speed',()=>{
+  vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+   const line=this.getAttribute('data-line');
+   return DOMRect.fromRect({x:0,y:line===null?0:100+Number(line)*50,width:200,height:30});
+  });
+  const {rerender}=render(<Editor {...editor} activeLine={0}/>);
+  const cursor=screen.getByRole('img',{name:'Current instruction'});
+  expect(cursor.style.transform).toContain('106px');
+  rerender(<Editor {...editor} activeLine={2}/>);
+  expect(screen.getByRole('img',{name:'Current instruction'})).toBe(cursor);
+  expect(cursor.style.transform).toContain('206px');
+  expect(cursor.style.transitionDuration).toBe('360ms');
+  rerender(<Editor {...editor} activeLine={1} stepSeconds={.125}/>);
+  expect(cursor.style.transitionDuration).toBe('75ms');
+ });
  it('marks the full failing block and places the warning outside the code pane',()=>{
   render(<Editor {...editor} failureLine={2} failureMessage="Careful, an error here."/>);
   expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');

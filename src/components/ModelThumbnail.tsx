@@ -25,7 +25,7 @@ function thumbnail(model: Model) {
       await new Promise<void>(done => {
         root.render(<><ambientLight intensity={1.5}/><directionalLight position={[-3, 6, 5]} intensity={2}/>
           {robot ? <group position={[0, -.95, 0]}><RobotModel/></group> : <Cup at={[0, -.15, 0]} tea={model === 'tea'}/>}
-          <Capture onCapture={url => { resolve(url); done(); }}/></>);
+          <Capture center={model === 'tea'} onCapture={url => { resolve(url); done(); }}/></>);
       });
       root.unmount();
     }).catch(reject);
@@ -34,11 +34,28 @@ function thumbnail(model: Model) {
   return result;
 }
 
-function Capture({ onCapture }: { onCapture: (url: string) => void }) {
+function Capture({ onCapture, center }: { onCapture: (url: string) => void; center: boolean }) {
   useFrame(({ gl, scene, camera }) => {
     camera.lookAt(0, 0, 0);
     gl.render(scene, camera);
-    onCapture(gl.domElement.toDataURL('image/png'));
+    if (!center) { onCapture(gl.domElement.toDataURL('image/png')); return; }
+    // Center the rendered silhouette, including the handle and tag, without changing its scale.
+    const canvas = document.createElement('canvas');
+    canvas.width = gl.domElement.width; canvas.height = gl.domElement.height;
+    const context = canvas.getContext('2d');
+    if (!context) { onCapture(gl.domElement.toDataURL('image/png')); return; }
+    context.drawImage(gl.domElement, 0, 0);
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+    let left = canvas.width, right = -1, top = canvas.height, bottom = -1;
+    for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
+      if (pixels[(y * canvas.width + x) * 4 + 3] <= 8) continue;
+      left = Math.min(left, x); right = Math.max(right, x); top = Math.min(top, y); bottom = Math.max(bottom, y);
+    }
+    if (right >= left) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(gl.domElement, Math.round((canvas.width - 1 - left - right) / 2), Math.round((canvas.height - 1 - top - bottom) / 2));
+    }
+    onCapture(canvas.toDataURL('image/png'));
   }, 1);
   return null;
 }

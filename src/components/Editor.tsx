@@ -10,6 +10,7 @@ import type { VisualBlock } from '../domain/visualProgram';
 import { BlockSelect, DirectionSelect } from './BlockSelect';
 import { BlockIcon } from './BlockIcon';
 import { OperandIcon } from './OperandIcon';
+import { ExecutionCursor } from './ExecutionCursor';
 import { InstructionError } from './FailureFeedback';
 import { keyboardDropSlot, pickDropSlot } from '../domain/dragPlacement';
 import type { DraggedScope } from '../domain/dragPlacement';
@@ -100,10 +101,10 @@ function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivEleme
   return <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>{children}</div>;
 }
 
-function Row({ block, depth, ordinal, locked, active, failure, failureMessage, options, onReplace }: {
+function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onDismissFailure, options, onReplace }: {
   block: VisualBlock; depth: number; ordinal: number; locked: boolean; active: boolean; failure: boolean; options: string[];
   onReplace: (c: string) => void;
-  failureMessage?: string; onEdit?: () => void;
+  failureMessage?: string; onEdit?: () => void; onDismissFailure?: () => void;
 }) {
   const { line: id, command } = block;
   const { attributes, listeners, setNodeRef } = useDraggable({ id: String(id), data: { at: id }, disabled: locked });
@@ -111,7 +112,7 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
   useEffect(() => {
     if (active || failure) (failure ? rowRef.current?.parentElement : rowRef.current)?.scrollIntoView?.({ block: 'nearest', behavior: 'instant' });
   }, [active, failure]);
-  return <div className="code-row">
+  return <div className="code-row" onClickCapture={failure ? onDismissFailure : undefined}>
     <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">{String(ordinal).padStart(2, '0')}</span>
     <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...attributes} {...listeners} aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} aria-disabled={locked} tabIndex={locked ? -1 : 0} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
       aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
@@ -170,10 +171,10 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
   return <svg className="jump-arrows" aria-label="Jump connections"><defs><marker id={marker} viewBox="0 0 12 12" refX="9" refY="6" markerWidth="6" markerHeight="6" orient="auto"><path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker></defs>{links.map((l, i) => <path key={i} d={l.d} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" markerEnd={'url(#' + marker + ')'}/>)}</svg>;
 }
 
-export function Editor({ role = 'query', source, onChange, level, locked, observation, activeLine = -1, failureLine = -1, failureMessage, onEdit, textMode }: {
+export function Editor({ role = 'query', source, onChange, level, locked, observation, activeLine = -1, failureLine = -1, failureMessage, onEdit, textMode, onDismissFailure, stepSeconds = 1.5 }: {
   role?: RobotRole; source: string; onChange: (v: string) => void; level: number; locked: boolean; observation: boolean;
-  activeLine?: number; failureLine?: number; textMode: boolean;
-  failureMessage?: string; onEdit?: () => void;
+  activeLine?: number; failureLine?: number; textMode: boolean; stepSeconds?: number;
+  failureMessage?: string; onEdit?: () => void; onDismissFailure?: () => void;
 }) {
   const [dragged, setDragged] = useState('');
   const root = useRef<HTMLDivElement>(null), codeArea = useRef<HTMLDivElement>(null), pointer = useRef<{ x: number; y: number } | null>(null);
@@ -203,14 +204,14 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   const rows = flatten(tree);
   const visibleFailureLine = failureLine < 0 ? -1 : (rows.find(r => r.line === failureLine) ?? rows.findLast(r => r.line <= failureLine) ?? rows[0])?.line ?? -1;
   const renderBlocks = (blocks: VisualBlock[], depth = 0): React.ReactNode => blocks.map(block => <div className={(block.children ? 'code-scope ' + category(block.command) : 'code-statement') + (draggedLine === block.line ? ' drag-source' : '')} key={block.line}>
-    <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit}
+    <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit} onDismissFailure={onDismissFailure}
       onReplace={c => { const lines = source.split('\n'); lines[block.line] = c; change(lines.join('\n')); }}/>
     {block.children && <div className="scope-body">
       <Insertion at={block.line + 1} disabled={disabled} hint={block.children.length ? '' : 'Drop a block here'}/>
       {renderBlocks(block.children, depth + 1)}
     </div>}
     {!!block.alternative?.length && <div className={'else-body' + (draggedLine === block.elseLine ? ' drag-source' : '')}>
-      <Row block={elseBlock(block)} depth={depth} ordinal={rows.findIndex(r => r.line === block.elseLine) + 1} options={options} locked={disabled} active={activeLine === block.elseLine} failure={visibleFailureLine === block.elseLine} failureMessage={failureMessage} onEdit={onEdit}
+      <Row block={elseBlock(block)} depth={depth} ordinal={rows.findIndex(r => r.line === block.elseLine) + 1} options={options} locked={disabled} active={activeLine === block.elseLine} failure={visibleFailureLine === block.elseLine} failureMessage={failureMessage} onEdit={onEdit} onDismissFailure={onDismissFailure}
         onReplace={() => {}}/>
       <div className="scope-body"><Insertion at={block.elseLine! + 1} disabled={disabled}/>{renderBlocks(block.alternative, depth + 1)}</div>
     </div>}
@@ -266,8 +267,9 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
     <section className="palette compact-palette" aria-label="Available code blocks"><div className="command-library">{blockPrototypes(options).map(c => <CommandTile key={role + ':' + level + ':' + c} initial={c} options={options} disabled={disabled} onInsert={insert}/>)}</div></section>
     <div className="editor-body" aria-label="Code zone" ref={codeArea}>
       {failureMessage && (textMode || !rows.length) && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
-      {observation ? null : textMode ? <textarea spellCheck={false} aria-label="Program source" value={source} onChange={e => change(e.target.value)} readOnly={locked} className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}/> :
+      {observation ? null : textMode ? <textarea onClick={failureLine >= 0 ? onDismissFailure : undefined} spellCheck={false} aria-label="Program source" value={source} onChange={e => change(e.target.value)} readOnly={locked} className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}/> :
         <ProgramSurface root={root}>
+          <ExecutionCursor root={root} line={failureLine >= 0 ? -1 : activeLine} stepSeconds={stepSeconds}/>
           <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'}/>
           {renderBlocks(tree)}<JumpArrows root={root} source={source} dragging={!!dragged}/>
         </ProgramSurface>}
