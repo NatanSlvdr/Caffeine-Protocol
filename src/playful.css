@@ -479,17 +479,18 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 .robot-holding .holding-badge{position:absolute;right:0;bottom:0;background:#fffbed;border-radius:3px}
 .holding-sugar{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:1px;padding:1px 2px;border-radius:3px;background:#fffbed;font:700 10px/1.2 Inter,sans-serif}
 
-.scene-footer.view-controls{gap:3px;padding:4px;z-index:15;flex-wrap:wrap;justify-content:center;border:1px solid #cbbda4;border-radius:10px;background:#e9dfcf}
-.view-controls>button{gap:6px;padding:8px 12px;border:0;border-radius:7px;background:transparent;color:#786a57;font-size:12px;white-space:nowrap;box-shadow:none}
-.view-controls>button:hover:not(:disabled){background:#fffbed80}
-.view-controls>button[aria-pressed=true]{background:#fffbed;color:var(--coffee);font-weight:650;box-shadow:0 1px 3px #49301c25}
-.view-controls>button:active:not(:disabled){transform:none}
+.camera-controls .view-controls{display:flex;align-items:center;gap:3px;padding:4px;z-index:15;flex-wrap:wrap;justify-content:center;border:1px solid #cbbda4;border-radius:10px;background:#e9dfcf}
+.view-controls button{gap:6px;padding:8px 12px;border:0;border-radius:7px;background:transparent;color:#786a57;font-size:12px;white-space:nowrap;box-shadow:none}
+.view-controls button:hover:not(:disabled){background:#fffbed80}
+.view-controls button[aria-pressed=true]{background:#fffbed;color:var(--coffee);font-weight:650;box-shadow:0 1px 3px #49301c25}
+.view-controls button:active:not(:disabled){transform:none}
 
 .robot-tabs{display:flex;gap:6px;flex-wrap:wrap}
 .robot-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:1}
-.robot-tabs button:disabled,.view-controls>button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
-.scene-footer.view-controls{max-width:calc(100% - 16px)}
-.view-controls>button{padding:8px 9px;font-size:11px}
+.robot-tabs button:disabled,.view-controls button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.scene-footer.camera-controls{display:flex;flex-direction:column;gap:4px;padding:0;background:transparent;border:0;border-radius:0;box-shadow:none;z-index:15}
+.camera-controls .view-controls{max-width:100%}
+.view-controls button{padding:8px 9px;font-size:11px}
 
 /* Normal program buttons sit beneath one rounded lock overlay. */
 .robot-tabs{display:flex;align-items:stretch;gap:8px;flex-wrap:wrap;padding:10px 14px;background:var(--draft-deep)}
@@ -504,3 +505,11 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 .locked-robot-buttons button:disabled{opacity:1;cursor:not-allowed;min-width:0}
 .robot-choice-lock{position:absolute;inset:0;z-index:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:5px 8px;border-radius:9px;background:rgb(38 30 24 / 78%);color:#ead8b8;font:500 10px/1.4 Inter,sans-serif;text-align:center;cursor:not-allowed}
 .robot-tabs button:focus-visible{outline:2px solid #b58b52;outline-offset:3px}
+
+/* Keep the compact camera control while sharing the program selector’s lock overlay. */
+.camera-view-label{padding:3px 6px;text-align:center;font-size:10px;font-weight:600;color:#786a57}
+.view-controls .robot-choice-label{padding:0;gap:6px}
+.view-controls .locked-robot-zone{flex-basis:auto;min-width:0;max-width:100%}
+.view-controls .locked-robot-buttons{gap:3px;flex-wrap:wrap}
+.view-controls .locked-robot-buttons button:disabled{flex:1;opacity:1}
+.view-controls .robot-choice-lock{border-radius:7px}

@@ -1,6 +1,6 @@
 import { ChefHat, ConciergeBell, LockKeyhole, ReceiptText } from 'lucide-react';
 import { useId } from 'react';
-import { ROBOT_NAMES, ROBOT_UNLOCK_LEVELS } from '../data/extension';
+import { ROBOT_UNLOCK_LEVELS } from '../data/extension';
 import type { RobotRole } from '../domain/types';
 
 const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
@@ -30,7 +30,7 @@ export function RobotOptions({ level, selected, labels, onSelect, tabs = false }
     {locked.length > 0 && <div className="locked-robot-zone" style={{ flexGrow: locked.length }}>
       <div className="locked-robot-buttons">{locked.map(robot => button(robot, true))}</div>
       <div className="robot-choice-lock" id={noticeId}><LockKeyhole size={12} aria-hidden="true"/>
-        <span>Unlocks after shift {locked.map(robot => `${ROBOT_UNLOCK_LEVELS[robot] - 1} (${ROBOT_NAMES[robot]})`).join(' · ')}</span>
+        <span>Locked</span>
       </div>
     </div>}
   </>;

@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Bot, Store, ArrowLeft, ArrowRight, Check, CheckCheck, Coffee, Download, FolderHeart, HelpCircle, Home, Leaf, Maximize, Pause, Play, RotateCcw, Settings2, SlidersHorizontal, Sparkles, Square, Star, Terminal, Upload, Volume2, LockKeyhole } from 'lucide-react';
+import { Store, ArrowLeft, ArrowRight, Check, CheckCheck, Coffee, Download, FolderHeart, HelpCircle, Home, Leaf, Maximize, Pause, Play, RotateCcw, Settings2, SlidersHorizontal, Sparkles, Square, Star, Terminal, Upload, Volume2, LockKeyhole } from 'lucide-react';
 import { Cafe } from './components/Cafe';
 import { Editor } from './components/Editor';
 import { Modal } from './components/Modal';
 import { lessons,levels,stories,titleFor,CAMPAIGN_LENGTH,MAX_STARS } from './data';
-import { ROBOT_NAMES, ROBOT_UNLOCK_LEVELS, ROBOT_AREAS } from './data/extension';
+import { ROBOT_NAMES, ROBOT_AREAS } from './data/extension';
 import { CodingPaneHeader } from './components/CodingPaneHeader';
+import { RobotOptions } from './components/RobotChoice';
 import { shiftBriefs } from './data/shiftBriefs';
 import { MAX_PLAYBACK_SPEED } from './domain/playback';
 import { sampleReplay } from './domain/replay';
@@ -94,7 +95,7 @@ function Workspace({index,save,update,onNext,saveError}:{index:number;save:Progr
  useEffect(()=>{const keys=(e:KeyboardEvent)=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){if(modal)return;e.preventDefault();run();}if(e.key==='Escape'&&!modal)go('/campaign');};window.addEventListener('keydown',keys);return ()=>window.removeEventListener('keydown',keys);});
  return <main className="workspace-main">
  <div className={'workbench'+(result&&!result.passed?' has-failure':'')}><section className="cafe-panel"><div className="workspace-heading"><button className="breadcrumb" onClick={()=>go('/campaign')}><ArrowLeft size={13}/> Campaign <span>/</span> Shift {number(index+1)}</button>{saveError&&<p className="error-text" role="alert">{saveError}</p>}</div><div className="scene-space"><Cafe evening={index>10} result={result??undefined} time={time} reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} showLabels={!running&&!modal&&!observation} moving={running&&!paused} serviceView={running} focusRole={zoomToRobot&&!observation?role:undefined} level={index+1}/>
- <div className="scene-footer view-controls" role="group" aria-label="Camera view"><button type="button" aria-pressed={!zoomToRobot||observation} onClick={()=>setZoomToRobot(false)}><Store size={16} aria-hidden="true"/>Full café</button>{(['query','prep','floor'] as const).map(robot=>{const locked=index+1<ROBOT_UNLOCK_LEVELS[robot];return <button key={robot} type="button" aria-pressed={zoomToRobot&&!locked&&role===robot} disabled={locked} title={locked?`Unlocks at shift ${ROBOT_UNLOCK_LEVELS[robot]}`:undefined} onClick={()=>{setRole(robot);setZoomToRobot(true);}}>{locked?<LockKeyhole size={16} aria-hidden="true"/>:<Bot size={16} aria-hidden="true"/>}{ROBOT_AREAS[robot]}</button>;})}</div></div>
+ <div className="scene-footer camera-controls"><span className="camera-view-label">Camera view</span><div className="view-controls" role="group" aria-label="Camera view"><button type="button" aria-pressed={!zoomToRobot||observation} onClick={()=>setZoomToRobot(false)}><Store size={16} aria-hidden="true"/>Full café</button><RobotOptions level={index+1} selected={zoomToRobot&&!observation?role:undefined} labels={ROBOT_AREAS} onSelect={robot=>{setRole(robot);setZoomToRobot(true);}}/></div></div></div>
  <div className="playback-toolbar" aria-label="Simulation controls"><button className={`primary run-button ${running?'stop-button':''}`} onClick={run}>{running?<Square size={15}/>:<Play size={15} fill="currentColor"/>}{running?(result&&!result.passed?'Edit program':'Stop & edit'):observation?'Watch service':'Run service'}<kbd>{navigator.platform.includes('Mac')?'⌘':'Ctrl'} ↵</kbd></button><button aria-label={paused?'Resume playback':'Pause playback'} disabled={!running||!result?.passed} onClick={()=>{setPaused(p=>!p);}}>{paused?<Play size={15}/>:<Pause size={15}/>} {paused?'Resume':'Pause'}</button><label className="playback-speed"><span>Speed <strong>{speed}×</strong><small>1 block · {(1.5/speed).toFixed(2)}s</small></span><input type="range" aria-label="Playback speed" min={1} max={MAX_PLAYBACK_SPEED} step={.25} value={speed} onChange={e=>setSpeed(Number(e.target.value))}/></label></div>
 
 
