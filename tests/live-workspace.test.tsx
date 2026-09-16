@@ -4,7 +4,7 @@ import App from '../src/App';
 import { newSave, SAVE_KEY } from '../src/domain/persistence';
 import { lessons } from '../src/data';
 
-vi.mock('../src/components/Cafe',()=>({Cafe:({serviceView}:{serviceView?:boolean})=><div data-testid="cafe" data-service-view={serviceView}/> }));
+vi.mock('../src/components/Cafe',()=>({Cafe:({serviceView,focusRole}:{serviceView?:boolean;focusRole?:string})=><div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole}/> }));
 vi.mock('../src/audio',()=>({configureAudio:vi.fn(),playSound:vi.fn(),startAudio:vi.fn()}));
 beforeEach(()=>{
  vi.useFakeTimers();localStorage.clear();window.location.hash='/shift/3';
@@ -19,6 +19,42 @@ function open(source=lessons[2].solution){
 }
 function savedStars(){return JSON.parse(localStorage.getItem(SAVE_KEY)!).stars;}
 describe('live workspace lifecycle',()=>{
+ it('focuses the scene on the robot selected for editing',()=>{
+  const save=newSave();save.unlocked=22;save.selected=22;
+  window.location.hash='/shift/23';
+  localStorage.setItem(SAVE_KEY,JSON.stringify(save));render(<App/>);
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('floor');
+  fireEvent.click(screen.getByRole('tab',{name:'Query'}));
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('query');
+  fireEvent.click(screen.getByRole('tab',{name:'Brew'}));
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('prep');
+  fireEvent.click(screen.getByRole('tab',{name:'Porter'}));
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('floor');
+  fireEvent.click(screen.getByRole('button',{name:'Full café'}));
+  expect(screen.getByTestId('cafe').hasAttribute('data-focus-role')).toBe(false);
+  fireEvent.click(screen.getByRole('tab',{name:'Query'}));
+  expect(screen.getByTestId('cafe').hasAttribute('data-focus-role')).toBe(false);
+  fireEvent.click(screen.getByRole('button',{name:'Query’s counter'}));
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('query');
+  fireEvent.click(screen.getByRole('button',{name:'Brew’s kitchen'}));
+  expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('prep');
+  expect(screen.getByRole('tab',{name:'Brew'}).getAttribute('aria-selected')).toBe('true');
+ });
+ it('shows locked robot areas and code tabs before their unlock shifts',()=>{
+  const save=newSave();save.unlocked=2;save.selected=2;
+  localStorage.setItem(SAVE_KEY,JSON.stringify(save));render(<App/>);
+  for(const name of ['Brew’s kitchen','Porter’s dining room']){
+   const button=screen.getByRole('button',{name});
+   expect(button.hasAttribute('disabled')).toBe(true);
+   expect(button.querySelector('.lucide-lock-keyhole')).toBeTruthy();
+  }
+  for(const name of ['Brew','Porter']){
+   const tab=screen.getByRole('tab',{name});
+   expect(tab.hasAttribute('disabled')).toBe(true);
+   expect(tab.querySelector('.lucide-lock-keyhole')).toBeTruthy();
+  }
+  expect(screen.getByRole('tab',{name:'Query'}).hasAttribute('disabled')).toBe(false);
+ });
  it('awards progress and opens the receipt only after the live service finishes',()=>{
   open();expect(savedStars()['2']).toBeUndefined();
   expect(screen.queryByText('Service complete')).toBeNull();

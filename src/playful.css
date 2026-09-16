@@ -478,3 +478,15 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 .robot-holding .model-thumbnail{width:42px;height:42px}
 .robot-holding .holding-badge{position:absolute;right:0;bottom:0;background:#fffbed;border-radius:3px}
 .holding-sugar{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:1px;padding:1px 2px;border-radius:3px;background:#fffbed;font:700 10px/1.2 Inter,sans-serif}
+
+.scene-footer.view-controls{gap:3px;padding:4px;z-index:15;flex-wrap:wrap;justify-content:center;border:1px solid #cbbda4;border-radius:10px;background:#e9dfcf}
+.view-controls>button{gap:6px;padding:8px 12px;border:0;border-radius:7px;background:transparent;color:#786a57;font-size:12px;white-space:nowrap;box-shadow:none}
+.view-controls>button:hover:not(:disabled){background:#fffbed80}
+.view-controls>button[aria-pressed=true]{background:#fffbed;color:var(--coffee);font-weight:650;box-shadow:0 1px 3px #49301c25}
+.view-controls>button:active:not(:disabled){transform:none}
+
+.robot-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.robot-tabs button{display:inline-flex;align-items:center;justify-content:center;gap:5px;flex:1}
+.robot-tabs button:disabled,.view-controls>button:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
+.scene-footer.view-controls{max-width:calc(100% - 16px)}
+.view-controls>button{padding:8px 9px;font-size:11px}

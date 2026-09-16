@@ -1,13 +1,13 @@
 import type { RobotRole } from '../domain/types';
-import { ROBOT_NAMES } from '../data/extension';
-import { BookOpen, SlidersHorizontal } from 'lucide-react';
+import { ROBOT_NAMES, ROBOT_UNLOCK_LEVELS } from '../data/extension';
+import { BookOpen, Bot, LockKeyhole, SlidersHorizontal } from 'lucide-react';
 
-/** Keep the objective fixed; robot navigation only appears once there is a choice. */
+/** Keep every robot directly below the goal, with explicit unlock states. */
 export function CodingPaneHeader({ shift, objective, story, level, role, onRole, onHelp, onOptions }: {
   shift: string; objective: string; level: number; role: RobotRole; onRole: (role: RobotRole) => void;
   story?: string; onHelp?: () => void; onOptions?: () => void;
 }) {
-  const available = (['query', 'prep', 'floor'] as const).filter(r => r === 'query' || r === 'prep' && level >= 15 || r === 'floor' && level >= 23);
+  const robots = ['query', 'prep', 'floor'] as const;
   return <>
     <header className="coding-pane-heading">
       <div className="coding-title-row"><h2>{shift}</h2><div className="coding-tools">
@@ -17,8 +17,8 @@ export function CodingPaneHeader({ shift, objective, story, level, role, onRole,
       {story && <p className="shift-story">{story}</p>}
       <p className="shift-objective"><span>Your goal</span>{objective}</p>
     </header>
-    {available.length > 1 && <div className="robot-tabs" role="tablist" aria-label="Robot programs">
-      {available.map(r => <button key={r} role="tab" aria-selected={role === r} onClick={() => onRole(r)}>{ROBOT_NAMES[r]}</button>)}
-    </div>}
+    <div className="robot-tabs" role="tablist" aria-label="Robot programs">
+      {robots.map(r => {const locked=level<ROBOT_UNLOCK_LEVELS[r];return <button key={r} type="button" role="tab" aria-selected={!locked&&role === r} disabled={locked} title={locked?`Unlocks at shift ${ROBOT_UNLOCK_LEVELS[r]}`:undefined} onClick={() => onRole(r)}>{locked?<LockKeyhole size={14} aria-hidden="true"/>:<Bot size={14} aria-hidden="true"/>}{ROBOT_NAMES[r]}</button>;})}
+    </div>
   </>;
 }

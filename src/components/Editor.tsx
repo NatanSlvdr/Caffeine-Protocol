@@ -58,12 +58,8 @@ function comparisonOperands(command: string, options: string[], disabled: boolea
 }
 
 function Operands({ command, options, disabled, label, onChange, library = false }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean }) {
-  const [chosen, setChosen] = useState<ReadonlySet<string>>(() => new Set());
-  const mask = (key: string, value: string) => library && !chosen.has(key) ? '' : value;
-  const select = (key: string, value: string) => {
-    setChosen(current => new Set([...current, key]));
-    onChange(value);
-  };
+  const mask = (_key: string, value: string) => library ? '' : value;
+  const select = (_key: string, value: string) => { if (!library) onChange(value); };
   const fields = blockFields(command);
   if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
@@ -90,12 +86,12 @@ function Operands({ command, options, disabled, label, onChange, library = false
 }
 
 function CommandTile({ initial, options, disabled, onInsert }: { initial: string; options: string[]; disabled: boolean; onInsert: (command: string) => void }) {
-  const [command, setCommand] = useState(initial);
+  const command = initial;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: 'library:' + initial, data: { command }, disabled });
   const fields = blockFields(command);
   return <div ref={setNodeRef} className={'command-tile ' + category(command)} style={{ opacity: isDragging ? .4 : 1 }}>
     <button type="button" disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.verb}</button>
-    <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={setCommand}/>
+    <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={() => {}}/>
   </div>;
 }
 

@@ -11,9 +11,9 @@ import { CafeFloor } from './CafeFloor';
 import { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS } from './CafeModels';
 import type { Vec3 } from './CafeModels';
 import type { StationId } from '../domain/layout';
-import type { ActorId, ActorSnapshot, RunResult } from '../domain/types';
+import type { ActorId, ActorSnapshot, RobotRole, RunResult } from '../domain/types';
 import { sampleReplay } from '../domain/replay';
-import { cameraZoom, TABLE_LAYOUT, FURNITURE, STATIONS, STARTS, CAMERA_POSITION, CAMERA_TARGET, ENTRANCE, STAFF_ENTRY, ROOM, tableSeat } from '../domain/layout';
+import { cameraZoom, TABLE_LAYOUT, FURNITURE, STATIONS, STARTS, CAMERA_POSITION, CAMERA_TARGET, CAMERA_ELEVATION, ENTRANCE, STAFF_ENTRY, ROOM, tableSeat } from '../domain/layout';
 import type { Point } from '../domain/layout';
 
 function Plant({at,scale=1}:{at:Vec3;scale?:number}){return <group position={at} scale={scale}><Cylinder at={[0,.32,0]} size={[.35,.25,.62]} color="#c26b50"/><Cylinder at={[0,.65,0]} size={[.29,.29,.04]} color="#514439"/><Cylinder at={[0,1.08,0]} size={[.035,.045,.9]} color="#5f6c43"/>{Array.from({length:7},(_,i)=><mesh key={i} position={[Math.sin(i*2.4)*.26,.9+i*.11,Math.cos(i*2.4)*.24]} rotation={[i*.2,i*2.4,.6]} scale={[.22,.55,.11]} castShadow><icosahedronGeometry args={[1,0]}/><meshStandardMaterial color={i%2?'#6a895b':'#93a86d'}/></mesh>)}</group>;}
@@ -116,20 +116,36 @@ function Character({at,color='#c28563',robot=false,label,animate=false,walking=f
     </>}
   </group>{label&&<Html position={[0,2.1,0]} center zIndexRange={[6,0]}><span className="actor-label">{label}</span></Html>}</group>;
 }
-/** Ease into a wider, ten-degree view for service, then return to the coding grid. */
-function CameraFit({serviceView,reduced}:{serviceView:boolean;reduced:boolean}){
- const {size,camera}=useThree();const angle=useRef(0),zoomScale=useRef(1);
+/** Frame each robot's work area, including its reachable counters or dining tables. */
+const robotViews = {
+ query: { target: [-5, .7, 4.4], width: 8, depth: 5.5 },
+ prep: { target: [2.5, .7, 4.3], width: 12, depth: 5.5 },
+ floor: { target: [0, .7, -1], width: 17, depth: 11.5 },
+} satisfies Record<RobotRole, { target: number[]; width: number; depth: number }>;
+
+/** Pan and zoom together when the code editor switches robots. */
+function CameraFit({serviceView,reduced,focusRole}:{serviceView:boolean;reduced:boolean;focusRole?:RobotRole}){
+ const {size,camera}=useThree();
+ const angle=useRef(0),center=useRef<number[]>([...CAMERA_TARGET]),zoom=useRef(cameraZoom(size.width,size.height));
  useFrame((_,delta)=>{
   const blend=reduced?1:1-Math.exp(-delta*5);
+  const view=focusRole?robotViews[focusRole]:undefined;
+  const target=view?.target??CAMERA_TARGET;
   angle.current+=((serviceView?10*Math.PI/180:0)-angle.current)*blend;
-  zoomScale.current+=((serviceView?.8:1)-zoomScale.current)*blend;
+  center.current=center.current.map((value,index)=>value+(target[index]-value)*blend);
+  const cos=Math.cos(angle.current),sin=Math.abs(Math.sin(angle.current));
+  const targetZoom=view?Math.max(1,Math.min(
+   size.width/(view.width*cos+view.depth*sin+1),
+   size.height/((view.depth*cos+view.width*sin)*Math.sin(CAMERA_ELEVATION)+3.4*Math.cos(CAMERA_ELEVATION)+1),
+  )):cameraZoom(size.width,size.height)*(serviceView?.8:1);
+  zoom.current+=(targetZoom-zoom.current)*blend;
   const radius=CAMERA_POSITION[2]-CAMERA_TARGET[2];
-  camera.position.set(CAMERA_TARGET[0]+Math.sin(angle.current)*radius,CAMERA_POSITION[1],CAMERA_TARGET[2]+Math.cos(angle.current)*radius);
-  camera.zoom=cameraZoom(size.width,size.height)*zoomScale.current;
-  camera.lookAt(...CAMERA_TARGET);camera.updateProjectionMatrix();
+  camera.position.set(center.current[0]+Math.sin(angle.current)*radius,center.current[1]+CAMERA_POSITION[1]-CAMERA_TARGET[1],center.current[2]+cos*radius);
+  camera.zoom=zoom.current;
+  camera.lookAt(center.current[0],center.current[1],center.current[2]);camera.updateProjectionMatrix();
  });return null;
 }
-function World({evening,result,time,reduced,moving,level,showLabels,serviceView}:{evening:boolean;result?:RunResult;time:number;reduced:boolean;moving:boolean;level:number;showLabels:boolean;serviceView:boolean}){
+function World({evening,result,time,reduced,moving,level,showLabels,serviceView,focusRole}:{evening:boolean;result?:RunResult;time:number;reduced:boolean;moving:boolean;level:number;showLabels:boolean;serviceView:boolean;focusRole?:RobotRole}){
  const state=result?sampleReplay(result,time):undefined;
  const speakingId=state?.seed?.events.findLast(e=>e.role==='query'&&e.start<=state.local)?.customerId;
  const speaking=result?.events.find(e=>e.seed_id===state?.seed?.seed_id&&e.customer.customer_id===speakingId);
@@ -137,7 +153,7 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView}
  const actors:Partial<Record<ActorId,ActorSnapshot>>=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{niko:{position:STARTS.query,inventory:[],role:'query' as const}}),prep:{position:STARTS.prep,inventory:[],role:'prep' as const},floor:{position:STARTS.floor,inventory:[],role:'floor' as const}};
 
  const gateOpen=!!state?.seed?.events.some(e=>e.actor==='niko'&&e.from[0]===STAFF_ENTRY[0]&&e.to[0]===STAFF_ENTRY[0]&&e.from[1]!==e.to[1]&&(e.from[1]===STAFF_ENTRY[1]||e.to[1]===STAFF_ENTRY[1])&&state.local>=e.start-.3&&state.local<=e.end+.2);
- return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit serviceView={serviceView} reduced={reduced}/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
+ return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit serviceView={serviceView} reduced={reduced} focusRole={focusRole}/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
  {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={actor.facing??(id==='query'?-Math.PI/2:0)} walking={moving&&actor.walking} reach={actor.reach} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{serviceView&&state&&(id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23)&&(actor.heldPaper||actor.inventory.length>0)&&<Html position={[actor.position[0],2.8,actor.position[1]]} center zIndexRange={[10,0]} style={{pointerEvents:'none'}}><RobotHolding name={id==='query'?'Query':id==='prep'?'Brew':'Porter'} inventory={actor.inventory} paper={actor.heldPaper}/></Html>}{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
  {state?.waitingTickets.slice(0,4).map((ticket,i)=><group key={ticket.ticket_id} position={[STATIONS.orders.cell[0]+.2,1.12+i*.015,STATIONS.orders.cell[1]+.18]}>
   <Box size={[.32,.012,.4]} color="#fff3d5"/>
@@ -154,7 +170,7 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView}
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;
 }
 class SceneBoundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}render(){return this.state.failed?<div className="webgl-fallback"><strong>The café is still open.</strong><p>3D graphics are unavailable on this device. You can still program Query, run service, and follow each customer’s order.</p></div>:this.props.children;}}
-export function Cafe({evening=false,result,time=0,reduced=false,pixelArt=true,moving=false,level=32,showLabels=false,serviceView=false}:{evening?:boolean;result?:RunResult;time?:number;reduced?:boolean;pixelArt?:boolean;moving?:boolean;level?:number;showLabels?:boolean;serviceView?:boolean}){
+export function Cafe({evening=false,result,time=0,reduced=false,pixelArt=true,moving=false,level=32,showLabels=false,serviceView=false,focusRole}:{evening?:boolean;result?:RunResult;time?:number;reduced?:boolean;pixelArt?:boolean;moving?:boolean;level?:number;showLabels?:boolean;serviceView?:boolean;focusRole?:RobotRole}){
  const [lost,setLost]=useState(false);
- return <div className="cafe-canvas" aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room">{lost?<div className="webgl-fallback">The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.</div>:<SceneBoundary><Suspense fallback={<div className="scene-loading">Warming up the café…</div>}><Canvas key={pixelArt?'pixelated':'smooth'} shadows dpr={[1,1.5]} gl={{antialias:!pixelArt,alpha:true,localClippingEnabled:true}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',()=>setLost(true))}><World evening={evening} result={result} time={time} reduced={reduced} moving={moving} level={level} showLabels={showLabels} serviceView={serviceView}/>{pixelArt&&<PixelArtEffect/>}</Canvas></Suspense></SceneBoundary>}</div>;
+ return <div className="cafe-canvas" aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room">{lost?<div className="webgl-fallback">The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.</div>:<SceneBoundary><Suspense fallback={<div className="scene-loading">Warming up the café…</div>}><Canvas key={pixelArt?'pixelated':'smooth'} shadows dpr={[1,1.5]} gl={{antialias:!pixelArt,alpha:true,localClippingEnabled:true}} onCreated={({gl})=>gl.domElement.addEventListener('webglcontextlost',()=>setLost(true))}><World evening={evening} result={result} time={time} reduced={reduced} moving={moving} level={level} showLabels={showLabels} serviceView={serviceView} focusRole={focusRole}/>{pixelArt&&<PixelArtEffect/>}</Canvas></Suspense></SceneBoundary>}</div>;
 }

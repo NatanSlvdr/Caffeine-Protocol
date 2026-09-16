@@ -32,7 +32,7 @@ describe('compact visual code', () => {
   await userEvent.click(screen.getByLabelText('Library Write value'));
   expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea']);
  });
- it('leaves shop operands unselected until individually chosen', async () => {
+ it('ignores shop selections and keeps its operands unselected', async () => {
   render(<Harness/>);
   for (const name of ['Library Write value','Library If value','Library If operator','Library If source']) {
    expect(screen.getByLabelText(name).textContent).toBe('');
@@ -41,7 +41,8 @@ describe('compact visual code', () => {
   expect(screen.getByLabelText('Library Take direction').querySelector('.chosen')).toBeNull();
   await userEvent.click(screen.getByLabelText('Library If value'));
   await userEvent.click(screen.getByRole('option',{name:'Tea'}));
-  expect(screen.getByLabelText('Library If value').textContent).toContain('Tea');
+  expect(screen.getByLabelText('Library If value').textContent).toBe('');
+  expect(source()).toBe('LISTEN');
   expect(screen.getByLabelText('Library If operator').textContent).toBe('');
   expect(screen.getByLabelText('Library If source').textContent).toBe('');
  });
@@ -100,12 +101,12 @@ describe('compact visual code', () => {
   expect([...document.querySelectorAll<HTMLElement>('.line-number')].map(e=>e.style.left)).toEqual(['-35px','-35px','-77px','-35px','-77px']);
   expect(document.querySelectorAll('.code-row .block-icon')).toHaveLength(5);
  });
- it('does not select a row when inserting a configured block', async () => {
+ it('inserts the default block after previewing shop options', async () => {
   const user = userEvent.setup(); render(<Harness initial={'LISTEN\nIF tea\nEND'}/>);
   await user.click(document.querySelector('[data-line="1"] .block-verb')!);
   await choose('Library Write value','tea');
-  await user.click(screen.getByRole('button',{name:'Insert ITEM tea'}));
-  expect(source()).toBe('LISTEN\nIF tea\nEND\nITEM tea');
+  await user.click(screen.getByRole('button',{name:'Insert ITEM coffee'}));
+  expect(source()).toBe('LISTEN\nIF tea\nEND\nITEM coffee');
   expect(document.querySelectorAll('.block.selected')).toHaveLength(0);
  });
  it('preserves branch contents when editing the condition', async () => {
@@ -313,12 +314,16 @@ describe('structural editing',()=>{
  });
 });
 describe('minimal coding pane header',()=>{
- it('hides one robot and offers only the available robots',async()=>{
+ it('shows all robots and enables each at its unlock shift',async()=>{
   const props={shift:'A little sugar',objective:'Make the requested drinks.',role:'query' as const,onRole:vi.fn()};
   const {rerender}=render(<CodingPaneHeader {...props} level={14}/>);
-  expect(screen.queryByRole('tablist')).toBeNull();
+  expect(screen.getAllByRole('tab')).toHaveLength(3);
+  expect(screen.getByRole('tab',{name:'Brew'}).hasAttribute('disabled')).toBe(true);
+  await userEvent.click(screen.getByRole('tab',{name:'Brew'}));
+  expect(props.onRole).not.toHaveBeenCalled();
   rerender(<CodingPaneHeader {...props} level={15}/>);
-  expect(screen.getAllByRole('tab')).toHaveLength(2);
+  expect(screen.getAllByRole('tab')).toHaveLength(3);
+  expect(screen.getByRole('tab',{name:'Porter'}).hasAttribute('disabled')).toBe(true);
   await userEvent.click(screen.getAllByRole('tab')[1]);
   expect(props.onRole).toHaveBeenCalledWith('prep');
  });
