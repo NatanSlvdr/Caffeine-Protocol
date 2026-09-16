@@ -1,13 +1,13 @@
 import type { RobotRole } from '../domain/types';
-import { ROBOT_NAMES, ROBOT_UNLOCK_LEVELS } from '../data/extension';
-import { BookOpen, Bot, LockKeyhole, SlidersHorizontal } from 'lucide-react';
+import { ROBOT_NAMES } from '../data/extension';
+import { BookOpen, SlidersHorizontal } from 'lucide-react';
+import { RobotOptions } from './RobotChoice';
 
 /** Keep every robot directly below the goal, with explicit unlock states. */
 export function CodingPaneHeader({ shift, objective, story, level, role, onRole, onHelp, onOptions }: {
   shift: string; objective: string; level: number; role: RobotRole; onRole: (role: RobotRole) => void;
   story?: string; onHelp?: () => void; onOptions?: () => void;
 }) {
-  const robots = ['query', 'prep', 'floor'] as const;
   return <>
     <header className="coding-pane-heading">
       <div className="coding-title-row"><h2>{shift}</h2><div className="coding-tools">
@@ -18,7 +18,7 @@ export function CodingPaneHeader({ shift, objective, story, level, role, onRole,
       <p className="shift-objective"><span>Your goal</span>{objective}</p>
     </header>
     <div className="robot-tabs" role="tablist" aria-label="Robot programs">
-      {robots.map(r => {const locked=level<ROBOT_UNLOCK_LEVELS[r];return <button key={r} type="button" role="tab" aria-selected={!locked&&role === r} disabled={locked} title={locked?`Unlocks at shift ${ROBOT_UNLOCK_LEVELS[r]}`:undefined} onClick={() => onRole(r)}>{locked?<LockKeyhole size={14} aria-hidden="true"/>:<Bot size={14} aria-hidden="true"/>}{ROBOT_NAMES[r]}</button>;})}
+      <RobotOptions level={level} selected={role} labels={ROBOT_NAMES} onSelect={onRole} tabs/>
     </div>
   </>;
 }

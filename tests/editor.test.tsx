@@ -318,6 +318,8 @@ describe('minimal coding pane header',()=>{
   const props={shift:'A little sugar',objective:'Make the requested drinks.',role:'query' as const,onRole:vi.fn()};
   const {rerender}=render(<CodingPaneHeader {...props} level={14}/>);
   expect(screen.getAllByRole('tab')).toHaveLength(3);
+  expect(screen.getAllByText('Unlocks after shift 14 (Brew) · 22 (Porter)')).toHaveLength(1);
+  expect(screen.getByRole('tab',{name:'Brew'}).getAttribute('aria-describedby')).toBe(screen.getByRole('tab',{name:'Porter'}).getAttribute('aria-describedby'));
   expect(screen.getByRole('tab',{name:'Brew'}).hasAttribute('disabled')).toBe(true);
   await userEvent.click(screen.getByRole('tab',{name:'Brew'}));
   expect(props.onRole).not.toHaveBeenCalled();
