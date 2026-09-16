@@ -1,6 +1,7 @@
 import { compileProgram, createTicket, streamCustomerEvent } from './program';
 import { streamService } from './service';
 import { validate } from './simulation';
+import { STREET_APPROACH_SECONDS } from './street';
 import { BLOCK_SECONDS } from './playback';
 import { STARTS } from './layout';
 import { moveQuery } from './queryMovement';
@@ -15,7 +16,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
     level_id: level.id, level_title: level.title, passed_seeds: 0, required_seeds: 1,
     executed_instructions: 0, average_satisfaction: 100, stars: 0, first_failure: null,
   };
-  let time = -2, next = 0, done = false;
+  let time = -STREET_APPROACH_SECONDS, next = 0, done = false;
   let service: ReturnType<typeof streamService> | undefined;
 
   function initialize() {
@@ -28,6 +29,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
       table: i % level.active_tables + 1, satisfaction: 100,
       timing: { arrival: customer.arrival, created: Infinity, seated: Infinity, ready: Infinity, served: Infinity, left: Infinity, cleaned: Infinity },
     }));
+    result.execution=[{seed_id:seed.id,start:0,duration:Infinity,events:[]}];
     const listenIndex = program.instructions.findIndex(command => command === 'LISTEN');
     const listenLine = listenIndex >= 0 ? program.source_lines[listenIndex] : -1;
     let index = 0, state: RuntimeState = { pc: 0, stopped: false }, queryNext = seed.customers[0]?.arrival ?? Infinity;
@@ -98,6 +100,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
   function advance(seconds: number) {
     if (done) return snapshot();
     const target = time + Math.max(0, seconds);
+    if (!service) initialize();
     while (!done && next <= target) {
       if (!service) initialize();
       const tick = service!.next();

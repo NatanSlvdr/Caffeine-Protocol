@@ -4,7 +4,7 @@ import { levels, lessons } from '../src/data';
 import { referencePrograms } from '../src/data/extension';
 import { sampleReplay } from '../src/domain/replay';
 import { STATIONS, tableSeat } from '../src/domain/layout';
-import { DRINK_SECONDS, SIT_SECONDS } from '../src/domain/street';
+import { STREET_APPROACH_SECONDS, customerApproach, DRINK_SECONDS, SIT_SECONDS } from '../src/domain/street';
 
 function programs(index: number) {
  return index >= 14 ? referencePrograms(index+1) : {query:lessons[index].solution,prep:'',floor:''};
@@ -21,12 +21,23 @@ describe('live service',()=>{
   expect(run.snapshot().result.execution).toEqual([]);
   expect(run.snapshot().result.tickets).toEqual([]);
   expect(run.snapshot().result.stars).toBe(0);
-  const first=run.advance(2+levels[2].seeds[0].customers[0].arrival);
+  const first=run.advance(STREET_APPROACH_SECONDS+levels[2].seeds[0].customers[0].arrival);
   expect(first.done).toBe(false);
   expect(first.result.events[0].trace.map(t=>t.command)).toEqual(['LISTEN']);
   expect(first.result.tickets).toEqual([]);
   expect(run.advance(1).result.events[0].trace).toHaveLength(1);
   expect(run.advance(.5).result.events[0].trace).toHaveLength(2);
+ });
+ it('renders the full street approach before executing any instructions',()=>{
+  const run=createLiveRun(levels[2],programs(2));
+  const start=run.advance(0);
+  expect(start.time).toBe(-STREET_APPROACH_SECONDS);
+  expect(start.result.events[0].trace).toEqual([]);
+  expect(sampleReplay(start.result,start.time).customers[0].position).toEqual(customerApproach(0)[0]);
+  const next=run.advance(.1);
+  const position=sampleReplay(next.result,next.time).customers[0].position;
+  expect(Math.hypot(position[0]-customerApproach(0)[0][0],position[1]-customerApproach(0)[0][1])).toBeLessThan(1);
+  expect(next.result.events[0].trace).toEqual([]);
  });
  it('records paper pickup, writing and deposit without changing earlier snapshots',()=>{
   const run=createLiveRun(levels[2],programs(2));
@@ -75,12 +86,12 @@ describe('live service',()=>{
  });
  it('records a zero-duration wait while an automatic worker is idle',()=>{
   const run=createLiveRun(levels[2],programs(2));
-  const frame=run.advance(2+levels[2].seeds[0].customers[0].arrival);
+  const frame=run.advance(STREET_APPROACH_SECONDS+levels[2].seeds[0].customers[0].arrival);
   expect(frame.result.execution?.[0].events.some(e=>e.actor==='prep'&&e.command==='WAIT TICKET'&&e.start===e.end)).toBe(true);
  });
  it('reaches a bad instruction after the preceding blocks instead of jumping to failure',()=>{
   const run=createLiveRun(levels[2],{query:'LISTEN\nITEM coffee',prep:'',floor:''});
-  const first=run.advance(2+levels[2].seeds[0].customers[0].arrival);
+  const first=run.advance(STREET_APPROACH_SECONDS+levels[2].seeds[0].customers[0].arrival);
   expect(first.result.first_failure).toBeNull();
   expect(run.advance(1.5).done).toBe(false);
   const failed=run.advance(1.5);

@@ -1,15 +1,13 @@
 import type { Customer } from '../domain/types';
+import { OrderIcons } from './OrderIcons';
 
-/** Display recognized groups without revealing the expected ticket or clarification. */
-export function CustomerSpeech({ customer, clarified = false }: { customer: Customer; clarified?: boolean }) {
-  const orders = clarified ? customer.clarification_heard_orders ?? [] : customer.heard_orders;
-  const phrase = clarified ? customer.clarification || 'Niko cannot clarify this request.' : customer.phrase;
+/** The customer's phrase and grouped order icons stay attached throughout their visit. */
+export function CustomerSpeech({customer, clarified=false}: {customer:Customer; clarified?:boolean}) {
+  const heard=clarified?customer.clarification_heard_orders??[]:customer.heard_orders;
+  const orders=heard.map(order=>({item:order.tokens.find(token=>token==='coffee'||token==='tea'),sugar:order.tokens.includes('negation')?0:order.number??(order.tokens.includes('sugar')?1:0)}));
   return <div className="customer-speech">
-    <blockquote>{clarified && 'Niko: '}“{phrase}”</blockquote>
-    <ul aria-label="Heard orders">
-      {orders.map((order, index) => <li key={index} aria-label={`Item ${index + 1}: ${order.tokens.join(', ')}${order.number === undefined ? '' : ` (${order.number})`}`}>
-        <span>{order.tokens.join(' · ')}{order.number !== undefined && ` (${order.number})`}</span>
-      </li>)}
-    </ul>
+    <blockquote>“{customer.phrase}”</blockquote>
+    {clarified&&<small>Niko: {customer.clarification || 'No clarification available.'}</small>}
+    <OrderIcons orders={orders} label="Heard orders"/>
   </div>;
 }

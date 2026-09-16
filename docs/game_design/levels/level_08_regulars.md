@@ -15,13 +15,13 @@ Different wording exposes the same recognized concepts. Reuse the same token tes
 POSITION listen
 LISTEN
 TAKE UP
-IF tea IN item
+IF tea IN CUSTOMER SPEECH
   ITEM tea
 ELSE
   ITEM coffee
 END
-IF sugar IN item
-  IF negation IN item
+IF sugar IN CUSTOMER SPEECH
+  IF negation IN CUSTOMER SPEECH
     SUGAR false
   ELSE
     SUGAR true
@@ -35,4 +35,4 @@ JUMP listen
 
 ## Validation
 
-Every seed must produce the expected tickets in order. Query can write only on held paper, takes one sheet from the register stack per order, moves to the handoff to deposit it, and returns to the register before listening again.
+Every seed must produce the expected tickets in order. Query can write only on held paper, takes sheets from the register stack for its orders, moves to the handoff to deposit it, and returns to the register before listening again.

@@ -81,7 +81,7 @@ describe('compact visual code', () => {
   expect([...document.querySelectorAll('.block-verb:not(.block-suffix)')].map(e => e.textContent)).toEqual(['Wait for','Take','Write','Deposit']);
   await choose('Block 3 value','tea');
   expect(source()).toContain('ITEM tea');
-  expect(document.querySelector('[data-line="2"]')?.textContent).toContain('on paper');
+  expect(document.querySelector('[data-line="2"]')?.textContent).not.toContain('on paper');
  });
  it('keeps Take and Deposit generic and lets Query edit movement', async () => {
   render(<Harness initial={'LISTEN\nTAKE UP\nMOVE RIGHT 1\nDEPOSIT RIGHT'}/>);
@@ -93,7 +93,7 @@ describe('compact visual code', () => {
   expect(compileProgram(source()).compile_error).toBe('');
  });
  it('puts numbering outside tiles and renders nested branches as one scope', () => {
-  render(<Harness initial={'LISTEN\nIF tea IN item\nTICKET\nELSE\nHELP\nEND'}/>);
+  render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nHELP\nEND'}/>);
   expect([...document.querySelectorAll('.block')].map(e => e.getAttribute('data-depth'))).toEqual(['0','0','1','0','1']);
   expect(document.querySelector('.block .line-number')).toBeNull();
   expect(document.querySelector('.code-scope .else-body [data-line="4"]')).toBeTruthy();
@@ -102,25 +102,25 @@ describe('compact visual code', () => {
   expect(document.querySelectorAll('.code-row .block-icon')).toHaveLength(5);
  });
  it('inserts the default block after previewing shop options', async () => {
-  const user = userEvent.setup(); render(<Harness initial={'LISTEN\nIF tea IN item\nEND'}/>);
+  const user = userEvent.setup(); render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nEND'}/>);
   await user.click(document.querySelector('[data-line="1"] .block-verb')!);
   await choose('Library Write value','tea');
   await user.click(screen.getByRole('button',{name:'Insert ITEM coffee'}));
-  expect(source()).toBe('LISTEN\nIF tea IN item\nEND\nITEM coffee');
+  expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\nEND\nITEM coffee');
   expect(document.querySelectorAll('.block.selected')).toHaveLength(0);
  });
  it('preserves branch contents when editing the condition', async () => {
-  render(<Harness initial={'LISTEN\nIF tea IN item\nTICKET\nEND'}/>);
+  render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nEND'}/>);
   await choose('Block 2 value','coffee');
-  expect(source()).toBe('LISTEN\nIF coffee IN item\nTICKET\nEND');
+  expect(source()).toBe('LISTEN\nIF coffee IN CUSTOMER SPEECH\nTICKET\nEND');
   expect(compileProgram(source()).compile_error).toBe('');
  });
  it('edits token membership using one condition block with scoped operands', async () => {
-  render(<Harness level={7} initial={'LISTEN\nIF sugar IN item\nEND'}/>);
+  render(<Harness level={7} initial={'LISTEN\nIF sugar IN CUSTOMER SPEECH\nEND'}/>);
   await choose('Block 2 value','Negation');
-  expect(source()).toBe('LISTEN\nIF negation IN item\nEND');
+  expect(source()).toBe('LISTEN\nIF negation IN CUSTOMER SPEECH\nEND');
   await userEvent.click(screen.getByRole('combobox', {name:'Block 2 source'}));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['item']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Customer speech']);
   expect(compileProgram(source(),7).compile_error).toBe('');
  });
  it('inserts a FOR scope with separate variable and collection selectors', async () => {
@@ -138,21 +138,35 @@ describe('compact visual code', () => {
   expect(screen.getByLabelText('Block 2 source').textContent).toBe('Customer speech');
  });
  it('adds, edits, switches and removes logical rows within the same IF', async () => {
-  render(<Harness level={7} initial={'LISTEN\nIF sugar IN item\nSUGAR true\nEND'}/>);
+  render(<Harness level={7} initial={'LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND'}/>);
   expect(screen.getByLabelText('Block 2 value').querySelector('.model-sugar')).toBeTruthy();
   await choose('Block 2 connector','AND');
   await choose('Block 2 condition 2 value','Negation');
   await choose('Block 2 condition 2 operator','not in');
-  expect(source()).toBe('LISTEN\nIF sugar IN item AND negation NOT IN item\nSUGAR true\nEND');
+  expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH\nSUGAR true\nEND');
   expect(document.querySelectorAll('[data-line="1"] .if-comparison-operands')).toHaveLength(2);
   expect(compileProgram(source(),7).compile_error).toBe('');
   await choose('Block 2 connector','OR');
-  expect(source()).toContain('sugar IN item OR negation NOT IN item');
+  expect(source()).toContain('sugar IN CUSTOMER SPEECH OR negation NOT IN CUSTOMER SPEECH');
   await choose('Block 2 connector','Remove following condition');
-  expect(source()).toBe('LISTEN\nIF sugar IN item\nSUGAR true\nEND');
+  expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND');
+ });
+ it('offers item only when editing a condition inside FOR', async () => {
+  render(<Harness level={9} initial={'LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND'}/>);
+  await userEvent.click(screen.getByLabelText('Block 2 source'));
+  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Customer speech']);
+  await userEvent.keyboard('{Escape}');
+  await userEvent.click(screen.getByLabelText('Block 5 source'));
+  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Customer speech','item']);
+ });
+ it('edits quantity before the drink without a paper suffix',()=>{
+  render(<Harness initial={'LISTEN\nTAKE UP\nITEM coffee'}/>);
+  fireEvent.change(screen.getByLabelText('Block 3 quantity'),{target:{value:'2'}});
+  expect(source()).toContain('ITEM 2 coffee');
+  expect(document.querySelector('[data-line="2"]')?.textContent).not.toContain('on paper');
  });
  it('floats nested dropdowns outside block stacking contexts and keeps selection and dismissal working', async () => {
-  const user=userEvent.setup();render(<Harness initial={'LISTEN\nIF tea IN item\nITEM coffee\nEND'}/>);
+  const user=userEvent.setup();render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nITEM coffee\nEND'}/>);
   await user.click(screen.getByLabelText('Block 3 value'));
   const menu=screen.getByRole('listbox');
   expect(menu.parentElement).toBe(document.body);expect(menu.style.position).toBe('fixed');
@@ -251,7 +265,7 @@ describe('compact visual code', () => {
   expect(document.querySelector('.drop-projection')).toBeNull();
  });
  it('previews a full nested branch inside Else and commits it there', async () => {
-  const initial = 'IF tea IN item\nTICKET\nEND\nIF coffee IN item\nHELP\nEND';
+  const initial = 'IF tea IN CUSTOMER SPEECH\nTICKET\nEND\nIF coffee IN CUSTOMER SPEECH\nHELP\nEND';
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
    if (this.classList.contains('editor-body') || this.classList.contains('visual-program')) return DOMRect.fromRect({x:0,y:0,width:600,height:800});
    if (this.style.position === 'fixed') return DOMRect.fromRect({x:parseFloat(this.style.left) || 0,y:parseFloat(this.style.top) || 0,width:200,height:38});
@@ -268,7 +282,7 @@ describe('compact visual code', () => {
   await waitFor(() => expect(document.querySelector('[data-drop-slot="else:2"] .drop-projection .code-scope .scope-body')).toBeTruthy());
   expect(source()).toBe(initial);
   fireEvent.pointerUp(document);
-  expect(source()).toBe('IF tea IN item\nTICKET\nELSE\nIF coffee IN item\nHELP\nEND\nEND');
+  expect(source()).toBe('IF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nIF coffee IN CUSTOMER SPEECH\nHELP\nEND\nEND');
   expect(document.querySelector('.else-body .scope-body .code-scope')).toBeTruthy();
   // dnd-kit briefly suppresses the click following a pointer drop.
   await new Promise(resolve => setTimeout(resolve, 60));
@@ -283,20 +297,20 @@ describe('compact visual code', () => {
   expect(onChange).not.toHaveBeenCalled();
  });
  it('highlights execution and errors by preserved source line', () => {
-  render(<Editor source={'LISTEN\nIF tea IN item\nTICKET\nEND'} onChange={()=>{}} level={4} locked observation={false} textMode={false} activeLine={2} failureLine={1}/>);
+  render(<Editor source={'LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nEND'} onChange={()=>{}} level={4} locked observation={false} textMode={false} activeLine={2} failureLine={1}/>);
   expect(document.querySelector('.block.active')?.getAttribute('data-line')).toBe('2');
   expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('1');
  });
 });
 describe('structural editing',()=>{
  it('deletes a complete nested IF when dragged out, leaving the surrounding routine intact',()=>{
-  expect(removeVisualBlock('LISTEN\nIF tea IN item\nIF sugar IN item\nTICKET\nEND\nELSE\nHELP\nEND\nREPEAT',1)).toBe('LISTEN\nREPEAT');
+  expect(removeVisualBlock('LISTEN\nIF tea IN CUSTOMER SPEECH\nIF sugar IN CUSTOMER SPEECH\nTICKET\nEND\nELSE\nHELP\nEND\nREPEAT',1)).toBe('LISTEN\nREPEAT');
  });
  it('deletes an ELSE body without deleting the enclosing IF delimiter',()=>{
-  expect(removeVisualBlock('IF tea IN item\nTICKET\nELSE\nIF sugar IN item\nHELP\nEND\nEND',2)).toBe('IF tea IN item\nTICKET\nEND');
+  expect(removeVisualBlock('IF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nIF sugar IN CUSTOMER SPEECH\nHELP\nEND\nEND',2)).toBe('IF tea IN CUSTOMER SPEECH\nTICKET\nEND');
  });
  it('removes ELSE when its final instruction is deleted',()=>{
-  expect(removeVisualBlock('IF tea IN item\nTICKET\nELSE\nHELP\nEND',3)).toBe('IF tea IN item\nTICKET\nEND');
+  expect(removeVisualBlock('IF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nHELP\nEND',3)).toBe('IF tea IN CUSTOMER SPEECH\nTICKET\nEND');
  });
  it('cleans up disconnected jump endpoints but preserves shared destinations',()=>{
   expect(removeVisualBlock('POSITION listen\nLISTEN\nJUMP listen',2)).toBe('LISTEN');
@@ -305,26 +319,26 @@ describe('structural editing',()=>{
   expect(removeVisualBlock(' POSITION listen \nLISTEN\n JUMP listen ',2)).toBe('LISTEN');
  });
  it('only moves ELSE branches to another IF alternative slot',()=>{
-  const code='IF tea IN item\nTICKET\nELSE\nHELP\nEND\nIF coffee IN item\nEND';
+  const code='IF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nHELP\nEND\nIF coffee IN CUSTOMER SPEECH\nEND';
   expect(placeBlock(code,'ELSE',0,2)).toBe(code);
-  expect(placeBlock(code,'ELSE',6,2,true)).toBe('IF tea IN item\nTICKET\nEND\nIF coffee IN item\nELSE\nHELP\nEND');
+  expect(placeBlock(code,'ELSE',6,2,true)).toBe('IF tea IN CUSTOMER SPEECH\nTICKET\nEND\nIF coffee IN CUSTOMER SPEECH\nELSE\nHELP\nEND');
  });
  it('creates ELSE by dropping an instruction and removes it when emptied',()=>{
-  const original='LISTEN\nIF tea IN item\nTICKET\nEND';
+  const original='LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nEND';
   const withElse=placeBlock(original,'HELP',3,undefined,true);
-  expect(withElse).toBe('LISTEN\nIF tea IN item\nTICKET\nELSE\nHELP\nEND');
+  expect(withElse).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nHELP\nEND');
   expect(placeBlock(withElse,'HELP',6,4)).toBe(original+'\nHELP');
  });
  it('populates an existing empty ELSE without adding a second delimiter',()=>{
-  expect(placeBlock('IF tea IN item\nITEM coffee\nELSE\nEND','ITEM tea',3)).toBe('IF tea IN item\nITEM coffee\nELSE\nITEM tea\nEND');
+  expect(placeBlock('IF tea IN CUSTOMER SPEECH\nITEM coffee\nELSE\nEND','ITEM tea',3)).toBe('IF tea IN CUSTOMER SPEECH\nITEM coffee\nELSE\nITEM tea\nEND');
  });
  it('can move the final true-branch instruction into its else branch',()=>{
-  expect(placeBlock('IF tea IN item\nTICKET\nEND','TICKET',2,1,true)).toBe('IF tea IN item\nELSE\nTICKET\nEND');
+  expect(placeBlock('IF tea IN CUSTOMER SPEECH\nTICKET\nEND','TICKET',2,1,true)).toBe('IF tea IN CUSTOMER SPEECH\nELSE\nTICKET\nEND');
  });
  it('moves complete nested scopes and prevents dropping them inside themselves',()=>{
-  const code='LISTEN\nIF tea IN item\nFOR item IN heard orders\nTICKET\nEND\nEND\nHELP';
-  expect(placeBlock(code,'IF tea IN item',4,1)).toBe(code);
-  expect(placeBlock(code,'IF tea IN item',7,1)).toBe('LISTEN\nHELP\nIF tea IN item\nFOR item IN heard orders\nTICKET\nEND\nEND');
+  const code='LISTEN\nIF tea IN CUSTOMER SPEECH\nFOR item IN heard orders\nTICKET\nEND\nEND\nHELP';
+  expect(placeBlock(code,'IF tea IN CUSTOMER SPEECH',4,1)).toBe(code);
+  expect(placeBlock(code,'IF tea IN CUSTOMER SPEECH',7,1)).toBe('LISTEN\nHELP\nIF tea IN CUSTOMER SPEECH\nFOR item IN heard orders\nTICKET\nEND\nEND');
  });
  it('gives independent jumps independent movable targets',()=>{
   const code=placeBlock('POSITION listen\nLISTEN\nJUMP listen','JUMP listen',3);
@@ -334,7 +348,7 @@ describe('structural editing',()=>{
   expect(placeBlock('POSITION listen\nLISTEN\nTICKET\nJUMP listen','POSITION listen',2,0)).toBe('LISTEN\nPOSITION listen\nTICKET\nJUMP listen');
  });
  it('keeps empty alternatives invisible and resolves nested ELSE correctly',()=>{
-  const tree=visualProgram('IF tea IN item\nIF coffee IN item\nHELP\nELSE\nTICKET\nEND\nELSE\nEND');
+  const tree=visualProgram('IF tea IN CUSTOMER SPEECH\nIF coffee IN CUSTOMER SPEECH\nHELP\nELSE\nTICKET\nEND\nELSE\nEND');
   expect(tree[0].alternative).toEqual([]);
   expect(tree[0].children?.[0].alternative?.[0].command).toBe('TICKET');
  });

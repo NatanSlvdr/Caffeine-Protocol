@@ -7,11 +7,11 @@ export const LIMIT = 1024;
 export const isOpening = (command: string) => command.startsWith('FOR ') || command.startsWith('IF ') || command.startsWith('FUNCTION ');
 export const CONDITION_OPERATORS = ['IN', 'NOT IN'] as const;
 export const CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'negation', 'number', 'ambiguous'] as const;
-export const CONDITION_SOURCES = ['item'] as const;
+export const CONDITION_SOURCES = ['CUSTOMER SPEECH', 'item'] as const;
 export interface ComparisonCondition { left: string; operator: typeof CONDITION_OPERATORS[number]; right: string }
 /** Membership operands stay independent of the token vocabulary and source registry. */
 export function parseComparison(command: string): ComparisonCondition | undefined {
-  const match = /^IF ([a-z][a-z0-9_]*) (IN|NOT IN) ([a-z][a-z0-9_]*)$/.exec(command);
+  const match = /^IF ([a-z][a-z0-9_]*) (IN|NOT IN) (CUSTOMER SPEECH|[a-z][a-z0-9_]*)$/.exec(command);
   return match ? { left: match[1], operator: match[2] as ComparisonCondition['operator'], right: match[3] } : undefined;
 }
 export const CONDITION_CONNECTORS = ['AND', 'OR'] as const;
@@ -36,7 +36,7 @@ export function isComparisonCondition(command: string) { return !!parseCondition
 const tokenUnlocks: Record<string, number> = { coffee: 4, tea: 4, sugar: 6, negation: 7, number: 10, ambiguous: 11 };
 export function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);
-  return !!expression && expression.conditions.every(condition => condition.right === 'item' && level >= (tokenUnlocks[condition.left] ?? Infinity));
+  return !!expression && expression.conditions.every(condition => CONDITION_SOURCES.some(source => source === condition.right) && level >= (tokenUnlocks[condition.left] ?? Infinity));
 }
 export interface ForInstruction { variable: string; selector: string }
 export const LOOP_VARIABLES = ['item'] as const;
@@ -51,19 +51,32 @@ export function parseFor(command: string): ForInstruction | undefined {
 }
 const queryDirectionalPattern = new RegExp(`^(TAKE|PICKUP|DEPOSIT) (${DIRECTIONS.join('|')})$`);
 const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
+const writePattern = /^ITEM ([1-9]|1[0-9]) (coffee|tea)$/;
 const legacyQueryAction = (command: string) => command === 'TICKET' || command === 'SUBMIT' || /^MOVE (RIGHT|LEFT) 1$/.test(command);
 export const isPaperPickup = (command: string) => command === 'TICKET' || /^(TAKE|PICKUP) (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
 export const isOrderDeposit = (command: string) => command === 'SUBMIT' || /^DEPOSIT (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
+
+/** Find whether a source row belongs to a FOR body, including nested IF branches. */
+export function insideOrderLoop(source: string, line: number) {
+  const stack: string[] = [];
+  for (const raw of source.split('\n').slice(0, line)) {
+    const command=raw.trim();
+    if(isOpening(command))stack.push(command);
+    else if(command==='END')stack.pop();
+  }
+  return stack.some(command=>command.startsWith('FOR '));
+}
 
 /** Rename old actions without removing movement, comments, or formatting. */
 export function migrateQuerySource(source: string): string {
   const lines = source.split('\n');
   // Restore the handoff steps in saves from the brief stationary-PICKUP version.
   const stationaryPickup = lines.some(line => line.trim().startsWith('PICKUP ')) && !lines.some(line => line.trim().startsWith('MOVE '));
-  return lines.map(raw => {
+  return lines.map((raw, line) => {
     const command = raw.trim();
     const indent = raw.slice(0, raw.length - raw.trimStart().length);
     const trailing = raw.slice(raw.trimEnd().length);
+    if (command.startsWith('IF ') && !insideOrderLoop(source,line)) return raw.replace(/ IN item\b/g,' IN CUSTOMER SPEECH');
     if (stationaryPickup && command === 'DEPOSIT RIGHT') return `${indent}MOVE RIGHT 1\n${raw}\n${indent}MOVE LEFT 1`;
     if (command === 'TICKET') return indent + 'TAKE UP' + trailing;
     if (command === 'SUBMIT') return indent + 'DEPOSIT RIGHT' + trailing;
@@ -74,7 +87,7 @@ export function migrateQuerySource(source: string): string {
 export function availableCommands(level: number): string[] {
   const c = ['LISTEN','TAKE UP','ITEM coffee','MOVE RIGHT 1','DEPOSIT RIGHT'];
   if (level >= 3) c.push(...DIRECTIONS.filter(direction => direction !== 'UP').map(direction => `TAKE ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `DEPOSIT ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `MOVE ${direction} 1`));
-  if(level>=4)c.push(...CONDITION_VALUES.filter(token => level >= tokenUnlocks[token]).map(token => `IF ${token} IN item`),'ELSE','END','ITEM tea');
+  if(level>=4)c.push(...CONDITION_VALUES.filter(token => level >= tokenUnlocks[token]).map(token => `IF ${token} IN CUSTOMER SPEECH`),'ELSE','END','ITEM tea');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('SUGAR true','SUGAR false');
   if(level>=9)c.push('FOR item IN heard orders');
@@ -90,7 +103,8 @@ export function compileProgram(source: string, level = 14): Program {
   for(const [line,raw] of source.split('\n').entries()) {
     const c=raw.trim(); p.error_line=line;
     if(!c || c.startsWith('#'))continue;
-    if(!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(queryDirectionalPattern.test(c)||movePattern.test(c)))&&!comparisonUnlocked(c, level))return fail('Unknown or locked instruction: '+c);
+    if(!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(queryDirectionalPattern.test(c)||movePattern.test(c)))&&!(level>=3&&writePattern.test(c)&&(level>=4||c.endsWith('coffee')))&&!comparisonUnlocked(c, level))return fail('Unknown or locked instruction: '+c);
+    if(parseConditionExpression(c)?.conditions.some(condition=>condition.right==='item')&&!stack.some(i=>p.instructions[i].startsWith('FOR ')))return fail('The item source is available only inside FOR. Use customer speech here.');
     const at=p.instructions.length; p.instructions.push(c); p.source_lines.push(line);
     if(c.startsWith('POSITION ')){const label=c.slice(9);if(label in p.positions)return fail('Duplicate position: '+label);p.positions[label]=at;}
     if(isOpening(c)){
@@ -121,7 +135,7 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
   if(p.compile_error){out.error_line=p.error_line;return fail(p.compile_error);}
   if(initial.stopped)return fail('Query stopped listening. Jump to the listen position after serving.');
   let orders=structuredClone(customer.heard_orders), vars: {number?:number}={}, ticket: OrderTicket|undefined, heard=false;
-  const bindings: Record<string, HeardOrder | undefined> = { item: orders[0] };
+  const bindings: Record<string, HeardOrder | undefined> = { 'CUSTOMER SPEECH': {tokens:orders.flatMap(order=>order.tokens)}, item: orders[0] };
   const ambiguous = () => orders.some(order => order.tokens.includes('ambiguous'));
   // Checkout is automatic once the complete paper order is deposited.
   const finish=()=>{
@@ -163,12 +177,20 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
     } else if(c.startsWith('MOVE ')){
       const position=moveQuery(queryPosition(out.state.counter),c);
       out.state.counter=position[0]===STARTS.query[0]?0:1;
+    } else if(c.startsWith('ITEM ')){
+      if(!ticket)return fail('Take the order paper before writing its item.');
+      const parts=c.split(' ');ticket.item=parts.at(-1)!;ticket.quantity=parts.length===3?Number(parts[1]):1;
+      if(checkWrittenOrder){
+        const written=out.tickets.reduce((sum,paper)=>sum+(paper.quantity??1),0);
+        const expected=(customer.expected.tickets??[customer.expected])[written];
+        if(expected?.item&&ticket.item!==expected.item)return fail(`Wrong item on ticket ${out.tickets.length+1}: expected ${expected.item}, got ${ticket.item}.`);
+      }
     } else switch(c){
       case 'LISTEN':if(out.state.counter)return fail('Move left 1 tile to the register before waiting for customer speech.');heard=true;break;
       case 'HELP':
         if(ambiguous()){
           if(ticket||loops.length)return fail('Ask for clarification before taking paper or starting FOR.');
-          out.asked_help=true;orders=structuredClone(customer.clarification_heard_orders??[]);bindings.item=orders[0];vars={};
+          out.asked_help=true;orders=structuredClone(customer.clarification_heard_orders??[]);bindings.item=orders[0];bindings['CUSTOMER SPEECH']={tokens:orders.flatMap(order=>order.tokens)};vars={};
           if(!orders.length){out.state={pc:0,stopped:!p.instructions.includes('REPEAT')&&!p.instructions.some(command=>command.startsWith('JUMP '))};return out;}
         }
         break;
@@ -194,14 +216,6 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
         {const target=interactionTarget(queryPosition(out.state.counter),c.slice(5));
         if(!target||!samePoint(target,[STARTS.query[0],STARTS.query[1]-1]))return fail('No paper in that direction. Take from the paper stack above the register.');}
         ticket=createTicket(customer,`${id}_${String(out.tickets.length+1).padStart(2,'0')}`);break;
-      case 'ITEM coffee':case 'ITEM tea':
-        if(!ticket)return fail('Take the order paper before writing its item.');
-        ticket.item=c.slice(5);
-        if(checkWrittenOrder){
-          const expected=(customer.expected.tickets??[customer.expected])[out.tickets.length];
-          if(expected?.item&&ticket.item!==expected.item)return fail(`Wrong item on ticket ${out.tickets.length+1}: expected ${expected.item}, got ${ticket.item}.`);
-        }
-        break;
       case 'READ number':
         if(!bindings.item?.tokens.includes('number')||bindings.item.number===undefined)return fail('Expected a number token, but none was heard.');
         vars.number=bindings.item.number;break;

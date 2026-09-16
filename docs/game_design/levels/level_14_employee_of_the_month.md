@@ -26,7 +26,7 @@ Certification covers all recognized concepts, clarification, numbers, and multip
 ```text
 POSITION listen
 LISTEN
-IF ambiguous IN item
+IF ambiguous IN CUSTOMER SPEECH
   HELP
 END
 FOR item IN heard orders
@@ -57,6 +57,6 @@ JUMP listen
 
 ## Validation
 
-Every seed must produce the expected tickets in order. Query can write only on held paper, takes one sheet from the register stack per order, moves to the handoff to deposit it, and returns to the register before listening again.
+Every seed must produce the expected tickets in order. Query can write only on held paper, takes sheets from the register stack for its orders, moves to the handoff to deposit it, and returns to the register before listening again.
 
 Functions are reserved for the kitchen act, where a future controller memory limit will motivate reuse. General natural-language parsing and difficult modifier scoping are deferred to advanced challenges.

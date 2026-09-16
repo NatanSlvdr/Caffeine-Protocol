@@ -8,7 +8,7 @@ export interface ValidationSeed { id: string; customers: Customer[] }
 export interface LevelDefinition { service?:ServiceConfig; act?:number;  id: string; title: string; programming_enabled: boolean; block_target: number; instruction_target: number; reference_block_count: number; seeds: ValidationSeed[]; summary: string; active_tables: number }
 export interface Program { source: string; instructions: string[]; source_lines: number[]; ends: Record<number, number>; alternatives: Record<number, number>; positions: Record<string, number>; functions: Record<string, number>; compile_error: string; error_line: number; block_count: number }
 export interface TraceStep { line: number; command: string; function_depth: number }
-export interface OrderTicket { ticket_id: string; customer_id: string; table_id: string | null; source_phrase: string; source_intent: SpeechIntent; item: string; with_sugar: boolean | null; sugar_count: number | null; status: string; created_at: number; due_at: number; debug_notes: string }
+export interface OrderTicket { quantity?: number; ticket_id: string; customer_id: string; table_id: string | null; source_phrase: string; source_intent: SpeechIntent; item: string; with_sugar: boolean | null; sugar_count: number | null; status: string; created_at: number; due_at: number; debug_notes: string }
 export interface RuntimeState { pc: number; stopped: boolean; counter?: 0 | 1 }
 export interface OrderPayment { amount:number; ticketIds:string[] }
 export interface CustomerExecution { heldPaper?:OrderTicket; payment?:OrderPayment;  tickets: OrderTicket[]; asked_help: boolean; error: string; error_line?: number; executed_instructions: number; trace: TraceStep[]; state: RuntimeState }

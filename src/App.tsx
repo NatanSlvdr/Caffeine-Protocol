@@ -1,3 +1,4 @@
+import { STREET_APPROACH_SECONDS } from './domain/street';
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import { Store, ArrowLeft, ArrowRight, Check, CheckCheck, Coffee, Download, FolderHeart, HelpCircle, Home, Leaf, Maximize, Pause, Play, RotateCcw, Settings2, SlidersHorizontal, Sparkles, Square, Star, Terminal, Upload, Volume2, LockKeyhole } from 'lucide-react';
@@ -66,7 +67,7 @@ function Workspace({index,save,update,onNext,saveError}:{index:number;save:Progr
  const run=()=>{
   if(running){stop();return;}
   liveRun.current=createLiveRun(level,programs);
-  setResult(null);setReplayTime(-2);setShowFailure(false);setPaused(false);setRunning(true);
+  setResult(null);setReplayTime(-STREET_APPROACH_SECONDS);setShowFailure(false);setPaused(false);setRunning(true);
  };
  useEffect(()=>{
   if(!running||paused)return;

@@ -5,6 +5,7 @@ import { Html, OrthographicCamera } from '@react-three/drei';
 import { CanvasTexture, Group, SRGBColorSpace } from 'three';
 import { PixelArtEffect } from './PixelArtEffect';
 import { Street, StreetClip } from './Street';
+import { OrderQueueBubble } from './OrderQueueBubble';
 import { CustomerSpeech } from './CustomerSpeech';
 import { RobotHolding } from './RobotHolding';
 import { CafeFloor } from './CafeFloor';
@@ -147,15 +148,12 @@ function CameraFit({serviceView,reduced,focusRole}:{serviceView:boolean;reduced:
 }
 function World({evening,result,time,reduced,moving,level,showLabels,serviceView,focusRole}:{evening:boolean;result?:RunResult;time:number;reduced:boolean;moving:boolean;level:number;showLabels:boolean;serviceView:boolean;focusRole?:RobotRole}){
  const state=result?sampleReplay(result,time):undefined;
- const speakingId=state?.seed?.events.findLast(e=>e.role==='query'&&e.start<=state.local)?.customerId;
- const speaking=result?.events.find(e=>e.seed_id===state?.seed?.seed_id&&e.customer.customer_id===speakingId);
- const clarified=!!speaking&&!!state?.seed?.events.some(e=>e.role==='query'&&e.command==='HELP'&&e.customerId===speaking.customer.customer_id&&e.end<=state.local);
- const showSpeech=!!state&&!!speaking&&state.local>=speaking.timing.arrival&&state.local<=speaking.timing.created+2;
  const actors:Partial<Record<ActorId,ActorSnapshot>>=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{niko:{position:STARTS.query,inventory:[],role:'query' as const}}),prep:{position:STARTS.prep,inventory:[],role:'prep' as const},floor:{position:STARTS.floor,inventory:[],role:'floor' as const}};
 
  const gateOpen=!!state?.seed?.events.some(e=>e.actor==='niko'&&e.from[0]===STAFF_ENTRY[0]&&e.to[0]===STAFF_ENTRY[0]&&e.from[1]!==e.to[1]&&(e.from[1]===STAFF_ENTRY[1]||e.to[1]===STAFF_ENTRY[1])&&state.local>=e.start-.3&&state.local<=e.end+.2);
  return <><OrthographicCamera makeDefault position={CAMERA_POSITION} near={.1} far={150}/><CameraFit serviceView={serviceView} reduced={reduced} focusRole={focusRole}/><ambientLight intensity={evening?.65:1.1} color={evening?'#c6c9e4':'#f4f4ed'}/><hemisphereLight args={['#f1f3ed','#607477',1.1]}/><directionalLight position={[-8,18,8]} intensity={2} color="#ffe7ca" castShadow shadow-mapSize={[2048,2048]} shadow-camera-left={-16} shadow-camera-right={16} shadow-camera-top={18} shadow-camera-bottom={-18} shadow-normalBias={.04}/><Room evening={evening} gateOpen={gateOpen} showLabels={showLabels}/>
  {Object.entries(actors).map(([id,actor])=>actor&&<group key={id}><Character at={actor.position} robot={id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23} label={id==='prep'&&level<15?'Moka · Auto':id==='floor'&&level<23?'Pip · Auto':undefined} facing={actor.facing??(id==='query'?-Math.PI/2:0)} walking={moving&&actor.walking} reach={actor.reach} color={id==='floor'?'#d4ac6b':id==='prep'?'#7d9eae':'#80a889'} animate={moving} phase={time} reduced={reduced}/>{serviceView&&state&&(id==='query'||id==='prep'&&level>=15||id==='floor'&&level>=23)&&(actor.heldPaper||actor.inventory.length>0)&&<Html position={[actor.position[0],2.8,actor.position[1]]} center zIndexRange={[10,0]} style={{pointerEvents:'none'}}><RobotHolding name={id==='query'?'Query':id==='prep'?'Brew':'Porter'} inventory={actor.inventory} paper={actor.heldPaper}/></Html>}{actor.inventory.map((item,i)=><Cup key={item.ticketId} at={[actor.position[0]-.2+i*.4,1.2,actor.position[1]+.3]} tea={item.item==='tea'}/>)}</group>)}
+ {state&&<Html position={[STATIONS.orders.cell[0],2.7,STATIONS.orders.cell[1]]} center zIndexRange={[11,0]}><OrderQueueBubble tickets={state.waitingTickets}/></Html>}
  {state?.waitingTickets.slice(0,4).map((ticket,i)=><group key={ticket.ticket_id} position={[STATIONS.orders.cell[0]+.2,1.12+i*.015,STATIONS.orders.cell[1]+.18]}>
   <Box size={[.32,.012,.4]} color="#fff3d5"/>
   <Box at={[0,.009,-.08]} size={[.2,.006,.025]} color="#405d61"/>
@@ -164,10 +162,13 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView,
  {state?.pickup.slice(0,2).map(([id,item],i)=><Cup key={id} at={[STATIONS.pickup.cell[0]-.2+i*.4,1.16,STATIONS.pickup.cell[1]]} tea={item==='tea'}/>)}
  {state?.tableDrinks.map((drink,index)=><Cup key={drink.id} at={[TABLE_LAYOUT[drink.table-1].x-.2+(index%2)*.4,1.33,TABLE_LAYOUT[drink.table-1].z]} tea={drink.item==='tea'}/>)}
  <Street evening={evening} paused={!!result&&!moving} reduced={reduced}/>
- <StreetClip>{state?.customers.map((c,i)=><group key={c.id}>
+ <StreetClip>{state?.customers.map((c,i)=>{
+  const event=result?.events.find(event=>event.seed_id===state.seed?.seed_id&&event.customer.customer_id===c.id);
+  const clarified=!!state.seed?.events.some(log=>log.role==='query'&&log.command==='HELP'&&log.customerId===c.id&&log.end<=state.local);
+  return <group key={c.id}>
   <Character at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} sit={c.sit} walking={moving&&c.walking} animate={moving} phase={time} reduced={reduced} facing={c.facing} drinking={c.drinking} tea={c.drink==='tea'}/>
-  {showSpeech&&speaking.customer.customer_id===c.id&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={speaking.customer} clarified={clarified}/></Html>}
- </group>)}</StreetClip>
+  {event&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={event.customer} clarified={clarified}/></Html>}
+ </group>})}</StreetClip>
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;
 }
 class SceneBoundary extends Component<{children:ReactNode},{failed:boolean}>{state={failed:false};static getDerivedStateFromError(){return {failed:true};}render(){return this.state.failed?<div className="webgl-fallback"><strong>The café is still open.</strong><p>3D graphics are unavailable on this device. You can still program Query, run service, and follow each customer’s order.</p></div>:this.props.children;}}

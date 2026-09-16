@@ -1,3 +1,4 @@
+import { ticketUnits } from './ticketUnits';
 import { STARTS, STATIONS, tableFront } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { directionVectors, normalizeDirection } from './directions';
@@ -49,15 +50,15 @@ export function sampleReplay(result:RunResult,time:number){
   const position=samplePath(path,progress), ahead=samplePath(path,progress+.001);
   const walking=progress>0&&progress<1;
   const facing=walking?Math.atan2(ahead[0]-position[0],ahead[1]-position[1]):hasSeat&&local>=timing.seated-SIT_SECONDS?(side===0?Math.PI/2:-Math.PI/2):Math.PI/2;
-  const drinks=event.tickets.filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id));
+  const drinks=event.tickets.flatMap(ticketUnits).filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id));
   const sipping=drinks.find(ticket=>local<servedTimes.get(ticket.ticket_id)!+DRINK_SECONDS);
   return {id:event.customer.customer_id,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
  });
- const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
+ const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.flatMap(ticketUnits).find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
  // A submitted ticket stays on the shared counter until prep finishes claiming it.
  const claimed=new Set(logs.filter(e=>e.command==='WAIT TICKET'&&e.end<=local).map(e=>e.ticketId));
- const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local&&!claimed.has(t.ticket_id));
+ const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local).flatMap(ticket=>{const remaining=ticketUnits(ticket).filter(unit=>!claimed.has(unit.ticket_id)).length;return remaining?[{...ticket,quantity:remaining}]:[];});
  const sippingIds=new Set(customers.map(customer=>customer.sippingId));
- const tableDrinks=result.events.filter(event=>event.seed_id===seed?.seed_id).flatMap(event=>event.tickets.filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id)&&!sippingIds.has(ticket.ticket_id)).map(ticket=>({id:ticket.ticket_id,item:ticket.item,table:event.table})));
+ const tableDrinks=result.events.filter(event=>event.seed_id===seed?.seed_id).flatMap(event=>event.tickets.flatMap(ticketUnits).filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id)&&!sippingIds.has(ticket.ticket_id)).map(ticket=>({id:ticket.ticket_id,item:ticket.item,table:event.table})));
  return {actors,customers,tableDrinks,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};
 }

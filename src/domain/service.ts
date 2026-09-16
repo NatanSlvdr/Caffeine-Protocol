@@ -1,3 +1,4 @@
+import { ticketUnits, belongsToPaper } from './ticketUnits';
 import { seatingDuration, DRINK_SECONDS, STREET_EXIT_SECONDS } from './street';
 import { BLOCK_SECONDS } from './playback';
 import { compileRobot } from './robotProgram';
@@ -42,7 +43,7 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
   for(const [ticketIndex,ticket] of (event.passed?event.tickets:[]).entries()){
    const handoff=submitted[ticketIndex]?.end??created;
    ticket.table_id=`T${String(event.table).padStart(2,'0')}`;ticket.status='created';ticket.created_at=handoff;
-   jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:number<3?Infinity:handoff,status:'ticket',dirtyAt:Infinity});
+   for(const unit of ticketUnits(ticket))jobs.push({ticketId:unit.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:number<3?Infinity:handoff,status:'ticket',dirtyAt:Infinity});
   }
  }
  let queryFailure=events.find(e=>!e.passed);
@@ -128,9 +129,10 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
    if(!station(w,tableFront(cargo.table-1),`table ${cargo.table}`))return false;
    if(job.event.timing.seated>now){markWaiting(w,line,c);return false;}
    apply=()=>{
-    w.inventory.shift();job.status='served';job.dirtyAt=now+DRINK_SECONDS;job.event.timing.served=now;job.event.tickets.find(t=>t.ticket_id===job.ticketId)!.status='served';
+    w.inventory.shift();job.status='served';job.dirtyAt=now+DRINK_SECONDS;job.event.timing.served=now;const paper=job.event.tickets.find(t=>belongsToPaper(job.ticketId,t))!;
+    if(jobs.filter(j=>belongsToPaper(j.ticketId,paper)).every(j=>Number.isFinite(j.dirtyAt)))paper.status='served';
     const group=jobs.filter(j=>j.event===job.event);
-    if(group.length===job.event.tickets.length&&job.event.tickets.every(ticket=>ticket.status==='served'))job.event.timing.left=Math.max(...group.map(served=>served.dirtyAt));
+    if(group.length===job.event.tickets.reduce((sum,t)=>sum+(t.quantity??1),0)&&job.event.tickets.every(ticket=>ticket.status==='served'))job.event.timing.left=Math.max(...group.map(served=>served.dirtyAt));
    };
   }else if(c==='COLLECT'){
    if(!w.job||w.job.dirtyAt>now){fail(w,'WAIT DIRTY before collecting a used cup.');return false;}
@@ -186,8 +188,8 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
    live.pump(now,log);
    queryFailure=events.find(e=>!e.passed);
    for(const event of events)for(const ticket of event.tickets){
-    if(jobs.some(j=>j.ticketId===ticket.ticket_id))continue;
-    jobs.push({ticketId:ticket.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:ticket.created_at,status:'ticket',dirtyAt:Infinity});
+    if(jobs.some(j=>belongsToPaper(j.ticketId,ticket)))continue;
+    for(const unit of ticketUnits(ticket))jobs.push({ticketId:unit.ticket_id,table:event.table,item:ticket.item as 'coffee'|'tea',sugar:sugarOf(ticket),event,created:ticket.created_at,status:'ticket',dirtyAt:Infinity});
    }
   }
   if(queryFailure&&now>=queryFailure.timing.created){const position=log.findLast(e=>e.actor==='query')?.to??STARTS.query;failure={role:'query',line:queryFailure.failure_line??0,time:now,reason:queryFailure.reason??'Order program failed.',event:queryFailure};log.push({seed_id:seed,actor:'query',role:'query',start:now,end:now,line:failure.line,command:queryFailure.trace.at(-1)?.command??'COMPILE',from:position,to:position,inventory:[],error:failure.reason,customerId:queryFailure.customer.customer_id});break;}
@@ -198,7 +200,7 @@ export function* streamService(level:LevelDefinition,events:ReplayEvent[],progra
    path.slice(1).forEach((to,i)=>log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end:++arrival,line:-1,command:'WALK TO ORDER COUNTER',from:path[i],to,inventory:[]}));
    const end=arrival+9;intakeFree=end;
    log.push({seed_id:seed,actor:'niko',role:'query',start:arrival,end,line:-1,command:'TAKE ORDER',from:MANUAL_INTAKE,to:MANUAL_INTAKE,inventory:[],customerId:event.customer.customer_id});
-   manualIntake={end,apply:()=>{nikoPosition=MANUAL_INTAKE;event.timing.created=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>t.ticket_id===job.ticketId)!.created_at=end;}}};
+   manualIntake={end,apply:()=>{nikoPosition=MANUAL_INTAKE;event.timing.created=end;for(const job of jobs.filter(j=>j.event===event)){job.created=end;event.tickets.find(t=>belongsToPaper(job.ticketId,t))!.created_at=end;}}};
   }
   for(const job of jobs)if(job.status==='served'&&job.dirtyAt<=now)job.status='dirty';
   // Reserve a table as the customer chooses it; delivery waits for the seated timestamp.

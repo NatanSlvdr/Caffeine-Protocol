@@ -111,7 +111,7 @@ describe('clear execution feedback',()=>{
  });
  it('uses the same type class for leading verbs and trailing words',()=>{
   render(<Editor {...editor} source={'ITEM coffee\nMOVE RIGHT 1'}/>);
-  expect(document.querySelectorAll('.code-row .block-verb.block-suffix')).toHaveLength(2);
+  expect(document.querySelectorAll('.code-row .block-verb.block-suffix')).toHaveLength(1);
  });
 
 });

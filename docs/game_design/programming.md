@@ -2,7 +2,7 @@
 
 ## Query language
 
-The block editor and text editor serialize the same finite language. Query starts with `LISTEN`, optionally preceded by a `POSITION listen` marker. The first heard order becomes the implicit `item`, so Level 4 can teach conditions before loops.
+The block editor and text editor serialize the same finite language. Query starts with `LISTEN`, optionally preceded by a `POSITION listen` marker. Early conditions test `CUSTOMER SPEECH`; `item` refers to the selected group only inside FOR.
 
 Act I offers these operations progressively:
 
@@ -32,7 +32,7 @@ HELP replaces the heard collection and current item with authored clarification 
 
 Every ticket begins with a fresh sheet from the register paper stack. Query can write only on held paper. It must move right to the handoff, deposit right, then return left to the register. The stack is also reachable diagonally from the handoff tile. Movement respects the existing walkable cells and obstacles.
 
-Grouped orders need separate sheets. Taking another sheet while holding one, depositing an itemless sheet, ending FOR while holding paper, or finishing checkout away from the register fails. Legacy `TICKET`, `PICKUP`, and `SUBMIT` action aliases use the same physical handlers or migrate to TAKE/DEPOSIT.
+Different drinks or modifier choices need separate sheets; identical drinks can share one sheet with a quantity. Taking another sheet while holding one, depositing an itemless sheet, ending FOR while holding paper, or finishing checkout away from the register fails. Legacy `TICKET`, `PICKUP`, and `SUBMIT` action aliases use the same physical handlers or migrate to TAKE/DEPOSIT.
 
 ## Editor, debugging, and limits
 
@@ -45,3 +45,12 @@ The live game and offline validation drain the same interpreter. Run, Pause, Ste
 ## Save migration
 
 Save version 3 replaces incompatible Query programs with the redesigned lesson starters. It clears old Query solutions and Act I stars/story flags while retaining selected/unlocked levels, settings, and kitchen/floor routines. Completed legacy Act I still unlocks the kitchen. Current-version programs continue carrying forward normally. The existing storage key is retained so old saves can be found and migrated.
+
+
+## Current editor and quantity behavior
+
+Early conditions use `CUSTOMER SPEECH`, which tests the recognized tokens across the heard groups. The `item` source becomes available only inside a `FOR item IN heard orders` body. Compilation enforces that scope, and saved implicit-item conditions outside loops migrate to customer speech.
+
+Write displays an editable quantity before the drink, for example `Write 2 Coffee` (`ITEM 2 coffee` in text). Quantities range from 1 to 19. One paper can request several identical drinks with the same modifiers; the kitchen creates individual cup jobs while retaining the original paper and its quantity. Payment and validation count every cup. The original `ITEM coffee` syntax means one coffee.
+
+Customer bubbles retain the original phrase and grouped 3D drink/sugar icons throughout the visit. Sugar uses three cubes. Clarification appears only after HELP. The handoff counter displays its pending order list, updating quantities as the cook claims cups. Service starts at the beginning of the full six-second street approach, before any order instructions execute.

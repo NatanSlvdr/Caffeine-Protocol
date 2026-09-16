@@ -1,6 +1,6 @@
 # Level 6: Sugar
 
-IF sugar IN item detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.
+IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.
 
 ## Heard orders
 
@@ -15,12 +15,12 @@ IF sugar IN item detects a positive modifier. Use SUGAR true on the held paper. 
 POSITION listen
 LISTEN
 TAKE UP
-IF tea IN item
+IF tea IN CUSTOMER SPEECH
   ITEM tea
 ELSE
   ITEM coffee
 END
-IF sugar IN item
+IF sugar IN CUSTOMER SPEECH
   SUGAR true
 END
 MOVE RIGHT 1
@@ -31,4 +31,4 @@ JUMP listen
 
 ## Validation
 
-Every seed must produce the expected tickets in order. Query can write only on held paper, takes one sheet from the register stack per order, moves to the handoff to deposit it, and returns to the register before listening again.
+Every seed must produce the expected tickets in order. Query can write only on held paper, takes sheets from the register stack for its orders, moves to the handoff to deposit it, and returns to the register before listening again.

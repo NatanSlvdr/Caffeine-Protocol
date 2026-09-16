@@ -35,9 +35,9 @@ describe('redesigned Act I campaign',()=>{
  });
  it('unlocks only the intended syntax at each milestone',()=>{
   expect(availableCommands(5)).not.toContain('SUGAR true');
-  expect(availableCommands(6)).toContain('IF sugar IN item');
-  expect(availableCommands(6)).not.toContain('IF negation IN item');
-  expect(availableCommands(7)).toContain('IF negation IN item');
+  expect(availableCommands(6)).toContain('IF sugar IN CUSTOMER SPEECH');
+  expect(availableCommands(6)).not.toContain('IF negation IN CUSTOMER SPEECH');
+  expect(availableCommands(7)).toContain('IF negation IN CUSTOMER SPEECH');
   expect(availableCommands(8)).toEqual(availableCommands(7));
   expect(availableCommands(9)).toContain('FOR item IN heard orders');
   expect(availableCommands(10)).not.toContain('HELP');
@@ -54,20 +54,20 @@ describe('token interpreter and physical order handling',()=>{
   expect(evaluateComparison({left:'future_token',operator:'IN',right:'item'},{item:{tokens:['future_token']}})).toBe(true);
  });
  it.each([
-  ['sugar IN item AND negation NOT IN item', ['sugar'], true],
-  ['sugar IN item AND negation NOT IN item', ['sugar','negation'], false],
-  ['coffee IN item OR tea IN item', ['tea'], true],
-  ['coffee IN item OR tea IN item', ['sugar'], false],
-  ['coffee IN item OR tea IN item AND sugar IN item', ['coffee'], true],
-  ['coffee IN item OR tea IN item AND sugar IN item', ['tea'], false],
-  ['coffee NOT IN item', ['coffee'], false],
-  ['coffee NOT IN item', ['tea'], true],
+  ['sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH', ['sugar'], true],
+  ['sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH', ['sugar','negation'], false],
+  ['coffee IN CUSTOMER SPEECH OR tea IN CUSTOMER SPEECH', ['tea'], true],
+  ['coffee IN CUSTOMER SPEECH OR tea IN CUSTOMER SPEECH', ['sugar'], false],
+  ['coffee IN CUSTOMER SPEECH OR tea IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH', ['coffee'], true],
+  ['coffee IN CUSTOMER SPEECH OR tea IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH', ['tea'], false],
+  ['coffee NOT IN CUSTOMER SPEECH', ['coffee'], false],
+  ['coffee NOT IN CUSTOMER SPEECH', ['tea'], true],
  ])('evaluates %s against %j',(condition,tokens,yes)=>{
   const result=exec(`LISTEN\nTAKE UP\nIF ${condition}\nITEM coffee\nELSE\nITEM tea\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1`,request([{tokens}]));
   expect(result.error).toBe('');expect(result.tickets[0].item).toBe(yes?'coffee':'tea');
  });
  it('rejects incomplete or locked compound clauses',()=>{
-  for(const condition of ['coffee IN item AND','coffee IN item OR OR tea IN item','coffee IN item AND sugar IN item'])expect(compileProgram(`LISTEN\nIF ${condition}\nEND`,4).compile_error).toContain('locked');
+  for(const condition of ['coffee IN CUSTOMER SPEECH AND','coffee IN CUSTOMER SPEECH OR OR tea IN CUSTOMER SPEECH','coffee IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH'])expect(compileProgram(`LISTEN\nIF ${condition}\nEND`,4).compile_error).toContain('locked');
  });
  it('does not read solved intent or expected output to choose a drink',()=>{
   const customer={...coffee,intent:{drink:'tea' as const,with_sugar:true},expected:{item:'tea' as const}};
@@ -86,7 +86,7 @@ describe('token interpreter and physical order handling',()=>{
   expect(new Set(result.tickets.map(t=>t.ticket_id)).size).toBe(2);
  });
  it('plain drinks reject unconditional sugar after modifiers are introduced',()=>{
-  const source=lessons[5].solution.replace('IF sugar IN item\n  SUGAR true\nEND','SUGAR true');
+  const source=lessons[5].solution.replace('IF sugar IN CUSTOMER SPEECH\n  SUGAR true\nEND','SUGAR true');
   expect(run(5,source).first_failure?.reason).toContain('sugar');
  });
  it('rejects a sugar-only check on a negated request',()=>{
@@ -122,7 +122,7 @@ describe('token interpreter and physical order handling',()=>{
   const customer=request(Array.from({length:400},()=>({tokens:['coffee']})));
   const result=exec(lessons[8].solution,customer);expect(result.error).toContain('limit');expect(result.executed_instructions).toBe(LIMIT);
  });
- for(const source of ['', 'LISTEN\nEND','LISTEN\nFOR item IN heard orders','LISTEN\nREPEAT\nTAKE UP','LISTEN\nBOGUS','TAKE UP\nLISTEN','LISTEN\nELSE','LISTEN\nIF tea IN item\nELSE\nELSE\nEND','LISTEN\nJUMP listen','POSITION listen\nLISTEN\nPOSITION listen','LISTEN\nLISTEN'])it(`rejects invalid structure ${JSON.stringify(source)}`,()=>expect(compileProgram(source).compile_error).not.toBe(''));
+ for(const source of ['', 'LISTEN\nEND','LISTEN\nFOR item IN heard orders','LISTEN\nREPEAT\nTAKE UP','LISTEN\nBOGUS','TAKE UP\nLISTEN','LISTEN\nELSE','LISTEN\nIF tea IN CUSTOMER SPEECH\nELSE\nELSE\nEND','LISTEN\nJUMP listen','POSITION listen\nLISTEN\nPOSITION listen','LISTEN\nLISTEN'])it(`rejects invalid structure ${JSON.stringify(source)}`,()=>expect(compileProgram(source).compile_error).not.toBe(''));
  it('enforces 128 blocks',()=>{expect(compileProgram('LISTEN\n'+'TAKE UP\n'.repeat(127)).compile_error).toBe('');expect(compileProgram('LISTEN\n'+'TAKE UP\n'.repeat(128)).compile_error).toContain('128');});
  it('rejects reads before speech and missing numeric tokens',()=>{
   expect(exec('POSITION listen\nREAD number\nLISTEN').error).toContain('No customer speech');

@@ -1,3 +1,4 @@
+import { ticketUnits } from './ticketUnits';
 import { orderTotal } from './pricing';
 import { simulateService } from './service';
 import type { RobotPrograms } from './types';
@@ -11,9 +12,10 @@ export function validate(customer:Customer, actual:CustomerExecution):string {
   if(!expected.ask_help&&actual.asked_help)return 'Query asked for help on a supported phrase.';
   if(expected.ask_help&&!tickets.length)return actual.tickets.length?'Do not guess a drink when no clarification is available.':'';
   if(!actual.tickets.length)return 'No ticket was created.';
-  if(actual.tickets.length!==tickets.length)return `Wrong ticket count: expected ${tickets.length}, got ${actual.tickets.length}.`;
+  const units=actual.tickets.flatMap(ticketUnits);
+  if(units.length!==tickets.length)return `Wrong ticket count: expected ${tickets.length}, got ${units.length}.`;
   for(const [i,e] of tickets.entries()){
-    const a=actual.tickets[i];
+    const a=units[i];
     if(e.item!==undefined&&a.item!==e.item)return `Wrong item on ticket ${i+1}: expected ${e.item}, got ${a.item}.`;
     if(e.with_sugar!==undefined&&a.with_sugar!==e.with_sugar)return `Wrong binary sugar modifier on ticket ${i+1}.`;
     if(e.sugar_count!==undefined&&a.sugar_count!==e.sugar_count)return `Wrong sugar count on ticket ${i+1}.`;

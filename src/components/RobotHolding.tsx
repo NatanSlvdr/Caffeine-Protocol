@@ -35,7 +35,7 @@ export function RobotHolding({ name, inventory, paper }: { name: string; invento
     + (paper.sugar_count !== null ? ` · ${paper.sugar_count} sugar` : paper.with_sugar !== null ? paper.with_sugar ? ' · With sugar' : ' · No sugar' : '') : '';
   return <div className="robot-holding" aria-label={`${name} is holding`}>
     <ul>
-      {paper && <li title={paperLabel} aria-label={paperLabel}><HoldingIcon item={paper.item} stage="paper"/></li>}
+      {paper && <li title={paperLabel} aria-label={paperLabel}><HoldingIcon item={paper.item} stage="paper"/>{(paper.quantity??1)>1&&<span className="order-quantity">×{paper.quantity}</span>}</li>}
       {inventory.map(cargo => {
         const label = cargoLabel(cargo) + (cargo.table > 0 ? ` · Table ${cargo.table}` : '');
         return <li key={cargo.ticketId} title={label} aria-label={label}>

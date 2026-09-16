@@ -16,34 +16,34 @@
       "starter": "LISTEN"
     },
     {
-      "note": "Each request supplies one current item. Use IF tea IN item to test its tokens, then write tea or coffee. No loop is needed yet.",
-      "solution": "LISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
+      "note": "Conditions inspect the recognized customer speech. Use IF tea IN CUSTOMER SPEECH to test its tokens, then write tea or coffee. No loop is needed yet.",
+      "solution": "LISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1",
       "starter": "LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
     },
     {
       "note": "Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.",
-      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
-      "starter": "LISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
+      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+      "starter": "LISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
     },
     {
-      "note": "IF sugar IN item detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.",
-      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  SUGAR true\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
+      "note": "IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.",
+      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  SUGAR true\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
     },
     {
-      "note": "Without sugar still contains sugar, plus negation. Inside IF sugar IN item, test IF negation IN item and write SUGAR false or SUGAR true.",
-      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  IF negation IN item\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  SUGAR true\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
+      "note": "Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write SUGAR false or SUGAR true.",
+      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  IF negation IN CUSTOMER SPEECH\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  SUGAR true\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
     },
     {
       "note": "Different wording exposes the same recognized concepts. Reuse the same token tests; no new commands are needed.",
-      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  IF negation IN item\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  IF negation IN item\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  IF negation IN CUSTOMER SPEECH\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  IF negation IN CUSTOMER SPEECH\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
     },
     {
       "note": "FOR item IN heard orders selects each order group. Take a fresh sheet, interpret that item, deposit it, and return to the register inside every iteration.",
       "solution": "POSITION listen\nLISTEN\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF sugar IN item\n    IF negation IN item\n      SUGAR false\n    ELSE\n      SUGAR true\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN item\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN item\n  IF negation IN item\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
+      "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  IF negation IN CUSTOMER SPEECH\n    SUGAR false\n  ELSE\n    SUGAR true\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
     },
     {
       "note": "IF number IN item detects numeric metadata. READ number, then SUGAR number writes the exact amount, including zero. Keep modifier logic for orders without numbers.",
@@ -51,24 +51,24 @@
       "starter": "POSITION listen\nLISTEN\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF sugar IN item\n    IF negation IN item\n      SUGAR false\n    ELSE\n      SUGAR true\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
     },
     {
-      "note": "An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN item and HELP. Niko replaces the heard orders with a clarification.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+      "note": "An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN CUSTOMER SPEECH and HELP. Niko replaces the heard orders with a clarification.",
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
       "starter": "POSITION listen\nLISTEN\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
     },
     {
       "note": "Combine separate order groups, positive sugar, negation, numbers, and filler words. Each group needs its own physical paper.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
     },
     {
       "note": "The queue is denser and requests contain more orders. Keep every ticket correct and return to listen; there is no new syntax.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
     },
     {
       "note": "Certification covers all recognized concepts, clarification, numbers, and multiple orders. Take, write, move, deposit, and return for every sheet.",
-      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
-      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN item\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
+      "solution": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+      "starter": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    READ number\n    SUGAR number\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        SUGAR false\n      ELSE\n        SUGAR true\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
     }
   ],
   "levels": [
@@ -464,7 +464,7 @@
           ]
         }
       ],
-      "summary": "Each request supplies one current item. Use IF tea IN item to test its tokens, then write tea or coffee. No loop is needed yet.",
+      "summary": "Conditions inspect the recognized customer speech. Use IF tea IN CUSTOMER SPEECH to test its tokens, then write tea or coffee. No loop is needed yet.",
       "title": "Level 4: Coffee or Tea?",
       "act": 1
     },
@@ -922,7 +922,7 @@
           ]
         }
       ],
-      "summary": "IF sugar IN item detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.",
+      "summary": "IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use SUGAR true on the held paper. New paper starts without sugar.",
       "title": "Level 6: Sugar",
       "act": 1
     },
@@ -1286,7 +1286,7 @@
           ]
         }
       ],
-      "summary": "Without sugar still contains sugar, plus negation. Inside IF sugar IN item, test IF negation IN item and write SUGAR false or SUGAR true.",
+      "summary": "Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write SUGAR false or SUGAR true.",
       "title": "Level 7: Negation",
       "act": 1
     },
@@ -2806,7 +2806,7 @@
           ]
         }
       ],
-      "summary": "An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN item and HELP. Niko replaces the heard orders with a clarification.",
+      "summary": "An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN CUSTOMER SPEECH and HELP. Niko replaces the heard orders with a clarification.",
       "title": "Level 11: Ambiguity",
       "act": 1
     },

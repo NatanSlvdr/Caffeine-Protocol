@@ -517,3 +517,14 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 /* Logical clauses stay on separate rows inside one IF tile. */
 .editor-panel .if-condition-rows{display:inline-flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;max-width:100%}
 .editor-panel .code-row .block:has(.if-condition-rows){align-items:flex-start}
+
+/* Align the IF label with its first operand row, not the full condition group. */
+.editor-panel .code-row .block:has(.if-condition-rows)>.block-verb{height:28px;display:flex;align-items:center}
+.editor-panel .code-row .block:has(.if-condition-rows)>.block-icon{margin-top:6px}
+.editor-panel .optional-connector .block-select>button{background:transparent;border:1px dashed currentColor;box-shadow:none;opacity:.55;padding-inline:6px}
+.editor-panel .optional-connector .block-select>button:hover{opacity:1;background:#ffffff22}
+.customer-speech .order-icons{gap:5px}
+.customer-speech .order-icons li{display:flex;align-items:center;gap:2px;padding:2px 4px}
+.customer-speech .order-icons .model-thumbnail{width:25px;height:25px}
+.customer-speech small{display:block;font-size:10px;margin-top:4px}
+.order-queue-bubble strong{font-size:11px}

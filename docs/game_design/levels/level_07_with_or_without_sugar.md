@@ -1,6 +1,6 @@
 # Level 7: Negation
 
-Without sugar still contains sugar, plus negation. Inside IF sugar IN item, test IF negation IN item and write SUGAR false or SUGAR true.
+Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write SUGAR false or SUGAR true.
 
 ## Heard orders
 
@@ -17,13 +17,13 @@ Without sugar still contains sugar, plus negation. Inside IF sugar IN item, test
 POSITION listen
 LISTEN
 TAKE UP
-IF tea IN item
+IF tea IN CUSTOMER SPEECH
   ITEM tea
 ELSE
   ITEM coffee
 END
-IF sugar IN item
-  IF negation IN item
+IF sugar IN CUSTOMER SPEECH
+  IF negation IN CUSTOMER SPEECH
     SUGAR false
   ELSE
     SUGAR true
@@ -37,4 +37,4 @@ JUMP listen
 
 ## Validation
 
-Every seed must produce the expected tickets in order. Query can write only on held paper, takes one sheet from the register stack per order, moves to the handoff to deposit it, and returns to the register before listening again.
+Every seed must produce the expected tickets in order. Query can write only on held paper, takes sheets from the register stack for its orders, moves to the handoff to deposit it, and returns to the register before listening again.

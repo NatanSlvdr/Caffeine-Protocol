@@ -5,7 +5,7 @@ import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
 import { normalizeDirection } from '../domain/directions';
-import { CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
+import { insideOrderLoop, CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
 import * as robotConditions from '../domain/robotConditions';
 import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
 import type { VisualBlock } from '../domain/visualProgram';
@@ -44,7 +44,7 @@ function conditionOption(value: string) {
   return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
 }
 /** Each connector extends the same IF with another editable row, keeping its body intact. */
-function membershipOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void, library: boolean) {
+function membershipOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void, library: boolean, inLoop: boolean) {
   const expression = parseConditionExpression(command);
   if (!expression) return null;
   const values = CONDITION_VALUES.filter(value => expression.conditions.some(condition => condition.left === value) || options.some(candidate => parseComparison(candidate)?.left === value));
@@ -58,8 +58,8 @@ function membershipOperands(command: string, options: string[], disabled: boolea
     return <span className="if-comparison-operands" key={index}>
       <BlockSelect label={rowLabel + ' value'} value={library ? '' : condition.left} disabled={disabled} onChange={value => update(index, 'left', value)} options={values.map(conditionOption)}/>
       <BlockSelect label={rowLabel + ' operator'} value={library ? '' : condition.operator} disabled={disabled} onChange={value => update(index, 'operator', value)} options={CONDITION_OPERATORS.map(conditionOption)}/>
-      <BlockSelect label={rowLabel + ' source'} value={library ? '' : condition.right} disabled={disabled} onChange={value => update(index, 'right', value)} options={CONDITION_SOURCES.map(conditionOption)}/>
-      {!library && <BlockSelect label={rowLabel + ' connector'} value={connector} disabled={disabled} options={[{value:'',label:connector ? 'Remove following condition' : '+'}, ...CONDITION_CONNECTORS.map(conditionOption)]} onChange={value => {
+      <BlockSelect label={rowLabel + ' source'} value={library ? '' : condition.right} disabled={disabled} onChange={value => update(index, 'right', value)} options={CONDITION_SOURCES.filter(source => source !== 'item' || inLoop).map(conditionOption)}/>
+      {!library && <span className={connector ? 'condition-connector' : 'condition-connector optional-connector'} title={connector ? undefined : 'Optional: add another condition'}><BlockSelect label={rowLabel + ' connector'} value={connector} disabled={disabled} options={[{value:'',label:connector ? 'Remove following condition' : '+'}, ...CONDITION_CONNECTORS.map(conditionOption)]} onChange={value => {
         const conditions = [...expression.conditions], connectors = [...expression.connectors];
         if (!value) { conditions.splice(index + 1, 1); connectors.splice(index, 1); }
         else {
@@ -67,13 +67,13 @@ function membershipOperands(command: string, options: string[], disabled: boolea
           if (index === conditions.length - 1) conditions.push({ ...condition });
         }
         onChange(formatConditionExpression({ conditions, connectors }));
-      }}/>}
+      }}/></span>}
     </span>;
   })}</span>;
 }
 
 function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (key: string, value: string) => void, mask: (key: string, value: string) => string) {
-  const membership = parseComparison(command);
+  const membership = options.includes('LISTEN') ? parseComparison(command) : undefined;
   const condition = membership ?? robotConditions.parseComparison(command);
   if (!condition) return null;
   const vocabulary = membership ? CONDITION_VALUES : robotConditions.CONDITION_VALUES;
@@ -90,10 +90,17 @@ function comparisonOperands(command: string, options: string[], disabled: boolea
   </span>;
 }
 
-function Operands({ command, options, disabled, label, onChange, library = false }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean }) {
+function Operands({ command, options, disabled, label, onChange, library = false, inLoop = false }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean; inLoop?: boolean }) {
   const mask = (_key: string, value: string) => library ? '' : value;
   const select = (_key: string, value: string) => { if (!library) onChange(value); };
   const fields = blockFields(command);
+  if (fields.family === 'ITEM') {
+    const parts=command.split(' '), quantity=parts.length===3?parts[1]:'1', item=parts.at(-1)!;
+    return <><input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' quantity'} value={library ? '' : quantity} disabled={disabled} onKeyDown={event=>event.stopPropagation()} onChange={event=>{
+      const count=Number(event.target.value);
+      if(Number.isInteger(count)&&count>=1&&count<=19)select('quantity',`ITEM ${count} ${item}`);
+    }}/><BlockSelect label={label + ' value'} value={library ? '' : `ITEM ${item}`} disabled={disabled} options={options.filter(option=>/^ITEM (coffee|tea)$/.test(option)).map(operandOption)} onChange={value=>select('item',parts.length===3?`ITEM ${quantity} ${value.slice(5)}`:value)}/></>;
+  }
   if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
     const query = options.includes('LISTEN');
@@ -114,7 +121,7 @@ function Operands({ command, options, disabled, label, onChange, library = false
       <span className="block-verb block-suffix">in</span><BlockSelect label={label + ' selector'} value={mask('selector', loop.selector)} disabled={disabled} onChange={selector => select('selector', `FOR ${loop.variable} IN ${selector}`)} options={LOOP_SELECTORS.map(conditionOption)}/></>;
   }
   if (fields.family === 'IF') {
-    const membership = membershipOperands(command, options, disabled, label, value => select('condition', value), library);
+    const membership = options.includes('LISTEN') && membershipOperands(command, options, disabled, label, value => select('condition', value), library, inLoop);
     if (membership) return membership;
     const comparison = comparisonOperands(command, options, disabled, label, select, mask);
     if (comparison) return comparison;
@@ -172,9 +179,9 @@ function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivEleme
   return <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>{children}</div>;
 }
 
-function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onDismissFailure, options, onReplace }: {
+function Row({ block, depth, ordinal, locked, active, failure, failureMessage, onDismissFailure, options, onReplace, inLoop = false }: {
   block: VisualBlock; depth: number; ordinal: number; locked: boolean; active: boolean; failure: boolean; options: string[];
-  onReplace: (c: string) => void;
+  onReplace: (c: string) => void; inLoop?: boolean;
   failureMessage?: string; onEdit?: () => void; onDismissFailure?: () => void;
 }) {
   const { line: id, command } = block;
@@ -188,7 +195,7 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
     <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...attributes} {...listeners} aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} aria-disabled={locked} tabIndex={locked ? -1 : 0} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
       aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
 
-      {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} onChange={onReplace}/></>}
+      {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} inLoop={inLoop} onChange={onReplace}/></>}
       {target && <span className="sr-only">Jump destination</span>}
     </div>
     {failure && failureMessage && <InstructionError message={failureMessage} anchor={rowRef}/>}
@@ -284,7 +291,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
     ? rows.findLast(row => row.line < activeLine)?.line ?? activeLine : activeLine;
   const markerLine = jumpDestination ?? visibleActiveLine;
   const renderBlocks = (blocks: VisualBlock[], depth = 0): React.ReactNode => blocks.map(block => <div className={(block.children ? 'code-scope ' + category(block.command) : 'code-statement') + (draggedLine === block.line ? ' drag-source' : '')} key={block.line}>
-    <Row block={block} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit} onDismissFailure={onDismissFailure}
+    <Row block={block} inLoop={insideOrderLoop(source,block.line)} depth={depth} ordinal={rows.findIndex(r => r.line === block.line) + 1} options={options} locked={disabled} active={activeLine === block.line} failure={visibleFailureLine === block.line} failureMessage={failureMessage} onEdit={onEdit} onDismissFailure={onDismissFailure}
       onReplace={c => { const lines = source.split('\n'); lines[block.line] = c; change(lines.join('\n')); }}/>
     {block.children && <div className="scope-body">
       <Insertion at={block.line + 1} disabled={disabled} hint={block.children.length ? '' : 'Drop a block here'}/>
