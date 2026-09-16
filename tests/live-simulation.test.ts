@@ -90,7 +90,7 @@ describe('live service',()=>{
   expect(failed.result.execution![0].events.filter(e=>e.actor==='query').map(e=>e.command)).toEqual(['LISTEN','ITEM coffee','ITEM coffee']);
  });
  it('flags a wrong drink on the write instruction before moving or submitting it',()=>{
-  const level={...levels[3],seeds:[{id:'wrong-drink',customers:[{...levels[3].seeds[0].customers[0],arrival:0,intent:{drink:'tea' as const},expected:{item:'tea' as const}}]}]};
+  const level={...levels[3],seeds:[{id:'wrong-drink',customers:[{...levels[3].seeds[0].customers[0],arrival:0,heard_orders:[{tokens:['tea']}],intent:{drink:'tea' as const},expected:{item:'tea' as const}}]}]};
   const run=createLiveRun(level,{query:'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT',prep:'',floor:''});
   const failed=finish(run);
   expect(failed.result.first_failure?.error_line).toBe(2);

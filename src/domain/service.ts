@@ -5,7 +5,8 @@ import { floorSource, preparationSource } from './routines';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import { directionVectors, normalizeDirection } from './directions';
-import { evaluateComparison, isOrderDeposit, parseComparison } from './program';
+import { isOrderDeposit } from './program';
+import { evaluateComparison, parseComparison } from './robotConditions';
 import { moveQuery } from './queryMovement';
 import type { ActorId, Cargo, ExecutionEvent, LevelDefinition, Program, ReplayEvent, RobotPrograms, RobotRole, SeedExecution } from './types';
 

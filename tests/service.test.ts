@@ -26,7 +26,7 @@ function service(overrides:Partial<RobotPrograms>,shift=32,patch:Partial<LevelDe
  return runLevel(level,compileProgram(programs.query),programs);
 }
 function physical(source:string,role:'prep'|'floor'='prep'){
- const event:ReplayEvent={seed_id:'test',customer:{customer_id:'C1',arrival:0,phrase:'coffee',intent:{drink:'coffee'},expected:{item:'coffee'}},tickets:[{ticket_id:'one',customer_id:'C1',table_id:'T01',source_phrase:'coffee',source_intent:{drink:'coffee'},item:'coffee',with_sugar:false,sugar_count:0,status:'created',created_at:0,due_at:30,debug_notes:''}],asked_help:false,passed:true,trace:[],timing:{arrival:0,created:0,seated:0,ready:0,served:0,left:0,cleaned:0},table:1,satisfaction:100};
+ const event:ReplayEvent={seed_id:'test',customer:{customer_id:'C1',arrival:0,phrase:'coffee',heard_orders:[{tokens:['coffee']}],intent:{drink:'coffee'},expected:{item:'coffee'}},tickets:[{ticket_id:'one',customer_id:'C1',table_id:'T01',source_phrase:'coffee',source_intent:{drink:'coffee'},item:'coffee',with_sugar:false,sugar_count:0,status:'created',created_at:0,due_at:30,debug_notes:''}],asked_help:false,passed:true,trace:[],timing:{arrival:0,created:0,seated:0,ready:0,served:0,left:0,cleaned:0},table:1,satisfaction:100};
  const level={...levels[31],service:{...levels[31].service!,prepCapacity:1,floorCapacity:1,minLoad:0}};
  return simulateService(level,[event],{...referencePrograms(32),prep:referencePrograms(20).prep,floor:referencePrograms(27).floor,[role]:source});
 }

@@ -7,7 +7,7 @@ import { sampleReplay } from '../src/domain/replay';
 const base = runLevel(levels[2], compileProgram(lessons[2].solution,3));
 describe('Query paper handoff',()=>{
  it('checks out automatically without a payment block after depositing paper',()=>{
-  const source='LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT';
+  const source='LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
   const result=runLevel(levels[2],compileProgram(source,3));
   expect(result.passed).toBe(true);
   expect(result.events.every(e=>e.payment?.amount===3)).toBe(true);

@@ -1,5 +1,7 @@
 # September 2026 implementation notes
 
+The sections below describe an earlier prototype. The current TypeScript Query implementation is documented in [programming.md](programming.md), [orders.md](orders.md), and the Level 3–14 documents. Those documents supersede the former Act I EACH, semantic-copy, and function progression. The current game has 32 shifts; kitchen/floor behavior is preserved by the Query redesign.
+
 ## Source of truth and completed scope
 
 The design specification was recovered from commit `5a31554` after its deletion in `770783a`. The 14 documented Act I levels remain the campaign. The older 10-level draft in Downloads is superseded by these documents. No undocumented future acts have been invented.
@@ -12,11 +14,9 @@ The room uses the seven existing `assets/tiles/tile-B-*.png` sheets through `caf
 
 ## Visual programming implementation
 
-The default editor is a scrollable colored block stack. All operation/condition/value choices come from the finite unlocked vocabulary, preventing arbitrary expressions in typed slots. IF, EACH and FUNCTION insert their closing END; the numbered grip moves a whole structural group. Arrow buttons also allow deliberate individual statement rearrangement. Malformed structure is reported at compile time. The same program has an optional text view for keyboard use and compatibility with earlier saves.
+The current editor uses `IF <token> IN item` and `FOR item IN heard orders` with editable operands and matched END scopes. Authored heard groups are separate from expected tickets. Functions and semantic-copy commands are absent from Query's Act I vocabulary; existing kitchen/floor function support remains available.
 
-The current Position and Function slots have the named values `listen` and `build_ticket`, sufficient for the Act I campaign. The function receives the current heard-order context, has its own local sugar/count variables, and returns the current ticket to the caller. Recursive calls are rejected. Every executed statement records its source line, opcode and call depth. A 1024-instruction event budget and 128-block source limit bound execution.
-
-Legacy ITEM heard, REPEAT and copying instructions remain readable for existing saves. The lessons teach explicit IF/ELSE, Position/Jump and typed variable/function blocks. SUGAR heard is a convenience refactor operation from level 11. Programs carry forward unchanged; later stress levels may pass with an already robust solution, as the original persistence specification requires.
+Query retains Position/Jump, physical paper handling, and explicit numeric reads. Save version 3 resets incompatible Query programs and Act I scores while preserving unlocks, settings, and other robot routines. Full language and runtime behavior is described in [programming.md](programming.md).
 
 ## Timing and replay
 
@@ -34,8 +34,8 @@ The portrait café has a dedicated order till, a brick kitchen partition, a staf
 
 ## Step-target tuning
 
-The original documentation marked timing/scoring values as first-pass tuning. Levels 5, 6 and 7 now allow 100, 165 and 145 executed instructions respectively so their examples can earn three stars with explicit conditional branches, position markers and variable reads. All other documented block/step targets are retained. Markers, branch boundaries and function operations count when executed, consistently with the trace.
+`src/data/campaign.json` contains the redesigned Act I targets. `src/data/service-targets.json` accounts for the more explicit Query program in later acts. All reference solutions can earn three stars. Instruction targets include a small margin over measured execution counts.
 
 ## Verification
 
-The player, runtime, UI-interaction and independent reference validation scripts are under `scripts/validation/`. They cover all 14 levels, the ending, attainable three-star solutions, deterministic service schedules, branches and local function scope, invalid/missing values, bounded execution, saved-program inheritance, mouse insertion, shortcuts and replay controls. Rendering checks cover 1280×720 and 1100×720.
+The current tests live in `tests/` and run with `npm test`. They cover all 32 reference solutions, the live interpreter, movement and handoffs, token membership, negation, numbers, multiple paper tickets, clarification, editor operands, and versioned saves. `npm run build` checks TypeScript and builds the production bundle. Browser testing is performed only when explicitly requested.

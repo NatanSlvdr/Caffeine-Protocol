@@ -46,12 +46,16 @@ describe('live workspace lifecycle',()=>{
   for(const name of ['Brew’s kitchen','Porter’s dining room']){
    const button=screen.getByRole('button',{name});
    expect(button.hasAttribute('disabled')).toBe(true);
-   expect(button.querySelector('.lucide-lock-keyhole')).toBeTruthy();
+   const notice=document.getElementById(button.getAttribute('aria-describedby')!);
+   expect(notice?.textContent).toBe('Locked');
+   expect(notice?.querySelector('.lucide-lock-keyhole')).toBeTruthy();
   }
   for(const name of ['Brew','Porter']){
    const tab=screen.getByRole('tab',{name});
    expect(tab.hasAttribute('disabled')).toBe(true);
-   expect(tab.querySelector('.lucide-lock-keyhole')).toBeTruthy();
+   const notice=document.getElementById(tab.getAttribute('aria-describedby')!);
+   expect(notice?.textContent).toBe('Locked');
+   expect(notice?.querySelector('.lucide-lock-keyhole')).toBeTruthy();
   }
   expect(screen.getByRole('tab',{name:'Query'}).hasAttribute('disabled')).toBe(false);
  });

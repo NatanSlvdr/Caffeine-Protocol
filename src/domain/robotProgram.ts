@@ -1,5 +1,6 @@
 import type { Program, RobotRole } from './types';
-import { availableCommands, compileProgram, comparisonUnlocked } from './program';
+import { availableCommands, compileProgram } from './program';
+import { comparisonUnlocked } from './robotConditions';
 import { TABLE_LAYOUT } from './layout';
 import { DIRECTIONS } from './directions';
 export const MOVING_ROLES = ['prep','floor'] as const;

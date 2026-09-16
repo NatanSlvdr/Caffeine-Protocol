@@ -5,7 +5,8 @@ import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
 import { normalizeDirection } from '../domain/directions';
-import { CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, parseComparison } from '../domain/program';
+import { CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
+import * as robotConditions from '../domain/robotConditions';
 import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
 import type { VisualBlock } from '../domain/visualProgram';
 import { BlockSelect, DirectionSelect } from './BlockSelect';
@@ -26,7 +27,7 @@ class BlockPointerSensor extends PointerSensor {
 
 function category(command: string) {
   const family = blockFields(command).family;
-  return ['FUNCTION', 'CALL', 'RETURN'].includes(family) ? 'function' : family === 'MOVE' ? 'motion' : ['IF', 'ELSE', 'EACH', 'REPEAT', 'JUMP', 'POSITION'].includes(family) ? 'flow' : ['HELP', 'ERROR'].includes(family) ? 'help' : 'action';
+  return ['FUNCTION', 'CALL', 'RETURN'].includes(family) ? 'function' : family === 'MOVE' ? 'motion' : ['IF', 'ELSE', 'FOR', 'REPEAT', 'JUMP', 'POSITION'].includes(family) ? 'flow' : ['HELP', 'ERROR'].includes(family) ? 'help' : 'action';
 }
 
 function operandOption(value: string) {
@@ -35,20 +36,52 @@ function operandOption(value: string) {
 }
 
 const conditionLabels: Record<string, string> = {
-  coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar requested', count: 'Sugar count', ambiguous: 'Ambiguous speech',
+  coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar', negation: 'Negation', number: 'Number', count: 'Sugar count', ambiguous: 'Ambiguous', item: 'item',
   'CUSTOMER SPEECH': 'Customer speech', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
-  IN: 'in', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
+  IN: 'in', 'NOT IN': 'not in', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
 };
 function conditionOption(value: string) {
   return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
 }
+/** Each connector extends the same IF with another editable row, keeping its body intact. */
+function membershipOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void, library: boolean) {
+  const expression = parseConditionExpression(command);
+  if (!expression) return null;
+  const values = CONDITION_VALUES.filter(value => expression.conditions.some(condition => condition.left === value) || options.some(candidate => parseComparison(candidate)?.left === value));
+  const update = (index: number, key: 'left' | 'operator' | 'right', value: string) => {
+    const conditions = expression.conditions.map((condition, at) => at === index ? { ...condition, [key]: value } : condition);
+    onChange(formatConditionExpression({ ...expression, conditions }));
+  };
+  return <span className="if-condition-rows">{expression.conditions.map((condition, index) => {
+    const rowLabel = label + (index ? ` condition ${index + 1}` : '');
+    const connector = expression.connectors[index] ?? '';
+    return <span className="if-comparison-operands" key={index}>
+      <BlockSelect label={rowLabel + ' value'} value={library ? '' : condition.left} disabled={disabled} onChange={value => update(index, 'left', value)} options={values.map(conditionOption)}/>
+      <BlockSelect label={rowLabel + ' operator'} value={library ? '' : condition.operator} disabled={disabled} onChange={value => update(index, 'operator', value)} options={CONDITION_OPERATORS.map(conditionOption)}/>
+      <BlockSelect label={rowLabel + ' source'} value={library ? '' : condition.right} disabled={disabled} onChange={value => update(index, 'right', value)} options={CONDITION_SOURCES.map(conditionOption)}/>
+      {!library && <BlockSelect label={rowLabel + ' connector'} value={connector} disabled={disabled} options={[{value:'',label:connector ? 'Remove following condition' : '+'}, ...CONDITION_CONNECTORS.map(conditionOption)]} onChange={value => {
+        const conditions = [...expression.conditions], connectors = [...expression.connectors];
+        if (!value) { conditions.splice(index + 1, 1); connectors.splice(index, 1); }
+        else {
+          connectors[index] = value === 'AND' ? 'AND' : 'OR';
+          if (index === conditions.length - 1) conditions.push({ ...condition });
+        }
+        onChange(formatConditionExpression({ conditions, connectors }));
+      }}/>}
+    </span>;
+  })}</span>;
+}
+
 function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (key: string, value: string) => void, mask: (key: string, value: string) => string) {
-  const condition = parseComparison(command);
+  const membership = parseComparison(command);
+  const condition = membership ?? robotConditions.parseComparison(command);
   if (!condition) return null;
-  const values = CONDITION_VALUES.filter(value => value === condition.left || options.some(candidate => candidate === `IF ${value}` || parseComparison(candidate)?.left === value));
+  const vocabulary = membership ? CONDITION_VALUES : robotConditions.CONDITION_VALUES;
+  const parse = membership ? parseComparison : robotConditions.parseComparison;
+  const values = vocabulary.filter(value => value === condition.left || options.some(candidate => candidate === `IF ${value}` || parse(candidate)?.left === value));
   const hasCount = options.some(candidate => candidate === 'IF count' || candidate.startsWith('IF count ')) || condition.left === 'count' || condition.right === 'SUGAR COUNT';
-  const sources = CONDITION_SOURCES.filter(value => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount);
-  const operators = CONDITION_OPERATORS.includes(condition.operator as typeof CONDITION_OPERATORS[number]) ? CONDITION_OPERATORS : [condition.operator, ...CONDITION_OPERATORS];
+  const sources = membership ? CONDITION_SOURCES : robotConditions.CONDITION_SOURCES.filter(value => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount);
+  const operators = membership ? CONDITION_OPERATORS : [...new Set([condition.operator, ...robotConditions.CONDITION_OPERATORS])];
   const next = (left: string, operator: string, right: string) => `IF ${left} ${operator} ${right}`;
   return <span className="if-comparison-operands">
     <BlockSelect label={label + ' value'} value={mask('value', condition.left)} disabled={disabled} onChange={value => onChange('value', next(value, condition.operator, condition.right))} options={values.map(conditionOption)}/>
@@ -74,7 +107,15 @@ function Operands({ command, options, disabled, label, onChange, library = false
       }}/><span className="block-verb block-suffix">tiles</span></>}
     </>;
   }
+  if (fields.family === 'FOR') {
+    const loop = parseFor(command);
+    if (!loop) return null;
+    return <><BlockSelect label={label + ' variable'} value={mask('variable', loop.variable)} disabled={disabled} onChange={variable => select('variable', `FOR ${variable} IN ${loop.selector}`)} options={LOOP_VARIABLES.map(conditionOption)}/>
+      <span className="block-verb block-suffix">in</span><BlockSelect label={label + ' selector'} value={mask('selector', loop.selector)} disabled={disabled} onChange={selector => select('selector', `FOR ${loop.variable} IN ${selector}`)} options={LOOP_SELECTORS.map(conditionOption)}/></>;
+  }
   if (fields.family === 'IF') {
+    const membership = membershipOperands(command, options, disabled, label, value => select('condition', value), library);
+    if (membership) return membership;
     const comparison = comparisonOperands(command, options, disabled, label, select, mask);
     if (comparison) return comparison;
   }

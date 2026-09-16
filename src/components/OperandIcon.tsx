@@ -4,7 +4,7 @@ import { Hash, MessageCircle, Package, Sparkles } from 'lucide-react';
 /** Give familiar operand values a small visual cue in compact selectors. */
 export function OperandIcon({ value }: { value: string }) {
   const normalized = value.toLowerCase();
-  if (normalized === 'coffee' || normalized === 'tea') return <ModelThumbnail model={normalized}/>;
+  if (normalized === 'coffee' || normalized === 'tea' || normalized === 'sugar') return <ModelThumbnail model={normalized}/>;
   const Icon = normalized.includes('speech') || normalized.includes('heard') ? MessageCircle
     : normalized.includes('sugar') || normalized.includes('sweet') ? Sparkles
     : normalized.includes('count') || normalized.includes('number') ? Hash

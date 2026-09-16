@@ -5,7 +5,7 @@ import { blockFields } from '../domain/blockFields';
 export function BlockIcon({ command }: { command: string }) {
   const icons = {
     WAIT: Clock3, TICKET: Ticket, ITEM: PenLine, SUBMIT: Ticket,
-    MOVE: ArrowRight, IF: GitBranch, ELSE: CornerDownRight, EACH: ListRestart,
+    MOVE: ArrowRight, IF: GitBranch, ELSE: CornerDownRight, FOR: ListRestart,
     REPEAT: Repeat2, JUMP: MoveUpRight, POSITION: MapPin, FUNCTION: SquareFunction,
     CALL: SquareFunction, RETURN: Undo2, READ: ReceiptText, SUGAR: Plus, ADD: CirclePlus,
     TAKE: Hand, FILL: Waves, GRIND: Settings2, BREW: Coffee, STEEP: Coffee,

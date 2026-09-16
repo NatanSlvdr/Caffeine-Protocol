@@ -1,7 +1,9 @@
 export type Drink = 'coffee' | 'tea';
 export interface SpeechIntent { confidence?: 'clear' | 'ambiguous'; drink?: Drink; with_sugar?: boolean; sugar_count?: number; orders?: SpeechIntent[] }
 export interface ExpectedTicket { item?: Drink; with_sugar?: boolean; sugar_count?: number }
-export interface Customer { customer_id: string; arrival: number; phrase: string; clarification?: string; intent: SpeechIntent; clarification_intent?: SpeechIntent; expected: ExpectedTicket & { tickets?: ExpectedTicket[]; ask_help?: boolean } }
+/** Authored concepts available to Query; expected ticket fields stay separate. */
+export interface HeardOrder { tokens: string[]; number?: number }
+export interface Customer { heard_orders: HeardOrder[]; clarification_heard_orders?: HeardOrder[]; customer_id: string; arrival: number; phrase: string; clarification?: string; intent: SpeechIntent; clarification_intent?: SpeechIntent; expected: ExpectedTicket & { tickets?: ExpectedTicket[]; ask_help?: boolean } }
 export interface ValidationSeed { id: string; customers: Customer[] }
 export interface LevelDefinition { service?:ServiceConfig; act?:number;  id: string; title: string; programming_enabled: boolean; block_target: number; instruction_target: number; reference_block_count: number; seeds: ValidationSeed[]; summary: string; active_tables: number }
 export interface Program { source: string; instructions: string[]; source_lines: number[]; ends: Record<number, number>; alternatives: Record<number, number>; positions: Record<string, number>; functions: Record<string, number>; compile_error: string; error_line: number; block_count: number }
@@ -25,4 +27,4 @@ export interface ActorSnapshot { facing?:number; walking?:boolean; reach?:number
 export interface ExecutionEvent { heldPaper?:OrderTicket; ticketId?:string;  seed_id:string; actor:ActorId; role:RobotRole; start:number; end:number; line:number; command:string; from:readonly [number,number]; to:readonly [number,number]; inventory:Cargo[]; requested?:number; completed?:number; error?:string; customerId?:string }
 export interface SeedExecution { seed_id:string; start:number; duration:number; events:ExecutionEvent[] }
 export interface ServiceConfig { prepCapacity:number; floorCapacity:number; clearing:boolean; objective:'serve'|'prepare'|'pickup'; minLoad?:number }
-export interface ProgressSave extends Omit<ProgressSaveV1,'version'> { version:2; robotDrafts:Record<string,RobotPrograms>; robotSolutions:Record<string,RobotPrograms> }
+export interface ProgressSave extends Omit<ProgressSaveV1,'version'> { version:3; robotDrafts:Record<string,RobotPrograms>; robotSolutions:Record<string,RobotPrograms> }

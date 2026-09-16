@@ -1,4 +1,5 @@
 import { isComparisonCondition } from './program';
+import { isComparisonCondition as isRobotComparison } from './robotConditions';
 
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
@@ -13,7 +14,7 @@ export function blockFields(command: string) {
     family: 'WAIT', verb: 'Wait for', value: ({ TICKET: 'Order ticket', DRINK: 'Ready drink', DIRTY: 'Dirty cups' } as Record<string, string>)[command.slice(5)] ?? command.slice(5),
   };
   const [verb, ...parts] = command.split(' ');
-  if (['IF', 'ITEM', 'SUGAR', 'READ', 'TAKE', 'FILL', 'ADD', 'MOVE', 'FUNCTION', 'CALL', 'POSITION', 'JUMP'].includes(verb)) {
+  if (['FOR', 'IF', 'ITEM', 'SUGAR', 'READ', 'TAKE', 'FILL', 'ADD', 'MOVE', 'FUNCTION', 'CALL', 'POSITION', 'JUMP'].includes(verb)) {
     const operand = parts.join(' ');
     return { family: verb, verb: verb === 'ITEM' ? 'Write' : verb[0] + verb.slice(1).toLowerCase(), value: operand === 'coffee' ? 'Coffee' : operand === 'tea' ? 'Tea' : operand.toLowerCase().replaceAll('_', ' ') };
   }
@@ -25,7 +26,7 @@ export function blockVariants(command: string, available: readonly string[]) {
   return available.filter(candidate => candidate !== 'ITEM heard' && blockFields(candidate).family === family
     // Legacy IF blocks keep their compact single selector; comparison blocks
     // expose their three operands separately in the editor.
-    && !(family === 'IF' && isComparisonCondition(candidate)));
+    && !(family === 'IF' && (isComparisonCondition(candidate) || isRobotComparison(candidate))));
 }
 
 /** One library block per action; operands are chosen inside that block. */

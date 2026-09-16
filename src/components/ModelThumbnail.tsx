@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { createRoot, extend, useFrame } from '@react-three/fiber';
 import { AmbientLight, DirectionalLight, Group, Mesh, MeshStandardMaterial, BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry } from 'three';
-import { Cup, RobotModel } from './CafeModels';
+import { Appliance, Cup, RobotModel } from './CafeModels';
 
-type Model = 'coffee' | 'tea' | 'robot';
+type Model = 'coffee' | 'tea' | 'sugar' | 'robot';
 const thumbnails = new Map<Model, Promise<string>>();
 let queue = Promise.resolve();
 
@@ -24,7 +24,7 @@ function thumbnail(model: Model) {
       });
       await new Promise<void>(done => {
         root.render(<><ambientLight intensity={1.5}/><directionalLight position={[-3, 6, 5]} intensity={2}/>
-          {robot ? <group position={[0, -.95, 0]}><RobotModel/></group> : <Cup at={[0, -.15, 0]} tea={model === 'tea'}/>}
+          {robot ? <group position={[0, -.95, 0]}><RobotModel/></group> : model === 'sugar' ? <group position={[0, -1.33, 0]}><Appliance id="sugar"/></group> : <Cup at={[0, -.15, 0]} tea={model === 'tea'}/>}
           <Capture center={model === 'tea'} onCapture={url => { resolve(url); done(); }}/></>);
       });
       root.unmount();

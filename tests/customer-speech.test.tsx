@@ -1,20 +1,21 @@
 import { afterEach, expect, it } from 'vitest';
 import { cleanup, render, screen, within } from '@testing-library/react';
 import { CustomerSpeech } from '../src/components/CustomerSpeech';
-
 afterEach(cleanup);
-it('shows the requested drinks and modifiers, grouping only identical items',()=>{
- render(<CustomerSpeech customer={{customer_id:'C6',arrival:0,phrase:'Two coffees, a sweet tea and a plain tea, please.',intent:{},expected:{tickets:[
-  {item:'coffee',sugar_count:0},{item:'coffee',sugar_count:0},{item:'tea',sugar_count:2},{item:'tea',with_sugar:false},
- ]}}}/>);
- expect(screen.getByRole('blockquote').textContent).toBe('“Two coffees, a sweet tea and a plain tea, please.”');
- expect(within(screen.getByRole('list',{name:'Expected order'})).getAllByRole('listitem').map(e=>e.getAttribute('aria-label'))).toEqual(['2 × Coffee · No sugar','1 × Tea · 2 sugars','1 × Tea · No sugar']);
- expect(screen.getByLabelText('2 × Coffee · No sugar').querySelector('.model-coffee')).toBeTruthy();
- expect(screen.getByLabelText('1 × Tea · 2 sugars').querySelector('.model-tea')).toBeTruthy();
- expect(screen.getByLabelText('2 × Coffee · No sugar').querySelector('.order-quantity')?.textContent).toBe('×2');
- expect(screen.getByLabelText('1 × Tea · 2 sugars').querySelector('.order-quantity')).toBeNull();
+it('shows each recognized order group, negation and numeric metadata',()=>{
+ render(<CustomerSpeech customer={{customer_id:'C1',arrival:0,phrase:'coffee without sugar and tea with 2 sugars',intent:{},heard_orders:[{tokens:['coffee','sugar','negation']},{tokens:['tea','sugar','number'],number:2}],expected:{tickets:[{item:'coffee',with_sugar:false},{item:'tea',sugar_count:2}]}}}/>);
+ expect(within(screen.getByRole('list',{name:'Heard orders'})).getAllByRole('listitem').map(e=>e.getAttribute('aria-label'))).toEqual(['Item 1: coffee, sugar, negation','Item 2: tea, sugar, number (2)']);
+ expect(screen.queryByRole('list',{name:'Expected order'})).toBeNull();
 });
-it('shows the clarification expected for an ambiguous request',()=>{
- render(<CustomerSpeech customer={{customer_id:'C1',arrival:0,phrase:'The usual.',intent:{confidence:'ambiguous'},expected:{ask_help:true,tickets:[]}}}/>);
- expect(screen.getByRole('listitem').textContent).toBe('Ask for clarification');
+it('does not reveal the answer to ambiguous speech',()=>{
+ render(<CustomerSpeech customer={{customer_id:'C1',arrival:0,phrase:'The usual.',intent:{},heard_orders:[{tokens:['ambiguous']}],clarification_heard_orders:[{tokens:['tea']}],expected:{ask_help:true,item:'tea'}}}/>);
+ expect(screen.getByRole('listitem').textContent).toBe('ambiguous');expect(screen.queryByText('tea')).toBeNull();
+});
+it('reveals Niko’s replacement groups only after HELP finishes',()=>{
+ const customer={customer_id:'C1',arrival:0,phrase:'The usual.',intent:{},heard_orders:[{tokens:['ambiguous']}],clarification:'tea with 2 sugars',clarification_heard_orders:[{tokens:['tea','sugar','number'],number:2}],expected:{}};
+ const {rerender}=render(<CustomerSpeech customer={customer}/>);
+ expect(screen.getByRole('listitem').textContent).toBe('ambiguous');
+ rerender(<CustomerSpeech customer={customer} clarified/>);
+ expect(screen.getByRole('blockquote').textContent).toBe('Niko: “tea with 2 sugars”');
+ expect(screen.getByRole('listitem').textContent).toBe('tea · sugar · number (2)');
 });

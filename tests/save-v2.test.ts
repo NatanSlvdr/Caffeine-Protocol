@@ -3,17 +3,24 @@ import { completeLevel,incomingRobotPrograms,newSave,parseSave,readSave,saveRobo
 import { lessons } from '../src/data';
 import { referencePrograms } from '../src/data/extension';
 
-describe('version 2 campaign saves',()=>{
- it.each([1,2])('removes retired payment blocks from version %i saves without losing other data',version=>{
-  const source='# CHARGE ORDER was automatic\nLISTEN\n  CHARGE ORDER  \n\nMOVE LEFT 1';
-  const expected='# CHARGE ORDER was automatic\nLISTEN\n\nMOVE LEFT 1';
-  const save={...newSave(),version,selected:3,unlocked:3,drafts:{3:source},solutions:{3:source},stars:{3:2},robotDrafts:{3:{query:source,prep:'',floor:'CHARGE'}},robotSolutions:{3:{query:source,prep:'',floor:'CHARGE'}}};
+describe('version 3 campaign saves',()=>{
+ it.each([1,2])('resets incompatible Query programs from version %i while preserving unlocks and settings',version=>{
+  const source='LISTEN\nEACH\nITEM heard\nSUGAR heard\nEND';
+  const save={...newSave(),version,selected:13,unlocked:13,drafts:{13:source},solutions:{13:source},stars:{13:2},story:{13:true},robotDrafts:{13:{query:source,prep:'',floor:''}},robotSolutions:{13:{query:source,prep:'',floor:''}}};
   const migrated=parseSave(JSON.stringify(save));
-  expect(migrated.drafts[3]).toBe(expected);expect(migrated.solutions[3]).toBe(expected);
-  expect(migrated.robotDrafts[3].query).toBe(expected);expect(migrated.robotSolutions[3].query).toBe(expected);
-  expect(incomingRobotPrograms(migrated,4).query).toBe(expected);
-  expect(migrated.stars).toEqual(save.stars);expect(migrated.settings).toEqual(save.settings);
-  if(version===2)expect(migrated.robotDrafts[3].floor).toBe('');
+  expect(migrated.version).toBe(3);expect(migrated.unlocked).toBe(13);expect(migrated.selected).toBe(13);
+  expect(migrated.drafts).toEqual({});expect(migrated.solutions).toEqual({});expect(migrated.robotSolutions).toEqual({});
+  expect(migrated.robotDrafts[13].query).toBe(lessons[13].starter);
+  expect(migrated.stars).toEqual({});expect(migrated.story).toEqual({});expect(migrated.settings).toEqual(save.settings);
+ });
+ it('preserves kitchen and floor routines when resetting Query in later acts',()=>{
+  const programs={query:'LISTEN\nITEM heard',prep:'WAIT TICKET\nCALL recipe',floor:'WAIT DRINK\nTAKE DOWN'};
+  const save={...newSave(),version:2,selected:23,unlocked:23,robotDrafts:{23:programs},robotSolutions:{23:programs},stars:{13:3,23:2},story:{7:true,23:true}};
+  const migrated=parseSave(JSON.stringify(save));
+  expect(migrated.robotDrafts[23]).toEqual({...programs,query:lessons[23].starter});
+  expect(migrated.robotSolutions[23].prep).toBe(programs.prep);expect(migrated.robotSolutions[23].floor).toBe(programs.floor);
+  expect(migrated.stars).toEqual({23:2});expect(migrated.story).toEqual({23:true});
+  expect(parseSave(JSON.stringify(migrated))).toEqual(migrated);
  });
  it('keeps the non-charging path when importing an old Porter routine',()=>{
   const source='# my route\nWAIT DRINK\nIF BATTERY < 40\nMOVE LEFT 2\nCHARGE\nMOVE RIGHT 2\nELSE\nTAKE DOWN\nEND\nSERVE';
@@ -21,10 +28,11 @@ describe('version 2 campaign saves',()=>{
   const restored=parseSave(JSON.stringify(save));
   expect(restored.robotDrafts[0].floor).toBe('# my route\nWAIT DRINK\nTAKE DOWN\nSERVE');
  });
- it('migrates completed Act I while retaining all personal data',()=>{
-  const legacy={version:1,selected:13,unlocked:13,complete:true,drafts:{13:'# my draft\nLISTEN'},solutions:{13:lessons[13].solution},stars:{13:3},story:{13:true},settings:{...newSave().settings,music:0}};
-  const migrated=parseSave(JSON.stringify(legacy));expect(migrated.version).toBe(2);expect(migrated.unlocked).toBe(14);expect(migrated.selected).toBe(13);expect(migrated.complete).toBe(false);expect(migrated.robotDrafts[13].query).toBe(legacy.drafts[13]);expect(migrated.solutions).toEqual(legacy.solutions);expect(migrated.settings).toEqual(legacy.settings);expect(migrated.stars).toEqual(legacy.stars);expect(migrated.story).toEqual(legacy.story);
-  const incoming=incomingRobotPrograms(migrated,14);expect(incoming.query).toBe(legacy.solutions[13]);expect(incoming.prep).toContain('TODO');
+ it('keeps Act II unlocked for completed legacy Act I',()=>{
+  const legacy={...newSave(),version:1,selected:13,unlocked:13,complete:true,solutions:{13:'ITEM heard'}};
+  const migrated=parseSave(JSON.stringify(legacy));
+  expect(migrated.unlocked).toBe(14);expect(migrated.complete).toBe(false);expect(migrated.solutions).toEqual({});
+  expect(incomingRobotPrograms(migrated,14).prep).toContain('TODO');
  });
  it('keeps independent role drafts and solutions across reload',()=>{
   let save=completeLevel(newSave(),22,3);const programs={query:'LISTEN',prep:'MOVE UP 2',floor:'MOVE DOWN 3'};save=saveRobotDraft(save,22,programs);save.robotSolutions[22]=referencePrograms(23);

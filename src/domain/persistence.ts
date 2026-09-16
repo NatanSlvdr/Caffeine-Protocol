@@ -4,7 +4,7 @@ import { lessons, CAMPAIGN_LENGTH } from '../data';
 import { migrateQuerySource } from './program';
 export const SAVE_KEY='caffeine-protocol.v1';
 export const defaultSettings:Settings={volume:.6,music:.55,effects:.65,reduced_motion:false,pixel_art:true,fullscreen:false};
-export const newSave=(settings:Settings={...defaultSettings}):ProgressSave=>({version:2,robotDrafts:{},robotSolutions:{},selected:0,unlocked:0,complete:false,drafts:{},solutions:{},stars:{},story:{},settings:{...settings}});
+export const newSave=(settings:Settings={...defaultSettings}):ProgressSave=>({version:3,robotDrafts:{},robotSolutions:{},selected:0,unlocked:0,complete:false,drafts:{},solutions:{},stars:{},story:{},settings:{...settings}});
 const record=(value:unknown):value is Record<string,unknown>=>typeof value==='object'&&value!==null&&!Array.isArray(value);
 /** Migrate retired payment instructions without changing comments or other commands. */
 function removeOrderCharge(source:string){return source.split('\n').filter(line=>line.trim()!=='CHARGE ORDER').join('\n');}
@@ -31,8 +31,8 @@ const index=(value:unknown):value is number=>typeof value==='number'&&Number.isI
 export function parseSave(text:string):ProgressSave {
   if(text.length>2_000_000)throw new Error('This save is too large. Choose a Caffeine Protocol JSON export.');
   const v:unknown=JSON.parse(text);
-  if(!record(v)||(v.version!==1&&v.version!==2))throw new Error('Unsupported save version. Your current café has been kept.');
-  if(!index(v.selected)||!index(v.unlocked)||v.selected>v.unlocked||typeof v.complete!=='boolean'||v.version===1&&v.unlocked>13||v.version===2&&v.complete&&v.unlocked!==CAMPAIGN_LENGTH-1)throw new Error('Invalid campaign progress.');
+  if(!record(v)||(v.version!==1&&v.version!==2&&v.version!==3))throw new Error('Unsupported save version. Your current café has been kept.');
+  if(!index(v.selected)||!index(v.unlocked)||v.selected>v.unlocked||typeof v.complete!=='boolean'||v.version===1&&v.unlocked>13||v.version!==1&&v.complete&&v.unlocked!==CAMPAIGN_LENGTH-1)throw new Error('Invalid campaign progress.');
   for(const key of ['drafts','solutions','stars','story']){
     const entries=v[key];if(!record(entries))throw new Error(`Missing ${key} data.`);
     for(const [k,value] of Object.entries(entries)){
@@ -47,7 +47,7 @@ export function parseSave(text:string):ProgressSave {
   for(const k of ['reduced_motion','fullscreen'])if(typeof v.settings[k]!=='boolean')throw new Error('Invalid display setting.');
   if(v.settings.pixel_art!==undefined&&typeof v.settings.pixel_art!=='boolean')throw new Error('Invalid display setting.');
   const robotMaps: {robotDrafts:Record<string,RobotPrograms>;robotSolutions:Record<string,RobotPrograms>}={robotDrafts:{},robotSolutions:{}};
-  if(v.version===2)for(const key of ['robotDrafts','robotSolutions'] as const){
+  if(v.version!==1)for(const key of ['robotDrafts','robotSolutions'] as const){
     const entries=v[key];if(!record(entries))throw new Error(`Missing ${key} data.`);
     for(const [shift,programs] of Object.entries(entries)){
       if(!/^\d+$/.test(shift)||!index(Number(shift))||!record(programs))throw new Error('Invalid robot program collection.');
@@ -56,7 +56,19 @@ export function parseSave(text:string):ProgressSave {
     }
   }
   if(v.version===1)for(const [flat,mapped] of [['drafts','robotDrafts'],['solutions','robotSolutions']] as const)for(const [shift,query] of Object.entries(v[flat] as Record<string,string>))robotMaps[mapped][shift]={query:cleanQuery(query),prep:'',floor:''};
-  return {version:2,...robotMaps,selected:v.selected,unlocked:v.version===1&&v.complete?14:v.unlocked,complete:v.version===2&&v.complete,drafts:cleanQueryMap(v.drafts as Record<string,string>),solutions:cleanQueryMap(v.solutions as Record<string,string>),stars:{...v.stars as Record<string,number>},story:{...v.story as Record<string,boolean>},settings:{volume:v.settings.volume as number,music:v.settings.music as number,effects:v.settings.effects as number,reduced_motion:v.settings.reduced_motion as boolean,pixel_art:v.settings.pixel_art as boolean|undefined??true,fullscreen:v.settings.fullscreen as boolean}};
+  // Semantic-copy programs cannot be translated into the new token puzzles.
+  // Preserve unlocks and other robots, but retire Query drafts, scores and story beats.
+  if(v.version!==3){
+    for(const key of ['robotDrafts','robotSolutions'] as const){
+      for(const [shift,programs] of Object.entries(robotMaps[key])){
+        if(key==='robotSolutions'&&Number(shift)<14)delete robotMaps[key][shift];
+        else programs.query=lessons[Number(shift)].starter;
+      }
+    }
+    const keepLater=(entries:Record<string,unknown>)=>Object.fromEntries(Object.entries(entries).filter(([shift])=>Number(shift)>=14));
+    v.drafts={};v.solutions={};v.stars=keepLater(v.stars as Record<string,unknown>);v.story=keepLater(v.story as Record<string,unknown>);
+  }
+  return {version:3,...robotMaps,selected:v.selected,unlocked:v.version===1&&v.complete?14:v.unlocked,complete:v.version!==1&&v.complete,drafts:cleanQueryMap(v.drafts as Record<string,string>),solutions:cleanQueryMap(v.solutions as Record<string,string>),stars:{...v.stars as Record<string,number>},story:{...v.story as Record<string,boolean>},settings:{volume:v.settings.volume as number,music:v.settings.music as number,effects:v.settings.effects as number,reduced_motion:v.settings.reduced_motion as boolean,pixel_art:v.settings.pixel_art as boolean|undefined??true,fullscreen:v.settings.fullscreen as boolean}};
 }
 export function readSave(storage:Pick<Storage,'getItem'>):{save:ProgressSave;error:string}{try{const raw=storage.getItem(SAVE_KEY);return {save:raw?parseSave(raw):newSave(),error:''};}catch{return {save:newSave(),error:'Saved progress could not be read. The original data is untouched; export a recovery copy in Settings before saving a new café.'};}}
 export function writeSave(storage:Pick<Storage,'setItem'>,save:ProgressSave):string{try{storage.setItem(SAVE_KEY,JSON.stringify(save));return '';}catch{return 'Progress could not be saved. Export your café from Settings to keep it.';}}

@@ -149,6 +149,7 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView,
  const state=result?sampleReplay(result,time):undefined;
  const speakingId=state?.seed?.events.findLast(e=>e.role==='query'&&e.start<=state.local)?.customerId;
  const speaking=result?.events.find(e=>e.seed_id===state?.seed?.seed_id&&e.customer.customer_id===speakingId);
+ const clarified=!!speaking&&!!state?.seed?.events.some(e=>e.role==='query'&&e.command==='HELP'&&e.customerId===speaking.customer.customer_id&&e.end<=state.local);
  const showSpeech=!!state&&!!speaking&&state.local>=speaking.timing.arrival&&state.local<=speaking.timing.created+2;
  const actors:Partial<Record<ActorId,ActorSnapshot>>=state?.actors??{...(level>=3?{query:{position:STARTS.query,inventory:[],role:'query' as const}}:{niko:{position:STARTS.query,inventory:[],role:'query' as const}}),prep:{position:STARTS.prep,inventory:[],role:'prep' as const},floor:{position:STARTS.floor,inventory:[],role:'floor' as const}};
 
@@ -165,7 +166,7 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView,
  <Street evening={evening} paused={!!result&&!moving} reduced={reduced}/>
  <StreetClip>{state?.customers.map((c,i)=><group key={c.id}>
   <Character at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} sit={c.sit} walking={moving&&c.walking} animate={moving} phase={time} reduced={reduced} facing={c.facing} drinking={c.drinking} tea={c.drink==='tea'}/>
-  {showSpeech&&speaking.customer.customer_id===c.id&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={speaking.customer}/></Html>}
+  {showSpeech&&speaking.customer.customer_id===c.id&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={speaking.customer} clarified={clarified}/></Html>}
  </group>)}</StreetClip>
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;
 }

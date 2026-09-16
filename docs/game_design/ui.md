@@ -26,7 +26,7 @@ The program panel contains Help and Options, a short lesson summary, the unlocke
 
 - Help explains the lesson and optionally reveals the worked solution.
 - Options contains the source editor toggle, incoming-program reset and ticket inspection.
-- Inspect pauses playback and shows the phrase, intent chips, tickets, simulation timestamps, customer navigation, replay, step and restart controls.
+- Inspect pauses playback and shows the phrase, heard-order tokens, tickets, simulation timestamps, customer navigation, replay, step and restart controls.
 - Results shows seed counts, satisfaction, block/step metrics and the first failure details.
 
 Editing is locked during playback until Stop & edit or replay completion. Inspection is optional for every shift. Controls and dialogs must remain usable at 1100×720 as well as 1280×720.
