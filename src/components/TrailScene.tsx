@@ -123,6 +123,16 @@ function TrailWorld({ view, save }: { view: View; save: ProgressSave }) {
   </>;
 }
 
+/** The diorama is static between scrolls and selections, so the canvas renders
+ * on demand instead of every frame. Note: R3F mounts `fallback` content into
+ * the canvas element unconditionally, so it must never carry side effects —
+ * a fallback that reports unavailability unmounts the scene on every load. */
+function TrailInvalidator({ view, save }: { view: View; save: ProgressSave }) {
+  const invalidate = useThree(s => s.invalidate);
+  useEffect(() => { invalidate(); }, [invalidate, view, save]);
+  return null;
+}
+
 class TrailBoundary extends Component<{ children: ReactNode; onUnavailable: () => void }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() { return { failed: true }; }
@@ -131,11 +141,7 @@ class TrailBoundary extends Component<{ children: ReactNode; onUnavailable: () =
 }
 
 export function TrailScene({ view, save, onUnavailable }: { view: View; save: ProgressSave; onUnavailable: () => void }) {
-  return <div className="trail-scene" style={{ width: view.width }} aria-hidden="true"><TrailBoundary onUnavailable={onUnavailable}><Canvas orthographic shadows dpr={[1, 1.5]} camera={{ position: [0, 20, 15], near: .1, far: 250 }} gl={{ antialias: !save.settings.pixel_art, alpha: false }} fallback={<Unavailable onUnavailable={onUnavailable}/>} onCreated={({ gl }) => gl.domElement.addEventListener('webglcontextlost', onUnavailable, { once: true })}>
-    <TrailWorld view={view} save={save}/>{save.settings.pixel_art && <PixelArtEffect/>}
+  return <div className="trail-scene" style={{ width: view.width }} aria-hidden="true"><TrailBoundary onUnavailable={onUnavailable}><Canvas orthographic frameloop="demand" shadows dpr={[1, 1.5]} camera={{ position: [0, 20, 15], near: .1, far: 250 }} gl={{ antialias: !save.settings.pixel_art, alpha: false }} onCreated={({ gl }) => gl.domElement.addEventListener('webglcontextlost', onUnavailable, { once: true })}>
+    <TrailWorld view={view} save={save}/><TrailInvalidator view={view} save={save}/>{save.settings.pixel_art && <PixelArtEffect/>}
   </Canvas></TrailBoundary></div>;
-}
-function Unavailable({ onUnavailable }: { onUnavailable: () => void }) {
-  useEffect(onUnavailable, [onUnavailable]);
-  return null;
 }
