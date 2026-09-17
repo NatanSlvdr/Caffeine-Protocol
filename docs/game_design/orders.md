@@ -24,7 +24,7 @@ interface HeardOrder {
 
 Negation applies only to modifiers in Act I. “Without sugar”, “no sugar”, and “but no sugar please” all include both `sugar` and `negation`. Drink corrections such as “not tea, coffee” and difficult modifier scoping are reserved for advanced challenges.
 
-Query conditions inspect membership in the currently selected group: `IF sugar IN item`, `IF negation IN item`, and so on. Number tokens signal metadata that must be explicitly read with `READ number` before `SUGAR number` writes it to a ticket. Query cannot read `drink`, `with_sugar`, `sugar_count`, or expected ticket fields from speech.
+Query conditions inspect membership in the currently selected group: `IF sugar IN item`, `IF negation IN item`, and so on. Number tokens signal metadata that must be explicitly read with `STORE var1 FROM number` before `WRITE var1 sugar` writes it to a ticket. Query cannot read `drink`, `with_sugar`, `sugar_count`, or expected ticket fields from speech.
 
 ## Progression
 

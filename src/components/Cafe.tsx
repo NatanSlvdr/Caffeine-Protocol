@@ -167,7 +167,7 @@ function World({evening,result,time,reduced,moving,level,showLabels,serviceView,
   const clarified=!!state.seed?.events.some(log=>log.role==='query'&&log.command==='HELP'&&log.customerId===c.id&&log.end<=state.local);
   return <group key={c.id}>
   <Character at={c.position} color={['#af7e67','#79929c','#b29c66'][i%3]} sit={c.sit} walking={moving&&c.walking} animate={moving} phase={time} reduced={reduced} facing={c.facing} drinking={c.drinking} tea={c.drink==='tea'}/>
-  {event&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={event.customer} clarified={clarified}/></Html>}
+  {event&&c.showOrder&&<Html position={[c.position[0],2.2,c.position[1]]} center zIndexRange={[12,0]} style={{pointerEvents:'none'}}><CustomerSpeech customer={event.customer} clarified={clarified}/></Html>}
  </group>})}</StreetClip>
  <mesh rotation-x={-Math.PI/2} position={[0,-.81,0]} receiveShadow><planeGeometry args={[200,200]}/><shadowMaterial transparent opacity={.12}/></mesh></>;
 }

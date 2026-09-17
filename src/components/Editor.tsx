@@ -5,7 +5,7 @@ import type { RobotRole } from '../domain/types';
 import { robotCommands } from '../domain/robotProgram';
 import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
 import { normalizeDirection } from '../domain/directions';
-import { insideOrderLoop, CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
+import { VARIABLES, STORE_VALUES, parseStore, parseSugarWrite, insideOrderLoop, CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
 import * as robotConditions from '../domain/robotConditions';
 import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
 import type { VisualBlock } from '../domain/visualProgram';
@@ -36,8 +36,9 @@ function operandOption(value: string) {
 }
 
 const conditionLabels: Record<string, string> = {
+  var1:'var 1',var2:'var 2',var3:'var 3',var4:'var 4',
   coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar', negation: 'Negation', number: 'Number', count: 'Sugar count', ambiguous: 'Ambiguous', item: 'item',
-  'CUSTOMER SPEECH': 'Customer speech', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
+  'CUSTOMER SPEECH': 'Orders', 'heard orders': 'order', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
   IN: 'in', 'NOT IN': 'not in', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
 };
 function conditionOption(value: string) {
@@ -94,12 +95,28 @@ function Operands({ command, options, disabled, label, onChange, library = false
   const mask = (_key: string, value: string) => library ? '' : value;
   const select = (_key: string, value: string) => { if (!library) onChange(value); };
   const fields = blockFields(command);
+  if (fields.family === 'STORE') {
+    const stored=parseStore(command)??{variable:'var1',value:'number'};
+    return <span className="assignment-operands">
+      <BlockSelect label={label+' variable'} value={stored.variable} disabled={disabled} options={VARIABLES.map(conditionOption)} onChange={variable=>select('variable',`STORE ${variable} FROM ${stored.value}`)}/>
+      <span className="assignment-equals">=</span>
+      <BlockSelect label={label+' source'} value={stored.value} disabled={disabled} options={STORE_VALUES.map(value=>({...conditionOption(value),label:value==='number'?'Number in item':conditionLabels[value]??value}))} onChange={value=>select('source',`STORE ${stored.variable} FROM ${value}`)}/>
+    </span>;
+  }
   if (fields.family === 'ITEM') {
-    const parts=command.split(' '), quantity=parts.length===3?parts[1]:'1', item=parts.at(-1)!;
-    return <><input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' quantity'} value={library ? '' : quantity} disabled={disabled} onKeyDown={event=>event.stopPropagation()} onChange={event=>{
+    const sugar=parseSugarWrite(command), parts=command.split(' ');
+    const quantity=sugar??(parts.length===3?parts[1]:'1'), item=sugar!==undefined?'sugar':parts.at(-1)!;
+    const write=(amount:string,ingredient=item)=>ingredient==='sugar'?`WRITE ${amount} sugar`:`ITEM ${amount} ${ingredient}`;
+    const variables=options.some(option=>parseStore(option))?VARIABLES:[];
+    return <>{item==='sugar'?<BlockSelect label={label + ' quantity'} value={mask('quantity',quantity)} disabled={disabled} options={[...Array.from({length:20},(_,i)=>String(i)),...variables,...(!/^\d+$/.test(quantity)?[quantity]:[])].filter((value,index,values)=>values.indexOf(value)===index).map(conditionOption)} onChange={value=>select('quantity',write(value))}/>:<input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' quantity'} value={library ? '' : quantity} disabled={disabled} onKeyDown={event=>event.stopPropagation()} onChange={event=>{
       const count=Number(event.target.value);
-      if(Number.isInteger(count)&&count>=1&&count<=19)select('quantity',`ITEM ${count} ${item}`);
-    }}/><BlockSelect label={label + ' value'} value={library ? '' : `ITEM ${item}`} disabled={disabled} options={options.filter(option=>/^ITEM (coffee|tea)$/.test(option)).map(operandOption)} onChange={value=>select('item',parts.length===3?`ITEM ${quantity} ${value.slice(5)}`:value)}/></>;
+      if(Number.isInteger(count)&&count>=1&&count<=19)select('quantity',write(String(count)));
+    }}/>}
+      <BlockSelect label={label + ' value'} value={library?'':item==='sugar'?'WRITE 1 sugar':`ITEM ${item}`} disabled={disabled} options={options.filter(option=>/^ITEM (coffee|tea)$/.test(option)||option==='WRITE 1 sugar').map(operandOption)} onChange={value=>{
+        const ingredient=value==='WRITE 1 sugar'?'sugar':value.slice(5);
+        const amount=/^\d+$/.test(quantity)&&Number(quantity)>0?quantity:'1';
+        select('item',ingredient==='sugar'?write(quantity,ingredient):parts.length===2?value:write(amount,ingredient));
+      }}/></>;
   }
   if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
@@ -221,14 +238,8 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
         const a = jump.getBoundingClientRect(), b = target.getBoundingClientRect();
         const x1 = a.right - bounds.left + 3, y1 = a.top - bounds.top + a.height / 2;
         const x2 = b.right - bounds.left + 5, y2 = b.top - bounds.top + b.height / 2;
-        // Route beyond every intervening tile, including wider operands and nested scopes.
-        const clearance = [...element.querySelectorAll<HTMLElement>('.code-row .block')].reduce((right, block) => {
-          if (block.closest('.has-drop-preview .drag-source')) return right;
-          const rect = block.getBoundingClientRect(), middle = rect.top - bounds.top + rect.height / 2;
-          return middle >= Math.min(y1, y2) && middle <= Math.max(y1, y2) ? Math.max(right, rect.right - bounds.left) : right;
-        }, Math.max(x1, x2));
-        // Route within the fixed pane width, including long and repeated jumps.
-        const bend = Math.min(bounds.width - 8, clearance + 16 + Math.min(16, index * 4));
+        // Short blue routes may pass behind intermediate blocks.
+        const bend = Math.min(bounds.width - 8, Math.max(x1,x2) + 24 + Math.min(16,index*4));
         const r = Math.min(18, Math.abs(y2 - y1) / 2);
         const s = y2 >= y1 ? 1 : -1;
         const d = r < 1 ? 'M ' + x1 + ' ' + y1 + ' H ' + x2
@@ -260,6 +271,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   const dragScope = useRef<DraggedScope | undefined>(undefined), lastSlot = useRef<string | undefined>(undefined);
   const [draggedLine, setDraggedLine] = useState<number | null>(null);
   const options = robotCommands(role, level), disabled = locked || observation;
+
   const keyboardCoordinates: KeyboardCoordinateGetter = (event, { context, currentCoordinates }) => {
     const rect = context.collisionRect;
     if (!rect || !['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.code)) return;

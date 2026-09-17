@@ -10,12 +10,12 @@
   "ITEM coffee": "Set item: coffee",
   "ITEM tea": "Set item: tea",
   "JUMP listen": "Jump to listen",
-  "LISTEN": "Wait for customer speech",
+  "LISTEN": "Wait for Orders",
   "POSITION listen": "Position: listen",
   "REPEAT": "Repeat from the beginning",
   "RETURN": "Return ticket",
   "SUBMIT": "Submit ticket",
-  "SUGAR number": "Set sugar count from variable",
+  "WRITE var1 sugar": "Write var 1 sugar on paper",
   "TICKET": "Create ticket",
   "IF coffee IN item": "If coffee is in the current item",
   "IF tea IN item": "If tea is in the current item",
@@ -24,7 +24,7 @@
   "IF number IN item": "If number is in the current item",
   "IF ambiguous IN item": "If ambiguous is in the current item",
   "FOR item IN heard orders": "For item in heard orders",
-  "READ number": "Read the current item’s number",
-  "SUGAR true": "Set sugar: yes",
-  "SUGAR false": "Set sugar: no"
+  "STORE var1 FROM number": "var 1 = Number in item",
+  "WRITE 1 sugar": "Write 1 sugar on paper",
+  "WRITE 0 sugar": "Write 0 sugar on paper"
 }

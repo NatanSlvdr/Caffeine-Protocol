@@ -30,7 +30,7 @@ describe('compact visual code', () => {
  expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.jump-icon')).toBeTruthy();
   expect(screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
   await userEvent.click(screen.getByLabelText('Library Write value'));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Coffee','Tea','Sugar']);
  });
  it('ignores shop selections and keeps its operands unselected', async () => {
   render(<Harness/>);
@@ -49,7 +49,7 @@ describe('compact visual code', () => {
  it('shows operand text alongside shared-model miniatures and keeps keyboard selection local', async () => {
   const user = userEvent.setup();
   render(<Harness initial={'LISTEN\nITEM coffee\nMOVE RIGHT 1'}/>);
-  expect(screen.getByLabelText('Block 1 value').textContent).toContain('Customer speech');
+  expect(screen.getByLabelText('Block 1 value').textContent).toContain('Orders');
   expect(screen.getByLabelText('Block 2 value').textContent).toContain('Coffee');
   expect(screen.getByLabelText('Block 2 value').querySelector('.model-coffee')).toBeTruthy();
   screen.getByLabelText('Block 3 direction').focus();
@@ -120,7 +120,7 @@ describe('compact visual code', () => {
   await choose('Block 2 value','Negation');
   expect(source()).toBe('LISTEN\nIF negation IN CUSTOMER SPEECH\nEND');
   await userEvent.click(screen.getByRole('combobox', {name:'Block 2 source'}));
-  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Customer speech']);
+  expect(screen.getAllByRole('option').map(e=>e.textContent)).toEqual(['Orders']);
   expect(compileProgram(source(),7).compile_error).toBe('');
  });
  it('inserts a FOR scope with separate variable and collection selectors', async () => {
@@ -128,14 +128,14 @@ describe('compact visual code', () => {
   await userEvent.click(screen.getByRole('button',{name:'Insert FOR item IN heard orders'}));
   expect(source()).toBe('LISTEN\nFOR item IN heard orders\nEND');
   expect(screen.getByLabelText('Block 2 variable').textContent).toBe('item');
-  expect(screen.getByLabelText('Block 2 selector').textContent).toBe('heard orders');
+  expect(screen.getByLabelText('Block 2 selector').textContent).toBe('order');
   expect(compileProgram(source(),9).compile_error).toBe('');
  });
  it('preserves the kitchen comparison operands independently of Query tokens', async () => {
   render(<Harness role="prep" level={20} initial={'WAIT TICKET\nIF coffee IN CUSTOMER SPEECH\nEND'}/>);
   await choose('Block 2 operator','!=');
   expect(source()).toBe('WAIT TICKET\nIF coffee != CUSTOMER SPEECH\nEND');
-  expect(screen.getByLabelText('Block 2 source').textContent).toBe('Customer speech');
+  expect(screen.getByLabelText('Block 2 source').textContent).toBe('Orders');
  });
  it('adds, edits, switches and removes logical rows within the same IF', async () => {
   render(<Harness level={7} initial={'LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND'}/>);
@@ -154,10 +154,10 @@ describe('compact visual code', () => {
  it('offers item only when editing a condition inside FOR', async () => {
   render(<Harness level={9} initial={'LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND'}/>);
   await userEvent.click(screen.getByLabelText('Block 2 source'));
-  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Customer speech']);
+  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Orders']);
   await userEvent.keyboard('{Escape}');
   await userEvent.click(screen.getByLabelText('Block 5 source'));
-  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Customer speech','item']);
+  expect(screen.getAllByRole('option').map(option=>option.textContent)).toEqual(['Orders','item']);
  });
  it('edits quantity before the drink without a paper suffix',()=>{
   render(<Harness initial={'LISTEN\nTAKE UP\nITEM coffee'}/>);
@@ -369,4 +369,20 @@ describe('minimal coding pane header',()=>{
   await userEvent.click(screen.getAllByRole('tab')[1]);
   expect(props.onRole).toHaveBeenCalledWith('prep');
  });
+});
+
+it('renders a single assignment with two selectors and uses fixed variables in Write',async()=>{
+ render(<Harness level={10} initial={'LISTEN\nTAKE UP\nITEM 2 coffee\nSTORE var1 FROM number\nITEM coffee'}/>);
+ await choose('Block 4 variable','var 2');
+ await choose('Block 4 source','3');
+ expect(source()).toContain('STORE var2 FROM 3');
+ const assignment=document.querySelector('[data-line="3"] .assignment-operands')!;
+ expect(within(assignment as HTMLElement).getAllByRole('combobox')).toHaveLength(2);
+ expect(assignment.querySelector('.assignment-equals')?.textContent).toBe('=');
+ expect(screen.queryByRole('textbox',{name:'Block 4 variable'})).toBeNull();
+ await choose('Block 4 source','Number in item');
+ await choose('Block 5 value','Sugar');
+ await choose('Block 5 quantity','var 2');
+ expect(source()).toContain('ITEM 2 coffee\nSTORE var2 FROM number\nWRITE var2 sugar');
+ expect(compileProgram(source(),10).compile_error).toBe('');
 });

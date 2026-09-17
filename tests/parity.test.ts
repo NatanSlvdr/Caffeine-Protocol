@@ -86,7 +86,7 @@ describe('token interpreter and physical order handling',()=>{
   expect(new Set(result.tickets.map(t=>t.ticket_id)).size).toBe(2);
  });
  it('plain drinks reject unconditional sugar after modifiers are introduced',()=>{
-  const source=lessons[5].solution.replace('IF sugar IN CUSTOMER SPEECH\n  SUGAR true\nEND','SUGAR true');
+  const source=lessons[5].solution.replace('IF sugar IN CUSTOMER SPEECH\n  WRITE 1 sugar\nEND','WRITE 1 sugar');
   expect(run(5,source).first_failure?.reason).toContain('sugar');
  });
  it('rejects a sugar-only check on a negated request',()=>{

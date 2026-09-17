@@ -1,5 +1,6 @@
 import { ticketUnits } from './ticketUnits';
 import { STARTS, STATIONS, tableFront } from './layout';
+import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { directionVectors, normalizeDirection } from './directions';
 import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
@@ -27,12 +28,22 @@ export function sampleReplay(result:RunResult,time:number){
  }
  const servedTimes=new Map(logs.filter(log=>log.command==='SERVE'&&log.ticketId&&log.end<=local).map(log=>[log.ticketId!,log.end]));
  const collected=new Set(logs.filter(log=>log.command==='COLLECT'&&log.end<=local).map(log=>log.ticketId));
+ // Intake is serial: later arrivals line up behind customers still at the counter.
+ const intakeEvents=result.events.filter(event=>event.seed_id===seed?.seed_id);
  const customers=result.events.map((event,index)=>({event,index})).filter(({event})=>event.seed_id===seed?.seed_id&&local>=event.timing.arrival-STREET_APPROACH_SECONDS&&local<event.timing.left+STREET_EXIT_SECONDS).map(({event,index})=>{
   const side=index%2 as 0|1, timing=event.timing;
   const hasSeat=Number.isFinite(timing.seated)&&event.table>0;
   const seating=timing.seating??timing.created;
   const leaving=local>=timing.left;
   let path=customerApproach(index), progress=(local-(timing.arrival-STREET_APPROACH_SECONDS))/STREET_APPROACH_SECONDS;
+  const queueIndex=intakeEvents.slice(0,intakeEvents.indexOf(event)).filter(previous=>local<Math.min(previous.timing.seating??previous.timing.created,previous.timing.left)).length;
+  if(queueIndex>0&&local<seating&&!leaving){
+   const queuePath:Point[]=[STATIONS.orders.floor,[-8,5],[-9.6,5],[-9.6,5-queueIndex]];
+   const slot=samplePath(queuePath,queueIndex/pathDistance(queuePath));
+   path=[customerApproach(index)[0],[-9.6,slot[1]],slot];
+  }
+  const showOrder=logs.some(log=>log.customerId===event.customer.customer_id&&log.role==='query'&&log.start<=local)
+   || local>=timing.created;
   let sit=0;
   if(hasSeat&&local>=seating){
    path=customerSeatPath(event.table-1,side);
@@ -52,7 +63,7 @@ export function sampleReplay(result:RunResult,time:number){
   const facing=walking?Math.atan2(ahead[0]-position[0],ahead[1]-position[1]):hasSeat&&local>=timing.seated-SIT_SECONDS?(side===0?Math.PI/2:-Math.PI/2):Math.PI/2;
   const drinks=event.tickets.flatMap(ticketUnits).filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id));
   const sipping=drinks.find(ticket=>local<servedTimes.get(ticket.ticket_id)!+DRINK_SECONDS);
-  return {id:event.customer.customer_id,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
+  return {id:event.customer.customer_id,showOrder,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
  });
  const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.flatMap(ticketUnits).find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
  // A submitted ticket stays on the shared counter until prep finishes claiming it.

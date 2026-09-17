@@ -9,9 +9,9 @@ Act I offers these operations progressively:
 - `LISTEN`, `TAKE <direction>`, `ITEM coffee`, `ITEM tea`, `MOVE <direction> <tiles>`, `DEPOSIT <direction>`.
 - `IF <token> IN item` or `IF <token> NOT IN item`, `ELSE`, `END`.
 - `POSITION <label>` and `JUMP <label>` for continuous service. `REPEAT` remains accepted at the end of a program.
-- `SUGAR true` and `SUGAR false`.
+- `WRITE 1 sugar` and `WRITE 0 sugar`.
 - `FOR item IN heard orders` with a closing `END`.
-- `READ number` and `SUGAR number`.
+- `STORE var1 FROM number` and `WRITE var1 sugar`.
 - `HELP` and `ERROR`.
 
 Tokens unlock as coffee/tea at Level 4, sugar at Level 6, negation at Level 7, number at Level 10, and ambiguous at Level 11. The editor offers one IF block with editable token and source operands. The connector control at the end of a condition row adds AND or OR and a new row with the same operands within that IF. Connectors can be changed or removed. Text mode keeps the expression on one line, for example `IF sugar IN item AND negation NOT IN item`; AND binds more tightly than OR. It offers one FOR block with separate variable and collection operands.
@@ -24,7 +24,7 @@ Speech is an authored array of `{ tokens: string[], number?: number }` values, s
 
 A FOR instruction has independent `variable` and `selector` fields. The selector registry resolves the collection; the loop runtime binds one value, executes its body, advances at END, and restores the previous binding when finished. Act I allows only variable `item` and selector `heard orders`. Unsupported selectors and nested FOR blocks fail compilation. Empty collections skip the body. Jumps out of an active loop fail at runtime.
 
-The numeric local must be explicitly read. It resets between customers and loop iterations, preventing a number from a previous order from leaking into the next ticket. A missing number token or an unread numeric local produces an error at the relevant source line.
+Store creates or updates a named numeric local: `STORE var1 FROM number` copies the current item’s numeric metadata. The four fixed slots are var 1, var 2, var 3, and var 4, each with its own icon. The assignment displays two selectors separated by =. Sources include Number in item, constants from 0 to 19, and another variable. `WRITE var1 sugar` writes that amount onto the held paper while preserving its drink and quantity. The shared Write block also offers fixed sugar amounts from 0 to 19. Locals reset between customers and loop iterations, preventing a number from a previous order from leaking into the next ticket. Missing number tokens and unassigned variables produce an error at the relevant source line. Saved `READ number` and `SUGAR` instructions migrate to Store and Write.
 
 HELP replaces the heard collection and current item with authored clarification data. It runs before taking paper or entering FOR. Unresolved ambiguity is deferred without guessing.
 

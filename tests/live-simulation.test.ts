@@ -16,6 +16,23 @@ function finish(run: ReturnType<typeof createLiveRun>) {
  return frame;
 }
 describe('live service',()=>{
+ it('lines up simultaneous arrivals and reveals each order only when intake starts',()=>{
+  const level=structuredClone(levels[4]);
+  const customer=level.seeds[0].customers[0];
+  level.seeds[0].customers=Array.from({length:3},(_,index)=>({...structuredClone(customer),customer_id:`queue-${index}`,arrival:0}));
+  const run=createLiveRun(level,programs(4));
+  let frame=run.advance(STREET_APPROACH_SECONDS);
+  const waiting=sampleReplay(frame.result,frame.time).customers;
+  expect(waiting.map(customer=>customer.position)).toEqual([STATIONS.orders.floor,[-8,5],[-9,5]]);
+  expect(waiting.map(customer=>customer.showOrder)).toEqual([true,false,false]);
+  for(let i=0;i<100&&!frame.result.execution?.[0].events.some(log=>log.customerId==='queue-1');i++)frame=run.advance(.25);
+  const next=sampleReplay(frame.result,frame.time).customers;
+  expect(next.find(customer=>customer.id==='queue-1')?.position).toEqual(STATIONS.orders.floor);
+  expect(next.find(customer=>customer.id==='queue-1')?.showOrder).toBe(true);
+  expect(next.find(customer=>customer.id==='queue-2')?.position).toEqual([-8,5]);
+  expect(next.find(customer=>customer.id==='queue-2')?.showOrder).toBe(false);
+ });
+
  it('does no execution on creation and advances only as time passes',()=>{
   const run=createLiveRun(levels[2],programs(2));
   expect(run.snapshot().result.execution).toEqual([]);
