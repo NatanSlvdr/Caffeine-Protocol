@@ -117,12 +117,16 @@ describe('live service',()=>{
   expect(failed.result.stars).toBe(0);
   expect(failed.result.execution![0].events.filter(e=>e.actor==='query').map(e=>e.command)).toEqual(['LISTEN','ITEM coffee','ITEM coffee']);
  });
- it('flags a wrong drink on the write instruction before moving or submitting it',()=>{
+ it('rejects a wrong drink at deposit after letting the robot write and carry its paper',()=>{
   const level={...levels[3],seeds:[{id:'wrong-drink',customers:[{...levels[3].seeds[0].customers[0],arrival:0,heard_orders:[{tokens:['tea']}],intent:{drink:'tea' as const},expected:{item:'tea' as const}}]}]};
   const run=createLiveRun(level,{query:'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT',prep:'',floor:''});
+  const writing=run.advance(STREET_APPROACH_SECONDS+4.5);
+  expect(writing.result.first_failure).toBeNull();
+  expect(sampleReplay(writing.result,writing.time).actors.query?.heldPaper?.item).toBe('coffee');
   const failed=finish(run);
-  expect(failed.result.first_failure?.error_line).toBe(2);
-  expect(failed.result.events[0].trace.map(e=>e.command)).toEqual(['LISTEN','TAKE UP','ITEM coffee']);
+  expect(failed.result.first_failure?.error_line).toBe(4);
+  expect(failed.result.first_failure?.reason).toBe('The submitted order does not match the customer’s request.');
+  expect(failed.result.events[0].trace.map(e=>e.command)).toEqual(['LISTEN','TAKE UP','ITEM coffee','MOVE RIGHT 1','DEPOSIT RIGHT']);
   expect(failed.result.tickets).toEqual([]);
   expect(Number.isFinite(failed.result.average_satisfaction)).toBe(true);
  });
@@ -150,4 +154,28 @@ describe('live service',()=>{
   const actor=sampleReplay(result,(move.start+move.end)/2).actors.prep!;
   expect(actor.position[0]).toBeCloseTo((move.from[0]+move.to[0])/2);
  });
+});
+
+it.each([[1,'few'],[3,'many']] as const)('rejects %i cups at handoff without revealing the expected count', (quantity,kind)=>{
+ const customer={...levels[3].seeds[0].customers[0],arrival:0,heard_orders:[{tokens:['coffee']},{tokens:['coffee']}],expected:{tickets:[{item:'coffee' as const},{item:'coffee' as const}]}};
+ const level={...levels[3],seeds:[{id:'counts',customers:[customer]}]};
+ const result=finish(createLiveRun(level,{query:`LISTEN\nTAKE UP\nITEM ${quantity} coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1`,prep:'',floor:''})).result;
+ expect(result.first_failure?.error_line).toBe(4);
+ expect(result.first_failure?.reason).toBe(`The submitted order has too ${kind} items.`);
+ expect(result.tickets).toHaveLength(0);
+});
+it('shows Store in progress and publishes memory only after the action completes',()=>{
+ const customer={...levels[9].seeds[0].customers[0],arrival:0,heard_orders:[{tokens:['coffee','number'],number:2}],expected:{item:'coffee' as const,sugar_count:2}};
+ const level={...levels[9],seeds:[{id:'memory',customers:[customer]}]};
+ const run=createLiveRun(level,{query:'LISTEN\nTAKE UP\nITEM coffee\nSTORE var1 FROM number\nWRITE var1 sugar\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1',prep:'',floor:''});
+ const mid=run.advance(STREET_APPROACH_SECONDS+5.25);
+ const before=sampleReplay(mid.result,mid.time).actors.query!;
+ expect(before.action).toMatchObject({command:'STORE var1 FROM number',progress:.5});
+ expect(before.variables?.var1).toBeUndefined();
+ const complete=run.advance(.75);
+ const after=sampleReplay(complete.result,complete.time).actors.query!;
+ expect(after.variables?.var1).toBe(2);
+ expect(after.action?.command).toBe('WRITE var1 sugar');
+ expect(after.heldPaper?.sugar_count).toBeNull();
+ expect(finish(run).result.passed).toBe(true);
 });

@@ -16,7 +16,7 @@ export function sampleReplay(result:RunResult,time:number){
  const logs=[...(seed?.events??[])].sort((a,b)=>a.start-b.start||a.end-b.end);
  for(const id of ['query','prep','floor','niko'] as const){
   const history=logs.filter(e=>e.actor===id&&e.start<=local);if(!history.length)continue;
-  const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local).at(-1),last=history.at(-1)!;
+  const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local&&!e.error).at(-1),last=history.at(-1)!;
   let position=settled?.to??last.from;
   if(motion&&motion.end>local){const t=Math.max(0,Math.min(1,(local-motion.start)/(motion.end-motion.start)));position=[motion.from[0]+(motion.to[0]-motion.from[0])*t,motion.from[1]+(motion.to[1]-motion.from[1])*t];}
   const directional=history.findLast(event=>event.command==='LISTEN'||/^(MOVE|TAKE|PICKUP|DEPOSIT) /.test(event.command)&&normalizeDirection(event.command.split(' ')[1]));
@@ -24,7 +24,7 @@ export function sampleReplay(result:RunResult,time:number){
   const vector=direction?directionVectors[direction]:undefined;
   const facing=directional?.command==='LISTEN'?-Math.PI/2:vector?Math.atan2(vector[0],vector[1]):id==='query'?-Math.PI/2:0;
   const reach=/^(TAKE|PICKUP|DEPOSIT)( |$)/.test(last.command)&&last.end>local?Math.sin(Math.PI*(local-last.start)/Math.max(.001,last.end-last.start)):0;
-  actors[id]={position,facing,reach,walking:!!motion&&motion.end>local,inventory:settled?.inventory??[],heldPaper:settled?.heldPaper,role:last.role};
+  actors[id]={position,facing,reach,action:last.end>local?{command:last.command,progress:Math.max(0,Math.min(1,(local-last.start)/(last.end-last.start))),start:last.start}:undefined,variables:settled?.variables,walking:!!motion&&motion.end>local,inventory:settled?.inventory??[],heldPaper:settled?.heldPaper,role:last.role};
  }
  const servedTimes=new Map(logs.filter(log=>log.command==='SERVE'&&log.ticketId&&log.end<=local).map(log=>[log.ticketId!,log.end]));
  const collected=new Set(logs.filter(log=>log.command==='COLLECT'&&log.end<=local).map(log=>log.ticketId));

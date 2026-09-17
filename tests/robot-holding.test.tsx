@@ -17,3 +17,15 @@ it('hides empty hands and shows accessible cargo icons',()=>{
  rerender(<RobotHolding name="Porter" inventory={[{...cargo,stage:'dirty'}]}/>);
  expect(screen.getByLabelText('Dirty cup · Table 2').querySelector('svg')).toBeTruthy();
 });
+
+it('shows an in-flight action even before paper is picked up, and supports paused feedback',()=>{
+ const {rerender}=render(<RobotHolding name="Query" inventory={[]} action={{command:'TAKE UP',start:0,progress:.4}} paused/>);
+ expect(screen.getByLabelText('Action progress').getAttribute('value')).toBe('0.4');
+ expect(screen.getByLabelText('Query is holding').style.animationPlayState).toBe('paused');
+ expect(document.querySelector('.robot-action .lucide-hand')).toBeTruthy();
+ rerender(<RobotHolding name="Query" inventory={[]} action={{command:'STORE var1 FROM number',start:1,progress:.5}} reduced/>);
+ expect(screen.getByText('Store var 1 in memory')).toBeTruthy();
+ expect(screen.queryByLabelText('Query memory')).toBeNull();
+ rerender(<RobotHolding name="Query" inventory={[]} variables={{var1:2}}/>);
+ expect(screen.getByLabelText('Query memory').textContent).toContain('var 1 = 2');
+});

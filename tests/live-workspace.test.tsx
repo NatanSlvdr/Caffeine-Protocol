@@ -79,15 +79,15 @@ describe('live workspace lifecycle',()=>{
   act(()=>{vi.advanceTimersByTime(120000);});
   expect(savedStars()['2']).toBeUndefined();
  });
- it('reveals an error only when reached, and keeps its animation until the failing line is clicked',()=>{
+ it('freezes the error cursor and keeps editing locked until service is stopped',()=>{
   open('LISTEN\nITEM coffee');
   expect([...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))).toBeUndefined();
   for(let i=0;i<30&&![...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'));i++)act(()=>{vi.advanceTimersByTime(1000);});
   expect([...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))?.getAttribute('data-line')).toBe('1');
-  expect(screen.getByRole('alert').textContent).toContain('Careful, an error here.');
-  expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('false');
-  expect(screen.getByRole('button',{name:/Run service/})).toBeTruthy();
-  expect(screen.getByRole('combobox',{name:'Block 2 value'}).hasAttribute('disabled')).toBe(false);
+  expect(screen.getByRole('alert').textContent).toContain('Take the order paper');
+  expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('true');
+  expect(screen.getByRole('button',{name:/Stop & edit/})).toBeTruthy();
+  expect(screen.getByRole('combobox',{name:'Block 2 value'}).hasAttribute('disabled')).toBe(true);
   fireEvent.click(document.body);
   fireEvent.keyDown(document.body,{key:'Shift'});
   const failed=[...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))!;
@@ -95,6 +95,9 @@ describe('live workspace lifecycle',()=>{
   act(()=>{vi.advanceTimersByTime(5000);});
   expect(failed.classList.contains('failure')).toBe(true);
   fireEvent.click(failed);
+  expect(failed.classList.contains('failure')).toBe(true);
+  expect(screen.getByRole('img',{name:'Current instruction'}).querySelector('.execution-line-highlight')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:/Stop & edit/}));
   expect([...document.querySelectorAll('[data-line]')].find(e=>e.classList.contains('failure'))).toBeUndefined();
   expect(screen.queryByRole('alert')).toBeNull();
   expect(savedStars()['2']).toBeUndefined();

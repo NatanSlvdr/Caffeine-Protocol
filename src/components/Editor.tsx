@@ -415,7 +415,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
       {failureMessage && (textMode || !rows.length) && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined}/>}
       {observation ? null : textMode ? <textarea onClick={failureLine >= 0 ? onDismissFailure : undefined} spellCheck={false} aria-label="Program source" value={source} onChange={e => change(e.target.value)} readOnly={locked} className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}/> :
         <ProgramSurface root={root}>
-          <ExecutionCursor root={root} line={failureLine >= 0 ? -1 : markerLine} stepSeconds={stepSeconds}/>
+          <ExecutionCursor root={root} line={failureLine >= 0 ? visibleFailureLine : markerLine} stepSeconds={stepSeconds}/>
           <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'}/>
           {renderBlocks(tree)}<JumpArrows root={root} source={source} dragging={!!dragged}/>
         </ProgramSurface>}

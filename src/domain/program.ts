@@ -166,6 +166,14 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
   const ambiguous = () => orders.some(order => order.tokens.includes('ambiguous'));
   // Checkout is automatic once the complete paper order is deposited.
   const finish=()=>{
+    if(checkWrittenOrder&&!out.error){
+      const expected=customer.expected.tickets??(customer.expected.item?[customer.expected]:[]);
+      const count=out.tickets.reduce((sum,paper)=>sum+(paper.quantity??1),0);
+      if(count<expected.length){
+        out.error_line=out.trace.findLast(step=>isOrderDeposit(step.command))?.line??out.error_line;
+        return fail('The submitted order has too few items.');
+      }
+    }
     if(!out.error&&out.tickets.length&&!out.payment){
       if(ticket)return fail('Deposit the current paper before finishing the order.');
       if(out.state.counter)return fail('Return to the register after depositing the order.');
@@ -221,11 +229,7 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
     } else if(c.startsWith('ITEM ')){
       if(!ticket)return fail('Take the order paper before writing its item.');
       const parts=c.split(' ');ticket.item=parts.at(-1)!;ticket.quantity=parts.length===3?Number(parts[1]):1;
-      if(checkWrittenOrder){
-        const written=out.tickets.reduce((sum,paper)=>sum+(paper.quantity??1),0);
-        const expected=(customer.expected.tickets??[customer.expected])[written];
-        if(expected?.item&&ticket.item!==expected.item)return fail(`Wrong item on ticket ${out.tickets.length+1}: expected ${expected.item}, got ${ticket.item}.`);
-      }
+
     } else switch(c){
       case 'LISTEN':if(out.state.counter)return fail('Move left 1 tile to the register before waiting for customer speech.');heard=true;break;
       case 'HELP':
@@ -261,10 +265,22 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
         if(!ticket||!['coffee','tea'].includes(ticket.item))return fail('The order paper is missing an item.');
         {const target=interactionTarget(queryPosition(out.state.counter),c.slice(8));
         if(!target||!samePoint(target,STATIONS.orders.cell))return fail('Move right to the handoff tile, then Deposit right into the order counter.');}
+        if(checkWrittenOrder){
+          const expected=customer.expected.tickets??(customer.expected.item?[customer.expected]:[]);
+          const offset=out.tickets.reduce((sum,paper)=>sum+(paper.quantity??1),0);
+          const count=ticket.quantity??1;
+          if(offset+count>expected.length)return fail('The submitted order has too many items.');
+          const moreLoopItems=loops.some(loop=>loop.index+1<loop.values.length);
+          const morePaper=p.instructions.slice(pc+1).some(command=>isPaperPickup(command)||command.startsWith('JUMP ')&&p.instructions.slice(p.positions[command.slice(5)]+1).find(next=>!next.startsWith('POSITION '))!=='LISTEN');
+          if(!moreLoopItems&&!morePaper&&offset+count<expected.length)return fail('The submitted order has too few items.');
+          for(const request of expected.slice(offset,offset+count)){
+            if(request.item!==undefined&&ticket.item!==request.item||request.with_sugar!==undefined&&ticket.with_sugar!==request.with_sugar||request.sugar_count!==undefined&&ticket.sugar_count!==request.sugar_count)return fail('The submitted order does not match the customer’s request.');
+          }
+        }
         out.tickets.push(ticket);ticket=undefined;break;
       case 'REPEAT':out.state.pc=0;return finish();
     }
-    out.heldPaper=ticket;
+    out.heldPaper=ticket;out.variables={...vars};
     out.state.pc=next;
   }
   out.state.stopped=true;return finish();
