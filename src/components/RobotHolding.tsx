@@ -69,11 +69,11 @@ export function RobotHolding({ name, inventory, paper, action, variables, paused
   return <HoldingBubble name={name} paused={paused} reduced={reduced}>
     {visibleAction&&<div className="robot-action" aria-label={`${name}: ${actionLabel}`}><span className={`robot-action-icon action-${thinking?'thinking':fields?.family.toLowerCase()}`} aria-hidden="true">{thinking?<><Settings className="thinking-gear" strokeWidth={1.8}/><Settings className="thinking-gear" strokeWidth={1.8}/></>:<BlockIcon command={visibleAction.command}/>}</span><span className="robot-action-label">{actionLabel}</span></div>}
     {(paper || inventory.length > 0) && <ul aria-label={`${name} inventory`}>
-      {paper && <li key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`} title={paperLabel} aria-label={paperLabel}><HoldingIcon item={paper.item} stage="paper"/>{(paper.quantity??1)>1&&<span className="order-quantity">×{paper.quantity}</span>}{paper.sugar_count!==null&&<span className="holding-sugar"><ModelThumbnail model="sugar"/>{paper.sugar_count}</span>}</li>}
+      {paper && <li key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`} title={paperLabel} aria-label={paperLabel}><span className="holding-item-icon"><HoldingIcon item={paper.item} stage="paper"/>{(paper.quantity??1)>1&&<span className="order-quantity">×{paper.quantity}</span>}</span>{paper.sugar_count!==null&&<span className="holding-sugar"><ModelThumbnail model="sugar"/>{paper.sugar_count}</span>}</li>}
       {inventory.map(cargo => {
         const label = cargoLabel(cargo) + (cargo.table > 0 ? ` · Table ${cargo.table}` : '');
         return <li key={`${cargo.ticketId}:${cargo.stage}:${cargo.sugar}`} title={label} aria-label={label}>
-          <HoldingIcon item={cargo.item} stage={cargo.stage}/>
+          <span className="holding-item-icon"><HoldingIcon item={cargo.item} stage={cargo.stage}/></span>
           {cargo.stage === 'brewed' && cargo.sugar > 0 && <span className="holding-sugar" aria-hidden="true"><ModelThumbnail model="sugar"/>{cargo.sugar}</span>}
         </li>;
       })}

@@ -472,11 +472,12 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 
 .robot-holding{position:relative;transform:translateY(-50%);width:max-content;max-width:160px;padding:4px;border:1px solid #cbbda4;border-radius:12px;background:#fffbedf5;color:#68543c;box-shadow:0 2px 0 #b4a28b55;pointer-events:auto}
 .robot-holding:after{content:"";position:absolute;left:calc(50% - 5px);bottom:-6px;width:9px;height:9px;transform:rotate(45deg);background:#fffbed;border-right:1px solid #cbbda4;border-bottom:1px solid #cbbda4}
-.robot-holding ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:3px}
-.robot-holding li{position:relative;display:grid;place-items:center;width:42px;height:42px}
-.robot-holding .model-thumbnail{width:42px;height:42px}
+.robot-holding ul{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:4px;align-items:flex-start}
+.robot-holding li{position:relative;display:flex;flex-direction:column;align-items:center;gap:0;width:42px}
+.holding-item-icon{position:relative;display:grid;place-items:center;width:36px;height:36px}
+.robot-holding .model-thumbnail{width:36px;height:36px}
 .robot-holding .holding-badge{position:absolute;right:0;bottom:0;background:#fffbed;border-radius:3px}
-.holding-sugar{position:absolute;right:0;bottom:0;display:flex;align-items:center;gap:1px;padding:1px 2px;border-radius:3px;background:#fffbed;font:700 10px/1.2 Inter,sans-serif}
+.holding-sugar{display:flex;align-items:center;justify-content:center;gap:2px;min-height:14px;white-space:nowrap;font:700 10px/1.2 Inter,sans-serif}
 
 .camera-controls .view-controls{display:flex;align-items:center;gap:3px;padding:4px;z-index:15;flex-wrap:wrap;justify-content:center;border:1px solid #cbbda4;border-radius:10px;background:#e9dfcf}
 .view-controls button{gap:6px;padding:8px 12px;border:0;border-radius:7px;background:transparent;color:#786a57;font-size:12px;white-space:nowrap;box-shadow:none}
@@ -601,19 +602,13 @@ html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop
 .editor-panel .assignment-tile{vertical-align:middle;box-shadow:0 3px 0 var(--edge)}
 .editor-panel .code-row .block.failure{animation:none;outline:none;background:var(--tile);border-color:var(--edge);box-shadow:0 3px 0 var(--edge)}
 .editor-panel .code-row .block:has(.assignment-operands):is(.active,.failure){background:transparent;border:0;box-shadow:none}
-.robot-action{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;padding:8px;color:#493e33;font:600 10px/1.3 ui-monospace,monospace}
+.robot-action{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:4px;color:#493e33;font:600 10px/1.3 ui-monospace,monospace}
 .robot-action-icon{display:inline-flex;transform-origin:center}
 .robot-action-icon .block-icon{width:40px;height:40px}
-.robot-action+ul{border-top:1px solid #cbbda4;margin-top:4px;padding-top:6px}
-.robot-holding .holding-sugar .model-thumbnail{width:16px;height:16px}
+.robot-action+ul{border-top:1px solid #cbbda4;margin-top:4px;padding-top:4px}
+.robot-holding .holding-sugar .model-thumbnail{width:14px;height:14px}
 .robot-memory{display:flex;flex-wrap:wrap;gap:4px;border-top:1px solid #cbbda4;margin-top:4px;padding-top:4px;font:600 10px ui-monospace,monospace}
 .robot-memory>span{display:flex;gap:3px;align-items:center;white-space:nowrap}
-.robot-holding{animation:holding-appear .2s ease-out}
-.robot-holding li{animation:holding-appear .2s ease-out;animation-play-state:inherit}
-@keyframes holding-appear{from{opacity:0;scale:.8}to{opacity:1;scale:1}}
-@media(prefers-reduced-motion:reduce){.robot-holding,.robot-holding li{animation:none}}
-.robot-holding[data-motion=reduced],.robot-holding[data-motion=reduced] li{animation:none}
-
 .robot-holding ul{animation-play-state:inherit}
 
 /* A steady width and two-line labels keep state changes calm. */
@@ -624,21 +619,10 @@ html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop
 .robot-holding-content *{animation-play-state:inherit}
 .robot-action-icon{position:relative;display:grid;place-items:center;width:48px;height:42px}
 .robot-action-icon svg{transform-origin:center}
-.action-take .block-icon{animation:action-take 1.6s ease-in-out infinite}
-.action-deposit .block-icon{animation:action-deposit 1.6s ease-in-out infinite}
-.action-item .block-icon{animation:action-write 1.4s linear infinite}
-.action-store .block-icon{animation:action-store 1.8s ease-in-out infinite}
-.action-move .block-icon{animation:action-move 1.5s linear infinite}
-.action-wait .block-icon{animation:action-turn 6s linear infinite}
 .action-thinking .thinking-gear{position:absolute;width:29px;height:29px;left:0;top:0;color:#68543c;animation:action-turn 4s linear infinite}
-.action-thinking .thinking-gear+ .thinking-gear{left:22px;top:19px;width:23px;height:23px;color:#8d795e;animation-direction:reverse;animation-duration:3.2s}
+.action-thinking .thinking-gear+ .thinking-gear{left:22px;top:19px;width:23px;height:23px;color:#68543c;animation-direction:reverse;animation-duration:3.2s}
 @keyframes action-turn{to{transform:rotate(360deg)}}
-@keyframes action-take{0%,100%{transform:translateX(4px)}50%,70%{transform:translateX(-4px)}}
-@keyframes action-deposit{0%,100%{transform:translateX(-4px)}50%,70%{transform:translateX(4px)}}
-@keyframes action-write{0%,100%{transform:translate(-3px,2px)}25%{transform:translate(0,-1px)}50%{transform:translate(3px,2px)}75%{transform:translate(0,-1px)}}
-@keyframes action-store{0%,100%{opacity:.6;filter:drop-shadow(0 0 0 transparent)}50%{opacity:1;filter:drop-shadow(0 0 3px #ad87c8)}}
-@keyframes action-move{0%{transform:translateX(-5px);opacity:0}20%,80%{opacity:1}100%{transform:translateX(5px);opacity:0}}
-.robot-holding .robot-action-icon svg{animation-play-state:inherit}
+.robot-holding .robot-action-icon :is(svg,path,polyline){animation-play-state:inherit}
 .robot-holding[data-motion=reduced],.robot-holding[data-motion=reduced] *{animation:none!important;transition:none!important}
 @media(prefers-reduced-motion:reduce){.robot-holding,.robot-holding *{animation:none!important;transition:none!important}}
 .error-note{background:#ffe0df;border:1px solid #e9a3a0;color:#b72126;border-radius:6px;padding:7px 10px}

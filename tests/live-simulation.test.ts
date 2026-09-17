@@ -50,6 +50,7 @@ describe('live service',()=>{
   const start=run.advance(0);
   expect(start.time).toBe(-STREET_APPROACH_SECONDS);
   expect(start.result.events[0].trace).toEqual([]);
+  expect(sampleReplay(start.result,start.time).actors.query?.action?.command).toBe('LISTEN');
   expect(sampleReplay(start.result,start.time).customers[0].position).toEqual(customerApproach(0)[0]);
   const next=run.advance(.1);
   const position=sampleReplay(next.result,next.time).customers[0].position;
@@ -105,6 +106,7 @@ describe('live service',()=>{
   const run=createLiveRun(levels[2],programs(2));
   const frame=run.advance(STREET_APPROACH_SECONDS+levels[2].seeds[0].customers[0].arrival);
   expect(frame.result.execution?.[0].events.some(e=>e.actor==='prep'&&e.command==='WAIT TICKET'&&e.start===e.end)).toBe(true);
+  expect(sampleReplay(frame.result,frame.time).actors.prep?.action?.command).toBe('WAIT TICKET');
  });
  it('reaches a bad instruction after the preceding blocks instead of jumping to failure',()=>{
   const run=createLiveRun(levels[2],{query:'LISTEN\nITEM coffee',prep:'',floor:''});
@@ -178,4 +180,17 @@ it('shows Store in progress and publishes memory only after the action completes
  expect(after.action?.command).toBe('WRITE var1 sugar');
  expect(after.heldPaper?.sugar_count).toBeNull();
  expect(finish(run).result.passed).toBe(true);
+});
+
+it('keeps waiting visible before a delayed arrival and replaces it with the next action',()=>{
+ const level=structuredClone(levels[2]);
+ level.seeds[0].customers[0].arrival=10;
+ const run=createLiveRun(level,programs(2));
+ const initial=run.snapshot();
+ expect(sampleReplay(initial.result,initial.time).actors.query?.action?.command).toBe('LISTEN');
+ const waiting=run.advance(STREET_APPROACH_SECONDS+5);
+ expect(waiting.result.events[0].trace).toEqual([]);
+ expect(sampleReplay(waiting.result,waiting.time).actors.query?.action?.command).toBe('LISTEN');
+ const taking=run.advance(6.5);
+ expect(sampleReplay(taking.result,taking.time).actors.query?.action?.command).toBe('TAKE UP');
 });
