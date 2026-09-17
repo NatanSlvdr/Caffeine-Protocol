@@ -1,0 +1,76 @@
+{
+  "active_tables": 4,
+  "block_target": 12,
+  "id": "L04",
+  "instruction_target": 27,
+  "programming_enabled": true,
+  "reference_block_count": 10,
+  "seeds": [
+    {
+      "id": "L04_A",
+      "customers": [
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    },
+    {
+      "id": "L04_B",
+      "customers": [
+        {
+          "phrase": "tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    },
+    {
+      "id": "L04_C",
+      "customers": [
+        {
+          "phrase": "tea please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    }
+  ],
+  "summary": "Conditions inspect the recognized customer speech. Use IF tea IN CUSTOMER SPEECH to test its tokens, then write tea or coffee. No loop is needed yet.",
+  "title": "Level 4: Coffee or Tea?",
+  "act": 1
+}

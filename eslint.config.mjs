@@ -100,13 +100,15 @@ export default tseslint.config(
               },
             },
             {
+              from: { element: { type: 'app' } },
+              allow: { to: { file: { categories: 'app-shell' } } },
+            },
+            {
               from: { file: { categories: 'app-shell' } },
               allow: {
                 to: {
                   element: {
-                    types: {
-                      anyOf: ['app', 'features', 'components', 'data', 'shared-domain', 'shared-ui', 'shared-lib'],
-                    },
+                    types: { anyOf: ['app', 'features', 'components', 'data', 'shared-domain', 'shared-ui', 'shared-lib'] },
                   },
                 },
               },

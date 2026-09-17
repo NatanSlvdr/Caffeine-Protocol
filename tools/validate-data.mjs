@@ -1,35 +1,35 @@
-/** Minimal campaign data check (Phase 0). Phase 3 upgrades this to valibot schema validation. */
+/** Campaign data check: manifest order plus per-shift level/lesson files. */
 import { readFileSync } from 'node:fs';
-import { createRequire } from 'node:module';
 
-const require = createRequire(import.meta.url);
-const campaign = JSON.parse(readFileSync(new URL('../src/data/campaign.json', import.meta.url), 'utf8'));
+const root = new URL('../src/data/campaign/', import.meta.url);
+const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
 
 const failures = [];
+if (!Array.isArray(manifest.order) || manifest.order.length === 0) failures.push('manifest order is empty');
 const ids = new Set();
-for (const level of campaign.levels ?? []) {
-  if (typeof level.id !== 'string' || !level.id) failures.push(`level missing id: ${JSON.stringify(level).slice(0, 80)}`);
-  if (ids.has(level.id)) failures.push(`duplicate level id: ${level.id}`);
-  ids.add(level.id);
-  if (!Array.isArray(level.seeds) || level.seeds.length === 0) failures.push(`level ${level.id} has no seeds`);
+for (const id of manifest.order ?? []) {
+  if (ids.has(id)) failures.push(`duplicate manifest id: ${id}`);
+  ids.add(id);
+  for (const kind of ['levels', 'lessons']) {
+    let parsed = null;
+    try {
+      parsed = JSON.parse(readFileSync(new URL(`${kind}/${id}.json`, root), 'utf8'));
+    } catch {
+      failures.push(`unreadable ${kind}/${id}.json`);
+      continue;
+    }
+    if (kind === 'levels') {
+      if (parsed.id !== id) failures.push(`levels/${id}.json id mismatch: ${parsed.id}`);
+      if (!Array.isArray(parsed.seeds) || parsed.seeds.length === 0) failures.push(`level ${id} has no seeds`);
+    } else if (typeof parsed.solution !== 'string' || typeof parsed.starter !== 'string' || typeof parsed.note !== 'string') {
+      failures.push(`lessons/${id}.json is missing note/solution/starter`);
+    }
+  }
 }
-if ((campaign.lessons ?? []).length !== (campaign.levels ?? []).length) {
-  failures.push(
-    `lessons (${(campaign.lessons ?? []).length}) and levels (${(campaign.levels ?? []).length}) counts differ`,
-  );
-}
-
-let serviceTargets = null;
-try {
-  serviceTargets = require('../src/data/service-targets.json');
-} catch {
-  failures.push('service-targets.json is not parseable');
-}
-if (!Array.isArray(serviceTargets)) failures.push('service-targets.json is not an array');
 
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);
   process.exit(1);
 }
-console.log(`validate:data ok: ${ids.size} levels, ${campaign.lessons.length} lessons, ${serviceTargets.length} service targets.`);
+console.log(`validate:data ok: ${ids.size} shifts (${[...ids].join(',')}).`);

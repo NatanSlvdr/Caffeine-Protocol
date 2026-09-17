@@ -1,0 +1,241 @@
+{
+  "active_tables": 6,
+  "block_target": 21,
+  "id": "L08",
+  "instruction_target": 175,
+  "programming_enabled": true,
+  "reference_block_count": 19,
+  "seeds": [
+    {
+      "id": "L08_A",
+      "customers": [
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L08_B",
+      "customers": [
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L08_C",
+      "customers": [
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    }
+  ],
+  "summary": "Different wording exposes the same recognized concepts. Reuse the same token tests; no new commands are needed.",
+  "title": "Level 8: Natural Wording",
+  "act": 1
+}

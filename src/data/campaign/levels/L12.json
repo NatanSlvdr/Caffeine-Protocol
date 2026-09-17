@@ -1,0 +1,1058 @@
+{
+  "active_tables": 8,
+  "block_target": 31,
+  "id": "L12",
+  "instruction_target": 1078,
+  "programming_enabled": true,
+  "reference_block_count": 29,
+  "seeds": [
+    {
+      "id": "L12_A",
+      "customers": [
+        {
+          "phrase": "coffee with sugar and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "coffee and tea without sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C2",
+          "arrival": 6
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C3",
+          "arrival": 12
+        },
+        {
+          "phrase": "tea with 2 sugars",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "number"
+              ],
+              "number": 2
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "sugar_count": 2
+          },
+          "customer_id": "C4",
+          "arrival": 18
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C5",
+          "arrival": 24
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C6",
+          "arrival": 30
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C7",
+          "arrival": 36
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C8",
+          "arrival": 42
+        },
+        {
+          "phrase": "coffee with 0 sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar",
+                "number"
+              ],
+              "number": 0
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "sugar_count": 0
+          },
+          "customer_id": "C9",
+          "arrival": 48
+        }
+      ]
+    },
+    {
+      "id": "L12_B",
+      "customers": [
+        {
+          "phrase": "coffee and tea without sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C2",
+          "arrival": 6
+        },
+        {
+          "phrase": "tea with 2 sugars",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "number"
+              ],
+              "number": 2
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "sugar_count": 2
+          },
+          "customer_id": "C3",
+          "arrival": 12
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 18
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C5",
+          "arrival": 24
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C6",
+          "arrival": 30
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C7",
+          "arrival": 36
+        },
+        {
+          "phrase": "coffee with 0 sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar",
+                "number"
+              ],
+              "number": 0
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "sugar_count": 0
+          },
+          "customer_id": "C8",
+          "arrival": 42
+        },
+        {
+          "phrase": "coffee with sugar and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C9",
+          "arrival": 48
+        }
+      ]
+    },
+    {
+      "id": "L12_C",
+      "customers": [
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "tea with 2 sugars",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "number"
+              ],
+              "number": 2
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "sugar_count": 2
+          },
+          "customer_id": "C2",
+          "arrival": 6
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C3",
+          "arrival": 12
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 18
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C5",
+          "arrival": 24
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C6",
+          "arrival": 30
+        },
+        {
+          "phrase": "coffee with 0 sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar",
+                "number"
+              ],
+              "number": 0
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "sugar_count": 0
+          },
+          "customer_id": "C7",
+          "arrival": 36
+        },
+        {
+          "phrase": "coffee with sugar and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C8",
+          "arrival": 42
+        },
+        {
+          "phrase": "coffee and tea without sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C9",
+          "arrival": 48
+        }
+      ]
+    },
+    {
+      "id": "L12_D",
+      "customers": [
+        {
+          "phrase": "tea with 2 sugars",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "number"
+              ],
+              "number": 2
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "sugar_count": 2
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C2",
+          "arrival": 6
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C3",
+          "arrival": 12
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C4",
+          "arrival": 18
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C5",
+          "arrival": 24
+        },
+        {
+          "phrase": "coffee with 0 sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar",
+                "number"
+              ],
+              "number": 0
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "sugar_count": 0
+          },
+          "customer_id": "C6",
+          "arrival": 30
+        },
+        {
+          "phrase": "coffee with sugar and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C7",
+          "arrival": 36
+        },
+        {
+          "phrase": "coffee and tea without sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C8",
+          "arrival": 42
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C9",
+          "arrival": 48
+        }
+      ]
+    },
+    {
+      "id": "L12_E",
+      "customers": [
+        {
+          "phrase": "a coffee please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "can I get a tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C2",
+          "arrival": 6
+        },
+        {
+          "phrase": "coffee with sugar please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": true
+          },
+          "customer_id": "C3",
+          "arrival": 12
+        },
+        {
+          "phrase": "tea without sugar thanks",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 18
+        },
+        {
+          "phrase": "coffee with 0 sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar",
+                "number"
+              ],
+              "number": 0
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "sugar_count": 0
+          },
+          "customer_id": "C5",
+          "arrival": 24
+        },
+        {
+          "phrase": "coffee with sugar and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee",
+                "sugar"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": true
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C6",
+          "arrival": 30
+        },
+        {
+          "phrase": "coffee and tea without sugar",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "negation"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C7",
+          "arrival": 36
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C8",
+          "arrival": 42
+        },
+        {
+          "phrase": "tea with 2 sugars",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea",
+                "sugar",
+                "number"
+              ],
+              "number": 2
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea",
+            "sugar_count": 2
+          },
+          "customer_id": "C9",
+          "arrival": 48
+        }
+      ]
+    }
+  ],
+  "summary": "Combine separate order groups, positive sugar, negation, numbers, and filler words. Each group needs its own physical paper.",
+  "title": "Level 12: Mixed Orders",
+  "act": 1
+}

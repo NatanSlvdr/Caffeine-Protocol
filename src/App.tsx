@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import type { Dispatch, SetStateAction } from 'react';
 import {
   Store,
   ArrowLeft,
@@ -33,27 +32,17 @@ import {
   createLiveRun,
   type ProgressSave,
   type RunResult,
-  type Settings,
   type RobotRole,
 } from '@/domain';
-import { ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, robotForLevel } from '@/domain/robots';
-import {
-  completeLevel,
-  incomingRobotPrograms,
-  saveRobotDraft,
-  newSave,
-  parseSave,
-  readSave,
-  SAVE_KEY,
-  writeSave,
-} from '@/features/campaign/save/persistence';
+import { ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES } from '@/domain/robots';
+import { incomingRobotPrograms, saveRobotDraft, parseSave, SAVE_KEY } from '@/features/campaign/save/persistence';
 import { Cafe, Editor, Modal, CodingPaneHeader, RobotOptions } from '@/components';
-import { lessons, levels, stories, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
-import { shiftBriefs } from '@/data/shiftBriefs';
-import { configureAudio, playSound, startAudio } from './audio';
-const go = (path: string) => {
-  window.location.hash = path;
-};
+import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
+import { stories } from '@/data/campaign/narrative';
+import { playSound } from './audio';
+import { go } from '@/app/navigation';
+import { GameProvider, useDefaultRole, useGame, useProgress, useSettings, useShift } from '@/state/GameStore';
+import type { Update } from '@/state/GameStore';
 const number = (n: number) => String(n).padStart(2, '0');
 const stars = (n: number) => '★'.repeat(Math.max(0, n)) + '☆'.repeat(3 - Math.max(0, n));
 function download(text: string, name = 'caffeine-protocol-save.json') {
@@ -64,47 +53,17 @@ function download(text: string, name = 'caffeine-protocol-save.json') {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-type Update = Dispatch<SetStateAction<ProgressSave>>;
 export default function App() {
-  const [initial] = useState(() => {
-    try {
-      return readSave(localStorage, lessons);
-    } catch {
-      return { save: newSave(), error: 'Local storage is unavailable. Export your café to preserve progress.' };
-    }
-  });
-  const [save, setSave] = useState(initial.save),
-    [saveError, setSaveError] = useState(initial.error),
-    [recovery, setRecovery] = useState(!!initial.error);
-  const [route, setRoute] = useState(location.hash.slice(1) || '/'),
-    [modal, setModal] = useState('');
-  useEffect(() => {
-    const change = () => setRoute(location.hash.slice(1) || '/');
-    window.addEventListener('hashchange', change);
-    return () => window.removeEventListener('hashchange', change);
-  }, []);
-  useEffect(() => {
-    if (!recovery) setSaveError(writeSave(localStorage, save));
-    configureAudio(save.settings);
-    document.documentElement.dataset.motion = save.settings.reduced_motion ? 'reduced' : 'full';
-  }, [save, recovery]);
-  useEffect(() => {
-    const gesture = (e: Event) => {
-      startAudio();
-      if (e.target instanceof Element && e.target.closest('button')) playSound('click');
-    };
-    window.addEventListener('pointerdown', gesture);
-    window.addEventListener('keydown', gesture);
-    return () => {
-      window.removeEventListener('pointerdown', gesture);
-      window.removeEventListener('keydown', gesture);
-    };
-  }, []);
-  const launch = (index: number) => {
-    if (index > save.unlocked) return;
-    setSave((s) => ({ ...s, selected: index }));
-    go(stories[index] && !save.story[index] ? `/interlude/${index + 1}` : `/shift/${index + 1}`);
-  };
+  return (
+    <GameProvider>
+      <Shell />
+    </GameProvider>
+  );
+}
+function Shell() {
+  const { save, saveError, recovery, route, update, launch, select, resetCafe, importCafe } = useGame();
+  const progress = useProgress();
+  const [modal, setModal] = useState('');
   const index = Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, Number(route.split('/')[2] || 1) - 1));
   const accessible = Number.isInteger(index) && index <= save.unlocked;
   const page = route.split('/')[1];
@@ -120,7 +79,7 @@ export default function App() {
             : page === 'ending' && save.complete
               ? 'ending'
               : 'home';
-  const total = Object.values(save.stars).reduce((a, b) => a + b, 0);
+  const total = progress.stars;
   return (
     <div className={`app ${screen}`}>
       <header className="app-header">
@@ -250,7 +209,7 @@ export default function App() {
                     key={l.id}
                     disabled={i > save.unlocked}
                     className={`shift-card ${save.selected === i ? 'selected' : ''} ${save.stars[i] !== undefined ? 'complete' : ''}`}
-                    onClick={() => setSave((s) => ({ ...s, selected: i }))}
+                    onClick={() => select(i)}
                     aria-label={`Shift ${i + 1}: ${titleFor(i)}${i > save.unlocked ? ', locked' : ''}`}
                   >
                     <span className="card-number">
@@ -314,12 +273,12 @@ export default function App() {
             key={index}
             index={index}
             save={save}
-            update={setSave}
+            update={update}
             saveError={saveError}
             onNext={() => {
               if (index === CAMPAIGN_LENGTH - 1) go('/ending');
               else {
-                setSave((s) => ({ ...s, selected: index + 1 }));
+                select(index + 1);
                 go('/campaign');
               }
             }}
@@ -328,12 +287,9 @@ export default function App() {
         {screen === 'settings' && (
           <SettingsPage
             save={save}
-            update={setSave}
             onNew={() => setModal('new')}
             onImport={(next) => {
-              setSave(next);
-              setRecovery(false);
-              setSaveError('');
+              importCafe(next);
             }}
             recovery={recovery}
             saveError={saveError}
@@ -356,7 +312,7 @@ export default function App() {
               <button
                 className="primary"
                 onClick={() => {
-                  setSave((s) => ({ ...s, story: { ...s.story, [index]: true } }));
+                  update((s) => ({ ...s, story: { ...s.story, [index]: true } }));
                   go(`/shift/${index + 1}`);
                 }}
               >
@@ -403,10 +359,8 @@ export default function App() {
             <button
               className="danger"
               onClick={() => {
-                setSave(newSave(save.settings));
-                setRecovery(false);
+                resetCafe();
                 setModal('');
-                go('/');
               }}
             >
               Start new café
@@ -457,13 +411,13 @@ function Workspace({
   onNext: () => void;
   saveError: string;
 }) {
-  const level = levels[index],
-    observation = index < 2,
-    brief = shiftBriefs[index];
+  const { level, brief } = useShift(index);
+  const observation = index < 2;
+  const { completeShift } = useGame();
   const [programs, setPrograms] = useState(
       () => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons),
     ),
-    [role, setRole] = useState<RobotRole>(robotForLevel(index + 1));
+    [role, setRole] = useState<RobotRole>(useDefaultRole(index));
   const source = programs[role];
   const [result, setResult] = useState<RunResult | null>(null),
     [running, setRunning] = useState(false),
@@ -536,10 +490,7 @@ function Workspace({
       if (frame.result.passed) {
         setRunning(false);
         setPaused(false);
-        update((s) => ({
-          ...completeLevel(s, index, frame.result.stars, programs.query, lessons),
-          robotSolutions: { ...s.robotSolutions, [index]: programs },
-        }));
+        completeShift(index, frame.result.stars, programs.query, programs);
         playSound('success');
         setModal('receipt');
       } else {
@@ -807,14 +758,12 @@ function Workspace({
 }
 function SettingsPage({
   save,
-  update,
   onNew,
   onImport,
   recovery,
   saveError,
 }: {
   save: ProgressSave;
-  update: Update;
   onNew: () => void;
   onImport: (s: ProgressSave) => void;
   recovery: boolean;
@@ -823,8 +772,7 @@ function SettingsPage({
   const [pending, setPending] = useState<ProgressSave | null>(null),
     [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
-  const setting = <K extends keyof Settings>(key: K, value: Settings[K]) =>
-    update((s) => ({ ...s, settings: { ...s.settings, [key]: value } }));
+  const [settings, setting] = useSettings();
   const fullscreen = async () => {
     try {
       if (document.fullscreenElement) {
@@ -859,7 +807,7 @@ function SettingsPage({
             <label className="volume-setting" key={key}>
               <span>
                 {key === 'volume' ? 'Master volume' : key === 'music' ? 'Music' : 'Sound effects'}
-                <strong>{Math.round(save.settings[key] * 100)}%</strong>
+                <strong>{Math.round(settings[key] * 100)}%</strong>
               </span>
               <input
                 aria-label={key === 'volume' ? 'Master volume' : key === 'music' ? 'Music volume' : 'Effects volume'}
@@ -867,7 +815,7 @@ function SettingsPage({
                 min="0"
                 max="1"
                 step=".01"
-                value={save.settings[key]}
+                value={settings[key]}
                 onChange={(e) => setting(key, Number(e.target.value))}
               />
             </label>
@@ -885,7 +833,7 @@ function SettingsPage({
             </span>
             <input
               type="checkbox"
-              checked={save.settings.reduced_motion}
+              checked={settings.reduced_motion}
               onChange={(e) => setting('reduced_motion', e.target.checked)}
             />
           </label>
@@ -896,7 +844,7 @@ function SettingsPage({
             </span>
             <input
               type="checkbox"
-              checked={save.settings.pixel_art}
+              checked={settings.pixel_art}
               onChange={(e) => setting('pixel_art', e.target.checked)}
             />
           </label>

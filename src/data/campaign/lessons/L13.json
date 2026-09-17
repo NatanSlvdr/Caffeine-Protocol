@@ -1,0 +1,5 @@
+{
+  "note": "The queue is denser and requests contain more orders. Keep every ticket correct and return to listen; there is no new syntax.",
+  "solution": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    STORE var1 FROM number\n    WRITE var1 sugar\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        WRITE 0 sugar\n      ELSE\n        WRITE 1 sugar\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+  "starter": "POSITION listen\nLISTEN\nIF ambiguous IN CUSTOMER SPEECH\n  HELP\nEND\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF number IN item\n    STORE var1 FROM number\n    WRITE var1 sugar\n  ELSE\n    IF sugar IN item\n      IF negation IN item\n        WRITE 0 sugar\n      ELSE\n        WRITE 1 sugar\n      END\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen"
+}

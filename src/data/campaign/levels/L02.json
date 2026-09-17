@@ -1,0 +1,185 @@
+{
+  "active_tables": 4,
+  "block_target": 0,
+  "id": "L02",
+  "instruction_target": 0,
+  "programming_enabled": false,
+  "reference_block_count": 0,
+  "seeds": [
+    {
+      "customers": [
+        {
+          "arrival": 0,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C1",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 5,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C2",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 10,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C3",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 15,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C4",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 20,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C5",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 25,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C6",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 30,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C7",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 35,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C8",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        }
+      ],
+      "id": "L02_A"
+    }
+  ],
+  "summary": "Watch the morning rush, then help Query take over the counter.",
+  "title": "Level 2: Rush"
+}

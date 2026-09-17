@@ -1,6 +1,7 @@
 import { test,expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
-import { lessons,stories } from '../../src/data';
+import { lessons } from '../../src/data';
+import { stories } from '../../src/data/campaign/narrative';
 import { newSave,SAVE_KEY } from '../../src/features/campaign/save/persistence';
 async function ready(page:Page){await page.goto('/');await expect(page.getByRole('heading',{name:'Good coffee. Better instructions.'})).toBeVisible();}
 async function finishObservation(page:Page){await page.getByRole('button',{name:'Watch service'}).click();await expect(page.getByRole('button',{name:'Back to campaign',exact:true})).toHaveCount(0);await page.getByRole('button',{name:'4× playback',exact:true}).click();await page.clock.fastForward(40_000);await expect(page.getByRole('button',{name:'Back to campaign',exact:true})).toBeVisible();await page.getByRole('button',{name:'Back to campaign',exact:true}).click();}

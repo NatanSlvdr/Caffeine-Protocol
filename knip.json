@@ -2,6 +2,6 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/components/index.ts", "src/domain/index.ts", "tools/*.mjs"],
   "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
-  "ignoreDependencies": ["@floating-ui/react", "clsx", "husky", "valibot", "zustand"],
+  "ignoreDependencies": ["@floating-ui/react", "clsx", "husky", "zustand"],
   "ignoreExportsUsedInFile": true
 }

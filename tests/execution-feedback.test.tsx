@@ -3,7 +3,7 @@ import { act, cleanup, fireEvent, render, screen, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { Editor } from '../src/components/Editor';
 import { CodingPaneHeader } from '../src/components/CodingPaneHeader';
-import { shiftBriefs } from '../src/data/shiftBriefs';
+import { campaignNarrative, narrativeFor } from '../src/data/campaign/narrative';
 import { levels } from '../src/data';
 
 afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
@@ -117,7 +117,7 @@ describe('clear execution feedback',()=>{
 });
 describe('story-led, compact shift header',()=>{
  it('places compact help and options beside the title, with story before goal',async()=>{
-  const onHelp=vi.fn(),onOptions=vi.fn(),brief=shiftBriefs[3];
+  const onHelp=vi.fn(),onOptions=vi.fn(),brief=narrativeFor(3);
   render(<CodingPaneHeader shift="Coffee or Tea?" story={brief.story} objective={brief.objective} role="query" level={4} onRole={()=>{}} onHelp={onHelp} onOptions={onOptions}/>);
   const title=screen.getByRole('heading',{name:'Coffee or Tea?'}).parentElement!;
   await userEvent.click(within(title).getByRole('button',{name:'Help'}));
@@ -127,7 +127,7 @@ describe('story-led, compact shift header',()=>{
   expect(brief.story).toContain('Tea has joined the menu');
  });
  it('gives every shift a story and a concrete goal',()=>{
-  expect(shiftBriefs).toHaveLength(levels.length);
-  for(const brief of shiftBriefs){expect(brief.story.length).toBeGreaterThan(40);expect(brief.objective.length).toBeGreaterThan(40);}
+  expect(campaignNarrative).toHaveLength(levels.length);
+  for(const brief of campaignNarrative){expect(brief.story.length).toBeGreaterThan(40);expect(brief.objective.length).toBeGreaterThan(40);}
  });
 });
