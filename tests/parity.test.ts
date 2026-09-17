@@ -1,8 +1,9 @@
 import { describe,it,expect } from 'vitest';
 import { levels,lessons } from '../src/data';
-import { availableCommands, compileProgram,executeCustomerEvent,evaluateComparison,LIMIT,parseFor } from '../src/domain/program';
+import { availableCommands, compileProgram,executeCustomerEvent,evaluateQueryComparison,parseFor } from '../src/domain/program';
+import { QUERY_INSTRUCTION_LIMIT } from '../src/domain/constants';
 import { runLevel,buildReplayTimeline,validate } from '../src/domain/simulation';
-import { completeLevel,incomingProgram,newSave,parseSave,readSave,SAVE_KEY,writeSave } from '../src/domain/persistence';
+import { completeLevel,incomingProgram,newSave,parseSave,readSave,SAVE_KEY,writeSave } from '../src/features/campaign/save/persistence';
 import type { Customer, HeardOrder } from '../src/domain/types';
 const run=(i:number,source=lessons[i].solution)=>runLevel(levels[i],compileProgram(source,i+1));
 const tea=levels[3].seeds[1].customers[0],coffee=levels[3].seeds[0].customers[0];
@@ -48,10 +49,10 @@ describe('redesigned Act I campaign',()=>{
 describe('token interpreter and physical order handling',()=>{
  it('membership tests use only the selected binding and arbitrary token strings',()=>{
   const bindings={item:{tokens:['coffee','sugar','negation']}};
-  expect(evaluateComparison({left:'coffee',operator:'IN',right:'item'},bindings)).toBe(true);
-  expect(evaluateComparison({left:'tea',operator:'IN',right:'item'},bindings)).toBe(false);
-  expect(evaluateComparison({left:'coffee',operator:'IN',right:'missing'},bindings)).toBe(false);
-  expect(evaluateComparison({left:'future_token',operator:'IN',right:'item'},{item:{tokens:['future_token']}})).toBe(true);
+  expect(evaluateQueryComparison({left:'coffee',operator:'IN',right:'item'},bindings)).toBe(true);
+  expect(evaluateQueryComparison({left:'tea',operator:'IN',right:'item'},bindings)).toBe(false);
+  expect(evaluateQueryComparison({left:'coffee',operator:'IN',right:'missing'},bindings)).toBe(false);
+  expect(evaluateQueryComparison({left:'future_token',operator:'IN',right:'item'},{item:{tokens:['future_token']}})).toBe(true);
  });
  it.each([
   ['sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH', ['sugar'], true],
@@ -120,7 +121,7 @@ describe('token interpreter and physical order handling',()=>{
  });
  it('bounds large loops at exactly 1024 executed instructions',()=>{
   const customer=request(Array.from({length:400},()=>({tokens:['coffee']})));
-  const result=exec(lessons[8].solution,customer);expect(result.error).toContain('limit');expect(result.executed_instructions).toBe(LIMIT);
+  const result=exec(lessons[8].solution,customer);expect(result.error).toContain('limit');expect(result.executed_instructions).toBe(QUERY_INSTRUCTION_LIMIT);
  });
  for(const source of ['', 'LISTEN\nEND','LISTEN\nFOR item IN heard orders','LISTEN\nREPEAT\nTAKE UP','LISTEN\nBOGUS','TAKE UP\nLISTEN','LISTEN\nELSE','LISTEN\nIF tea IN CUSTOMER SPEECH\nELSE\nELSE\nEND','LISTEN\nJUMP listen','POSITION listen\nLISTEN\nPOSITION listen','LISTEN\nLISTEN'])it(`rejects invalid structure ${JSON.stringify(source)}`,()=>expect(compileProgram(source).compile_error).not.toBe(''));
  it('enforces 128 blocks',()=>{expect(compileProgram('LISTEN\n'+'TAKE UP\n'.repeat(127)).compile_error).toBe('');expect(compileProgram('LISTEN\n'+'TAKE UP\n'.repeat(128)).compile_error).toContain('128');});
@@ -139,12 +140,12 @@ describe('token interpreter and physical order handling',()=>{
  it('fails on first customer mismatch and highlights the item source',()=>{const r=run(3,lessons[2].solution);expect(r.events).toHaveLength(2);expect(r.first_failure?.seed_id).toBe('L04_B');expect(r.first_failure?.error_line).toBe(2);});
 });
 describe('persistence',()=>{
- it('round trips every save field',()=>{let s=newSave();s=completeLevel(s,2,3,lessons[2].solution);s.drafts[2]='# comment\nLISTEN';s.story[2]=true;expect(parseSave(JSON.stringify(s))).toEqual(s);});
- it('preserves best stars and passing source over a broken draft',()=>{let s=completeLevel(newSave(),2,3,lessons[2].solution);s=completeLevel(s,2,1);s.drafts[2]='broken later edit';expect(s.stars[2]).toBe(3);expect(incomingProgram(s,3)).toBe(lessons[2].solution);expect(s.unlocked).toBe(3);});
- it('persists to storage and reloads',()=>{const storage=new Map<string,string>();const adapter={getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>{storage.set(k,v);}};const s=completeLevel(newSave(),13,3,lessons[13].solution);expect(writeSave(adapter,s)).toBe('');expect(readSave(adapter).save).toEqual(s);expect(readSave(adapter).save.complete).toBe(false);expect(readSave(adapter).save.unlocked).toBe(14);});
- it('new game preserves settings and clears progress',()=>{const s=completeLevel(newSave(),13,3);s.settings.music=0;const fresh=newSave(s.settings);expect(fresh.unlocked).toBe(0);expect(fresh.complete).toBe(false);expect(fresh.stars).toEqual({});expect(fresh.settings.music).toBe(0);});
- for(const value of ['{','null','[]','{"version":2}',JSON.stringify({...newSave(),selected:9}),JSON.stringify({...newSave(),stars:{2:4}}),JSON.stringify({...newSave(),drafts:{99:'LISTEN'}}),JSON.stringify({...newSave(),settings:{...newSave().settings,music:-1}})])it(`rejects malformed save ${value.slice(0,30)}`,()=>expect(()=>parseSave(value)).toThrow());
- it('recovers without mutating malformed storage',()=>{const storage={getItem:()=>'{broken'};expect(readSave(storage).error).not.toBe('');expect(readSave(storage).save).toEqual(newSave());expect(storage.getItem()).toBe('{broken');});
+ it('round trips every save field',()=>{let s=newSave();s=completeLevel(s,2,3,lessons[2].solution,lessons);s.drafts[2]='# comment\nLISTEN';s.story[2]=true;expect(parseSave(JSON.stringify(s),lessons)).toEqual(s);});
+ it('preserves best stars and passing source over a broken draft',()=>{let s=completeLevel(newSave(),2,3,lessons[2].solution,lessons);s=completeLevel(s,2,1,'',lessons);s.drafts[2]='broken later edit';expect(s.stars[2]).toBe(3);expect(incomingProgram(s,3,lessons)).toBe(lessons[2].solution);expect(s.unlocked).toBe(3);});
+ it('persists to storage and reloads',()=>{const storage=new Map<string,string>();const adapter={getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>{storage.set(k,v);}};const s=completeLevel(newSave(),13,3,lessons[13].solution,lessons);expect(writeSave(adapter,s)).toBe('');expect(readSave(adapter,lessons).save).toEqual(s);expect(readSave(adapter,lessons).save.complete).toBe(false);expect(readSave(adapter,lessons).save.unlocked).toBe(14);});
+ it('new game preserves settings and clears progress',()=>{const s=completeLevel(newSave(),13,3,'',lessons);s.settings.music=0;const fresh=newSave(s.settings);expect(fresh.unlocked).toBe(0);expect(fresh.complete).toBe(false);expect(fresh.stars).toEqual({});expect(fresh.settings.music).toBe(0);});
+ for(const value of ['{','null','[]','{"version":2}',JSON.stringify({...newSave(),selected:9}),JSON.stringify({...newSave(),stars:{2:4}}),JSON.stringify({...newSave(),drafts:{99:'LISTEN'}}),JSON.stringify({...newSave(),settings:{...newSave().settings,music:-1}})])it(`rejects malformed save ${value.slice(0,30)}`,()=>expect(()=>parseSave(value,lessons)).toThrow());
+ it('recovers without mutating malformed storage',()=>{const storage={getItem:()=>'{broken'};expect(readSave(storage,lessons).error).not.toBe('');expect(readSave(storage,lessons).save).toEqual(newSave());expect(storage.getItem()).toBe('{broken');});
  it('reports storage write failure',()=>expect(writeSave({setItem:()=>{throw new Error('quota');}},newSave())).toContain('could not be saved'));
  it('uses versioned local storage key',()=>expect(SAVE_KEY).toContain('v1'));
 });

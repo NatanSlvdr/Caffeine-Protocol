@@ -1,12 +1,10 @@
-import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig } from '../domain/types';
-import { preparationSource, floorSource } from '../domain/routines';
-import { TABLE_LAYOUT } from '../domain/layout';
+import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
+import { preparationSource, floorSource } from '@/domain/routines';
+import { TABLE_LAYOUT } from '@/domain/layout';
 import campaign from './campaign.json' with {type:'json'};
 import targets from './service-targets.json' with {type:'json'};
-export const ROBOT_NAMES={query:'Query',prep:'Brew',floor:'Porter'} as const;
-export const ROBOT_UNLOCK_LEVELS={query:3,prep:15,floor:23} as const;
-export const ROBOT_AREAS={query:"Query’s counter",prep:"Brew’s kitchen",floor:"Porter’s dining room"} as const;
-export const queryReference=campaign.lessons[13].solution;
+/** Query reference solution for extension shifts (Act I finale), keyed by LessonSeed id in Phase 3. */
+const queryReference=campaign.lessons[13].solution;
 const titles=['A second pair of hands','Count the tiles','From bean to cup','Time for tea','A spoonful of precision','A recipe worth keeping','Two cups in hand','The kitchen is yours','Meet Porter','A path to the table','There and back','A clean table','Keep the room moving','A clear route','A tray for two','The floor is yours','Three routines, one café','The whole café is yours'];
 const notes=[
  'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Niko still serves the room.',

@@ -3,26 +3,27 @@ import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, S
 import { DIRECTIONS } from './directions';
 import { samePoint, STARTS, STATIONS } from './layout';
 import { interactionTarget, moveQuery, queryPosition } from './queryMovement';
-export const LIMIT = 1024;
+import { DEPOSIT_RE, MOVE_RE, TAKE_RE } from './commands';
+import { QUERY_INSTRUCTION_LIMIT, QUERY_MAX_BLOCKS, TICKET_DUE_SECONDS } from './constants';
 export const isOpening = (command: string) => command.startsWith('FOR ') || command.startsWith('IF ') || command.startsWith('FUNCTION ');
-export const CONDITION_OPERATORS = ['IN', 'NOT IN'] as const;
-export const CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'negation', 'number', 'ambiguous'] as const;
-export const CONDITION_SOURCES = ['CUSTOMER SPEECH', 'item'] as const;
-export interface ComparisonCondition { left: string; operator: typeof CONDITION_OPERATORS[number]; right: string }
+export const QUERY_CONDITION_OPERATORS = ['IN', 'NOT IN'] as const;
+export const QUERY_CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'negation', 'number', 'ambiguous'] as const;
+export const QUERY_CONDITION_SOURCES = ['CUSTOMER SPEECH', 'item'] as const;
+export interface QueryComparisonCondition { left: string; operator: typeof QUERY_CONDITION_OPERATORS[number]; right: string }
 /** Membership operands stay independent of the token vocabulary and source registry. */
-export function parseComparison(command: string): ComparisonCondition | undefined {
+export function parseQueryComparison(command: string): QueryComparisonCondition | undefined {
   const match = /^IF ([a-z][a-z0-9_]*) (IN|NOT IN) (CUSTOMER SPEECH|[a-z][a-z0-9_]*)$/.exec(command);
-  return match ? { left: match[1], operator: match[2] as ComparisonCondition['operator'], right: match[3] } : undefined;
+  return match ? { left: match[1], operator: match[2] as QueryComparisonCondition['operator'], right: match[3] } : undefined;
 }
 export const CONDITION_CONNECTORS = ['AND', 'OR'] as const;
-export interface ConditionExpression { conditions: ComparisonCondition[]; connectors: (typeof CONDITION_CONNECTORS[number])[] }
+export interface ConditionExpression { conditions: QueryComparisonCondition[]; connectors: (typeof CONDITION_CONNECTORS[number])[] }
 /** AND binds more tightly than OR; compound conditions remain one IF instruction. */
 export function parseConditionExpression(command: string): ConditionExpression | undefined {
   const parts = command.split(/ (AND|OR) /);
-  const conditions: ComparisonCondition[] = [];
+  const conditions: QueryComparisonCondition[] = [];
   const connectors: ConditionExpression['connectors'] = [];
   for (let index = 0; index < parts.length; index += 2) {
-    const condition = parseComparison(index === 0 ? parts[index] : `IF ${parts[index]}`);
+    const condition = parseQueryComparison(index === 0 ? parts[index] : `IF ${parts[index]}`);
     if (!condition) return undefined;
     conditions.push(condition);
     if (index > 0) connectors.push(parts[index - 1] as typeof CONDITION_CONNECTORS[number]);
@@ -32,11 +33,11 @@ export function parseConditionExpression(command: string): ConditionExpression |
 export function formatConditionExpression(expression: ConditionExpression) {
   return 'IF ' + expression.conditions.map((condition, index) => `${index ? expression.connectors[index - 1] + ' ' : ''}${condition.left} ${condition.operator} ${condition.right}`).join(' ');
 }
-export function isComparisonCondition(command: string) { return !!parseConditionExpression(command); }
+export function isQueryComparison(command: string) { return !!parseConditionExpression(command); }
 const tokenUnlocks: Record<string, number> = { coffee: 4, tea: 4, sugar: 6, negation: 7, number: 10, ambiguous: 11 };
-export function comparisonUnlocked(command: string, level: number) {
+function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);
-  return !!expression && expression.conditions.every(condition => CONDITION_SOURCES.some(source => source === condition.right) && level >= (tokenUnlocks[condition.left] ?? Infinity));
+  return !!expression && expression.conditions.every(condition => QUERY_CONDITION_SOURCES.some(source => source === condition.right) && level >= (tokenUnlocks[condition.left] ?? Infinity));
 }
 export interface ForInstruction { variable: string; selector: string }
 export const LOOP_VARIABLES = ['item'] as const;
@@ -49,8 +50,6 @@ export function parseFor(command: string): ForInstruction | undefined {
   const match = /^FOR ([a-z][a-z0-9_]*) IN ([a-z][a-z ]*)$/.exec(command);
   return match ? { variable: match[1], selector: match[2] } : undefined;
 }
-const queryDirectionalPattern = new RegExp(`^(TAKE|PICKUP|DEPOSIT) (${DIRECTIONS.join('|')})$`);
-const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
 const writePattern = /^ITEM ([1-9]|1[0-9]) (coffee|tea)$/;
 export const VARIABLES = ['var1', 'var2', 'var3', 'var4'] as const;
 /** Letter labels distinguish variable slots from numeric values without changing saved programs. */
@@ -68,7 +67,7 @@ export function parseSugarWrite(command: string) {
   return /^WRITE (0|[1-9]|1[0-9]|[a-z][a-z0-9_]*) sugar$/.exec(command)?.[1];
 }
 const legacyQueryAction = (command: string) => command === 'TICKET' || command === 'SUBMIT' || /^MOVE (RIGHT|LEFT) 1$/.test(command);
-export const isPaperPickup = (command: string) => command === 'TICKET' || /^(TAKE|PICKUP) (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
+const isPaperPickup = (command: string) => command === 'TICKET' || /^(TAKE|PICKUP) (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
 export const isOrderDeposit = (command: string) => command === 'SUBMIT' || /^DEPOSIT (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
 
 /** Find whether a source row belongs to a FOR body, including nested IF branches. */
@@ -115,7 +114,7 @@ export function migrateQuerySource(source: string): string {
 export function availableCommands(level: number): string[] {
   const c = ['LISTEN','TAKE UP','ITEM coffee','MOVE RIGHT 1','DEPOSIT RIGHT'];
   if (level >= 3) c.push(...DIRECTIONS.filter(direction => direction !== 'UP').map(direction => `TAKE ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `DEPOSIT ${direction}`), ...DIRECTIONS.filter(direction => direction !== 'RIGHT').map(direction => `MOVE ${direction} 1`));
-  if(level>=4)c.push(...CONDITION_VALUES.filter(token => level >= tokenUnlocks[token]).map(token => `IF ${token} IN CUSTOMER SPEECH`),'ELSE','END','ITEM tea');
+  if(level>=4)c.push(...QUERY_CONDITION_VALUES.filter(token => level >= tokenUnlocks[token]).map(token => `IF ${token} IN CUSTOMER SPEECH`),'ELSE','END','ITEM tea');
   if(level>=5)c.push('POSITION listen','JUMP listen','REPEAT');
   if(level>=6)c.push('WRITE 1 sugar','WRITE 0 sugar');
   if(level>=9)c.push('FOR item IN heard orders');
@@ -134,7 +133,7 @@ export function compileProgram(source: string, level = 14): Program {
     const sugar=parseSugarWrite(c);
     const stored=parseStore(c);
     const dataInstruction=(level>=10&&!!stored&&VARIABLES.some(variable=>variable===stored.variable))||(level>=6&&sugar!==undefined&&(/^\d+$/.test(sugar)||level>=10&&VARIABLES.some(variable=>variable===sugar)))||(level>=6&&/^SUGAR (true|false)$/.test(c))||(level>=10&&['READ number','SUGAR number'].includes(c));
-    if(!dataInstruction&&!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(queryDirectionalPattern.test(c)||movePattern.test(c)))&&!(level>=3&&writePattern.test(c)&&(level>=4||c.endsWith('coffee')))&&!comparisonUnlocked(c, level))return fail('Unknown or locked instruction: '+c);
+    if(!dataInstruction&&!allowed.includes(c)&&!legacyQueryAction(c)&&!(level>=5&&/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c))&&!(level>=3&&(TAKE_RE.test(c)||DEPOSIT_RE.test(c)||MOVE_RE.test(c)))&&!(level>=3&&writePattern.test(c)&&(level>=4||c.endsWith('coffee')))&&!comparisonUnlocked(c, level))return fail('Unknown or locked instruction: '+c);
     if(parseConditionExpression(c)?.conditions.some(condition=>condition.right==='item')&&!stack.some(i=>p.instructions[i].startsWith('FOR ')))return fail('The item source is available only inside FOR. Use customer speech here.');
     const at=p.instructions.length; p.instructions.push(c); p.source_lines.push(line);
     if(c.startsWith('POSITION ')){const label=c.slice(9);if(label in p.positions)return fail('Duplicate position: '+label);p.positions[label]=at;}
@@ -153,11 +152,11 @@ export function compileProgram(source: string, level = 14): Program {
   else if(p.instructions.filter(c=>c==='LISTEN').length!==1)p.compile_error='Use one Wait for customer speech; jump back to it for continuous service.';
   else if(p.instructions.includes('REPEAT')&&(p.instructions.at(-1)!=='REPEAT'||p.instructions.filter(c=>c==='REPEAT').length>1))p.compile_error='REPEAT belongs once, at the very end.';
   p.instructions.forEach((c,i)=>{if(c.startsWith('JUMP ')&&!(c.slice(5) in p.positions)){p.compile_error='Jump target has no matching Position block.';p.error_line=p.source_lines[i];}if(c.startsWith('CALL ')&&!(c.slice(5) in p.functions)){p.compile_error='Define the function before calling it.';p.error_line=p.source_lines[i];}});
-  p.block_count=p.instructions.length;if(p.block_count>128)p.compile_error='Query has room for at most 128 blocks.';
+  p.block_count=p.instructions.length;if(p.block_count>QUERY_MAX_BLOCKS)p.compile_error='Query has room for at most 128 blocks.';
   return p;
 }
 export function createTicket(customer: Customer, id: string, intent: SpeechIntent = {}): OrderTicket {
-  return {ticket_id:id,customer_id:customer.customer_id,table_id:null,source_phrase:customer.phrase,source_intent:structuredClone(intent),item:'',with_sugar:false,sugar_count:null,status:'created',created_at:customer.arrival,due_at:customer.arrival+30,debug_notes:''};
+  return {ticket_id:id,customer_id:customer.customer_id,table_id:null,source_phrase:customer.phrase,source_intent:structuredClone(intent),item:'',with_sugar:false,sugar_count:null,status:'created',created_at:customer.arrival,due_at:customer.arrival+TICKET_DUE_SECONDS,debug_notes:''};
 }
 /** Resume at the next speech event, returning a new state without mutating inputs. */
 export function* streamCustomerEvent(p: Program, customer: Customer, id: string, initial: RuntimeState = {pc:0,stopped:false}, checkWrittenOrder = false): Generator<CustomerExecution, CustomerExecution> {
@@ -190,7 +189,7 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
     const pc=out.state.pc,raw=p.instructions[pc];
     const normalized=raw==='READ number'?'STORE number FROM number':raw==='SUGAR true'?'WRITE 1 sugar':raw==='SUGAR false'?'WRITE 0 sugar':raw==='SUGAR number'?'WRITE number sugar':raw;
     const c=normalized==='TICKET'?'TAKE UP':normalized==='SUBMIT'?'DEPOSIT RIGHT':normalized.replace(/^PICKUP /,'TAKE ');
-    if(out.executed_instructions>=LIMIT)return fail('Instruction limit reached. A loop must return to Wait for customer speech.');
+    if(out.executed_instructions>=QUERY_INSTRUCTION_LIMIT)return fail('Instruction limit reached. A loop must return to Wait for customer speech.');
     if(c==='LISTEN'&&heard)return finish();
     out.executed_instructions++;out.error_line=p.source_lines[pc];out.trace.push({line:p.source_lines[pc],command:p.instructions[pc],function_depth:calls.length});
     if(!checkWrittenOrder||!['END','ELSE'].includes(c)&&!c.startsWith('POSITION '))yield out;
@@ -291,19 +290,19 @@ export function* streamCustomerEvent(p: Program, customer: Customer, id: string,
 }
 
 /** Token membership never consults the expected ticket or semantic intent. */
-export function evaluateComparison(condition: ComparisonCondition, bindings: Record<string, HeardOrder | undefined>) {
+export function evaluateQueryComparison(condition: QueryComparisonCondition, bindings: Record<string, HeardOrder | undefined>) {
   const present = bindings[condition.right]?.tokens.includes(condition.left) ?? false;
   return condition.operator === 'NOT IN' ? !present : present;
 }
 
 /** Evaluate OR-separated groups of AND terms against the same current bindings. */
 export function evaluateConditionExpression(expression: ConditionExpression, bindings: Record<string, HeardOrder | undefined>) {
-  let group = evaluateComparison(expression.conditions[0], bindings);
+  let group = evaluateQueryComparison(expression.conditions[0], bindings);
   for (let index = 1; index < expression.conditions.length; index++) {
     if (expression.connectors[index - 1] === 'OR') {
       if (group) return true;
-      group = evaluateComparison(expression.conditions[index], bindings);
-    } else group = group && evaluateComparison(expression.conditions[index], bindings);
+      group = evaluateQueryComparison(expression.conditions[index], bindings);
+    } else group = group && evaluateQueryComparison(expression.conditions[index], bindings);
   }
   return group;
 }

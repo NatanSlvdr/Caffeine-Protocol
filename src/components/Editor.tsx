@@ -1,21 +1,48 @@
 import { useRef, useState, useEffect, useLayoutEffect, useId, createContext, useContext } from 'react';
 import { DndContext, DragOverlay, useDndContext, KeyboardSensor, MeasuringStrategy, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
-import type { RobotRole } from '../domain/types';
-import { robotCommands } from '../domain/robotProgram';
-import { blockFields, blockPrototypes, blockVariants } from '../domain/blockFields';
-import { normalizeDirection } from '../domain/directions';
-import { VARIABLES, STORE_VALUES, parseStore, parseSugarWrite, insideOrderLoop, CONDITION_CONNECTORS, formatConditionExpression, parseConditionExpression, CONDITION_OPERATORS, CONDITION_SOURCES, CONDITION_VALUES, LOOP_VARIABLES, LOOP_SELECTORS, parseFor, parseComparison } from '../domain/program';
-import * as robotConditions from '../domain/robotConditions';
-import { placeBlock, removeVisualBlock, visualProgram } from '../domain/visualProgram';
-import type { VisualBlock } from '../domain/visualProgram';
+import {
+  type RobotRole,
+  robotCommands,
+  blockFields,
+  blockPrototypes,
+  blockVariants,
+  normalizeDirection,
+  VARIABLES,
+  STORE_VALUES,
+  parseStore,
+  parseSugarWrite,
+  insideOrderLoop,
+  CONDITION_CONNECTORS,
+  formatConditionExpression,
+  parseConditionExpression,
+  QUERY_CONDITION_OPERATORS,
+  QUERY_CONDITION_SOURCES,
+  QUERY_CONDITION_VALUES,
+  LOOP_VARIABLES,
+  LOOP_SELECTORS,
+  parseFor,
+  parseQueryComparison,
+  placeBlock,
+  removeVisualBlock,
+  visualProgram,
+  type VisualBlock,
+  keyboardDropSlot,
+  pickDropSlot,
+  type DraggedScope,
+} from '@/domain';
+import {
+  WORKER_CONDITION_OPERATORS,
+  WORKER_CONDITION_SOURCES,
+  WORKER_CONDITION_VALUES,
+  parseWorkerComparison,
+} from '@/domain/robotConditions';
+import { MAX_ITEM_QUANTITY, MAX_MOVE_COUNT } from '@/domain/constants';
 import { BlockSelect, DirectionSelect } from './BlockSelect';
 import { BlockIcon } from './BlockIcon';
 import { OperandIcon } from './OperandIcon';
 import { ExecutionCursor } from './ExecutionCursor';
 import { InstructionError } from './FailureFeedback';
-import { keyboardDropSlot, pickDropSlot } from '../domain/dragPlacement';
-import type { DraggedScope } from '../domain/dragPlacement';
 
 /** Drag the whole tile while leaving operand controls to handle their own input. */
 class BlockPointerSensor extends PointerSensor {
@@ -53,7 +80,7 @@ function conditionOption(value: string) {
 function membershipOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void, library: boolean, inLoop: boolean) {
   const expression = parseConditionExpression(command);
   if (!expression) return null;
-  const values = CONDITION_VALUES.filter(value => expression.conditions.some(condition => condition.left === value) || options.some(candidate => parseComparison(candidate)?.left === value));
+  const values = QUERY_CONDITION_VALUES.filter(value => expression.conditions.some(condition => condition.left === value) || options.some(candidate => parseQueryComparison(candidate)?.left === value));
   const update = (index: number, key: 'left' | 'operator' | 'right', value: string) => {
     const conditions = expression.conditions.map((condition, at) => at === index ? { ...condition, [key]: value } : condition);
     onChange(formatConditionExpression({ ...expression, conditions }));
@@ -63,8 +90,8 @@ function membershipOperands(command: string, options: string[], disabled: boolea
     const connector = expression.connectors[index] ?? '';
     return <span className="if-comparison-operands" key={index}>
       <BlockSelect label={rowLabel + ' value'} value={library ? '' : condition.left} disabled={disabled} onChange={value => update(index, 'left', value)} options={values.map(conditionOption)}/>
-      <BlockSelect label={rowLabel + ' operator'} value={library ? '' : condition.operator} disabled={disabled} onChange={value => update(index, 'operator', value)} options={CONDITION_OPERATORS.map(conditionOption)}/>
-      <BlockSelect label={rowLabel + ' source'} value={library ? '' : condition.right} disabled={disabled} onChange={value => update(index, 'right', value)} options={CONDITION_SOURCES.filter(source => source !== 'item' || inLoop).map(conditionOption)}/>
+      <BlockSelect label={rowLabel + ' operator'} value={library ? '' : condition.operator} disabled={disabled} onChange={value => update(index, 'operator', value)} options={QUERY_CONDITION_OPERATORS.map(conditionOption)}/>
+      <BlockSelect label={rowLabel + ' source'} value={library ? '' : condition.right} disabled={disabled} onChange={value => update(index, 'right', value)} options={QUERY_CONDITION_SOURCES.filter(source => source !== 'item' || inLoop).map(conditionOption)}/>
       {!library && <span className={connector ? 'condition-connector' : 'condition-connector optional-connector'} title={connector ? undefined : 'Optional: add another condition'}><BlockSelect label={rowLabel + ' connector'} value={connector} disabled={disabled} options={[{value:'',label:connector ? 'Remove following condition' : '+'}, ...CONDITION_CONNECTORS.map(conditionOption)]} onChange={value => {
         const conditions = [...expression.conditions], connectors = [...expression.connectors];
         if (!value) { conditions.splice(index + 1, 1); connectors.splice(index, 1); }
@@ -79,15 +106,15 @@ function membershipOperands(command: string, options: string[], disabled: boolea
 }
 
 function comparisonOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (key: string, value: string) => void, mask: (key: string, value: string) => string) {
-  const membership = options.includes('LISTEN') ? parseComparison(command) : undefined;
-  const condition = membership ?? robotConditions.parseComparison(command);
+  const membership = options.includes('LISTEN') ? parseQueryComparison(command) : undefined;
+  const condition = membership ?? parseWorkerComparison(command);
   if (!condition) return null;
-  const vocabulary = membership ? CONDITION_VALUES : robotConditions.CONDITION_VALUES;
-  const parse = membership ? parseComparison : robotConditions.parseComparison;
+  const vocabulary = membership ? QUERY_CONDITION_VALUES : WORKER_CONDITION_VALUES;
+  const parse = membership ? parseQueryComparison : parseWorkerComparison;
   const values = vocabulary.filter(value => value === condition.left || options.some(candidate => candidate === `IF ${value}` || parse(candidate)?.left === value));
   const hasCount = options.some(candidate => candidate === 'IF count' || candidate.startsWith('IF count ')) || condition.left === 'count' || condition.right === 'SUGAR COUNT';
-  const sources = membership ? CONDITION_SOURCES : robotConditions.CONDITION_SOURCES.filter(value => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount);
-  const operators = membership ? CONDITION_OPERATORS : [...new Set([condition.operator, ...robotConditions.CONDITION_OPERATORS])];
+  const sources = membership ? QUERY_CONDITION_SOURCES : WORKER_CONDITION_SOURCES.filter(value => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount);
+  const operators = membership ? QUERY_CONDITION_OPERATORS : [...new Set([condition.operator, ...WORKER_CONDITION_OPERATORS])];
   const next = (left: string, operator: string, right: string) => `IF ${left} ${operator} ${right}`;
   return <span className="if-comparison-operands">
     <BlockSelect label={label + ' value'} value={mask('value', condition.left)} disabled={disabled} onChange={value => onChange('value', next(value, condition.operator, condition.right))} options={values.map(conditionOption)}/>
@@ -113,7 +140,7 @@ function Operands({ command, options, disabled, label, onChange, library = false
     const quantity=sugar??(parts.length===3?parts[1]:'1'), item=sugar!==undefined?'sugar':parts.at(-1)!;
     const write=(amount:string,ingredient=item)=>ingredient==='sugar'?`WRITE ${amount} sugar`:`ITEM ${amount} ${ingredient}`;
     const variables=options.some(option=>parseStore(option))?VARIABLES:[];
-    return <>{item==='sugar'?<BlockSelect label={label + ' quantity'} value={mask('quantity',quantity)} disabled={disabled} options={[...Array.from({length:20},(_,i)=>String(i)),...variables,...(!/^\d+$/.test(quantity)?[quantity]:[])].filter((value,index,values)=>values.indexOf(value)===index).map(conditionOption)} onChange={value=>select('quantity',write(value))}/>:<input className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' quantity'} value={library ? '' : quantity} disabled={disabled} onKeyDown={event=>event.stopPropagation()} onChange={event=>{
+    return <>{item==='sugar'?<BlockSelect label={label + ' quantity'} value={mask('quantity',quantity)} disabled={disabled} options={[...Array.from({length:20},(_,i)=>String(i)),...variables,...(!/^\d+$/.test(quantity)?[quantity]:[])].filter((value,index,values)=>values.indexOf(value)===index).map(conditionOption)} onChange={value=>select('quantity',write(value))}/>:<input className="tile-count" type="number" min={1} max={MAX_ITEM_QUANTITY} step={1} aria-label={label + ' quantity'} value={library ? '' : quantity} disabled={disabled} onKeyDown={event=>event.stopPropagation()} onChange={event=>{
       const count=Number(event.target.value);
       if(Number.isInteger(count)&&count>=1&&count<=19)select('quantity',write(String(count)));
     }}/>}
@@ -130,7 +157,7 @@ function Operands({ command, options, disabled, label, onChange, library = false
     const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
     const nextCommand = (value: string, nextCount = count) => fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
     return <><DirectionSelect label={label + ' direction'} value={mask('direction', direction)} disabled={disabled} onChange={v => select('direction', nextCommand(v))}/>
-      {fields.family === 'MOVE' && <><input onKeyDown={e => e.stopPropagation()} className="tile-count" type="number" min={1} max={19} step={1} aria-label={label + ' tiles'} value={mask('count', count)} disabled={disabled} onChange={e => {
+      {fields.family === 'MOVE' && <><input onKeyDown={e => e.stopPropagation()} className="tile-count" type="number" min={1} max={MAX_MOVE_COUNT} step={1} aria-label={label + ' tiles'} value={mask('count', count)} disabled={disabled} onChange={e => {
         const n = Number(e.target.value);
         if (Number.isInteger(n) && n >= 1 && n <= 19) select('count', nextCommand(direction, String(n)));
       }}/><span className="block-verb block-suffix">tiles</span></>}

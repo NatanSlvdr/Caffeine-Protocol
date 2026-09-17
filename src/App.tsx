@@ -1,126 +1,1000 @@
-import { STREET_APPROACH_SECONDS } from './domain/street';
 import { useEffect, useRef, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { Store, ArrowLeft, ArrowRight, Check, CheckCheck, Coffee, Download, FolderHeart, HelpCircle, Home, Leaf, Maximize, Pause, Play, RotateCcw, Settings2, SlidersHorizontal, Sparkles, Square, Star, Terminal, Upload, Volume2, LockKeyhole } from 'lucide-react';
-import { Cafe } from './components/Cafe';
-import { Editor } from './components/Editor';
-import { Modal } from './components/Modal';
-import { lessons,levels,stories,titleFor,CAMPAIGN_LENGTH,MAX_STARS } from './data';
-import { ROBOT_NAMES, ROBOT_AREAS } from './data/extension';
-import { CodingPaneHeader } from './components/CodingPaneHeader';
-import { RobotOptions } from './components/RobotChoice';
-import { shiftBriefs } from './data/shiftBriefs';
-import { MAX_PLAYBACK_SPEED } from './domain/playback';
-import { sampleReplay } from './domain/replay';
-import { createLiveRun } from './domain/liveSimulation';
-import { completeLevel,incomingRobotPrograms,saveRobotDraft,newSave,parseSave,readSave,SAVE_KEY,writeSave } from './domain/persistence';
-import type { ProgressSave,RunResult,Settings,RobotRole } from './domain/types';
-import { configureAudio,playSound,startAudio } from './audio';
-const go=(path:string)=>{window.location.hash=path;};
-const number=(n:number)=>String(n).padStart(2,'0');
-const stars=(n:number)=>'★'.repeat(Math.max(0,n))+'☆'.repeat(3-Math.max(0,n));
-function download(text:string,name='caffeine-protocol-save.json'){const url=URL.createObjectURL(new Blob([text],{type:'application/json'}));const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-type Update=Dispatch<SetStateAction<ProgressSave>>;
-export default function App(){
-  const [initial]=useState(()=>{try{return readSave(localStorage);}catch{return {save:newSave(),error:'Local storage is unavailable. Export your café to preserve progress.'};}});
-  const [save,setSave]=useState(initial.save),[saveError,setSaveError]=useState(initial.error),[recovery,setRecovery]=useState(!!initial.error);
-  const [route,setRoute]=useState(location.hash.slice(1)||'/'),[modal,setModal]=useState('');
-  useEffect(()=>{const change=()=>setRoute(location.hash.slice(1)||'/');window.addEventListener('hashchange',change);return ()=>window.removeEventListener('hashchange',change);},[]);
-  useEffect(()=>{if(!recovery)setSaveError(writeSave(localStorage,save));configureAudio(save.settings);document.documentElement.dataset.motion=save.settings.reduced_motion?'reduced':'full';},[save,recovery]);
-  useEffect(()=>{const gesture=(e:Event)=>{startAudio();if(e.target instanceof Element&&e.target.closest('button'))playSound('click');};window.addEventListener('pointerdown',gesture);window.addEventListener('keydown',gesture);return ()=>{window.removeEventListener('pointerdown',gesture);window.removeEventListener('keydown',gesture);};},[]);
-  const launch=(index:number)=>{if(index>save.unlocked)return;setSave(s=>({...s,selected:index}));go(stories[index]&&!save.story[index]?`/interlude/${index+1}`:`/shift/${index+1}`);};
-  const index=Math.max(0,Math.min(CAMPAIGN_LENGTH-1,Number(route.split('/')[2]||1)-1));
-  const accessible=Number.isInteger(index)&&index<=save.unlocked;
-  const page=route.split('/')[1];
-  const screen=page==='shift'&&accessible?'workspace':page==='campaign'?'campaign':page==='settings'?'settings':page==='interlude'&&accessible&&stories[index]?'interlude':page==='ending'&&save.complete?'ending':'home';
-  const total=Object.values(save.stars).reduce((a,b)=>a+b,0);
-  return <div className={`app ${screen}`}><header className="app-header"><button className="brand" onClick={()=>go('/')}><span className="brand-icon"><Coffee size={22}/></span><span>caffeine<span className="brand-light"> protocol</span><small>A LITTLE LOGIC. A LOT OF HEART.</small></span></button><div className="header-center"><span className="status-dot"/> YOUR NEIGHBORHOOD CAFÉ</div><div className="header-actions"><span className="star-total"><Star size={15}/> {total}<small>/ {MAX_STARS}</small></span><button aria-label="Settings" title="Settings" onClick={()=>go('/settings')}><Settings2 size={19}/></button></div></header>
-  <div className="app-body">{screen!=='home'&&screen!=='workspace'&&<nav className="rail" aria-label="Main navigation"><button aria-label="Main menu" onClick={()=>go('/')}><Home size={21}/></button><button className={screen==='campaign'?'current':''} aria-label="Campaign" onClick={()=>go('/campaign')}><FolderHeart size={21}/></button><div className="rail-divider"/><span className="rail-label">CAFÉ</span><button aria-label="Selected shift" onClick={()=>launch(save.selected)}><Terminal size={21}/></button><span className="rail-spacer"/><button aria-label="Game guide" onClick={()=>setModal('guide')}><HelpCircle size={21}/></button><button aria-label="Audio and display settings" onClick={()=>go('/settings')}><SlidersHorizontal size={21}/></button><Leaf className="rail-leaf" size={19}/></nav>}
-  {screen==='home'&&<main className="home-page"><section className="home-copy"><div className="eyebrow"><span/> A COZY PROGRAMMING ADVENTURE</div><h1>Good coffee.<br/>Better <em>instructions.</em></h1><p>A little café. A secondhand robot. A fresh start.<br/>Teach Query to listen, one cup at a time.</p><button className="primary large" onClick={()=>launch(save.selected)}><Play size={17} fill="currentColor"/>{Object.keys(save.stars).length?'Continue your café':'Open the café'}<ArrowRight size={18}/></button><button className="text-link" onClick={()=>go('/campaign')}>Explore the {CAMPAIGN_LENGTH} shifts <ArrowRight size={15}/></button><div className="home-footer"><span><Coffee size={16}/> Slow mornings</span><span><Terminal size={16}/> Small puzzles</span><span><Leaf size={16}/> No rush</span></div></section><section className="home-world"><div className="world-caption"><span className="status-dot"/> OPEN FOR A FRESH START</div><Cafe reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art}/><div className="home-note"><span className="note-icon">Q<span>••</span></span><div><strong>“What is a coffee?”</strong><small>QUERY · YOUR NEW COUNTER COMPANION</small></div></div></section><span className="home-bottom">HANDCRAFTED ROUTINES, HAPPILY SERVED. <span>ACT I — QUERY</span></span></main>}
-  {screen==='campaign'&&<main className="campaign-page"><div className="page-heading"><div><div className="eyebrow">THE SERVICE MANUAL / THREE ROBOTS</div><h1>One shift at a time.</h1><p>A new routine. A familiar face. A little more possibility.</p></div><span className="progress-pill"><CheckCheck size={18}/>{Object.keys(save.stars).length} / {CAMPAIGN_LENGTH} complete</span></div><div className="campaign-layout"><div className="shift-grid">{levels.map((l,i)=><button key={l.id} disabled={i>save.unlocked} className={`shift-card ${save.selected===i?'selected':''} ${save.stars[i]!==undefined?'complete':''}`} onClick={()=>setSave(s=>({...s,selected:i}))} aria-label={`Shift ${i+1}: ${titleFor(i)}${i>save.unlocked?', locked':''}`}><span className="card-number">{number(i+1)} {i>save.unlocked?<LockKeyhole size={13}/>:save.stars[i]!==undefined?<Check size={14}/>:<span className="tiny-dot"/>}</span><strong>{titleFor(i)}</strong><span className="card-bottom">{i<2?'OBSERVATION':i<14?'QUERY / INTAKE':i<22?'BREW / KITCHEN':i<30?'PORTER / FLOOR':'ALL THREE ROBOTS'}<span>{i<2?(save.stars[i]!==undefined?'✓':'—'):stars(save.stars[i]??0)}</span></span></button>)}</div><aside className="campaign-preview"><div className="preview-world"><Cafe level={save.selected+1} evening={save.selected>10} reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art}/></div><div className="preview-copy"><span className="eyebrow">SHIFT {number(save.selected+1)}</span><h2>{titleFor(save.selected)}</h2><p>{levels[save.selected].summary}</p><div className="preview-metrics"><span>{levels[save.selected].active_tables} tables</span><span>{levels[save.selected].seeds.length} test shifts</span></div><button className="primary" onClick={()=>launch(save.selected)}>Start shift <ArrowRight size={17}/></button>{save.complete&&<button className="text-link" onClick={()=>go('/ending')}>Revisit closing time</button>}</div></aside></div></main>}
-  {screen==='workspace'&&<Workspace key={index} index={index} save={save} update={setSave} saveError={saveError} onNext={()=>{if(index===CAMPAIGN_LENGTH-1)go('/ending');else{setSave(s=>({...s,selected:index+1}));go('/campaign');}}}/>}
-  {screen==='settings'&&<SettingsPage save={save} update={setSave} onNew={()=>setModal('new')} onImport={(next)=>{setSave(next);setRecovery(false);setSaveError('');}} recovery={recovery} saveError={saveError}/>}
-  {screen==='interlude'&&<main className="story-page"><div className="story-world"><Cafe level={index+1} evening={index>10} reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art}/></div><section><span className="eyebrow">BETWEEN SHIFTS / {number(index+1)}</span><h1>{stories[index].title}</h1><p className="story-text">{stories[index].text}</p><button className="primary" onClick={()=>{setSave(s=>({...s,story:{...s.story,[index]:true}}));go(`/shift/${index+1}`);}}>Let's open the café <ArrowRight size={17}/></button></section></main>}
-  {screen==='ending'&&<main className="story-page ending-page"><div className="story-world"><Cafe evening reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art}/><span className="ending-thanks">THANK YOU FOR SPENDING A LITTLE TIME AT OUR CAFÉ.</span></div><section><span className="eyebrow">EMPLOYEE OF THE MONTH</span><h1>Closing time.</h1><span className="dialogue-name">QUERY</span><blockquote>“That is not in my instruction set.”</blockquote><span className="dialogue-name">NIKO</span><blockquote>“It is now.”</blockquote><p>The counter, kitchen, and floor are working together. Every cup follows your instructions.</p><p>Niko sits down with a warm coffee. The café can finally run itself.</p><p>All three routines complete. Thank you for playing.</p><div className="ending-score">{CAMPAIGN_LENGTH} SHIFTS COMPLETE <span>·</span> {total} / {MAX_STARS} ★</div><button className="primary" onClick={()=>go('/')}>Back to the café <ArrowRight size={16}/></button><button className="text-link" onClick={()=>go('/campaign')}>Keep tinkering</button></section></main>}
-  </div>{modal==='new'&&<Modal title="Start a new café?" onClose={()=>setModal('')}><p>This clears all shifts, stars, programs and story progress. Your audio and display settings will stay.</p><p>Export your current café first if you want to return to it.</p><div className="modal-buttons"><button onClick={()=>setModal('')}>Keep my café</button><button className="danger" onClick={()=>{setSave(newSave(save.settings));setRecovery(false);setModal('');go('/');}}>Start new café</button></div></Modal>}{modal==='guide'&&<Modal title="A little logic. A lot of heart." onClose={()=>setModal('')}><p>Follow 32 shifts. Query takes orders from shift 3; Brew takes over the kitchen at shift 15; Porter takes over the floor at shift 23. Moka handles the kitchen and Pip handles the floor automatically until you program those roles. MOVE uses screen directions and whole tiles. Blocked moves stop early; customers never block paths. Use station actions beside the matching equipment. Query moves right one tile to Submit Ticket at the shared kitchen counter, then left one tile back to the register, where checkout is automatic. Coffee costs 3 credits and tea 2; sugar is included.</p><p>Choose a block from the library and click its action name or drag it into your routine. Set its values in the code pane; library selectors only preview the available options. Select a block to insert after it. Drag its grip to move a complete branch, loop or function. Drop a block into the optional else area to add an alternative. Move the empty destination tile to route a jump. Grip controls also work with Space, arrow keys and Space to drop.</p><p>Run service with <kbd>Ctrl / ⌘ + Enter</kbd>. Run the current shift one instruction at a time. One star rewards correctness; the second rewards the block target, and the third rewards the step target.</p><p>Follow each customer’s request above their head. If an instruction fails, its line is highlighted and you can edit immediately. Help in each shift includes its lesson and a worked example.</p></Modal>}</div>;
+import {
+  Store,
+  ArrowLeft,
+  ArrowRight,
+  Check,
+  CheckCheck,
+  Coffee,
+  Download,
+  FolderHeart,
+  HelpCircle,
+  Home,
+  Leaf,
+  Maximize,
+  Pause,
+  Play,
+  RotateCcw,
+  Settings2,
+  SlidersHorizontal,
+  Sparkles,
+  Square,
+  Star,
+  Terminal,
+  Upload,
+  Volume2,
+  LockKeyhole,
+} from 'lucide-react';
+import {
+  STREET_APPROACH_SECONDS,
+  MAX_PLAYBACK_SPEED,
+  sampleReplay,
+  createLiveRun,
+  type ProgressSave,
+  type RunResult,
+  type Settings,
+  type RobotRole,
+} from '@/domain';
+import { ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, robotForLevel } from '@/domain/robots';
+import {
+  completeLevel,
+  incomingRobotPrograms,
+  saveRobotDraft,
+  newSave,
+  parseSave,
+  readSave,
+  SAVE_KEY,
+  writeSave,
+} from '@/features/campaign/save/persistence';
+import { Cafe, Editor, Modal, CodingPaneHeader, RobotOptions } from '@/components';
+import { lessons, levels, stories, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
+import { shiftBriefs } from '@/data/shiftBriefs';
+import { configureAudio, playSound, startAudio } from './audio';
+const go = (path: string) => {
+  window.location.hash = path;
+};
+const number = (n: number) => String(n).padStart(2, '0');
+const stars = (n: number) => '★'.repeat(Math.max(0, n)) + '☆'.repeat(3 - Math.max(0, n));
+function download(text: string, name = 'caffeine-protocol-save.json') {
+  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = name;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
-function Workspace({index,save,update,onNext,saveError}:{index:number;save:ProgressSave;update:Update;onNext:()=>void;saveError:string}){
- const level=levels[index],observation=index<2,brief=shiftBriefs[index];
- const [programs,setPrograms]=useState(()=>save.robotDrafts[index]??incomingRobotPrograms(save,index)),[role,setRole]=useState<RobotRole>(index>=22?'floor':index>=14?'prep':'query');
- const source=programs[role];
- const [result,setResult]=useState<RunResult|null>(null),[running,setRunning]=useState(false),[paused,setPaused]=useState(false),[speed,setSpeed]=useState(1),[replayTime,setReplayTime]=useState(0),[modal,setModal]=useState(''),[textMode,setTextMode]=useState(false),[showSolution,setShowSolution]=useState(false);
- const timer=useRef(0);
- const liveRun=useRef<ReturnType<typeof createLiveRun>|null>(null);
- const [showFailure,setShowFailure]=useState(false);
- const [zoomToRobot,setZoomToRobot]=useState(!observation);
- const time=replayTime;
- const sampled=result?sampleReplay(result,time):undefined;
- const displayedTrace=sampled?.seed?.events.findLast(e=>e.role===role&&e.start<=sampled.local&&(e.end>sampled.local||e.start===e.end));
- const firstInstructionLine=source.split('\n').findIndex(line=>line.trim()&&!line.trim().startsWith('#'));
- const waitingLine=source.split('\n').findIndex(line=>/^(LISTEN|WAIT )/.test(line.trim()));
- // Keep the marker visible during startup and idle gaps: LISTEN is the real
- // instruction waiting for the next customer when no action is in flight.
- const activeLine=running&&(!result||result.passed)?(displayedTrace?.line??(waitingLine>=0?waitingLine:firstInstructionLine)):-1;
- const failureLine=showFailure&&result&&!result.passed&&result.first_failure?.role===role?(result.first_failure?.error_line??-1):-1;
- const change=(next:string)=>{if(running)return;const updated={...programs,[role]:next};setPrograms(updated);setResult(null);update(s=>saveRobotDraft(s,index,updated));};
- const stop=()=>{liveRun.current=null;setRunning(false);setPaused(false);setShowFailure(false);};
- const run=()=>{
-  if(running){stop();return;}
-  liveRun.current=createLiveRun(level,programs);
-  setResult(null);setReplayTime(-STREET_APPROACH_SECONDS);setShowFailure(false);setPaused(false);setRunning(true);
- };
- useEffect(()=>{
-  if(!running||paused)return;
-  let last=Date.now();
-  timer.current=window.setInterval(()=>{
-   const now=Date.now(),elapsed=(now-last)/1000;last=now;
-   const live=liveRun.current;
-   if(!live)return;
-   const frame=live.advance(elapsed*speed);
-   setResult(frame.result);setReplayTime(frame.time);
-   if(!frame.done)return;
-   liveRun.current=null;
-   if(frame.result.passed){
-    setRunning(false);setPaused(false);
-    update(s=>({...completeLevel(s,index,frame.result.stars,programs.query),robotSolutions:{...s.robotSolutions,[index]:programs}}));
-    playSound('success');setModal('receipt');
-   }else{
-    setPaused(true);setShowFailure(true);
-    if(frame.result.first_failure?.role)setRole(frame.result.first_failure.role);
-    playSound('retry');
-   }
-  },33);
-  return()=>clearInterval(timer.current);
- },[running,paused,speed,index,level,programs,update]);
-
- useEffect(()=>{const keys=(e:KeyboardEvent)=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){if(modal)return;e.preventDefault();run();}if(e.key==='Escape'&&!modal)go('/campaign');};window.addEventListener('keydown',keys);return ()=>window.removeEventListener('keydown',keys);});
- return <main className="workspace-main">
- <div className={'workbench'+(result&&!result.passed?' has-failure':'')}><section className="cafe-panel"><div className="workspace-heading"><button className="breadcrumb" onClick={()=>go('/campaign')}><ArrowLeft size={13}/> Campaign <span>/</span> Shift {number(index+1)}</button>{saveError&&<p className="error-text" role="alert">{saveError}</p>}</div><div className="scene-space"><Cafe evening={index>10} result={result??undefined} time={time} reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} showLabels={!running&&!modal&&!observation} moving={running&&!paused} serviceView={running} focusRole={zoomToRobot&&!observation?role:undefined} level={index+1}/>
- <div className="scene-footer camera-controls"><span className="camera-view-label">Camera view</span><div className="view-controls" role="group" aria-label="Camera view"><button type="button" aria-pressed={!zoomToRobot||observation} onClick={()=>setZoomToRobot(false)}><Store size={16} aria-hidden="true"/>Full café</button><RobotOptions level={index+1} selected={zoomToRobot&&!observation?role:undefined} labels={ROBOT_AREAS} onSelect={robot=>{setRole(robot);setZoomToRobot(true);}}/></div></div></div>
- <div className="playback-toolbar" aria-label="Simulation controls"><button className={`primary run-button ${running?'stop-button':''}`} onClick={run}>{running?<Square size={15}/>:<Play size={15} fill="currentColor"/>}{running?'Stop & edit':observation?'Watch service':'Run service'}<kbd>{navigator.platform.includes('Mac')?'⌘':'Ctrl'} ↵</kbd></button><button aria-label={paused?'Resume playback':'Pause playback'} disabled={!running||!result?.passed} onClick={()=>{setPaused(p=>!p);}}>{paused?<Play size={15}/>:<Pause size={15}/>} {paused?'Resume':'Pause'}</button><label className="playback-speed"><span>Speed <strong>{speed}×</strong><small>1 block · {(1.5/speed).toFixed(2)}s</small></span><input type="range" aria-label="Playback speed" min={1} max={MAX_PLAYBACK_SPEED} step={.25} value={speed} onChange={e=>setSpeed(Number(e.target.value))}/></label></div>
-
-
- </section><section className="editor-panel" aria-label={`${ROBOT_NAMES[role]} program editor`}>
- <CodingPaneHeader shift={titleFor(index)} objective={brief.objective} story={brief.story} onHelp={()=>setModal('help')} onOptions={()=>setModal('options')} level={index+1} role={role} onRole={r=>{setRole(r);}}/>
- <Editor role={role} source={source} onChange={change} level={index+1} locked={running} observation={observation} activeLine={activeLine} instructionProgress={displayedTrace && sampled && displayedTrace.end > displayedTrace.start ? (sampled.local-displayedTrace.start)/(displayedTrace.end-displayedTrace.start) : 0} stepSeconds={1.5/speed} failureLine={failureLine} failureMessage={failureLine>=0?result?.first_failure?.reason:undefined} onEdit={stop} textMode={textMode}/></section></div>
- {modal==='help'&&<Modal title={`Shift ${number(index+1)} · Field notes`} onClose={()=>setModal('')}><div className="lesson-note">{lessons[index].note}</div><p>{brief.story}</p><p><strong>Your goal:</strong> {brief.objective}</p>{!observation&&<><div className="help-targets"><span>★ Correct tickets</span><span>★★ ≤ {level.block_target} blocks</span><span>★★★ ≤ {level.instruction_target} steps</span></div><button onClick={()=>setShowSolution(s=>!s)}>{showSolution?'Hide worked example':'Reveal worked example'}</button>{showSolution&&<><pre className="code-example">{lessons[index].robotSolution?.[role]??lessons[index].solution}</pre><button className="primary" disabled={running} onClick={()=>{change(lessons[index].robotSolution?.[role]??lessons[index].solution);setModal('');}}>Use this example <ArrowRight size={15}/></button></>}</>}</Modal>}
- {modal==='options'&&<Modal title="Workspace options" onClose={()=>setModal('')}><label className="setting-row"><span><strong>Pixel-art shader</strong><small>Render the café with crisp pixels and outlined edges.</small></span><input type="checkbox" checked={save.settings.pixel_art} onChange={e=>update(s=>({...s,settings:{...s.settings,pixel_art:e.target.checked}}))}/></label><label className="setting-row"><span><strong>Text editor</strong><small>The same program, in a plain-text view.</small></span><input type="checkbox" checked={textMode} disabled={observation} onChange={e=>setTextMode(e.target.checked)}/></label><p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p><button disabled={running||observation} onClick={()=>setModal('reset')}><RotateCcw size={15}/> Reset to incoming program</button></Modal>}
- {modal==='reset'&&<Modal title="Reset this routine?" onClose={()=>setModal('')}><p>Your current draft will be replaced by the last passing program from the previous shift.</p><div className="modal-buttons"><button onClick={()=>setModal('')}>Keep draft</button><button className="primary" onClick={()=>{change(incomingRobotPrograms(save,index)[role]);setModal('');}}>Reset routine</button></div></Modal>}
- {modal==='receipt'&&result?.passed&&<Modal title="Service complete" onClose={()=>setModal('')} className="receipt-modal">
-  <div className="receipt-heading">CAFFEINE PROTOCOL<small>SHIFT {number(index+1)} · SERVICE RECEIPT</small></div>
-  <h3>Every order, taken care of.</h3><p>Your routine completed the service successfully.</p>
-  {!observation&&<div className="receipt-stars" aria-label={`${result.stars} stars`}>{stars(result.stars)}</div>}
-  <dl className="receipt-totals"><div><dt>Orders</dt><dd>{result.tickets.length}</dd></div><div><dt>Instructions</dt><dd>{result.executed_instructions}</dd></div><div><dt>Status</dt><dd>Complete ✓</dd></div></dl>
-  <p className="receipt-thanks">Thank you. See you next shift!</p>
-  <button className="primary" onClick={()=>{setModal('');onNext();}}>{index===CAMPAIGN_LENGTH-1?'Closing time':'Next shift'}<ArrowRight size={16}/></button>
-  <button className="text-link" onClick={()=>setModal('')}>Back to the café</button>
- </Modal>}
-
- </main>;
+type Update = Dispatch<SetStateAction<ProgressSave>>;
+export default function App() {
+  const [initial] = useState(() => {
+    try {
+      return readSave(localStorage, lessons);
+    } catch {
+      return { save: newSave(), error: 'Local storage is unavailable. Export your café to preserve progress.' };
+    }
+  });
+  const [save, setSave] = useState(initial.save),
+    [saveError, setSaveError] = useState(initial.error),
+    [recovery, setRecovery] = useState(!!initial.error);
+  const [route, setRoute] = useState(location.hash.slice(1) || '/'),
+    [modal, setModal] = useState('');
+  useEffect(() => {
+    const change = () => setRoute(location.hash.slice(1) || '/');
+    window.addEventListener('hashchange', change);
+    return () => window.removeEventListener('hashchange', change);
+  }, []);
+  useEffect(() => {
+    if (!recovery) setSaveError(writeSave(localStorage, save));
+    configureAudio(save.settings);
+    document.documentElement.dataset.motion = save.settings.reduced_motion ? 'reduced' : 'full';
+  }, [save, recovery]);
+  useEffect(() => {
+    const gesture = (e: Event) => {
+      startAudio();
+      if (e.target instanceof Element && e.target.closest('button')) playSound('click');
+    };
+    window.addEventListener('pointerdown', gesture);
+    window.addEventListener('keydown', gesture);
+    return () => {
+      window.removeEventListener('pointerdown', gesture);
+      window.removeEventListener('keydown', gesture);
+    };
+  }, []);
+  const launch = (index: number) => {
+    if (index > save.unlocked) return;
+    setSave((s) => ({ ...s, selected: index }));
+    go(stories[index] && !save.story[index] ? `/interlude/${index + 1}` : `/shift/${index + 1}`);
+  };
+  const index = Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, Number(route.split('/')[2] || 1) - 1));
+  const accessible = Number.isInteger(index) && index <= save.unlocked;
+  const page = route.split('/')[1];
+  const screen =
+    page === 'shift' && accessible
+      ? 'workspace'
+      : page === 'campaign'
+        ? 'campaign'
+        : page === 'settings'
+          ? 'settings'
+          : page === 'interlude' && accessible && stories[index]
+            ? 'interlude'
+            : page === 'ending' && save.complete
+              ? 'ending'
+              : 'home';
+  const total = Object.values(save.stars).reduce((a, b) => a + b, 0);
+  return (
+    <div className={`app ${screen}`}>
+      <header className="app-header">
+        <button className="brand" onClick={() => go('/')}>
+          <span className="brand-icon">
+            <Coffee size={22} />
+          </span>
+          <span>
+            caffeine<span className="brand-light"> protocol</span>
+            <small>A LITTLE LOGIC. A LOT OF HEART.</small>
+          </span>
+        </button>
+        <div className="header-center">
+          <span className="status-dot" /> YOUR NEIGHBORHOOD CAFÉ
+        </div>
+        <div className="header-actions">
+          <span className="star-total">
+            <Star size={15} /> {total}
+            <small>/ {MAX_STARS}</small>
+          </span>
+          <button aria-label="Settings" title="Settings" onClick={() => go('/settings')}>
+            <Settings2 size={19} />
+          </button>
+        </div>
+      </header>
+      <div className="app-body">
+        {screen !== 'home' && screen !== 'workspace' && (
+          <nav className="rail" aria-label="Main navigation">
+            <button aria-label="Main menu" onClick={() => go('/')}>
+              <Home size={21} />
+            </button>
+            <button
+              className={screen === 'campaign' ? 'current' : ''}
+              aria-label="Campaign"
+              onClick={() => go('/campaign')}
+            >
+              <FolderHeart size={21} />
+            </button>
+            <div className="rail-divider" />
+            <span className="rail-label">CAFÉ</span>
+            <button aria-label="Selected shift" onClick={() => launch(save.selected)}>
+              <Terminal size={21} />
+            </button>
+            <span className="rail-spacer" />
+            <button aria-label="Game guide" onClick={() => setModal('guide')}>
+              <HelpCircle size={21} />
+            </button>
+            <button aria-label="Audio and display settings" onClick={() => go('/settings')}>
+              <SlidersHorizontal size={21} />
+            </button>
+            <Leaf className="rail-leaf" size={19} />
+          </nav>
+        )}
+        {screen === 'home' && (
+          <main className="home-page">
+            <section className="home-copy">
+              <div className="eyebrow">
+                <span /> A COZY PROGRAMMING ADVENTURE
+              </div>
+              <h1>
+                Good coffee.
+                <br />
+                Better <em>instructions.</em>
+              </h1>
+              <p>
+                A little café. A secondhand robot. A fresh start.
+                <br />
+                Teach Query to listen, one cup at a time.
+              </p>
+              <button className="primary large" onClick={() => launch(save.selected)}>
+                <Play size={17} fill="currentColor" />
+                {Object.keys(save.stars).length ? 'Continue your café' : 'Open the café'}
+                <ArrowRight size={18} />
+              </button>
+              <button className="text-link" onClick={() => go('/campaign')}>
+                Explore the {CAMPAIGN_LENGTH} shifts <ArrowRight size={15} />
+              </button>
+              <div className="home-footer">
+                <span>
+                  <Coffee size={16} /> Slow mornings
+                </span>
+                <span>
+                  <Terminal size={16} /> Small puzzles
+                </span>
+                <span>
+                  <Leaf size={16} /> No rush
+                </span>
+              </div>
+            </section>
+            <section className="home-world">
+              <div className="world-caption">
+                <span className="status-dot" /> OPEN FOR A FRESH START
+              </div>
+              <Cafe reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
+              <div className="home-note">
+                <span className="note-icon">
+                  Q<span>••</span>
+                </span>
+                <div>
+                  <strong>“What is a coffee?”</strong>
+                  <small>QUERY · YOUR NEW COUNTER COMPANION</small>
+                </div>
+              </div>
+            </section>
+            <span className="home-bottom">
+              HANDCRAFTED ROUTINES, HAPPILY SERVED. <span>ACT I — QUERY</span>
+            </span>
+          </main>
+        )}
+        {screen === 'campaign' && (
+          <main className="campaign-page">
+            <div className="page-heading">
+              <div>
+                <div className="eyebrow">THE SERVICE MANUAL / THREE ROBOTS</div>
+                <h1>One shift at a time.</h1>
+                <p>A new routine. A familiar face. A little more possibility.</p>
+              </div>
+              <span className="progress-pill">
+                <CheckCheck size={18} />
+                {Object.keys(save.stars).length} / {CAMPAIGN_LENGTH} complete
+              </span>
+            </div>
+            <div className="campaign-layout">
+              <div className="shift-grid">
+                {levels.map((l, i) => (
+                  <button
+                    key={l.id}
+                    disabled={i > save.unlocked}
+                    className={`shift-card ${save.selected === i ? 'selected' : ''} ${save.stars[i] !== undefined ? 'complete' : ''}`}
+                    onClick={() => setSave((s) => ({ ...s, selected: i }))}
+                    aria-label={`Shift ${i + 1}: ${titleFor(i)}${i > save.unlocked ? ', locked' : ''}`}
+                  >
+                    <span className="card-number">
+                      {number(i + 1)}{' '}
+                      {i > save.unlocked ? (
+                        <LockKeyhole size={13} />
+                      ) : save.stars[i] !== undefined ? (
+                        <Check size={14} />
+                      ) : (
+                        <span className="tiny-dot" />
+                      )}
+                    </span>
+                    <strong>{titleFor(i)}</strong>
+                    <span className="card-bottom">
+                      {i < 2
+                        ? 'OBSERVATION'
+                        : i < 14
+                          ? 'QUERY / INTAKE'
+                          : i < 22
+                            ? 'BREW / KITCHEN'
+                            : i < 30
+                              ? 'PORTER / FLOOR'
+                              : 'ALL THREE ROBOTS'}
+                      <span>{i < 2 ? (save.stars[i] !== undefined ? '✓' : '—') : stars(save.stars[i] ?? 0)}</span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+              <aside className="campaign-preview">
+                <div className="preview-world">
+                  <Cafe
+                    level={save.selected + 1}
+                    evening={save.selected > 10}
+                    reduced={save.settings.reduced_motion}
+                    pixelArt={save.settings.pixel_art}
+                  />
+                </div>
+                <div className="preview-copy">
+                  <span className="eyebrow">SHIFT {number(save.selected + 1)}</span>
+                  <h2>{titleFor(save.selected)}</h2>
+                  <p>{levels[save.selected].summary}</p>
+                  <div className="preview-metrics">
+                    <span>{levels[save.selected].active_tables} tables</span>
+                    <span>{levels[save.selected].seeds.length} test shifts</span>
+                  </div>
+                  <button className="primary" onClick={() => launch(save.selected)}>
+                    Start shift <ArrowRight size={17} />
+                  </button>
+                  {save.complete && (
+                    <button className="text-link" onClick={() => go('/ending')}>
+                      Revisit closing time
+                    </button>
+                  )}
+                </div>
+              </aside>
+            </div>
+          </main>
+        )}
+        {screen === 'workspace' && (
+          <Workspace
+            key={index}
+            index={index}
+            save={save}
+            update={setSave}
+            saveError={saveError}
+            onNext={() => {
+              if (index === CAMPAIGN_LENGTH - 1) go('/ending');
+              else {
+                setSave((s) => ({ ...s, selected: index + 1 }));
+                go('/campaign');
+              }
+            }}
+          />
+        )}
+        {screen === 'settings' && (
+          <SettingsPage
+            save={save}
+            update={setSave}
+            onNew={() => setModal('new')}
+            onImport={(next) => {
+              setSave(next);
+              setRecovery(false);
+              setSaveError('');
+            }}
+            recovery={recovery}
+            saveError={saveError}
+          />
+        )}
+        {screen === 'interlude' && (
+          <main className="story-page">
+            <div className="story-world">
+              <Cafe
+                level={index + 1}
+                evening={index > 10}
+                reduced={save.settings.reduced_motion}
+                pixelArt={save.settings.pixel_art}
+              />
+            </div>
+            <section>
+              <span className="eyebrow">BETWEEN SHIFTS / {number(index + 1)}</span>
+              <h1>{stories[index].title}</h1>
+              <p className="story-text">{stories[index].text}</p>
+              <button
+                className="primary"
+                onClick={() => {
+                  setSave((s) => ({ ...s, story: { ...s.story, [index]: true } }));
+                  go(`/shift/${index + 1}`);
+                }}
+              >
+                Let's open the café <ArrowRight size={17} />
+              </button>
+            </section>
+          </main>
+        )}
+        {screen === 'ending' && (
+          <main className="story-page ending-page">
+            <div className="story-world">
+              <Cafe evening reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
+              <span className="ending-thanks">THANK YOU FOR SPENDING A LITTLE TIME AT OUR CAFÉ.</span>
+            </div>
+            <section>
+              <span className="eyebrow">EMPLOYEE OF THE MONTH</span>
+              <h1>Closing time.</h1>
+              <span className="dialogue-name">QUERY</span>
+              <blockquote>“That is not in my instruction set.”</blockquote>
+              <span className="dialogue-name">NIKO</span>
+              <blockquote>“It is now.”</blockquote>
+              <p>The counter, kitchen, and floor are working together. Every cup follows your instructions.</p>
+              <p>Niko sits down with a warm coffee. The café can finally run itself.</p>
+              <p>All three routines complete. Thank you for playing.</p>
+              <div className="ending-score">
+                {CAMPAIGN_LENGTH} SHIFTS COMPLETE <span>·</span> {total} / {MAX_STARS} ★
+              </div>
+              <button className="primary" onClick={() => go('/')}>
+                Back to the café <ArrowRight size={16} />
+              </button>
+              <button className="text-link" onClick={() => go('/campaign')}>
+                Keep tinkering
+              </button>
+            </section>
+          </main>
+        )}
+      </div>
+      {modal === 'new' && (
+        <Modal title="Start a new café?" onClose={() => setModal('')}>
+          <p>This clears all shifts, stars, programs and story progress. Your audio and display settings will stay.</p>
+          <p>Export your current café first if you want to return to it.</p>
+          <div className="modal-buttons">
+            <button onClick={() => setModal('')}>Keep my café</button>
+            <button
+              className="danger"
+              onClick={() => {
+                setSave(newSave(save.settings));
+                setRecovery(false);
+                setModal('');
+                go('/');
+              }}
+            >
+              Start new café
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'guide' && (
+        <Modal title="A little logic. A lot of heart." onClose={() => setModal('')}>
+          <p>
+            Follow 32 shifts. Query takes orders from shift 3; Brew takes over the kitchen at shift 15; Porter takes
+            over the floor at shift 23. Moka handles the kitchen and Pip handles the floor automatically until you
+            program those roles. MOVE uses screen directions and whole tiles. Blocked moves stop early; customers never
+            block paths. Use station actions beside the matching equipment. Query moves right one tile to Submit Ticket
+            at the shared kitchen counter, then left one tile back to the register, where checkout is automatic. Coffee
+            costs 3 credits and tea 2; sugar is included.
+          </p>
+          <p>
+            Choose a block from the library and click its action name or drag it into your routine. Set its values in
+            the code pane; library selectors only preview the available options. Select a block to insert after it. Drag
+            its grip to move a complete branch, loop or function. Drop a block into the optional else area to add an
+            alternative. Move the empty destination tile to route a jump. Grip controls also work with Space, arrow keys
+            and Space to drop.
+          </p>
+          <p>
+            Run service with <kbd>Ctrl / ⌘ + Enter</kbd>. Run the current shift one instruction at a time. One star
+            rewards correctness; the second rewards the block target, and the third rewards the step target.
+          </p>
+          <p>
+            Follow each customer’s request above their head. If an instruction fails, its line is highlighted and you
+            can edit immediately. Help in each shift includes its lesson and a worked example.
+          </p>
+        </Modal>
+      )}
+    </div>
+  );
 }
-function SettingsPage({save,update,onNew,onImport,recovery,saveError}:{save:ProgressSave;update:Update;onNew:()=>void;onImport:(s:ProgressSave)=>void;recovery:boolean;saveError:string}){
- const [pending,setPending]=useState<ProgressSave|null>(null),[error,setError]=useState('');const input=useRef<HTMLInputElement>(null);
- const setting=<K extends keyof Settings>(key:K,value:Settings[K])=>update(s=>({...s,settings:{...s.settings,[key]:value}}));
- const fullscreen=async()=>{try{if(document.fullscreenElement){await document.exitFullscreen();setting('fullscreen',false);}else{await document.documentElement.requestFullscreen();setting('fullscreen',true);}}catch{setError('Fullscreen is not available in this browser window.');}};
- return <main className="settings-page"><div className="page-heading"><div><span className="eyebrow">MAKE YOURSELF AT HOME</span><h1>The little things.</h1><p>A café that feels right for you.</p></div><button onClick={()=>go('/campaign')}><ArrowLeft size={15}/> Back to campaign</button></div><div className="settings-grid"><section className="settings-card"><h2><Volume2 size={19}/> Sound & atmosphere</h2>{(['volume','music','effects'] as const).map(key=><label className="volume-setting" key={key}><span>{key==='volume'?'Master volume':key==='music'?'Music':'Sound effects'}<strong>{Math.round(save.settings[key]*100)}%</strong></span><input aria-label={key==='volume'?'Master volume':key==='music'?'Music volume':'Effects volume'} type="range" min="0" max="1" step=".01" value={save.settings[key]} onChange={e=>setting(key,Number(e.target.value))}/></label>)}<p className="muted">A familiar soundtrack, a gentle click, a freshly served cup.</p></section><section className="settings-card"><h2><Sparkles size={19}/> Display & movement</h2><label className="setting-row"><span><strong>Reduced motion</strong><small>Keep the movement, skip the extra animation.</small></span><input type="checkbox" checked={save.settings.reduced_motion} onChange={e=>setting('reduced_motion',e.target.checked)}/></label><label className="setting-row"><span><strong>Pixel-art shader</strong><small>Render the café with crisp pixels and outlined edges.</small></span><input type="checkbox" checked={save.settings.pixel_art} onChange={e=>setting('pixel_art',e.target.checked)}/></label><div className="setting-row"><span><strong>Fullscreen</strong><small>A little more room for your café.</small></span><button onClick={()=>void fullscreen()}><Maximize size={17}/> Toggle</button></div><p className="muted">Designed for a mouse, a keyboard, and a desktop window at least 1100 pixels wide.</p></section><section className="settings-card"><h2><FolderHeart size={19}/> Your café, saved</h2><p>Your progress stays in this browser. Export a copy to keep it safe or move to another computer.</p><div className="button-row"><button onClick={()=>download(JSON.stringify(save,null,2))}><Download size={16}/> Export café</button><button onClick={()=>input.current?.click()}><Upload size={16}/> Import café</button>{recovery&&<button onClick={()=>{try{download(localStorage.getItem(SAVE_KEY)??'','caffeine-recovery.json');}catch{setError('The original storage could not be accessed.');}}}>Export recovery copy</button>}</div><input ref={input} aria-label="Import save file" className="file-input" type="file" accept="application/json,.json" onChange={async e=>{const file=e.target.files?.[0];if(file){try{if(file.size>2_000_000)throw new Error('This file is too large.');setPending(parseSave(await file.text()));setError('');}catch(err){setError(err instanceof Error?err.message:'This file could not be read.');}}e.target.value='';}}/>{(error||saveError)&&<p role="alert" className="error-text">{error||saveError}</p>}</section><section className="settings-card fresh-start"><h2><Leaf size={19}/> A fresh start</h2><p>Open the doors all over again. Clear campaign progress and programs while keeping your settings.</p><button className="outline-danger" onClick={onNew}>Start a new café</button><small>We’ll ask before clearing anything.</small></section></div>{pending&&<Modal title="Replace this café?" onClose={()=>setPending(null)}><p>This export contains {Object.keys(pending.stars).length} completed shifts and {Object.values(pending.stars).reduce((a,b)=>a+b,0)} stars. Importing it will replace your current progress, programs and settings.</p><div className="modal-buttons"><button onClick={()=>setPending(null)}>Keep current café</button><button className="primary" onClick={()=>{onImport(pending);setPending(null);}}>Replace café</button></div></Modal>}</main>;
+function Workspace({
+  index,
+  save,
+  update,
+  onNext,
+  saveError,
+}: {
+  index: number;
+  save: ProgressSave;
+  update: Update;
+  onNext: () => void;
+  saveError: string;
+}) {
+  const level = levels[index],
+    observation = index < 2,
+    brief = shiftBriefs[index];
+  const [programs, setPrograms] = useState(
+      () => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons),
+    ),
+    [role, setRole] = useState<RobotRole>(robotForLevel(index + 1));
+  const source = programs[role];
+  const [result, setResult] = useState<RunResult | null>(null),
+    [running, setRunning] = useState(false),
+    [paused, setPaused] = useState(false),
+    [speed, setSpeed] = useState(1),
+    [replayTime, setReplayTime] = useState(0),
+    [modal, setModal] = useState(''),
+    [textMode, setTextMode] = useState(false),
+    [showSolution, setShowSolution] = useState(false);
+  const timer = useRef(0);
+  const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
+  const [showFailure, setShowFailure] = useState(false);
+  const [zoomToRobot, setZoomToRobot] = useState(!observation);
+  const time = replayTime;
+  const sampled = result ? sampleReplay(result, time) : undefined;
+  const displayedTrace = sampled?.seed?.events.findLast(
+    (e) => e.role === role && e.start <= sampled.local && (e.end > sampled.local || e.start === e.end),
+  );
+  const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
+  const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
+  // Keep the marker visible during startup and idle gaps: LISTEN is the real
+  // instruction waiting for the next customer when no action is in flight.
+  const activeLine =
+    running && (!result || result.passed)
+      ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine))
+      : -1;
+  const failureLine =
+    showFailure && result && !result.passed && result.first_failure?.role === role
+      ? (result.first_failure?.error_line ?? -1)
+      : -1;
+  const change = (next: string) => {
+    if (running) return;
+    const updated = { ...programs, [role]: next };
+    setPrograms(updated);
+    setResult(null);
+    update((s) => saveRobotDraft(s, index, updated));
+  };
+  const stop = () => {
+    liveRun.current = null;
+    setRunning(false);
+    setPaused(false);
+    setShowFailure(false);
+  };
+  const run = () => {
+    if (running) {
+      stop();
+      return;
+    }
+    liveRun.current = createLiveRun(level, programs);
+    setResult(null);
+    setReplayTime(-STREET_APPROACH_SECONDS);
+    setShowFailure(false);
+    setPaused(false);
+    setRunning(true);
+  };
+  useEffect(() => {
+    if (!running || paused) return;
+    let last = Date.now();
+    timer.current = window.setInterval(() => {
+      const now = Date.now(),
+        elapsed = (now - last) / 1000;
+      last = now;
+      const live = liveRun.current;
+      if (!live) return;
+      const frame = live.advance(elapsed * speed);
+      setResult(frame.result);
+      setReplayTime(frame.time);
+      if (!frame.done) return;
+      liveRun.current = null;
+      if (frame.result.passed) {
+        setRunning(false);
+        setPaused(false);
+        update((s) => ({
+          ...completeLevel(s, index, frame.result.stars, programs.query, lessons),
+          robotSolutions: { ...s.robotSolutions, [index]: programs },
+        }));
+        playSound('success');
+        setModal('receipt');
+      } else {
+        setPaused(true);
+        setShowFailure(true);
+        if (frame.result.first_failure?.role) setRole(frame.result.first_failure.role);
+        playSound('retry');
+      }
+    }, 33);
+    return () => clearInterval(timer.current);
+  }, [running, paused, speed, index, level, programs, update]);
+
+  useEffect(() => {
+    const keys = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        if (modal) return;
+        e.preventDefault();
+        run();
+      }
+      if (e.key === 'Escape' && !modal) go('/campaign');
+    };
+    window.addEventListener('keydown', keys);
+    return () => window.removeEventListener('keydown', keys);
+  });
+  return (
+    <main className="workspace-main">
+      <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
+        <section className="cafe-panel">
+          <div className="workspace-heading">
+            <button className="breadcrumb" onClick={() => go('/campaign')}>
+              <ArrowLeft size={13} /> Campaign <span>/</span> Shift {number(index + 1)}
+            </button>
+            {saveError && (
+              <p className="error-text" role="alert">
+                {saveError}
+              </p>
+            )}
+          </div>
+          <div className="scene-space">
+            <Cafe
+              evening={index > 10}
+              result={result ?? undefined}
+              time={time}
+              reduced={save.settings.reduced_motion}
+              pixelArt={save.settings.pixel_art}
+              showLabels={!running && !modal && !observation}
+              moving={running && !paused}
+              serviceView={running}
+              focusRole={zoomToRobot && !observation ? role : undefined}
+              level={index + 1}
+            />
+            <div className="scene-footer camera-controls">
+              <span className="camera-view-label">Camera view</span>
+              <div className="view-controls" role="group" aria-label="Camera view">
+                <button type="button" aria-pressed={!zoomToRobot || observation} onClick={() => setZoomToRobot(false)}>
+                  <Store size={16} aria-hidden="true" />
+                  Full café
+                </button>
+                <RobotOptions
+                  level={index + 1}
+                  selected={zoomToRobot && !observation ? role : undefined}
+                  labels={ROBOT_AREA_LABELS}
+                  onSelect={(robot) => {
+                    setRole(robot);
+                    setZoomToRobot(true);
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="playback-toolbar" aria-label="Simulation controls">
+            <button className={`primary run-button ${running ? 'stop-button' : ''}`} onClick={run}>
+              {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}
+              {running ? 'Stop & edit' : observation ? 'Watch service' : 'Run service'}
+              <kbd>{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'} ↵</kbd>
+            </button>
+            <button
+              aria-label={paused ? 'Resume playback' : 'Pause playback'}
+              disabled={!running || !result?.passed}
+              onClick={() => {
+                setPaused((p) => !p);
+              }}
+            >
+              {paused ? <Play size={15} /> : <Pause size={15} />} {paused ? 'Resume' : 'Pause'}
+            </button>
+            <label className="playback-speed">
+              <span>
+                Speed <strong>{speed}×</strong>
+                <small>1 block · {(1.5 / speed).toFixed(2)}s</small>
+              </span>
+              <input
+                type="range"
+                aria-label="Playback speed"
+                min={1}
+                max={MAX_PLAYBACK_SPEED}
+                step={0.25}
+                value={speed}
+                onChange={(e) => setSpeed(Number(e.target.value))}
+              />
+            </label>
+          </div>
+        </section>
+        <section className="editor-panel" aria-label={`${ROBOT_DISPLAY_NAMES[role]} program editor`}>
+          <CodingPaneHeader
+            shift={titleFor(index)}
+            objective={brief.objective}
+            story={brief.story}
+            onHelp={() => setModal('help')}
+            onOptions={() => setModal('options')}
+            level={index + 1}
+            role={role}
+            onRole={(r) => {
+              setRole(r);
+            }}
+          />
+          <Editor
+            role={role}
+            source={source}
+            onChange={change}
+            level={index + 1}
+            locked={running}
+            observation={observation}
+            activeLine={activeLine}
+            instructionProgress={
+              displayedTrace && sampled && displayedTrace.end > displayedTrace.start
+                ? (sampled.local - displayedTrace.start) / (displayedTrace.end - displayedTrace.start)
+                : 0
+            }
+            stepSeconds={1.5 / speed}
+            failureLine={failureLine}
+            failureMessage={failureLine >= 0 ? result?.first_failure?.reason : undefined}
+            onEdit={stop}
+            textMode={textMode}
+          />
+        </section>
+      </div>
+      {modal === 'help' && (
+        <Modal title={`Shift ${number(index + 1)} · Field notes`} onClose={() => setModal('')}>
+          <div className="lesson-note">{lessons[index].note}</div>
+          <p>{brief.story}</p>
+          <p>
+            <strong>Your goal:</strong> {brief.objective}
+          </p>
+          {!observation && (
+            <>
+              <div className="help-targets">
+                <span>★ Correct tickets</span>
+                <span>★★ ≤ {level.block_target} blocks</span>
+                <span>★★★ ≤ {level.instruction_target} steps</span>
+              </div>
+              <button onClick={() => setShowSolution((s) => !s)}>
+                {showSolution ? 'Hide worked example' : 'Reveal worked example'}
+              </button>
+              {showSolution && (
+                <>
+                  <pre className="code-example">{lessons[index].robotSolution?.[role] ?? lessons[index].solution}</pre>
+                  <button
+                    className="primary"
+                    disabled={running}
+                    onClick={() => {
+                      change(lessons[index].robotSolution?.[role] ?? lessons[index].solution);
+                      setModal('');
+                    }}
+                  >
+                    Use this example <ArrowRight size={15} />
+                  </button>
+                </>
+              )}
+            </>
+          )}
+        </Modal>
+      )}
+      {modal === 'options' && (
+        <Modal title="Workspace options" onClose={() => setModal('')}>
+          <label className="setting-row">
+            <span>
+              <strong>Pixel-art shader</strong>
+              <small>Render the café with crisp pixels and outlined edges.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={save.settings.pixel_art}
+              onChange={(e) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: e.target.checked } }))}
+            />
+          </label>
+          <label className="setting-row">
+            <span>
+              <strong>Text editor</strong>
+              <small>The same program, in a plain-text view.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={textMode}
+              disabled={observation}
+              onChange={(e) => setTextMode(e.target.checked)}
+            />
+          </label>
+          <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
+          <button disabled={running || observation} onClick={() => setModal('reset')}>
+            <RotateCcw size={15} /> Reset to incoming program
+          </button>
+        </Modal>
+      )}
+      {modal === 'reset' && (
+        <Modal title="Reset this routine?" onClose={() => setModal('')}>
+          <p>Your current draft will be replaced by the last passing program from the previous shift.</p>
+          <div className="modal-buttons">
+            <button onClick={() => setModal('')}>Keep draft</button>
+            <button
+              className="primary"
+              onClick={() => {
+                change(incomingRobotPrograms(save, index, lessons)[role]);
+                setModal('');
+              }}
+            >
+              Reset routine
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === 'receipt' && result?.passed && (
+        <Modal title="Service complete" onClose={() => setModal('')} className="receipt-modal">
+          <div className="receipt-heading">
+            CAFFEINE PROTOCOL<small>SHIFT {number(index + 1)} · SERVICE RECEIPT</small>
+          </div>
+          <h3>Every order, taken care of.</h3>
+          <p>Your routine completed the service successfully.</p>
+          {!observation && (
+            <div className="receipt-stars" aria-label={`${result.stars} stars`}>
+              {stars(result.stars)}
+            </div>
+          )}
+          <dl className="receipt-totals">
+            <div>
+              <dt>Orders</dt>
+              <dd>{result.tickets.length}</dd>
+            </div>
+            <div>
+              <dt>Instructions</dt>
+              <dd>{result.executed_instructions}</dd>
+            </div>
+            <div>
+              <dt>Status</dt>
+              <dd>Complete ✓</dd>
+            </div>
+          </dl>
+          <p className="receipt-thanks">Thank you. See you next shift!</p>
+          <button
+            className="primary"
+            onClick={() => {
+              setModal('');
+              onNext();
+            }}
+          >
+            {index === CAMPAIGN_LENGTH - 1 ? 'Closing time' : 'Next shift'}
+            <ArrowRight size={16} />
+          </button>
+          <button className="text-link" onClick={() => setModal('')}>
+            Back to the café
+          </button>
+        </Modal>
+      )}
+    </main>
+  );
+}
+function SettingsPage({
+  save,
+  update,
+  onNew,
+  onImport,
+  recovery,
+  saveError,
+}: {
+  save: ProgressSave;
+  update: Update;
+  onNew: () => void;
+  onImport: (s: ProgressSave) => void;
+  recovery: boolean;
+  saveError: string;
+}) {
+  const [pending, setPending] = useState<ProgressSave | null>(null),
+    [error, setError] = useState('');
+  const input = useRef<HTMLInputElement>(null);
+  const setting = <K extends keyof Settings>(key: K, value: Settings[K]) =>
+    update((s) => ({ ...s, settings: { ...s.settings, [key]: value } }));
+  const fullscreen = async () => {
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setting('fullscreen', false);
+      } else {
+        await document.documentElement.requestFullscreen();
+        setting('fullscreen', true);
+      }
+    } catch {
+      setError('Fullscreen is not available in this browser window.');
+    }
+  };
+  return (
+    <main className="settings-page">
+      <div className="page-heading">
+        <div>
+          <span className="eyebrow">MAKE YOURSELF AT HOME</span>
+          <h1>The little things.</h1>
+          <p>A café that feels right for you.</p>
+        </div>
+        <button onClick={() => go('/campaign')}>
+          <ArrowLeft size={15} /> Back to campaign
+        </button>
+      </div>
+      <div className="settings-grid">
+        <section className="settings-card">
+          <h2>
+            <Volume2 size={19} /> Sound & atmosphere
+          </h2>
+          {(['volume', 'music', 'effects'] as const).map((key) => (
+            <label className="volume-setting" key={key}>
+              <span>
+                {key === 'volume' ? 'Master volume' : key === 'music' ? 'Music' : 'Sound effects'}
+                <strong>{Math.round(save.settings[key] * 100)}%</strong>
+              </span>
+              <input
+                aria-label={key === 'volume' ? 'Master volume' : key === 'music' ? 'Music volume' : 'Effects volume'}
+                type="range"
+                min="0"
+                max="1"
+                step=".01"
+                value={save.settings[key]}
+                onChange={(e) => setting(key, Number(e.target.value))}
+              />
+            </label>
+          ))}
+          <p className="muted">A familiar soundtrack, a gentle click, a freshly served cup.</p>
+        </section>
+        <section className="settings-card">
+          <h2>
+            <Sparkles size={19} /> Display & movement
+          </h2>
+          <label className="setting-row">
+            <span>
+              <strong>Reduced motion</strong>
+              <small>Keep the movement, skip the extra animation.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={save.settings.reduced_motion}
+              onChange={(e) => setting('reduced_motion', e.target.checked)}
+            />
+          </label>
+          <label className="setting-row">
+            <span>
+              <strong>Pixel-art shader</strong>
+              <small>Render the café with crisp pixels and outlined edges.</small>
+            </span>
+            <input
+              type="checkbox"
+              checked={save.settings.pixel_art}
+              onChange={(e) => setting('pixel_art', e.target.checked)}
+            />
+          </label>
+          <div className="setting-row">
+            <span>
+              <strong>Fullscreen</strong>
+              <small>A little more room for your café.</small>
+            </span>
+            <button onClick={() => void fullscreen()}>
+              <Maximize size={17} /> Toggle
+            </button>
+          </div>
+          <p className="muted">Designed for a mouse, a keyboard, and a desktop window at least 1100 pixels wide.</p>
+        </section>
+        <section className="settings-card">
+          <h2>
+            <FolderHeart size={19} /> Your café, saved
+          </h2>
+          <p>Your progress stays in this browser. Export a copy to keep it safe or move to another computer.</p>
+          <div className="button-row">
+            <button onClick={() => download(JSON.stringify(save, null, 2))}>
+              <Download size={16} /> Export café
+            </button>
+            <button onClick={() => input.current?.click()}>
+              <Upload size={16} /> Import café
+            </button>
+            {recovery && (
+              <button
+                onClick={() => {
+                  try {
+                    download(localStorage.getItem(SAVE_KEY) ?? '', 'caffeine-recovery.json');
+                  } catch {
+                    setError('The original storage could not be accessed.');
+                  }
+                }}
+              >
+                Export recovery copy
+              </button>
+            )}
+          </div>
+          <input
+            ref={input}
+            aria-label="Import save file"
+            className="file-input"
+            type="file"
+            accept="application/json,.json"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                try {
+                  if (file.size > 2_000_000) throw new Error('This file is too large.');
+                  setPending(parseSave(await file.text(), lessons));
+                  setError('');
+                } catch (err) {
+                  setError(err instanceof Error ? err.message : 'This file could not be read.');
+                }
+              }
+              e.target.value = '';
+            }}
+          />
+          {(error || saveError) && (
+            <p role="alert" className="error-text">
+              {error || saveError}
+            </p>
+          )}
+        </section>
+        <section className="settings-card fresh-start">
+          <h2>
+            <Leaf size={19} /> A fresh start
+          </h2>
+          <p>Open the doors all over again. Clear campaign progress and programs while keeping your settings.</p>
+          <button className="outline-danger" onClick={onNew}>
+            Start a new café
+          </button>
+          <small>We’ll ask before clearing anything.</small>
+        </section>
+      </div>
+      {pending && (
+        <Modal title="Replace this café?" onClose={() => setPending(null)}>
+          <p>
+            This export contains {Object.keys(pending.stars).length} completed shifts and{' '}
+            {Object.values(pending.stars).reduce((a, b) => a + b, 0)} stars. Importing it will replace your current
+            progress, programs and settings.
+          </p>
+          <div className="modal-buttons">
+            <button onClick={() => setPending(null)}>Keep current café</button>
+            <button
+              className="primary"
+              onClick={() => {
+                onImport(pending);
+                setPending(null);
+              }}
+            >
+              Replace café
+            </button>
+          </div>
+        </Modal>
+      )}
+    </main>
+  );
 }

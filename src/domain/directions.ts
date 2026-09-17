@@ -20,7 +20,3 @@ export function normalizeDirection(direction: string): Direction | undefined {
   const normalized = direction.toUpperCase().replaceAll('-', '_').replaceAll(' ', '_');
   return (DIRECTIONS as readonly string[]).includes(normalized) ? normalized as Direction : undefined;
 }
-
-export function isDirection(direction: string): direction is Direction {
-  return normalizeDirection(direction) !== undefined;
-}

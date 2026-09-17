@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, type ReactNode } from 'react';
 import { useFrame } from '@react-three/fiber';
 import { Mesh, Plane, Vector3, type Group } from 'three';
 import { Box, Cylinder, SoftBox, CAFE_COLORS } from './CafeModels';
-import { STREET_BOUNDS } from '../domain/street';
+import { STREET_BOUNDS } from '@/domain/street';
 
 type StreetMotion = { paused: boolean; reduced: boolean };
 

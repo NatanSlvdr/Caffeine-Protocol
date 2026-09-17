@@ -1,5 +1,5 @@
 import { Save, Clock3, MoveUpRight, PenLine, Move, CircleHelp, CirclePlus, Coffee, CornerDownRight, GitBranch, Hand, ListRestart, MapPin, Package, Plus, ReceiptText, Repeat2, Settings2, SquareFunction, Ticket, Undo2, Waves } from 'lucide-react';
-import { blockFields } from '../domain/blockFields';
+import { blockFields } from '@/domain/blockFields';
 
 /** Small action-specific glyphs are shared by the library, routine, and drag preview. */
 export function BlockIcon({ command }: { command: string }) {

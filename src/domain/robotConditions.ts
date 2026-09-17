@@ -1,40 +1,40 @@
 import type { SpeechIntent } from './types';
 
 /** Kitchen/floor ticket comparisons retained independently of Query speech tokens. */
-export const CONDITION_OPERATORS = ['IN', '=', '!='] as const;
+export const WORKER_CONDITION_OPERATORS = ['IN', '=', '!='] as const;
 /** Retained only so existing saved numeric-comparison programs keep running. */
 type LegacyConditionOperator = '<' | '>' | '<=' | '>=';
-export const CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'count', 'ambiguous'] as const;
-export const CONDITION_SOURCES = ['CUSTOMER SPEECH', 'SUGAR COUNT', '0', '1', '2', 'TRUE', 'FALSE'] as const;
-export type ConditionOperator = (typeof CONDITION_OPERATORS)[number] | LegacyConditionOperator;
-export interface ComparisonCondition {
-  left: (typeof CONDITION_VALUES)[number];
-  operator: ConditionOperator;
-  right: (typeof CONDITION_SOURCES)[number];
+export const WORKER_CONDITION_VALUES = ['coffee', 'tea', 'sugar', 'count', 'ambiguous'] as const;
+export const WORKER_CONDITION_SOURCES = ['CUSTOMER SPEECH', 'SUGAR COUNT', '0', '1', '2', 'TRUE', 'FALSE'] as const;
+export type WorkerConditionOperator = (typeof WORKER_CONDITION_OPERATORS)[number] | LegacyConditionOperator;
+export interface WorkerComparisonCondition {
+  left: (typeof WORKER_CONDITION_VALUES)[number];
+  operator: WorkerConditionOperator;
+  right: (typeof WORKER_CONDITION_SOURCES)[number];
 }
 const comparisonPattern =
   /^IF (coffee|tea|sugar|count|ambiguous) (IN|!=|<=|>=|=|<|>) (CUSTOMER SPEECH|SUGAR COUNT|0|1|2|TRUE|FALSE)$/;
-export function parseComparison(command: string): ComparisonCondition | undefined {
+export function parseWorkerComparison(command: string): WorkerComparisonCondition | undefined {
   const match = comparisonPattern.exec(command);
   return match
     ? {
-        left: match[1] as ComparisonCondition['left'],
-        operator: match[2] as ConditionOperator,
-        right: match[3] as ComparisonCondition['right'],
+        left: match[1] as WorkerComparisonCondition['left'],
+        operator: match[2] as WorkerConditionOperator,
+        right: match[3] as WorkerComparisonCondition['right'],
       }
     : undefined;
 }
-export function isComparisonCondition(command: string) {
-  return !!parseComparison(command);
+export function isWorkerComparison(command: string) {
+  return !!parseWorkerComparison(command);
 }
-const comparisonUsesCount = (condition: ComparisonCondition) =>
+const comparisonUsesCount = (condition: WorkerComparisonCondition) =>
   condition.left === 'count' || condition.right === 'SUGAR COUNT' || ['0', '1', '2'].includes(condition.right);
 export function comparisonUnlocked(command: string, level: number) {
-  const condition = parseComparison(command);
+  const condition = parseWorkerComparison(command);
   return !!condition && level >= (comparisonUsesCount(condition) ? 10 : 4);
 }
 /** Evaluate existing worker conditions against their selected ticket fields. */
-export function evaluateComparison(condition: ComparisonCondition, order: SpeechIntent, intent = order) {
+export function evaluateWorkerComparison(condition: WorkerComparisonCondition, order: SpeechIntent, intent = order) {
   const speechValue = () =>
     condition.left === 'coffee' || condition.left === 'tea'
       ? order.drink

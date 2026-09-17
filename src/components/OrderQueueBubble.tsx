@@ -1,4 +1,4 @@
-import type { OrderTicket } from '../domain/types';
+import type { OrderTicket } from '@/domain/types';
 import { OrderIcons } from './OrderIcons';
 
 /** The handoff bubble shows only paper orders still waiting for the cook. */

@@ -1,10 +1,11 @@
 import { gridRoute, STARTS, STATIONS, TABLE_LAYOUT, tableFront } from './layout';
 import type { Point } from './layout';
 import type { RobotRole } from './types';
+import { MAX_MOVE_COUNT } from './constants';
 /** Build readable reference MOVE counts from a route; player execution never calls this helper. */
 export function movementSource(from:Point,to:Point,role?:RobotRole){
  const path=gridRoute(from,to,role),moves:{direction:string;count:number}[]=[];
- path.slice(1).forEach((p,i)=>{const prev=path[i],direction=p[0]>prev[0]?'RIGHT':p[0]<prev[0]?'LEFT':p[1]>prev[1]?'DOWN':'UP';const last=moves.at(-1);if(last?.direction===direction&&last.count<19)last.count++;else moves.push({direction,count:1});});
+ path.slice(1).forEach((p,i)=>{const prev=path[i],direction=p[0]>prev[0]?'RIGHT':p[0]<prev[0]?'LEFT':p[1]>prev[1]?'DOWN':'UP';const last=moves.at(-1);if(last?.direction===direction&&last.count<MAX_MOVE_COUNT)last.count++;else moves.push({direction,count:1});});
  return moves.map(m=>`MOVE ${m.direction} ${m.count}`);
 }
 export function preparationSource(level:number,batch=1){

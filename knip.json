@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
-  "entry": ["src/main.tsx", "tools/*.mjs", "scripts/art/*.py"],
-  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}", "vite.config.ts", "playwright.config.ts", "vite/plugins/**/*.ts"],
-  "ignore": ["tests/fixtures/**", "src/vite-env.d.ts"],
-  "vitest": true
+  "entry": ["src/components/index.ts", "src/domain/index.ts", "tools/*.mjs"],
+  "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}"],
+  "ignoreDependencies": ["@floating-ui/react", "clsx", "husky", "valibot", "zustand"],
+  "ignoreExportsUsedInFile": true
 }

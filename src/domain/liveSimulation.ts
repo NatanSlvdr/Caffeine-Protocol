@@ -3,6 +3,8 @@ import { streamService } from './service';
 import { validate } from './simulation';
 import { STREET_APPROACH_SECONDS } from './street';
 import { BLOCK_SECONDS } from './playback';
+import { QUERY_PROGRAM_LEVEL_CAP, INSTRUCTION_LIMIT } from './constants';
+import { ROBOT_UNLOCK_LEVELS } from './robots';
 import { STARTS } from './layout';
 import { moveQuery } from './queryMovement';
 import { orderTotal } from './pricing';
@@ -20,10 +22,10 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
   let service: ReturnType<typeof streamService> | undefined;
 
   function initialize() {
-    const program = compileProgram(programs.query, Math.min(Number(level.id.slice(1)), 14));
+    const program = compileProgram(programs.query, Math.min(Number(level.id.slice(1)), QUERY_PROGRAM_LEVEL_CAP));
     const number = Number(level.id.slice(1));
-    result.block_count = program.block_count + (number >= 15 ? programs.prep.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length : 0)
-      + (number >= 23 ? programs.floor.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length : 0);
+    result.block_count = program.block_count + (number >= ROBOT_UNLOCK_LEVELS.prep ? programs.prep.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length : 0)
+      + (number >= ROBOT_UNLOCK_LEVELS.floor ? programs.floor.split('\n').filter(l => l.trim() && !l.trim().startsWith('#')).length : 0);
     result.events = seed.customers.map((customer, i): ReplayEvent => ({
       seed_id: seed.id, customer: structuredClone(customer), tickets: [], trace: [], asked_help: false, passed: true,
       table: i % level.active_tables + 1, satisfaction: 100,
@@ -74,7 +76,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
         state = actual.state; event.payment = actual.payment;
         event.timing.created = now;
         result.executed_instructions += actual.executed_instructions;
-        const reason = result.executed_instructions > 10000 ? 'Instruction limit reached (10,000 per robot).' : validate(event.customer, actual);
+        const reason = result.executed_instructions > INSTRUCTION_LIMIT ? 'Instruction limit reached (10,000 per robot).' : validate(event.customer, actual);
         if (reason) {
           event.passed = false; event.reason = reason;
           event.failure_line = actual.error_line ?? program.error_line;

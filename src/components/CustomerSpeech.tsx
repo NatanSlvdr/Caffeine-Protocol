@@ -1,4 +1,4 @@
-import type { Customer } from '../domain/types';
+import type { Customer } from '@/domain/types';
 import { OrderIcons } from './OrderIcons';
 
 /** Once intake begins, the customer's phrase and grouped order icons stay attached. */

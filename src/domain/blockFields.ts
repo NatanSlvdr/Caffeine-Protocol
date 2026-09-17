@@ -1,5 +1,5 @@
-import { isComparisonCondition } from './program';
-import { isComparisonCondition as isRobotComparison } from './robotConditions';
+import { isQueryComparison } from './program';
+import { isWorkerComparison as isRobotComparison } from './robotConditions';
 
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
@@ -28,7 +28,7 @@ export function blockVariants(command: string, available: readonly string[]) {
   return available.filter(candidate => candidate !== 'ITEM heard' && blockFields(candidate).family === family
     // Legacy IF blocks keep their compact single selector; comparison blocks
     // expose their three operands separately in the editor.
-    && !(family === 'IF' && (isComparisonCondition(candidate) || isRobotComparison(candidate))));
+    && !(family === 'IF' && (isQueryComparison(candidate) || isRobotComparison(candidate))));
 }
 
 /** One library block per action; operands are chosen inside that block. */

@@ -12,10 +12,8 @@ import { RobotHolding } from './RobotHolding';
 import { CafeFloor } from './CafeFloor';
 import { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS } from './CafeModels';
 import type { Vec3 } from './CafeModels';
-import type { StationId, Point } from '../domain/layout';
-import type { ActorId, ActorSnapshot, RobotRole, RunResult } from '../domain/types';
-import { sampleReplay } from '../domain/replay';
 import {
+  sampleReplay,
   cameraZoom,
   TABLE_LAYOUT,
   FURNITURE,
@@ -28,7 +26,14 @@ import {
   STAFF_ENTRY,
   ROOM,
   tableSeat,
-} from '../domain/layout';
+  type StationId,
+  type Point,
+  type ActorId,
+  type ActorSnapshot,
+  type RobotRole,
+  type RunResult,
+} from '@/domain';
+import { ROBOT_DISPLAY_NAMES, robotActorName, robotUnlocked } from '@/domain/robots';
 
 function Plant({ at, scale = 1 }: { at: Vec3; scale?: number }) {
   return (
@@ -448,9 +453,13 @@ function World({
             <group key={id}>
               <Character
                 at={actor.position}
-                robot={id === 'query' || (id === 'prep' && level >= 15) || (id === 'floor' && level >= 23)}
+                robot={id === 'query' || (id === 'prep' && robotUnlocked('prep', level)) || (id === 'floor' && robotUnlocked('floor', level))}
                 label={
-                  id === 'prep' && level < 15 ? 'Moka · Auto' : id === 'floor' && level < 23 ? 'Pip · Auto' : undefined
+                  id === 'prep' && !robotUnlocked('prep', level)
+                    ? 'Moka · Auto'
+                    : id === 'floor' && !robotUnlocked('floor', level)
+                      ? 'Pip · Auto'
+                      : undefined
                 }
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}
                 walking={moving && actor.walking}
@@ -462,7 +471,7 @@ function World({
               />
               {serviceView &&
                 state &&
-                !((id === 'prep' && level < 15) || (id === 'floor' && level < 23)) &&
+                !((id === 'prep' && !robotUnlocked('prep', level)) || (id === 'floor' && !robotUnlocked('floor', level))) &&
                 (actor.heldPaper ||
                   actor.inventory.length > 0 ||
                   actor.action ||
@@ -480,14 +489,8 @@ function World({
                         id === 'niko'
                           ? 'Niko'
                           : id === 'query'
-                            ? 'Query'
-                            : id === 'prep'
-                              ? level >= 15
-                                ? 'Brew'
-                                : 'Moka'
-                              : level >= 23
-                                ? 'Porter'
-                                : 'Pip'
+                            ? ROBOT_DISPLAY_NAMES.query
+                            : robotActorName(id === 'prep' ? 'prep' : 'floor', level)
                       }
                       inventory={actor.inventory}
                       paper={actor.heldPaper}

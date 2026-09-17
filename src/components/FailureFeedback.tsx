@@ -1,5 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
-import { variableLabels } from '../domain/program';
+import { variableLabels } from '@/domain/program';
 import { createPortal } from 'react-dom';
 import type { RefObject } from 'react';
 

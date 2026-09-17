@@ -1,0 +1,23 @@
+/** Single-import surface for presentational components. Internal imports stay relative. */
+export { BlockIcon } from './BlockIcon';
+export { BlockSelect, DirectionSelect } from './BlockSelect';
+export type { BlockOption } from './BlockSelect';
+export { Cafe } from './Cafe';
+export { CafeFloor } from './CafeFloor';
+export { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS, SugarCubes } from './CafeModels';
+export type { Vec3 } from './CafeModels';
+export { CodingPaneHeader } from './CodingPaneHeader';
+export { CustomerSpeech } from './CustomerSpeech';
+export { Editor } from './Editor';
+export { ExecutionCursor } from './ExecutionCursor';
+export { InstructionError } from './FailureFeedback';
+export { Modal } from './Modal';
+export { ModelThumbnail } from './ModelThumbnail';
+export { OperandIcon } from './OperandIcon';
+export { OrderIcons } from './OrderIcons';
+export type { IconOrder } from './OrderIcons';
+export { OrderQueueBubble } from './OrderQueueBubble';
+export { PixelArtEffect } from './PixelArtEffect';
+export { RobotChoice, RobotOptions } from './RobotChoice';
+export { RobotHolding } from './RobotHolding';
+export { Street, StreetClip } from './Street';

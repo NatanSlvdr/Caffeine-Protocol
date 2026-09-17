@@ -1,4 +1,4 @@
-import type { StationId } from '../domain/layout';
+import type { StationId } from '@/domain/layout';
 import { RoundedBox } from '@react-three/drei';
 
 export type Vec3=[number,number,number];
@@ -103,7 +103,7 @@ export function Appliance({ id }: { id: StationId }) {
 }
 
 /** Compact cold storage beside the ingredient cabinet, opening toward the prep aisle. */
-export function Fridge(){return <group>
+function Fridge(){return <group>
  <Box at={[0,1,-.4]} size={[.94,1.9,.06]} color="#d8e0dc"/>
  {[-.44,.44].map(x=><Box key={x} at={[x,1,0]} size={[.06,1.9,.86]} color="#d8e0dc"/>)}
  {[.1,.65,1.2,1.85].map(y=><Box key={y} at={[0,y,0]} size={[.84,.045,.78]} color="#c1cfcc"/>)}
@@ -118,7 +118,7 @@ export function Fridge(){return <group>
 </group>;}
 
 /** A full-height open shelf stands beside the fridge and matches its silhouette. */
-export function HighShelf(){return <group>
+function HighShelf(){return <group>
  {['left','right'].map((side,i)=><Box key={side} at={[.57+i*.86,1,-.02]} size={[.07,2,.74]} color="#355358"/>)}
  {[.08,.7,1.32,1.94].map(y=><Box key={y} at={[1,y,-.02]} size={[.92,.07,.78]} color="#b68b69"/>)}
  {[.34,.96,1.58].flatMap((y,row)=>[-.28,0,.28].flatMap((offset,column)=>[-.2,.2].map(z=><group key={`${y}-${offset}-${z}`} position={[1+offset,y,z]}>

@@ -1,7 +1,7 @@
 import { test,expect } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { lessons,stories } from '../../src/data';
-import { newSave,SAVE_KEY } from '../../src/domain/persistence';
+import { newSave,SAVE_KEY } from '../../src/features/campaign/save/persistence';
 async function ready(page:Page){await page.goto('/');await expect(page.getByRole('heading',{name:'Good coffee. Better instructions.'})).toBeVisible();}
 async function finishObservation(page:Page){await page.getByRole('button',{name:'Watch service'}).click();await expect(page.getByRole('button',{name:'Back to campaign',exact:true})).toHaveCount(0);await page.getByRole('button',{name:'4× playback',exact:true}).click();await page.clock.fastForward(40_000);await expect(page.getByRole('button',{name:'Back to campaign',exact:true})).toBeVisible();await page.getByRole('button',{name:'Back to campaign',exact:true}).click();}
 async function fit(page:Page,selector:string){const box=await page.locator(selector).boundingBox();expect(box).not.toBeNull();expect(box!.x).toBeGreaterThanOrEqual(0);expect(box!.y).toBeGreaterThanOrEqual(0);expect(box!.x+box!.width).toBeLessThanOrEqual(page.viewportSize()!.width+1);expect(box!.y+box!.height).toBeLessThanOrEqual(page.viewportSize()!.height+1);}

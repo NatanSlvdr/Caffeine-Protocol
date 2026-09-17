@@ -3,7 +3,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { ModelThumbnail } from './ModelThumbnail';
-import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '../domain/directions';
+import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '@/domain/directions';
 
 export interface BlockOption {
   value: string;

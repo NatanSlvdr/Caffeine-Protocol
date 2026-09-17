@@ -5,7 +5,7 @@ import { migrateQuerySource, compileProgram, executeCustomerEvent } from '../src
 import { compileRobot } from '../src/domain/robotProgram';
 import { referencePrograms } from '../src/data/extension';
 import { runLevel } from '../src/domain/simulation';
-import { newSave, parseSave } from '../src/domain/persistence';
+import { newSave, parseSave } from '../src/features/campaign/save/persistence';
 
 const customer = levels[2].seeds[0].customers[0];
 
@@ -38,7 +38,7 @@ describe('paper order handoff', () => {
     expect(migrateQuerySource(oldSource)).toBe(migrated);
 
     const save = { ...newSave(), drafts: { 2: oldSource }, solutions: { 2: oldSource }, robotDrafts: { 2: { query: oldSource, prep: '', floor: '' } }, robotSolutions: {} };
-    const restored = parseSave(JSON.stringify(save));
+    const restored = parseSave(JSON.stringify(save), lessons);
     expect(restored.drafts[2]).toBe(migrated);
     expect(restored.solutions[2]).toBe(migrated);
     expect(restored.robotDrafts[2].query).toBe(migrated);

@@ -2,7 +2,8 @@ import { ticketUnits } from './ticketUnits';
 import { STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
-import { directionVectors, normalizeDirection } from './directions';
+import { directionVectors } from './directions';
+import { commandDirection } from './commands';
 import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
 /** Sample immutable execution records; presentation never invents a robot route. */
 export function sampleReplay(result:RunResult,time:number){
@@ -25,8 +26,8 @@ export function sampleReplay(result:RunResult,time:number){
   const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local&&!e.error).at(-1),last=history.at(-1)!;
   let position=settled?.to??last.from;
   if(motion&&motion.end>local){const t=Math.max(0,Math.min(1,(local-motion.start)/(motion.end-motion.start)));position=[motion.from[0]+(motion.to[0]-motion.from[0])*t,motion.from[1]+(motion.to[1]-motion.from[1])*t];}
-  const directional=history.findLast(event=>event.command==='LISTEN'||/^(MOVE|TAKE|PICKUP|DEPOSIT) /.test(event.command)&&normalizeDirection(event.command.split(' ')[1]));
-  const direction=directional?normalizeDirection(directional.command.split(' ')[1]??''):undefined;
+  const directional=history.findLast(event=>event.command==='LISTEN'||commandDirection(event.command)!==undefined);
+  const direction=directional?commandDirection(directional.command):undefined;
   const vector=direction?directionVectors[direction]:undefined;
   const facing=directional?.command==='LISTEN'?-Math.PI/2:vector?Math.atan2(vector[0],vector[1]):id==='query'?-Math.PI/2:0;
   const reach=/^(TAKE|PICKUP|DEPOSIT)( |$)/.test(last.command)&&last.end>local?Math.sin(Math.PI*(local-last.start)/Math.max(.001,last.end-last.start)):0;

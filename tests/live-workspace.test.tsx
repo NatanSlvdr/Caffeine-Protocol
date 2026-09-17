@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import App from '../src/App';
-import { newSave, SAVE_KEY } from '../src/domain/persistence';
+import { newSave, SAVE_KEY } from '../src/features/campaign/save/persistence';
 import { lessons } from '../src/data';
 
 vi.mock('../src/components/Cafe',()=>({Cafe:({serviceView,focusRole}:{serviceView?:boolean;focusRole?:string})=><div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole}/> }));

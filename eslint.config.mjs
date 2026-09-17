@@ -124,6 +124,42 @@ export default tseslint.config(
     },
   },
   {
+    files: ['src/components/**', 'src/features/**', 'src/app/**', 'src/state/**', 'src/App.tsx', 'src/audio.ts'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['../domain', '../domain/*', './domain', './domain/*'],
+              message: 'Import from @/domain (barrel) instead of relative domain paths.',
+            },
+            {
+              group: ['../data', '../data/*', './data', './data/*'],
+              message: 'Import from @/data instead of relative data paths.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/App.tsx'],
+    rules: {
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['./components', './components/*'],
+              message: 'Import from @/components (barrel) instead of relative component paths.',
+            },
+          ],
+        },
+      ],
+    },
+  },
+  {
     files: ['tests/**', 'playwright.config.ts', 'vite.config.ts', 'vite/plugins/**', 'tools/**'],
     languageOptions: {
       globals: { ...globals.node },

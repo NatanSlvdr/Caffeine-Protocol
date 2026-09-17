@@ -1,12 +1,10 @@
 import campaign from './campaign.json' with {type:'json'};
-import labelsData from './labels.json' with {type:'json'};
 import { extensionLevels, extensionLessons } from './extension';
-import type { LevelDefinition } from '../domain/types';
+import type { LevelDefinition } from '@/domain/types';
 export const levels:LevelDefinition[] = [...(campaign.levels as LevelDefinition[]), ...extensionLevels];
 export const lessons = [...campaign.lessons.map(l=>({...l,robotStarter:undefined,robotSolution:undefined})),...extensionLessons];
 export const CAMPAIGN_LENGTH=levels.length;
 export const MAX_STARS=levels.filter(l=>l.programming_enabled).length*3;
-export const labels:Record<string,string> = labelsData;
 export const titleFor=(index:number)=>levels[index].title.replace(/^Level \d+: /,'');
 export const stories:Record<number,{title:string;text:string}>={
 2:{title:'A voice at the counter',text:"Niko tightens the last screw. The scrapyard robot's display blinks.\n\nQUERY: Hearing module online. What is a coffee?\nNIKO: Let's begin with one customer, one ticket. Moka will handle the brewing, and Pip will serve the drinks."},

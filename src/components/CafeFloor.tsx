@@ -1,6 +1,6 @@
 import { useEffect, useMemo } from 'react';
 import { CanvasTexture, SRGBColorSpace } from 'three';
-import { BOUNDS, ROOM } from '../domain/layout';
+import { BOUNDS, ROOM } from '@/domain/layout';
 import { Box } from './CafeModels';
 
 /** Staggered oak boards and fine grain stay independent of the editable tile grid. */

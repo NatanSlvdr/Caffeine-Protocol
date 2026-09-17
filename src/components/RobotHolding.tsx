@@ -1,10 +1,10 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
-import type { ActorSnapshot, Cargo, OrderTicket } from '../domain/types';
+import type { ActorSnapshot, Cargo, OrderTicket } from '@/domain/types';
 import { Bean, Droplets, Leaf, ScrollText, CupSoda, Settings } from 'lucide-react';
 import { BlockIcon } from './BlockIcon';
-import { blockFields } from '../domain/blockFields';
-import { variableLabels } from '../domain/program';
+import { blockFields } from '@/domain/blockFields';
+import { variableLabels } from '@/domain/program';
 import { OperandIcon } from './OperandIcon';
 import { ModelThumbnail } from './ModelThumbnail';
 

@@ -1,6 +1,8 @@
 import { ticketUnits } from './ticketUnits';
 import { orderTotal } from './pricing';
 import { simulateService } from './service';
+import { INSTRUCTION_LIMIT } from './constants';
+import { ROBOT_UNLOCK_LEVELS } from './robots';
 import type {
   RobotPrograms,
   Customer,
@@ -79,7 +81,7 @@ export function runLevel(level: LevelDefinition, program: Program, robotPrograms
       }
       state = actual.state;
       seedInstructions += actual.executed_instructions;
-      if (seedInstructions > 10000) actual.error = 'Instruction limit reached (10,000 per robot).';
+      if (seedInstructions > INSTRUCTION_LIMIT) actual.error = 'Instruction limit reached (10,000 per robot).';
       result.executed_instructions += actual.executed_instructions;
       const reason = validate(customer, actual);
       let line = actual.error_line ?? -1;
@@ -173,11 +175,11 @@ export function runLevel(level: LevelDefinition, program: Program, robotPrograms
     result.tickets = result.events.flatMap((e) => e.tickets);
   }
   if (!orderPassed && result.first_failure && !result.first_failure.role) result.first_failure.role = 'query';
-  if (levelNumber >= 15)
+  if (levelNumber >= ROBOT_UNLOCK_LEVELS.prep)
     result.block_count =
       program.block_count +
       programs.prep.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#')).length +
-      (levelNumber >= 23 ? programs.floor.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#')).length : 0);
+      (levelNumber >= ROBOT_UNLOCK_LEVELS.floor ? programs.floor.split('\n').filter((l) => l.trim() && !l.trim().startsWith('#')).length : 0);
   result.average_satisfaction = result.events.length
     ? round(result.events.reduce((a, e) => a + e.satisfaction, 0) / result.events.length)
     : 100;
