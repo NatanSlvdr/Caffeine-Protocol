@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { createRoot, extend, useFrame } from '@react-three/fiber';
 import { AmbientLight, DirectionalLight, Group, Mesh, MeshStandardMaterial, BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry } from 'three';
-import { SugarCubes, Cup, RobotModel } from './CafeModels';
+import { Appliance, SugarCubes, Cup, RobotModel } from './CafeModels';
 
-type Model = 'coffee' | 'tea' | 'sugar' | 'robot';
+export type ThumbnailModel = 'coffee' | 'tea' | 'sugar' | 'robot' | 'brew' | 'porter' | 'register' | 'machine' | 'sink';
+type Model = ThumbnailModel;
 const thumbnails = new Map<Model, Promise<string>>();
 let queue = Promise.resolve();
 
@@ -16,15 +17,16 @@ function thumbnail(model: Model) {
       extend({ AmbientLight, DirectionalLight, Group, Mesh, MeshStandardMaterial, BoxGeometry, CylinderGeometry, TorusGeometry, SphereGeometry });
       const canvas = document.createElement('canvas');
       const root = createRoot(canvas);
-      const robot = model === 'robot';
+      const robot = model === 'robot' || model === 'brew' || model === 'porter';
+      const appliance = model === 'register' || model === 'machine' || model === 'sink';
       await root.configure({
         size: { width: 128, height: 128, top: 0, left: 0 }, dpr: 2,
         gl: { alpha: true, antialias: true, preserveDrawingBuffer: true },
-        orthographic: true, camera: { position: [2, 3, 5], zoom: robot ? 56 : 205, near: .1, far: 50 },
+        orthographic: true, camera: { position: [2, 3, 5], zoom: robot ? 56 : appliance ? 58 : 205, near: .1, far: 50 },
       });
       await new Promise<void>(done => {
         root.render(<><ambientLight intensity={1.5}/><directionalLight position={[-3, 6, 5]} intensity={2}/>
-          {robot ? <group position={[0, -.95, 0]}><RobotModel/></group> : model === 'sugar' ? <SugarCubes/> : <Cup at={[0, -.15, 0]} tea={model === 'tea'}/>}
+          {robot ? <group position={[0, -.95, 0]}><RobotModel color={model === 'brew' ? '#7d9eae' : model === 'porter' ? '#d4ac6b' : '#80a889'}/></group> : appliance ? <group position={[0, -1.6, 0]}><Appliance id={model === 'register' ? 'orders' : model === 'machine' ? 'brewer' : 'water'}/></group> : model === 'sugar' ? <SugarCubes/> : <Cup at={[0, -.15, 0]} tea={model === 'tea'}/>}
           <Capture center={model === 'tea'} onCapture={url => { resolve(url); done(); }}/></>);
       });
       root.unmount();

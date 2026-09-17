@@ -1,0 +1,92 @@
+/* Both entry screens stay in the viewport; only the map owns a scroll area. */
+.app.home,.app.campaign{height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;background:#faf7ef}
+.home .app-header,.campaign .app-header{height:64px;flex:0 0 64px;background:transparent;border-bottom:0;padding:0 32px}
+.home .app-body,.campaign .app-body{flex:1;min-width:0;min-height:0;overflow:hidden}
+.home .header-center,.campaign .header-center,.home .brand small,.campaign .brand small{display:none}
+.home .brand,.campaign .brand{font-size:18px}.home .brand-icon,.campaign .brand-icon{background:transparent;transform:none;width:28px}
+.home .star-total,.campaign .star-total{background:none;padding:0;color:#8a785e}
+.home .primary,.campaign .primary{box-shadow:none;border-radius:8px;font-size:13px;font-weight:600}
+
+/* The café carries the landing page, with one short invitation alongside it. */
+.welcome-page{flex:1;min-width:0;min-height:0;padding:0 5vw 3vh}
+.welcome-hero{height:100%;max-width:1500px;margin:auto;display:grid;grid-template-columns:43% 57%;align-items:center;min-height:0}
+.welcome-copy{position:relative;z-index:1;padding:0 0 4vh 1vw}.welcome-copy .eyebrow{font-size:8px;letter-spacing:1.5px;color:#91836e}
+.welcome-copy h1{font-size:clamp(40px,min(5vw,8.5vh),76px);letter-spacing:-3px;line-height:1.08;margin:24px 0}.welcome-copy h1 em{font-style:normal;color:#987656}
+.welcome-copy>p{max-width:330px;font-size:14px;line-height:1.9;color:#8a7b68}
+.welcome-actions{display:flex;align-items:center;flex-wrap:wrap;gap:22px;margin-top:28px}.welcome-actions .primary{gap:12px;min-height:46px;padding:12px 18px}
+.welcome-explore{border:0;background:transparent;padding:8px 0;font-size:12px;font-weight:500;color:#8c7862}
+.welcome-scene{height:100%;min-height:0;min-width:0;position:relative;background:radial-gradient(ellipse at 50% 50%,#e5e6d4 0%,#efebdd88 40%,transparent 68%)}
+.welcome-scene>.cafe-canvas{height:100%}
+.welcome-dialogue{position:absolute;bottom:11%;left:16%;display:flex;align-items:center;gap:12px;padding:13px 17px;background:#fffdf2d9;border:1px solid #e6dfcc;border-radius:3px 14px 14px 14px;transform:rotate(-3deg)}
+.welcome-dialogue small{display:block;font-size:7px;letter-spacing:1.5px;color:#a08c6e;margin-bottom:5px}.welcome-dialogue strong{font-family:Georgia,serif;font-weight:400;font-size:19px}
+
+/* A quiet frame leaves the road and its little objects as the main focus. */
+.journey-page{display:flex;flex-direction:column;flex:1;width:100%;min-width:0;min-height:0;max-width:1550px;margin:0 auto;padding:16px 36px 26px}
+.journey-page .page-heading{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 20px}
+.journey-page .page-heading h1{font-size:26px;letter-spacing:-.9px;font-weight:650;margin:0}
+.journey-progress{font-size:12px;font-variant-numeric:tabular-nums;color:#6f735d}.journey-progress>span{color:#a09b89}
+.journey-layout{display:grid;grid-template-columns:minmax(0,1fr) 255px;gap:36px;flex:1;min-height:0}
+.trail-panel{position:relative;min-height:0;min-width:0;overflow:hidden;border-radius:18px;background:#f0f0e2}
+.trail-scroll{height:100%;width:100%;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#c8ccb5 transparent;outline-offset:-4px}
+.trail-scroll:focus-visible{outline:2px solid #9eac86}
+.trail-map{position:relative;min-width:460px;max-width:1000px;margin:auto;isolation:isolate}
+.trail-road{position:absolute;inset:0;width:100%;height:100%;overflow:hidden;pointer-events:none}
+.trail-meadow{fill:#e6ead5;opacity:.55}.trail-road path{fill:none;stroke-linecap:round}.road-border{stroke:#ded9c5;stroke-width:25}.road-locked{stroke:#e7e2cf;stroke-width:20}.road-open{stroke:#c4cda7;stroke-width:20}
+.trail-stop{position:absolute;transform:translate(-50%,-50%);width:44px;height:44px;border:0;background:transparent!important;padding:0;display:grid;place-items:center;overflow:visible;z-index:2;opacity:1!important}
+.trail-stop:hover:not(:disabled),.trail-stop:active:not(:disabled){transform:translate(-50%,-50%)}
+.trail-dot{width:34px;height:34px;display:grid;place-items:center;border-radius:50%;background:#faf8eb;border:2px solid #a9946b;color:#8d744c;font-size:11px;font-weight:650;transition:transform .15s}
+.trail-stop:hover:not(:disabled) .trail-dot{transform:scale(1.12)}.trail-stop:disabled .trail-dot{background:#eae6d6;border-color:#d0cbb6;color:#a39e86}
+.trail-stop.is-complete .trail-dot{background:#8b9e75;border-color:#f3f4e7;color:white}
+.trail-stop.is-selected .trail-dot{background:#856848;border-color:#faf6e7;color:white;outline:2px solid #b6a27f;outline-offset:4px}
+.trail-stars{position:absolute;top:44px;font-size:9px;letter-spacing:1px;color:#a98745;white-space:nowrap}
+.trail-start,.trail-finish{position:absolute;left:50%;transform:translateX(-50%);font-size:8px;letter-spacing:2px;color:#a1a087;white-space:nowrap}.trail-start{top:34px}.trail-finish{bottom:35px}
+.trail-landmark{position:absolute;transform:translateX(-50%);width:160px;text-align:center;pointer-events:none;z-index:1}
+.landmark-models{height:112px;display:flex;justify-content:center;align-items:center;filter:drop-shadow(0 9px 5px #807b5420)}
+.landmark-models .model-thumbnail{width:112px;height:112px;flex-shrink:0}.landmark-models.model-group .model-thumbnail{width:90px;height:90px;margin:0 -13px}.landmark-models.model-group .model-thumbnail:nth-child(2){transform:translateY(-9px)}
+.trail-landmark.is-locked .landmark-models{filter:saturate(.35) opacity(.55) drop-shadow(0 7px 5px #807b5410)}
+.trail-landmark strong{display:block;font-size:11px;font-weight:500;color:#7d7b60;line-height:1.3}.trail-landmark small{display:flex;align-items:center;justify-content:center;gap:4px;font-size:8px;color:#a3a18d;margin-top:5px}.trail-landmark.is-open small{color:#84916a}
+.trail-garden{position:absolute;display:flex;align-items:flex-end;gap:4px;color:#afb99a;transform:rotate(-12deg);pointer-events:none;opacity:.65}.trail-garden.garden-1{color:#c1bd98;transform:rotate(15deg)}.trail-garden.garden-2{transform:scale(.7);opacity:.4}.trail-garden i{width:6px;height:4px;border-radius:50%;background:#c7c5b0}
+.trail-legend{position:absolute;left:18px;bottom:14px;display:flex;gap:13px;font-size:9px;color:#8f927b;background:#f6f6e9e8;border-radius:20px;padding:9px 12px;pointer-events:none}.trail-legend span{display:flex;align-items:center;gap:5px}.trail-legend i{width:6px;height:6px;border-radius:50%;background:#ccc7b2}.trail-legend .done{background:#8b9e75}.trail-legend .available{background:#967f59}
+.journey-preview{min-height:0;display:flex;flex-direction:column;justify-content:center;padding-bottom:5vh;gap:22px}
+.preview-robot{height:clamp(65px,18vh,160px);display:flex;align-items:center;justify-content:flex-start}.preview-robot .model-thumbnail{width:100%;height:100%;max-width:145px;filter:drop-shadow(0 8px 6px #9b886321)}
+.journey-preview .preview-copy{padding:0}.journey-preview .eyebrow{font-size:8px;color:#9b907c;letter-spacing:1.6px}
+.journey-preview .preview-copy h2{font-size:25px;font-weight:600;line-height:1.2;letter-spacing:-.6px;margin:12px 0 16px}
+.journey-preview .preview-copy p{font-size:12px;line-height:1.85;color:#8c816f}
+.journey-preview .preview-copy>.primary{width:100%;justify-content:space-between;margin-top:25px}.journey-preview .text-link{font-size:11px}
+@media(max-width:1000px){
+  .journey-layout{grid-template-columns:minmax(0,1fr) 210px;gap:24px}.journey-page{padding:14px 24px 24px}
+  .welcome-copy h1{font-size:clamp(34px,min(5.3vw,8vh),55px);letter-spacing:-2px}.welcome-copy>p{font-size:13px}.welcome-actions{gap:16px}.welcome-dialogue{left:6%}
+}
+@media(max-width:700px){
+  .home .app-header,.campaign .app-header{height:54px;flex-basis:54px;padding:0 18px}.home .brand,.campaign .brand{font-size:16px}.home .header-actions,.campaign .header-actions{gap:10px}
+  .welcome-page{padding:10px 24px 16px}.welcome-hero{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr)}.welcome-copy{padding:8px 0 0}.welcome-copy h1{font-size:clamp(32px,6.5vh,50px);margin:14px 0;letter-spacing:-1.8px}.welcome-copy>p{max-width:370px;font-size:12px;line-height:1.7}.welcome-copy .eyebrow{font-size:7px}.welcome-actions{margin-top:18px;gap:20px}.welcome-actions .primary{min-height:40px;padding:10px 13px;font-size:12px}.welcome-explore{font-size:11px}.welcome-dialogue{left:18%;bottom:5%;padding:9px 13px}.welcome-dialogue strong{font-size:16px}
+  .journey-page{padding:10px 16px 16px}.journey-page .page-heading{margin-bottom:14px}.journey-page .page-heading h1{font-size:21px}.journey-progress{font-size:10px}
+  .journey-layout{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr) auto;gap:16px}.trail-panel{border-radius:12px}.journey-preview{padding:0;display:block}.preview-robot{display:none}
+  .journey-preview .preview-copy{display:grid;grid-template-columns:minmax(0,1fr) auto;column-gap:18px;align-items:center}.journey-preview .eyebrow{grid-column:1}.journey-preview .preview-copy h2{grid-column:1;font-size:18px;margin:6px 0 0}.journey-preview .preview-copy p{display:none}.journey-preview .preview-copy>.primary{grid-column:2;grid-row:1 / 3;margin:0;width:auto;min-height:40px;padding:10px 14px}.journey-preview .text-link{grid-column:1 / -1;justify-self:start}
+  .trail-map{min-width:0}.trail-landmark{width:115px}.landmark-models{height:85px}.landmark-models .model-thumbnail{height:85px;width:85px}.landmark-models.model-group .model-thumbnail{width:67px;height:67px;margin:0 -12px}.trail-landmark strong{font-size:9px}.trail-landmark small{font-size:7px}.trail-dot{width:30px;height:30px;font-size:10px}.trail-garden{opacity:.35}.trail-legend{font-size:8px;left:10px;bottom:10px}
+}
+@media(max-height:600px) and (min-width:701px){
+  .home .app-header,.campaign .app-header{height:52px;flex-basis:52px}.journey-page{padding-top:6px;padding-bottom:16px}.journey-page .page-heading{margin-bottom:12px}.journey-page .page-heading h1{font-size:22px}.journey-preview{gap:10px;padding:0}.preview-robot{height:65px}.journey-preview .preview-copy h2{font-size:21px;margin:8px 0 10px}.journey-preview .preview-copy p{font-size:11px;line-height:1.6}.journey-preview .preview-copy>.primary{margin-top:16px}.welcome-copy h1{margin:16px 0}.welcome-copy>p{font-size:12px}.welcome-actions{margin-top:18px}.welcome-dialogue{bottom:5%}
+}
+@media(max-height:560px) and (max-width:700px){
+  .welcome-hero{grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1fr)}.welcome-copy h1{font-size:30px}.welcome-copy .eyebrow{display:none}.welcome-copy>p{font-size:11px}.welcome-actions{gap:8px;margin-top:12px}.welcome-dialogue{display:none}.welcome-page{padding:0 20px 14px}
+}
+@media(prefers-reduced-motion:reduce){.trail-dot{transition:none}}
+[data-motion=reduced] .trail-dot{transition:none}
+
+/* The scroll layer supplies native input and labels over one live, pixel-shaded diorama. */
+.trail-panel.has-3d{background:#c5d0af}
+.trail-scene{position:absolute;left:0;top:0;bottom:0;pointer-events:none}
+.trail-scroll{position:relative;z-index:1;overflow-x:hidden}
+.trail-map{width:100%;min-width:0;max-width:none;isolation:auto}
+.has-3d .trail-dot,.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot,.has-3d .trail-stop:disabled .trail-dot{background:none;border:0;outline:0;box-shadow:none;color:#5d553f;font-size:11px;font-weight:700}
+.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot{color:#fff6dd}
+.has-3d .trail-stop:disabled .trail-dot{color:#7d7e65}
+.has-3d .trail-stop{border-radius:50%}
+.has-3d .trail-stop:hover:not(:disabled) .trail-dot{transform:none;color:#fff6dd}
+.has-3d .trail-stars{top:35px;text-shadow:0 1px 2px #f1efdc;color:#85652e}
+.trail-landmark{width:150px;padding:5px 8px;border-radius:5px;background:#eef0dcd9}
+.trail-landmark strong{color:#5d674e;font-size:10px;font-weight:600}.trail-landmark small{color:#858b71;font-size:8px;margin-top:3px}.trail-landmark.is-open small{color:#6c8057}
+.trail-start,.trail-finish{color:#657552;background:#e8ecd6bf;padding:6px 12px;border-radius:4px}
+.trail-legend{z-index:2;background:#eef1dde8;color:#727e63}
+@media(max-width:700px){.trail-landmark{width:100px;padding:4px}.trail-landmark strong{font-size:8px}.trail-landmark small{font-size:7px}.has-3d .trail-dot{font-size:9px}}
