@@ -8,6 +8,8 @@ export const QUERY_MAX_BLOCKS = 128;
 export const QUERY_PROGRAM_LEVEL_CAP = 14;
 /** Compiled blocks per kitchen/floor program. */
 export const ROBOT_MAX_BLOCKS = 512;
+/** Content level when no explicit shift applies; matches the full campaign length. */
+export const ROBOT_FALLBACK_LEVEL = 32;
 /** Interpreter steps per robot before a run fails. */
 export const INSTRUCTION_LIMIT = 10000;
 /** Simulated seconds per service run before the event clock gives up. */
@@ -22,6 +24,10 @@ export const MAX_PLAYBACK_SPEED = 12;
 export const TICKET_DUE_SECONDS = 30;
 /** Largest whole-tile MOVE count accepted by the language and the editor. */
 export const MAX_MOVE_COUNT = 19;
+/** Kitchen/floor comparison unlock level for drink, sugar, and boolean operands. */
+export const WORKER_COMPARISON_LEVEL = 4;
+/** Kitchen/floor comparison unlock level once numeric sugar counts are involved. */
+export const WORKER_COUNT_COMPARISON_LEVEL = 10;
 /** Largest per-paper ITEM quantity accepted by the language and the editor. */
 export const MAX_ITEM_QUANTITY = 19;
 /** Separator between a submitted paper id and its per-cup unit suffix. */

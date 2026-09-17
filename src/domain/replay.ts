@@ -1,10 +1,11 @@
-import { ticketUnits } from './ticketUnits';
+import { ticketUnits } from './tickets';
 import { STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { directionVectors } from './directions';
 import { commandDirection } from './commands';
-import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
+import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, SIDEWALK_X } from './street';
+import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
 /** Sample immutable execution records; presentation never invents a robot route. */
 export function sampleReplay(result:RunResult,time:number){
  const seed=(time<0?result.execution?.[0]:result.execution?.find(s=>time>=s.start&&time<s.start+s.duration))??result.execution?.at(-1);
@@ -47,9 +48,9 @@ export function sampleReplay(result:RunResult,time:number){
   let path=customerApproach(index), progress=(local-(timing.arrival-STREET_APPROACH_SECONDS))/STREET_APPROACH_SECONDS;
   const queueIndex=intakeEvents.slice(0,intakeEvents.indexOf(event)).filter(previous=>local<Math.min(previous.timing.seating??previous.timing.created,previous.timing.left)).length;
   if(queueIndex>0&&local<seating&&!leaving){
-   const queuePath:Point[]=[STATIONS.orders.floor,[-8,5],[-9.6,5],[-9.6,5-queueIndex]];
+   const queuePath:Point[]=[STATIONS.orders.floor,[-8,5],[SIDEWALK_X,5],[SIDEWALK_X,5-queueIndex]];
    const slot=samplePath(queuePath,queueIndex/pathDistance(queuePath));
-   path=[customerApproach(index)[0],[-9.6,slot[1]],slot];
+   path=[customerApproach(index)[0],[SIDEWALK_X,slot[1]],slot];
   }
   const showOrder=logs.some(log=>log.customerId===event.customer.customer_id&&log.role==='query'&&log.start<=local)
    || local>=timing.created;
@@ -74,10 +75,10 @@ export function sampleReplay(result:RunResult,time:number){
   const sipping=drinks.find(ticket=>local<servedTimes.get(ticket.ticket_id)!+DRINK_SECONDS);
   return {id:event.customer.customer_id,showOrder,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
  });
- const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.flatMap(ticketUnits).find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
+ const pickup=samplePickupCounter(logs,result.tickets,local);
  // A submitted ticket stays on the shared counter until prep finishes claiming it.
- const claimed=new Set(logs.filter(e=>e.command==='WAIT TICKET'&&e.end<=local).map(e=>e.ticketId));
- const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local).flatMap(ticket=>{const remaining=ticketUnits(ticket).filter(unit=>!claimed.has(unit.ticket_id)).length;return remaining?[{...ticket,quantity:remaining}]:[];});
+ const claimed=sampleClaimedTickets(logs,local);
+ const waitingTickets=waitingCounterTickets(result.events,seed?.seed_id,local,claimed);
  const sippingIds=new Set(customers.map(customer=>customer.sippingId));
  const tableDrinks=result.events.filter(event=>event.seed_id===seed?.seed_id).flatMap(event=>event.tickets.flatMap(ticketUnits).filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id)&&!sippingIds.has(ticket.ticket_id)).map(ticket=>({id:ticket.ticket_id,item:ticket.item,table:event.table})));
  return {actors,customers,tableDrinks,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};

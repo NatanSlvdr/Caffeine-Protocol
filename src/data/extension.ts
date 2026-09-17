@@ -1,5 +1,5 @@
 import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
-import { preparationSource, floorSource } from '@/domain/routines';
+import { preparationSource, floorSource } from '@/domain/defaultPrograms';
 import { TABLE_LAYOUT } from '@/domain/layout';
 import campaign from './campaign.json' with {type:'json'};
 import targets from './service-targets.json' with {type:'json'};
