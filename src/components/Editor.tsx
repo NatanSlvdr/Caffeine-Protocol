@@ -41,13 +41,13 @@ function operandOption(value: string) {
 }
 
 const conditionLabels: Record<string, string> = {
-  var1:'var 1',var2:'var 2',var3:'var 3',var4:'var 4',
+  var1:'Var A',var2:'Var B',var3:'Var C',var4:'Var D',
   coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar', negation: 'Negation', number: 'Number', count: 'Sugar count', ambiguous: 'Ambiguous', item: 'item',
   'CUSTOMER SPEECH': 'Orders', 'heard orders': 'order', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
   IN: 'IN', 'NOT IN': 'NOT IN', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
 };
 function conditionOption(value: string) {
-  return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
+  return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={value}/> };
 }
 /** Each connector extends the same IF with another editable row, keeping its body intact. */
 function membershipOperands(command: string, options: string[], disabled: boolean, label: string, onChange: (value: string) => void, library: boolean, inLoop: boolean) {

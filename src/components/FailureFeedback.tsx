@@ -1,4 +1,5 @@
 import { useLayoutEffect, useState } from 'react';
+import { variableLabels } from '../domain/program';
 import { createPortal } from 'react-dom';
 import type { RefObject } from 'react';
 
@@ -10,6 +11,6 @@ export function InstructionError({ message, anchor }: { message: string; onEdit?
   place();window.addEventListener('resize',place);window.addEventListener('scroll',place,true);
   return()=>{window.removeEventListener('resize',place);window.removeEventListener('scroll',place,true);};
  },[anchor]);
- if(!anchor)return <span className="error-note" role="alert">{message}</span>;
- return position?createPortal(<div className="line-error-callout" role="alert" style={position}>{message}</div>,document.body):null;
+ if(!anchor)return <span className="error-note" role="alert">{variableLabels(message)}</span>;
+ return position?createPortal(<div className="line-error-callout" role="alert" style={position}>{variableLabels(message)}</div>,document.body):null;
 }

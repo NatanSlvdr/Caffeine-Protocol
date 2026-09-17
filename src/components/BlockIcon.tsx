@@ -1,11 +1,11 @@
-import { Save, Clock3, MoveUpRight, PenLine, ArrowRight, CircleHelp, CirclePlus, Coffee, CornerDownRight, GitBranch, Hand, ListRestart, MapPin, Package, Plus, ReceiptText, Repeat2, Settings2, SquareFunction, Ticket, Undo2, Waves } from 'lucide-react';
+import { Save, Clock3, MoveUpRight, PenLine, Move, CircleHelp, CirclePlus, Coffee, CornerDownRight, GitBranch, Hand, ListRestart, MapPin, Package, Plus, ReceiptText, Repeat2, Settings2, SquareFunction, Ticket, Undo2, Waves } from 'lucide-react';
 import { blockFields } from '../domain/blockFields';
 
 /** Small action-specific glyphs are shared by the library, routine, and drag preview. */
 export function BlockIcon({ command }: { command: string }) {
   const icons = {
     WAIT: Clock3, TICKET: Ticket, ITEM: PenLine, SUBMIT: Ticket,
-    MOVE: ArrowRight, IF: GitBranch, ELSE: CornerDownRight, FOR: ListRestart,
+    MOVE: Move, IF: GitBranch, ELSE: CornerDownRight, FOR: ListRestart,
     REPEAT: Repeat2, JUMP: MoveUpRight, POSITION: MapPin, FUNCTION: SquareFunction,
     STORE: Save, CALL: SquareFunction, RETURN: Undo2, READ: ReceiptText, SUGAR: Plus, ADD: CirclePlus,
     TAKE: Hand, DEPOSIT: Hand, FILL: Waves, GRIND: Settings2, BREW: Coffee, STEEP: Coffee,

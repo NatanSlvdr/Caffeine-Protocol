@@ -53,6 +53,10 @@ const queryDirectionalPattern = new RegExp(`^(TAKE|PICKUP|DEPOSIT) (${DIRECTIONS
 const movePattern = new RegExp(`^MOVE (${DIRECTIONS.join('|')}) ([1-9]|1[0-9])$`);
 const writePattern = /^ITEM ([1-9]|1[0-9]) (coffee|tea)$/;
 export const VARIABLES = ['var1', 'var2', 'var3', 'var4'] as const;
+/** Letter labels distinguish variable slots from numeric values without changing saved programs. */
+export function variableLabels(text: string) {
+  return text.replace(/\bvar ?([1-4])\b/g, (_, slot: string) => `Var ${'ABCD'[Number(slot) - 1]}`);
+}
 export const STORE_VALUES = ['number', ...Array.from({length:20},(_,i)=>String(i)), ...VARIABLES];
 /** Assignment operands select a local slot and a numeric data source. */
 export function parseStore(command: string) {

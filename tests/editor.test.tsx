@@ -373,7 +373,7 @@ describe('minimal coding pane header',()=>{
 
 it('renders a single assignment with two selectors and uses fixed variables in Write',async()=>{
  render(<Harness level={10} initial={'LISTEN\nTAKE UP\nITEM 2 coffee\nSTORE var1 FROM number\nITEM coffee'}/>);
- await choose('Block 4 variable','var 2');
+ await choose('Block 4 variable','Var B');
  await choose('Block 4 source','3');
  expect(source()).toContain('STORE var2 FROM 3');
  const assignment=document.querySelector('[data-line="3"] .assignment-operands')!;
@@ -382,7 +382,7 @@ it('renders a single assignment with two selectors and uses fixed variables in W
  expect(screen.queryByRole('textbox',{name:'Block 4 variable'})).toBeNull();
  await choose('Block 4 source','Number in item');
  await choose('Block 5 value','Sugar');
- await choose('Block 5 quantity','var 2');
+ await choose('Block 5 quantity','Var B');
  expect(source()).toContain('ITEM 2 coffee\nSTORE var2 FROM number\nWRITE var2 sugar');
  expect(compileProgram(source(),10).compile_error).toBe('');
 });
