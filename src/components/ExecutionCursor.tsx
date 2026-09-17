@@ -21,7 +21,7 @@ export function ExecutionCursor({ root, line, stepSeconds }: {
       const center = rowRect.top + rowRect.height / 2;
       const next = {
         // Local coordinates scroll with the blocks without scroll listeners.
-        left: -16,
+        left: 0,
         top: center - bounds.top - 16,
         height: rowRect.height + 5,
         width: bounds.width,

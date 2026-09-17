@@ -349,7 +349,7 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 .editor-panel .code-row .block.active,.editor-panel .code-row .block.failure{padding-right:9px}
 
 /* One shared gutter frames every side of the workspace. */
-.workspace-main{--workspace-padding:16px;padding:var(--workspace-padding);gap:0}
+.workspace-main{--workspace-padding:10px;padding:var(--workspace-padding);gap:0}
 .workspace .workbench{height:100%;min-height:0}
 .workspace .editor-panel{border:1px solid #77604a;border-radius:9px;box-shadow:none}
 .workspace .workspace-heading{align-self:stretch;padding-top:0}
@@ -405,9 +405,9 @@ html[data-motion=reduced] .direction-menu.direction-closing{transform:scale(.2)}
 .drop-projection button:disabled,.floating-code-preview button:disabled{opacity:1}
 .floating-code-preview{font:650 11px/1.3 ui-monospace,monospace}
 
-@media(min-width:1500px){.workspace-main{--workspace-padding:20px}}
-@media(max-width:1100px){.workspace-main{--workspace-padding:14px}}
-@media(max-width:560px){.workspace-main{--workspace-padding:10px}}
+@media(min-width:1500px){.workspace-main{--workspace-padding:14px}}
+@media(max-width:1100px){.workspace-main{--workspace-padding:10px}}
+@media(max-width:560px){.workspace-main{--workspace-padding:8px}}
 
 /* The gutter identifies the current instruction; the whole failed tile pulses. */
 .editor-panel .code-row .block.failure{border-color:#dc3938;outline:2px solid #df4645;background:#ffd8d1;animation:error-line-pulse 1s ease-in-out infinite}
@@ -532,7 +532,7 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 
 /* One draggable assignment, with two inset tiles and an unboxed equals sign. */
 .editor-panel .code-row .block:has(.assignment-operands){background:transparent;border:0;box-shadow:none;padding:0;flex-wrap:nowrap}
-.editor-panel .block:has(.assignment-operands)>.block-icon,.editor-panel .block:has(.assignment-operands)>.block-verb{display:none}
+.editor-panel .block:has(.assignment-operands)>.block-verb{display:none}
 .assignment-operands{display:inline-flex;align-items:center;gap:8px;min-width:0}
 .assignment-equals{font:700 14px ui-monospace,monospace;color:#e9ddca}
 .editor-panel .assignment-operands .block-select>button{background:var(--tile);border:1px solid var(--edge);box-shadow:0 2px 0 var(--edge);border-radius:6px;padding:5px 8px;white-space:nowrap}
@@ -540,3 +540,50 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 .editor-panel .code-row .block-icon{width:14px;height:14px}
 .variable-1{color:#2563a5}.variable-2{color:#8745a0}.variable-3{color:#28744a}.variable-4{color:#ad6419}
 .editor-panel .code-row .block:is([data-jump],[data-target]),.editor-panel .command-tile:has(button[aria-label^="Insert JUMP"]){--tile:#b6d8ee;--edge:#5c88aa;--tile-ink:#183e5a}
+
+/* Categories are identical in the shop, canvas and full-size drag preview. */
+.block.data,.command-tile.data{--tile:#f4d27d;--edge:#b38b3d;--tile-ink:#493715}
+.block.jump,.command-tile.jump{--tile:#b6d8ee;--edge:#5c88aa;--tile-ink:#183e5a}
+.block.help,.command-tile.help{--tile:#efb378;--edge:#b67c42;--tile-ink:#513315}
+/* Fixed selector metrics include icon-bearing choices and wrapped condition rows. */
+.editor-panel .block-select>button,.editor-panel .visual-program .block-select>button,.editor-panel .compact-palette .block-select>button{height:28px;min-height:28px;max-height:28px;padding:3px 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;box-sizing:border-box}
+.editor-panel .block-select .model-thumbnail{width:20px;height:20px}
+.editor-panel .selected-operand-icon{height:20px;flex-shrink:0}
+.editor-panel .tile-count{height:28px;min-height:28px;max-height:28px}
+.editor-panel .code-row .block:has(.assignment-operands){min-height:35px}
+.editor-panel .assignment-tile{display:inline-flex;align-items:center;height:35px;box-sizing:border-box;padding:2px 7px;border:1px solid var(--edge);border-radius:7px;background:var(--tile);box-shadow:0 2px 0 var(--edge)}
+.editor-panel .assignment-operands .block-select>button{height:28px;min-height:28px;max-height:28px;border:0;outline:0;padding:3px 5px;box-shadow:none;background:#ffffff50}
+.editor-panel .assignment-operands .assignment-tile:last-child{--tile:#f4d27d;--edge:#b38b3d;--tile-ink:#493715}
+/* Zoom shrinks the shop's layout footprint; dragged copies use the canvas scale. */
+.editor-panel .compact-palette .command-tile{zoom:.72}
+.editor-panel .compact-palette .command-library{gap:6px;align-items:flex-start}
+.floating-code-preview.from-shop{animation:shop-block-grow .15s ease-out;transform-origin:top left}
+@keyframes shop-block-grow{from{transform:scale(.78);opacity:.75}to{transform:scale(1);opacity:1}}
+.drop-projection{opacity:.75;animation:placement-appear .14s ease-out}
+@keyframes placement-appear{from{opacity:.3}to{opacity:.9}}
+
+/* Round the actual painted surfaces without clipping floating drag previews. */
+.workspace .editor-panel>.coding-pane-heading{border-radius:8px 8px 0 0;overflow:hidden}
+.editor-panel .editor-body{margin-left:0;padding-left:0;border-radius:0 0 8px 8px;background-clip:padding-box}
+.editor-panel .visual-program{padding-left:64px}
+@media(prefers-reduced-motion:reduce){.floating-code-preview,.drop-projection{animation:none}}
+html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop-projection{animation:none}
+
+/* Assignments keep their two tiles and a dedicated grip in both shop and code. */
+.editor-panel .compact-palette .command-tile:has(.assignment-operands){background:transparent;border:0;box-shadow:none;padding:0;gap:5px}
+.editor-panel .command-tile:has(.assignment-operands)>button,.editor-panel .block:has(.assignment-operands)>.block-icon{color:#cab6e5;cursor:grab;flex-shrink:0}
+.editor-panel .command-tile:has(.assignment-operands)>button{width:20px;min-width:20px;height:35px;padding:0;justify-content:center;background:transparent;border:0;box-shadow:none}
+/* Shared grid columns align every clause with the widest operand above or below. */
+.editor-panel .if-condition-rows{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,max-content) minmax(0,max-content) minmax(0,max-content);gap:4px;flex:0 1 auto}
+.editor-panel .if-condition-rows>.if-comparison-operands{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;gap:4px}
+.editor-panel .if-condition-rows>.if-comparison-operands>.block-select,.editor-panel .if-condition-rows>.if-comparison-operands>.block-select>button{width:100%}
+/* A rounded return ends each scope guide beside its last child. */
+.editor-panel .scope-body{position:relative;border-left:0;padding-left:15px}
+.editor-panel .scope-body:before{content:"";position:absolute;left:0;top:0;bottom:18px;width:11px;border-left:2px solid #d38c7770;border-bottom:2px solid #d38c7770;border-bottom-left-radius:10px;pointer-events:none}
+.editor-panel .code-scope.function>.scope-body:before{border-color:#b59bd370}
+/* Direction cells must not inherit the full-size operand thumbnail dimensions. */
+.editor-panel .block-select.direction-select>.direction-trigger{display:grid;place-items:center;padding:0!important;width:28px;height:28px;min-height:28px;border:0;line-height:0}
+.editor-panel .direction-mini-grid .direction-player{min-width:0;min-height:0;display:grid;place-items:center}
+.editor-panel .direction-mini-grid .direction-player .model-thumbnail{display:block;width:100%;height:100%;min-width:0;min-height:0}
+
+.editor-panel .block:has(.assignment-operands)>.block-icon{width:18px;height:24px}

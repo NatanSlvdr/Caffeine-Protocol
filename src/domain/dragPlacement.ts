@@ -16,11 +16,14 @@ export function validDropSlots(slots: DropSlot[], dragged?: DraggedScope) {
 }
 
 /** Only insertion slots compete: rows never act as a second, conflicting set of swap targets. */
-export function pickDropSlot(point: { x: number; y: number }, slots: DropSlot[], dragged?: DraggedScope, previous?: string) {
+export function pickDropSlot(point: { x: number; y: number }, slots: DropSlot[], dragged?: DraggedScope, previous?: string, previousPoint?: {x:number;y:number}) {
   const valid = validDropSlots(slots, dragged);
   const score = (slot: DropSlot) => Math.abs(point.y - slot.top - slot.height / 2) + Math.abs(point.x - slot.left) * .2;
   const best = valid.reduce<DropSlot | undefined>((winner, slot) => !winner || score(slot) < score(winner) ? slot : winner, undefined);
   const current = valid.find(slot => slot.id === previous);
+  // A preview can reflow all slot rectangles beneath a stationary pointer.
+  // Keep its target until the user actually moves, rather than chasing that reflow.
+  if(current&&previousPoint&&Math.hypot(point.x-previousPoint.x,point.y-previousPoint.y)<=3)return current;
   // A small dead band prevents flicker when the pointer rests between adjacent slots.
   return current && best && score(current) <= score(best) + 5 ? current : best;
 }

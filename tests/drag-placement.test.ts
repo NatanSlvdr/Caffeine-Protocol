@@ -50,3 +50,18 @@ describe('stable insertion-based dragging',()=>{
   expect(keyboardDropSlot('ArrowLeft',{x:90,y:102},slots)?.at).toBe(3);
  });
 });
+
+it('keeps a stationary pointer on its target when preview layout shifts the slots',()=>{
+ const pointer={x:48,y:100};
+ const before=[slot(1,50),slot(2,100),slot(3,150)];
+ const chosen=pickDropSlot(pointer,before);
+ expect(chosen?.id).toBe('gap:2');
+ const reflowed=[slot(1,100),slot(2,150),slot(3,200)];
+ expect(pickDropSlot(pointer,reflowed,undefined,chosen?.id,pointer)?.id).toBe('gap:2');
+ expect(pickDropSlot({x:49,y:101},reflowed,undefined,chosen?.id,pointer)?.id).toBe('gap:2');
+ expect(pickDropSlot({x:48,y:195},reflowed,undefined,chosen?.id,pointer)?.id).toBe('gap:3');
+});
+it('does not keep a now-invalid target after reflow',()=>{
+ const point={x:48,y:100};
+ expect(pickDropSlot(point,[slot(1,50),slot(2,100),slot(3,150)],{from:0,end:2,command:'IF tea'},'gap:2',point)?.id).toBe('gap:3');
+});

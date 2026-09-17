@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, useId, createContext, useContext } from 'react';
+import { useRef, useState, useEffect, useLayoutEffect, useId, createContext, useContext } from 'react';
 import { DndContext, DragOverlay, useDndContext, KeyboardSensor, MeasuringStrategy, PointerSensor, useDraggable, useDroppable, useSensor, useSensors } from '@dnd-kit/core';
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
 import type { RobotRole } from '../domain/types';
@@ -27,7 +27,12 @@ class BlockPointerSensor extends PointerSensor {
 
 function category(command: string) {
   const family = blockFields(command).family;
-  return ['FUNCTION', 'CALL', 'RETURN'].includes(family) ? 'function' : family === 'MOVE' ? 'motion' : ['IF', 'ELSE', 'FOR', 'REPEAT', 'JUMP', 'POSITION'].includes(family) ? 'flow' : ['HELP', 'ERROR'].includes(family) ? 'help' : 'action';
+  if(['JUMP','POSITION'].includes(family))return 'jump';
+  if(['STORE','FUNCTION','CALL','RETURN'].includes(family))return 'function';
+  if(['MOVE','TAKE','DEPOSIT'].includes(family))return 'motion';
+  if(['IF','ELSE','FOR','REPEAT'].includes(family))return 'flow';
+  if(['HELP','ERROR'].includes(family))return 'help';
+  return 'data';
 }
 
 function operandOption(value: string) {
@@ -39,7 +44,7 @@ const conditionLabels: Record<string, string> = {
   var1:'var 1',var2:'var 2',var3:'var 3',var4:'var 4',
   coffee: 'Coffee', tea: 'Tea', sugar: 'Sugar', negation: 'Negation', number: 'Number', count: 'Sugar count', ambiguous: 'Ambiguous', item: 'item',
   'CUSTOMER SPEECH': 'Orders', 'heard orders': 'order', 'SUGAR COUNT': 'Sugar count', TRUE: 'True', FALSE: 'False',
-  IN: 'in', 'NOT IN': 'not in', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
+  IN: 'IN', 'NOT IN': 'NOT IN', '=': '=', '!=': '!=', '<': 'less than', '>': 'greater than', '<=': 'at most', '>=': 'at least',
 };
 function conditionOption(value: string) {
   return { value, label: conditionLabels[value] ?? value, icon: <OperandIcon value={conditionLabels[value] ?? value}/> };
@@ -98,9 +103,9 @@ function Operands({ command, options, disabled, label, onChange, library = false
   if (fields.family === 'STORE') {
     const stored=parseStore(command)??{variable:'var1',value:'number'};
     return <span className="assignment-operands">
-      <BlockSelect label={label+' variable'} value={stored.variable} disabled={disabled} options={VARIABLES.map(conditionOption)} onChange={variable=>select('variable',`STORE ${variable} FROM ${stored.value}`)}/>
+      <span className="assignment-tile"><BlockSelect label={label+' variable'} value={stored.variable} disabled={disabled} options={VARIABLES.map(conditionOption)} onChange={variable=>select('variable',`STORE ${variable} FROM ${stored.value}`)}/></span>
       <span className="assignment-equals">=</span>
-      <BlockSelect label={label+' source'} value={stored.value} disabled={disabled} options={STORE_VALUES.map(value=>({...conditionOption(value),label:value==='number'?'Number in item':conditionLabels[value]??value}))} onChange={value=>select('source',`STORE ${stored.variable} FROM ${value}`)}/>
+      <span className="assignment-tile"><BlockSelect label={label+' source'} value={stored.value} disabled={disabled} options={STORE_VALUES.map(value=>({...conditionOption(value),label:value==='number'?'Number in item':conditionLabels[value]??value}))} onChange={value=>select('source',`STORE ${stored.variable} FROM ${value}`)}/></span>
     </span>;
   }
   if (fields.family === 'ITEM') {
@@ -155,7 +160,7 @@ function CommandTile({ initial, options, disabled, onInsert }: { initial: string
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: 'library:' + initial, data: { command }, disabled });
   const fields = blockFields(command);
   return <div ref={setNodeRef} className={'command-tile ' + category(command)} style={{ opacity: isDragging ? .4 : 1 }}>
-    <button type="button" disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.verb}</button>
+    <button type="button" disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.family==='STORE'?null:fields.verb}</button>
     <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={() => {}}/>
   </div>;
 }
@@ -186,13 +191,40 @@ function Insertion({ at, disabled, alternative = false, hint = '' }: { at: numbe
         {preview ? <div className="drop-projection"><ProjectedBlocks blocks={blocks[0]?.command === 'ELSE' ? blocks[0].children ?? [] : blocks}/></div> : <div className="empty-scope">Drop a block here</div>}
       </div></> : !preview && hint}
     </div>
-    {!isElse && preview && <div className="drop-projection"><ProjectedBlocks blocks={blocks}/></div>}
+    {!isElse && preview && <div className="drop-projection" aria-label="Block placement preview"><ProjectedBlocks blocks={blocks}/></div>}
   </div>;
 }
 
 /** Hide the original group only while a landing slot displays its full-size preview. */
 function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivElement | null>; children: React.ReactNode }) {
   const { active, over } = useDndContext();
+  const previous=useRef(new Map<HTMLElement,{left:number;top:number}>());
+  const wasDragging=useRef(false);
+  // Animate visual rows only; drop targets keep stable, final-layout coordinates.
+  useLayoutEffect(()=>{
+    const surface=root.current;if(!surface)return;
+    const reduced=document.documentElement.dataset.motion==='reduced'||window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const next=new Map<HTMLElement,{left:number;top:number}>();
+    const bounds=surface.getBoundingClientRect();
+    for(const row of surface.querySelectorAll<HTMLElement>('.code-row')){
+      if(row.closest('.drop-projection,.drag-source'))continue;
+      const old=previous.current.get(row);
+      const transform=getComputedStyle(row).transform;
+      const matrix=transform.match(/^matrix\(([^)]+)\)$/)?.[1].split(',').map(Number);
+      const rect=row.getBoundingClientRect();
+      const offsetX=matrix?.[4]??0,offsetY=matrix?.[5]??0;
+      const position={left:rect.left-bounds.left-offsetX,top:rect.top-bounds.top-offsetY};
+      next.set(row,position);
+      // Pointer updates do not restart an animation whose destination is unchanged.
+      if(old&&Math.abs(old.left-position.left)+Math.abs(old.top-position.top)<.5&&!reduced)continue;
+      row.getAnimations?.().forEach(animation=>animation.cancel());
+      if(old&&(active||wasDragging.current)&&!reduced){
+        const dx=old.left-position.left+offsetX,dy=old.top-position.top+offsetY;
+        if(Math.abs(dx)+Math.abs(dy)>1)row.animate?.([{transform:`translate(${dx}px,${dy}px)`},{transform:'translate(0,0)'}],{duration:190,easing:'cubic-bezier(.2,.8,.2,1)'});
+      }
+    }
+    previous.current=next;wasDragging.current=!!active;
+  });
   return <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>{children}</div>;
 }
 
@@ -239,7 +271,7 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
         const x1 = a.right - bounds.left + 3, y1 = a.top - bounds.top + a.height / 2;
         const x2 = b.right - bounds.left + 5, y2 = b.top - bounds.top + b.height / 2;
         // Short blue routes may pass behind intermediate blocks.
-        const bend = Math.min(bounds.width - 8, Math.max(x1,x2) + 24 + Math.min(16,index*4));
+        const bend = Math.min(bounds.width - 8, Math.max(x1,x2) + 14 + Math.abs(y2-y1)*.32 + Math.min(16,index*4));
         const r = Math.min(18, Math.abs(y2 - y1) / 2);
         const s = y2 >= y1 ? 1 : -1;
         const d = r < 1 ? 'M ' + x1 + ' ' + y1 + ' H ' + x2
@@ -254,8 +286,15 @@ function JumpArrows({ root, source, dragging }: { root: React.RefObject<HTMLDivE
     element.querySelectorAll('.code-row .block').forEach(block => observer?.observe(block));
     window.addEventListener('resize', measure);
     let frame = 0;
-    const track = () => { measure(); frame = requestAnimationFrame(track); };
-    if (dragging) frame = requestAnimationFrame(track);
+    const settlingUntil=performance.now()+250;
+    // Dropping ends the drag before the rows finish their layout animations.
+    // Follow their rendered positions through the final frame as well.
+    const track = () => {
+      measure();
+      const animating=[...element.querySelectorAll<HTMLElement>('.code-row')].some(row=>row.getAnimations?.().some(animation=>animation.playState==='running'));
+      if(dragging||animating||performance.now()<settlingUntil)frame=requestAnimationFrame(track);
+    };
+    frame = requestAnimationFrame(track);
     return () => { cancelAnimationFrame(frame); observer?.disconnect(); window.removeEventListener('resize', measure); };
   }, [root, source, dragging]);
   return <svg className="jump-arrows" aria-label="Jump connections"><defs><marker id={marker} viewBox="0 0 12 12" refX="9" refY="6" markerWidth="6" markerHeight="6" orient="auto"><path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></marker></defs>{links.map((l, i) => <path key={i} d={l.d} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" markerEnd={'url(#' + marker + ')'}/>)}</svg>;
@@ -269,6 +308,8 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
   const [dragged, setDragged] = useState('');
   const root = useRef<HTMLDivElement>(null), codeArea = useRef<HTMLDivElement>(null), pointer = useRef<{ x: number; y: number } | null>(null);
   const dragScope = useRef<DraggedScope | undefined>(undefined), lastSlot = useRef<string | undefined>(undefined);
+  const landingX=useRef<number | undefined>(undefined);
+  const measuredPointer=useRef<{x:number;y:number;scrollTop:number;viewportTop:number} | undefined>(undefined);
   const [draggedLine, setDraggedLine] = useState<number | null>(null);
   const options = robotCommands(role, level), disabled = locked || observation;
 
@@ -323,19 +364,24 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
     ? { ...previewBlock, children: rows.find(block => block.elseLine === draggedLine)?.alternative }
     : previewBlock] : [];
 
-  const resetDrag = () => { setDragged(''); setDraggedLine(null); dragScope.current = undefined; lastSlot.current = undefined; };
+  const resetDrag = () => { setDragged(''); setDraggedLine(null); dragScope.current = undefined; lastSlot.current = undefined; landingX.current=undefined; measuredPointer.current=undefined; };
   return <DndContext sensors={sensors} measuring={{ droppable: { strategy: MeasuringStrategy.Always } }} collisionDetection={args => {
       pointer.current = args.pointerCoordinates;
       const point = args.pointerCoordinates ?? { x: args.collisionRect.left, y: args.collisionRect.top + args.collisionRect.height / 2 };
       const bounds = codeArea.current?.getBoundingClientRect();
       if (!bounds || point.x < bounds.left || point.x > bounds.right || point.y < bounds.top || point.y > bounds.bottom) { lastSlot.current = undefined; return []; }
       const landing = root.current?.querySelector('.drop-projection')?.getBoundingClientRect();
-      if (landing && lastSlot.current && point.x >= landing.left - 20 && point.x <= landing.right + 40 && point.y >= landing.top - 10 && point.y <= landing.bottom + 10) return [{ id: lastSlot.current }];
+      if (landing && lastSlot.current && point.x >= landing.left - 20 && point.x <= landing.right + 40 && Math.abs(point.x-(landingX.current??point.x)) < 24 && point.y >= landing.top - 10 && point.y <= landing.bottom + 10) return [{ id: lastSlot.current }];
       const slots = args.droppableContainers.flatMap(container => {
         const rect = args.droppableRects.get(container.id), data = container.data.current;
         return rect && typeof data?.at === 'number' ? [{ id: String(container.id), at: data.at, alternative: !!data.alternative, left: rect.left, top: rect.top, height: rect.height }] : [];
       });
-      const slot = pickDropSlot(point, slots, dragScope.current, lastSlot.current);
+      const previousPoint=measuredPointer.current;
+      const scrollTop=codeArea.current?.scrollTop??0;
+      const stablePoint=args.pointerCoordinates&&previousPoint?.scrollTop===scrollTop&&previousPoint.viewportTop===bounds.top?previousPoint:undefined;
+      const slot = pickDropSlot(point, slots, dragScope.current, lastSlot.current, stablePoint);
+      if(!stablePoint||Math.hypot(point.x-stablePoint.x,point.y-stablePoint.y)>3)measuredPointer.current={...point,scrollTop,viewportTop:bounds.top};
+      if(slot?.id!==lastSlot.current)landingX.current=point.x;
       lastSlot.current = slot?.id;
       return slot ? [{ id: slot.id }] : [];
     }}
@@ -373,7 +419,7 @@ export function Editor({ role = 'query', source, onChange, level, locked, observ
           {renderBlocks(tree)}<JumpArrows root={root} source={source} dragging={!!dragged}/>
         </ProgramSurface>}
     </div>
-    <DragOverlay dropAnimation={null}>{dragged && <div className="drag-preview floating-code-preview"><ProjectedBlocks blocks={previewBlocks}/></div>}</DragOverlay>
+    <DragOverlay dropAnimation={null}>{dragged && <div className={"drag-preview floating-code-preview"+(draggedLine===null?" from-shop":"")}><ProjectedBlocks blocks={previewBlocks}/></div>}</DragOverlay>
     </DragPreview.Provider>
   </DndContext>;
 }

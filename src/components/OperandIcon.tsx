@@ -1,5 +1,5 @@
 import { ModelThumbnail } from './ModelThumbnail';
-import { Circle, Square, Triangle, Diamond, Hash, MessageCircle, Package, Sparkles } from 'lucide-react';
+import { Circle, Square, Triangle, Diamond, ReceiptText, Hash, MessageCircle, Package, Sparkles } from 'lucide-react';
 
 /** Give familiar operand values a small visual cue in compact selectors. */
 export function OperandIcon({ value }: { value: string }) {
@@ -7,7 +7,7 @@ export function OperandIcon({ value }: { value: string }) {
   const variable=/^var ?([1-4])$/.exec(normalized);
   if(variable){const Icon=[Circle,Square,Triangle,Diamond][Number(variable[1])-1];return <Icon className={`operand-icon variable-icon variable-${variable[1]}`} size={13} aria-hidden="true"/>;}
   if (normalized === 'coffee' || normalized === 'tea' || normalized === 'sugar') return <ModelThumbnail model={normalized}/>;
-  const Icon = normalized.includes('speech') || normalized.includes('heard') ? MessageCircle
+  const Icon = normalized==='item'?ReceiptText:normalized.includes('speech') || normalized.includes('heard') ? MessageCircle
     : normalized.includes('sugar') || normalized.includes('sweet') ? Sparkles
     : normalized.includes('count') || normalized.includes('number') ? Hash
     : normalized.includes('paper') || normalized.includes('ticket') || normalized.includes('order') ? Package

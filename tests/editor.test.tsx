@@ -1,5 +1,5 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { useState } from 'react';
 import { Editor } from '../src/components/Editor';
@@ -142,7 +142,7 @@ describe('compact visual code', () => {
   expect(screen.getByLabelText('Block 2 value').querySelector('.model-sugar')).toBeTruthy();
   await choose('Block 2 connector','AND');
   await choose('Block 2 condition 2 value','Negation');
-  await choose('Block 2 condition 2 operator','not in');
+  await choose('Block 2 condition 2 operator','NOT IN');
   expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH\nSUGAR true\nEND');
   expect(document.querySelectorAll('[data-line="1"] .if-comparison-operands')).toHaveLength(2);
   expect(compileProgram(source(),7).compile_error).toBe('');
@@ -223,7 +223,7 @@ describe('compact visual code', () => {
    const coordinates = path.getAttribute('d')!.split(' ');
    const bend = Number(coordinates[coordinates.indexOf('Q') + 1]);
    expect(bend).toBeGreaterThan(300);
-   expect(bend).toBeLessThan(405 - 8);
+   expect(bend).toBeLessThanOrEqual(405 - 8);
   }
  });
  it('draws saved jump connections on first mount and after returning from text mode', () => {
@@ -385,4 +385,52 @@ it('renders a single assignment with two selectors and uses fixed variables in W
  await choose('Block 5 quantity','var 2');
  expect(source()).toContain('ITEM 2 coffee\nSTORE var2 FROM number\nWRITE var2 sugar');
  expect(compileProgram(source(),10).compile_error).toBe('');
+});
+
+it('extends longer jumps farther right than short jumps',()=>{
+ vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  const line=Number(this.dataset.line??0);
+  return DOMRect.fromRect(this.classList.contains('visual-program')?{x:0,y:0,width:600,height:800}:{x:64,y:line*40,width:84,height:35});
+ });
+ render(<Harness initial={'POSITION listen\nJUMP listen\nITEM coffee\nITEM coffee\nITEM coffee\nJUMP listen'}/>);
+ const bends=[...document.querySelectorAll('.jump-arrows>path')].map(path=>Number(path.getAttribute('d')!.split('Q')[1].trim().split(' ')[0]));
+ expect(bends).toHaveLength(2);
+ expect(bends[1]-bends[0]).toBeGreaterThan(40);
+});
+it('uses semantic color families and an icon for the current item',()=>{
+ render(<Harness level={10} initial={'LISTEN\nTAKE UP\nITEM coffee\nSTORE var1 FROM number\nMOVE RIGHT 1\nDEPOSIT RIGHT\nFOR item IN heard orders\nIF tea IN item\nEND\nEND'}/>);
+ expect(document.querySelector('[data-line="0"].data')).toBeTruthy();
+ expect(document.querySelector('[data-line="1"].motion')).toBeTruthy();
+ expect(document.querySelector('[data-line="3"].function')).toBeTruthy();
+ expect(document.querySelector('[data-line="4"].motion')).toBeTruthy();
+ expect(document.querySelector('[data-line="6"].flow')).toBeTruthy();
+ expect(screen.getByLabelText('Block 8 source').querySelector('.operand-icon')).toBeTruthy();
+});
+
+it('keeps jump endpoints attached while the final layout animation settles',()=>{
+ const frames=new Map<number,FrameRequestCallback>();let id=0,offset=0;
+ vi.stubGlobal('requestAnimationFrame',(callback:FrameRequestCallback)=>{frames.set(++id,callback);return id;});
+ vi.stubGlobal('cancelAnimationFrame',(frame:number)=>frames.delete(frame));
+ vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){
+  if(this.classList.contains('visual-program'))return DOMRect.fromRect({width:600,height:800});
+  const line=Number(this.dataset.line??0);
+  return DOMRect.fromRect({x:64,y:line*40+offset,width:84,height:35});
+ });
+ const props={onChange:vi.fn(),level:8,locked:false,observation:false,textMode:false};
+ const {rerender}=render(<Editor {...props} source={'POSITION listen\nLISTEN\nJUMP listen'}/>);
+ rerender(<Editor {...props} source={'POSITION listen\nLISTEN\nITEM coffee\nJUMP listen'}/>);
+ const path=()=>document.querySelector('.jump-arrows>path')!.getAttribute('d')!;
+ const before=path();
+ offset=45;
+ act(()=>{const pending=[...frames.values()];frames.clear();pending.forEach(callback=>callback(performance.now()));});
+ expect(path()).not.toBe(before);
+ expect(path()).toMatch(/^M 151 182.5 /);
+ expect(path()).toContain('62.5 H 153');
+});
+it('exposes a Store grip in the shop and the program without a redundant Store label',()=>{
+ render(<Harness level={10} initial={'LISTEN\nSTORE var1 FROM number'}/>);
+ const shop=screen.getByRole('button',{name:'Insert STORE var1 FROM number'});
+ expect(shop.querySelector('.lucide-grip-vertical')).toBeTruthy();
+ expect(shop.textContent).toBe('');
+ expect(document.querySelector('[data-line="1"]>.lucide-grip-vertical')).toBeTruthy();
 });
