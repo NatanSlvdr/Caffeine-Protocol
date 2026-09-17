@@ -3,11 +3,10 @@ import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
 import { narrativeFor, stories } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
-import { robotForLevel } from '@/domain/robots';
 import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
-import type { ProgressSave, RobotPrograms, RobotRole, Settings } from '@/domain';
+import type { ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, playSound, startAudio } from '@/audio';
-import { go } from '@/app/navigation';
+import { go } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
 
 export type Update = Dispatch<SetStateAction<ProgressSave>>;
@@ -135,9 +134,4 @@ export function useProgress(): { done: number; total: number; stars: number; max
 export function useSettings(): [Settings, <K extends keyof Settings>(key: K, value: Settings[K]) => void] {
   const { save, updateSetting } = useGame();
   return [save.settings, updateSetting];
-}
-
-/** Default programmable role for a zero-based shift index. */
-export function useDefaultRole(index: number): RobotRole {
-  return robotForLevel(index + 1);
 }

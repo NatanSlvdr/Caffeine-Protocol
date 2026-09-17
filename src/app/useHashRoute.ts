@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { go, readHashRoute } from './navigation';
+import { go, readHashRoute } from '@/shared/lib/navigation';
 
 /** Current `#/...` route plus navigation; replaces ad-hoc hashchange listeners. */
 export function useHashRoute(): [string, (path: string) => void] {

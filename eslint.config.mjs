@@ -7,7 +7,7 @@ import globals from 'globals';
 /**
  * Architecture boundaries (see docs/ARCHITECTURE.md):
  * - shared/domain never imports features/data/components (one-way: inward only)
- * - features/* only imports shared/*
+ * - features/* only imports shared/*, sibling features, and leaf components (never data/app)
  * - components may import shared/domain + data (presentation reads registries)
  * - data may import shared/domain (type-only intent; enforced via consistent-type-imports)
  * - app shell (App/main/state/app) may import anything
@@ -79,11 +79,14 @@ export default tseslint.config(
                 },
               },
             },
-            // features own behavior: shared/* + sibling features only. Never components/data.
+            // features own behavior: shared/* + sibling features + leaf components.
+            // Never data (inject via props/store) or app shell (no upward imports).
             {
               from: { element: { type: 'features' } },
               allow: {
-                to: { element: { types: { anyOf: ['features', 'shared-domain', 'shared-ui', 'shared-lib'] } } },
+                to: {
+                  element: { types: { anyOf: ['features', 'components', 'shared-domain', 'shared-ui', 'shared-lib'] } },
+                },
               },
             },
             // app shell (App/main/state/app + classified shell files) may wire anything.
@@ -108,7 +111,9 @@ export default tseslint.config(
               allow: {
                 to: {
                   element: {
-                    types: { anyOf: ['app', 'features', 'components', 'data', 'shared-domain', 'shared-ui', 'shared-lib'] },
+                    types: {
+                      anyOf: ['app', 'features', 'components', 'data', 'shared-domain', 'shared-ui', 'shared-lib'],
+                    },
                   },
                 },
               },
