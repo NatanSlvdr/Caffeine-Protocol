@@ -74,17 +74,17 @@
 @media(prefers-reduced-motion:reduce){.trail-dot{transition:none}}
 [data-motion=reduced] .trail-dot{transition:none}
 
-/* The scroll layer supplies native input and labels over one live, pixel-shaded diorama. */
-.trail-panel.has-3d{background:#c5d0af}
+/* The scroll layer supplies native input and labels over one live, dusk-lit street diorama. */
+.trail-panel.has-3d{background:#5d6f93}
 .trail-scene{position:absolute;left:0;top:0;bottom:0;pointer-events:none}
 .trail-scroll{position:relative;z-index:1;overflow-x:hidden}
 .trail-map{width:100%;min-width:0;max-width:none;isolation:auto}
-.has-3d .trail-dot,.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot,.has-3d .trail-stop:disabled .trail-dot{background:none;border:0;outline:0;box-shadow:none;color:#5d553f;font-size:11px;font-weight:700}
-.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot{color:#fff6dd}
-.has-3d .trail-stop:disabled .trail-dot{color:#7d7e65}
+.has-3d .trail-dot,.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot,.has-3d .trail-stop:disabled .trail-dot{background:none;border:0;outline:0;box-shadow:none;color:#f2e7cd;font-size:11px;font-weight:700}
+.has-3d .trail-stop.is-selected .trail-dot,.has-3d .trail-stop.is-complete .trail-dot{color:#ffe9b8;text-shadow:0 0 12px #ff9e4e}
+.has-3d .trail-stop:disabled .trail-dot{color:#8b93a5}
 .has-3d .trail-stop{border-radius:50%}
-.has-3d .trail-stop:hover:not(:disabled) .trail-dot{transform:none;color:#fff6dd}
-.has-3d .trail-stars{top:35px;text-shadow:0 1px 2px #f1efdc;color:#85652e}
+.has-3d .trail-stop:hover:not(:disabled) .trail-dot{transform:none;color:#ffe9b8}
+.has-3d .trail-stars{top:35px;text-shadow:0 1px 3px #1d2431;color:#ffca7a}
 .trail-landmark{width:150px;padding:5px 8px;border-radius:5px;background:#eef0dcd9}
 .trail-landmark strong{color:#5d674e;font-size:10px;font-weight:600}.trail-landmark small{color:#858b71;font-size:8px;margin-top:3px}.trail-landmark.is-open small{color:#6c8057}
 .trail-start,.trail-finish{color:#657552;background:#e8ecd6bf;padding:6px 12px;border-radius:4px}
