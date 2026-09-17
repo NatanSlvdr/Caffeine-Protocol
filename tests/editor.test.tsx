@@ -25,7 +25,7 @@ describe('compact visual code', () => {
   expect(screen.queryByRole('button',{name:'Insert CHARGE ORDER'})).toBeNull();
   expect(screen.getByRole('button',{name:'Insert TAKE UP'}).querySelector('.lucide-hand')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert MOVE RIGHT 1'})).toBeTruthy();
-  expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.deposit-icon')).toBeTruthy();
+  expect(screen.getByRole('button',{name:'Insert DEPOSIT RIGHT'}).querySelector('.lucide-hand')).toBeTruthy();
   expect(screen.getByRole('button',{name:'Insert ITEM coffee'}).querySelector('.lucide-pen-line')).toBeTruthy();
  expect(screen.getByRole('button',{name:'Insert JUMP listen'}).querySelector('.jump-icon')).toBeTruthy();
   expect(screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span')).toHaveLength(9);
@@ -427,10 +427,15 @@ it('keeps jump endpoints attached while the final layout animation settles',()=>
  expect(path()).toMatch(/^M 151 182.5 /);
  expect(path()).toContain('62.5 H 153');
 });
-it('exposes a Store grip in the shop and the program without a redundant Store label',()=>{
+it('places the Store icon and label inside the variable tile in both shop and program',()=>{
  render(<Harness level={10} initial={'LISTEN\nSTORE var1 FROM number'}/>);
  const shop=screen.getByRole('button',{name:'Insert STORE var1 FROM number'});
- expect(shop.querySelector('.lucide-grip-vertical')).toBeTruthy();
- expect(shop.textContent).toBe('');
- expect(document.querySelector('[data-line="1"]>.lucide-grip-vertical')).toBeTruthy();
+ expect(shop.querySelector('.lucide-save')).toBeTruthy();
+ expect(shop.textContent).toBe('Store :');
+ expect(shop.closest('.assignment-tile')?.querySelector('[role=combobox]')).toBeTruthy();
+ const tile=document.querySelector('[data-line="1"] .assignment-tile')!;
+ expect(tile.querySelector('.store-label .lucide-save')).toBeTruthy();
+ expect(tile.querySelector('.store-label')?.textContent).toBe('Store :');
+ expect(tile.querySelector('[role=combobox]')?.getAttribute('aria-label')).toBe('Block 2 variable');
+ expect(document.querySelectorAll('[data-line="1"] .lucide-save')).toHaveLength(1);
 });

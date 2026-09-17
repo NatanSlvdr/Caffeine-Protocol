@@ -286,7 +286,7 @@ input[type=range]{accent-color:var(--coffee)}input[type=checkbox]:checked{backgr
 .operand-menu>button[aria-selected=true]{font-weight:850}
 .editor-panel .compact-palette .command-library{max-height:none;overflow:visible}
 .editor-panel .compact-palette{overflow:visible;position:relative;z-index:40}
-.editor-panel .command-tile{font-size:11px!important;white-space:nowrap}
+.editor-panel .command-tile{white-space:nowrap}
 .editor-panel .command-tile .block-select>button{padding:4px 6px}
 .editor-panel .code-row .jump-target{width:84px;min-height:31px;background:var(--tile);border:1px solid var(--edge);box-shadow:0 3px 0 var(--edge);color:var(--tile-ink);cursor:grab;touch-action:none}
 .editor-panel .code-row .jump-target:active{cursor:grabbing}
@@ -534,7 +534,7 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 .editor-panel .code-row .block:has(.assignment-operands){background:transparent;border:0;box-shadow:none;padding:0;flex-wrap:nowrap}
 .editor-panel .block:has(.assignment-operands)>.block-verb{display:none}
 .assignment-operands{display:inline-flex;align-items:center;gap:8px;min-width:0}
-.assignment-equals{font:700 14px ui-monospace,monospace;color:#e9ddca}
+.assignment-equals{font:inherit;color:#e9ddca}
 .editor-panel .assignment-operands .block-select>button{background:var(--tile);border:1px solid var(--edge);box-shadow:0 2px 0 var(--edge);border-radius:6px;padding:5px 8px;white-space:nowrap}
 .editor-panel .code-row .block-select>button{font-size:10.5px;min-height:26px}
 .editor-panel .code-row .block-icon{width:14px;height:14px}
@@ -569,10 +569,8 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 @media(prefers-reduced-motion:reduce){.floating-code-preview,.drop-projection{animation:none}}
 html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop-projection{animation:none}
 
-/* Assignments keep their two tiles and a dedicated grip in both shop and code. */
+/* Assignments keep their two tiles and a leading action icon in both shop and code. */
 .editor-panel .compact-palette .command-tile:has(.assignment-operands){background:transparent;border:0;box-shadow:none;padding:0;gap:5px}
-.editor-panel .command-tile:has(.assignment-operands)>button,.editor-panel .block:has(.assignment-operands)>.block-icon{color:#cab6e5;cursor:grab;flex-shrink:0}
-.editor-panel .command-tile:has(.assignment-operands)>button{width:20px;min-width:20px;height:35px;padding:0;justify-content:center;background:transparent;border:0;box-shadow:none}
 /* Shared grid columns align every clause with the widest operand above or below. */
 .editor-panel .if-condition-rows{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,max-content) minmax(0,max-content) minmax(0,max-content);gap:4px;flex:0 1 auto}
 .editor-panel .if-condition-rows>.if-comparison-operands{display:grid;grid-template-columns:subgrid;grid-column:1 / -1;gap:4px}
@@ -586,4 +584,14 @@ html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop
 .editor-panel .direction-mini-grid .direction-player{min-width:0;min-height:0;display:grid;place-items:center}
 .editor-panel .direction-mini-grid .direction-player .model-thumbnail{display:block;width:100%;height:100%;min-width:0;min-height:0}
 
-.editor-panel .block:has(.assignment-operands)>.block-icon{width:18px;height:24px}
+
+.editor-panel .assignment-tile{gap:5px}
+.editor-panel .store-label{display:inline-flex;align-items:center;gap:5px;flex-shrink:0;white-space:nowrap;color:var(--tile-ink);font:inherit;cursor:grab}
+.editor-panel .compact-palette .assignment-tile>button.store-label{width:auto;min-width:0;height:28px;margin:0;padding:0;background:transparent;border:0;box-shadow:none;color:var(--tile-ink);font:inherit}
+.editor-panel .store-label strong{font:inherit}
+
+/* One typography token for every block part; only the whole shop is scaled. */
+.editor-panel{--code-font:650 10.5px/1.3 ui-monospace,monospace}
+.editor-panel .code-row .block,.editor-panel .compact-palette .command-tile,.editor-panel .floating-code-preview{font:var(--code-font)}
+.editor-panel :is(.block,.command-tile) :is(.block-verb,.block-suffix,.store-label,.assignment-operands,.assignment-tile,.assignment-equals,strong){font:var(--code-font)}
+.editor-panel .code-row .tile-count,.editor-panel .compact-palette .tile-count,.editor-panel .code-row .block-select>button,.editor-panel .compact-palette .block-select>button{font:var(--code-font)}

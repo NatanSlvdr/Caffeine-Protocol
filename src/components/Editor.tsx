@@ -96,14 +96,14 @@ function comparisonOperands(command: string, options: string[], disabled: boolea
   </span>;
 }
 
-function Operands({ command, options, disabled, label, onChange, library = false, inLoop = false }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean; inLoop?: boolean }) {
+function Operands({ command, options, disabled, label, onChange, library = false, inLoop = false, storeLabel }: { command: string; options: string[]; disabled: boolean; label: string; onChange: (value: string) => void; library?: boolean; inLoop?: boolean; storeLabel?: React.ReactNode }) {
   const mask = (_key: string, value: string) => library ? '' : value;
   const select = (_key: string, value: string) => { if (!library) onChange(value); };
   const fields = blockFields(command);
   if (fields.family === 'STORE') {
     const stored=parseStore(command)??{variable:'var1',value:'number'};
     return <span className="assignment-operands">
-      <span className="assignment-tile"><BlockSelect label={label+' variable'} value={stored.variable} disabled={disabled} options={VARIABLES.map(conditionOption)} onChange={variable=>select('variable',`STORE ${variable} FROM ${stored.value}`)}/></span>
+      <span className="assignment-tile">{storeLabel??<span className="store-label"><BlockIcon command={command}/><strong>Store :</strong></span>}<BlockSelect label={label+' variable'} value={stored.variable} disabled={disabled} options={VARIABLES.map(conditionOption)} onChange={variable=>select('variable',`STORE ${variable} FROM ${stored.value}`)}/></span>
       <span className="assignment-equals">=</span>
       <span className="assignment-tile"><BlockSelect label={label+' source'} value={stored.value} disabled={disabled} options={STORE_VALUES.map(value=>({...conditionOption(value),label:value==='number'?'Number in item':conditionLabels[value]??value}))} onChange={value=>select('source',`STORE ${stored.variable} FROM ${value}`)}/></span>
     </span>;
@@ -159,9 +159,10 @@ function CommandTile({ initial, options, disabled, onInsert }: { initial: string
   const command = initial;
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: 'library:' + initial, data: { command }, disabled });
   const fields = blockFields(command);
+  const insertButton=<button type="button" className={fields.family==='STORE'?'store-label':undefined} disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.family==='STORE'?'Store :':fields.verb}</button>;
   return <div ref={setNodeRef} className={'command-tile ' + category(command)} style={{ opacity: isDragging ? .4 : 1 }}>
-    <button type="button" disabled={disabled} aria-label={'Insert ' + command} onClick={() => onInsert(command)} {...attributes} {...listeners}><BlockIcon command={command}/>{fields.family==='STORE'?null:fields.verb}</button>
-    <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={() => {}}/>
+    {fields.family!=='STORE'&&insertButton}
+    <Operands library command={command} options={options} disabled={disabled} label={'Library ' + fields.verb} onChange={() => {}} storeLabel={insertButton}/>
   </div>;
 }
 
@@ -173,7 +174,7 @@ function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
   return blocks.map(block => <div key={block.line} className={block.children ? 'code-scope ' + category(block.command) : 'code-statement'}>
     <div className="code-row"><div className={'block ' + category(block.command) + (block.command.startsWith('POSITION ') ? ' jump-target' : '')}
       data-jump={block.command.startsWith('JUMP ') ? block.command.slice(5) : undefined} data-target={block.command.startsWith('POSITION ') ? block.command.slice(9) : undefined} data-line={block.line}>
-      {!block.command.startsWith('POSITION ') && <><BlockIcon command={block.command}/><strong className="block-verb">{blockFields(block.command).verb}</strong><Operands command={block.command} options={options} disabled label="Preview" onChange={() => {}}/></>}
+      {!block.command.startsWith('POSITION ') && <>{!parseStore(block.command)&&<><BlockIcon command={block.command}/><strong className="block-verb">{blockFields(block.command).verb}</strong></>}<Operands command={block.command} options={options} disabled label="Preview" onChange={() => {}}/></>}
     </div></div>
     {block.children && <div className="scope-body">{block.children.length ? <ProjectedBlocks blocks={block.children}/> : <div className="empty-scope">Drop a block here</div>}</div>}
     {!!block.alternative?.length && <><div className="code-row"><div className="block flow"><BlockIcon command="ELSE"/><strong className="block-verb">Else</strong></div></div><div className="scope-body"><ProjectedBlocks blocks={block.alternative}/></div></>}
@@ -244,7 +245,7 @@ function Row({ block, depth, ordinal, locked, active, failure, failureMessage, o
     <div ref={node => { setNodeRef(node); rowRef.current = node; }} {...attributes} {...listeners} aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'} aria-disabled={locked} tabIndex={locked ? -1 : 0} className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
       aria-current={active && !failure ? 'step' : undefined} data-line={id} data-depth={depth} data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined} data-target={target ? command.slice(9) : undefined}>
 
-      {!target && <><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong><Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} inLoop={inLoop} onChange={onReplace}/></>}
+      {!target && <>{!parseStore(command)&&<><BlockIcon command={command}/><strong className="block-verb">{blockFields(command).verb}</strong></>}<Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} inLoop={inLoop} onChange={onReplace}/></>}
       {target && <span className="sr-only">Jump destination</span>}
     </div>
     {failure && failureMessage && <InstructionError message={failureMessage} anchor={rowRef}/>}
