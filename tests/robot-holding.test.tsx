@@ -29,3 +29,23 @@ it('shows an in-flight action even before paper is picked up, and supports pause
  rerender(<RobotHolding name="Query" inventory={[]} variables={{var1:2}}/>);
  expect(screen.getByLabelText('Query memory').textContent).toContain('var 1 = 2');
 });
+
+it.each(['LISTEN', 'IF coffee', 'FOR EACH order', 'JUMP 1', 'CALL routine', 'READ ticket', 'WAIT TICKET'])('does not animate %s as a robot action', command=>{
+ const {rerender}=render(<RobotHolding name="Query" inventory={[]} action={{command,start:0,progress:.5}}/>);
+ expect(screen.queryByLabelText('Query is holding')).toBeNull();
+ rerender(<RobotHolding name="Query" inventory={[]} variables={{var1:2}} action={{command,start:0,progress:.5}}/>);
+ expect(screen.queryByLabelText('Action progress')).toBeNull();
+ expect(screen.getByLabelText('Query memory')).toBeTruthy();
+});
+
+it.each(['TAKE UP', 'DEPOSIT DOWN', 'ITEM coffee', 'WRITE 2 sugar', 'STORE var1 FROM number', 'MOVE LEFT', 'TICKET', 'SUBMIT', 'PICKUP'])('shows %s as a robot action', command=>{
+ render(<RobotHolding name="Query" inventory={[]} action={{command,start:0,progress:.5}}/>);
+ expect(screen.getByLabelText('Action progress')).toBeTruthy();
+});
+
+it('shows action, inventory with sugar cubes, and compact memory in order',()=>{
+ render(<RobotHolding name="Brew" action={{command:'DEPOSIT UP',start:0,progress:.5}} inventory={[{ticketId:'one',table:2,item:'coffee',stage:'brewed',sugar:2}]} variables={{var1:2}}/>);
+ const bubble=screen.getByLabelText('Brew is holding');
+ expect(Array.from(bubble.children).map(child=>child.className || child.tagName)).toEqual(['robot-action','UL','robot-memory']);
+ expect(screen.getByLabelText('Brew inventory').querySelector('.holding-sugar .model-sugar')).toBeTruthy();
+});

@@ -18,14 +18,14 @@ describe('clear execution feedback',()=>{
   const {rerender}=render(<Editor {...editor} activeLine={0}/>);
   const cursor=screen.getByRole('img',{name:'Current instruction'});
   expect(cursor.parentElement).toBe(document.querySelector('.visual-program'));
-  expect(cursor.style.transform).toContain('0px, 99px');
+  expect(cursor.style.transform).toContain('-16px, 99px');
   expect(document.querySelector('[data-line="0"]')?.parentElement?.querySelector('.line-number')?.textContent).toBe('01');
   rerender(<Editor {...editor} activeLine={2}/>);
   expect(screen.getByRole('img',{name:'Current instruction'})).toBe(cursor);
-  expect(cursor.style.transform).toContain('0px, 199px');
+  expect(cursor.style.transform).toContain('-16px, 199px');
   expect(cursor.style.transitionDuration).toBe('180ms');
   rerender(<Editor {...editor} activeLine={1} stepSeconds={.125}/>);
-  expect(cursor.style.transform).toContain('0px, 149px');
+  expect(cursor.style.transform).toContain('-16px, 149px');
   expect(cursor.style.transitionDuration).toBe('25ms');
 });
  it('moves from the jump instruction to its destination at the playback midpoint',()=>{
@@ -37,12 +37,12 @@ describe('clear execution feedback',()=>{
   const props={...editor,source:'POSITION listen\nLISTEN\nJUMP listen',level:8,activeLine:2};
   const {rerender}=render(<Editor {...props} instructionProgress={.49}/>);
   const cursor=screen.getByRole('img',{name:'Current instruction'});
-  expect(cursor.style.transform).toContain('0px, 199px');
+  expect(cursor.style.transform).toContain('-16px, 199px');
   rerender(<Editor {...props} instructionProgress={.5}/>);
-  expect(cursor.style.transform).toContain('0px, 99px');
+  expect(cursor.style.transform).toContain('-16px, 99px');
   expect(document.querySelector('[data-line="2"]')?.getAttribute('aria-current')).toBe('step');
   rerender(<Editor {...props} instructionProgress={.5} stepSeconds={.125}/>);
-  expect(cursor.style.transform).toContain('0px, 99px');
+  expect(cursor.style.transform).toContain('-16px, 99px');
  });
  it('scrolls in the same coordinate space as the blocks without repositioning',()=>{
   let scroll = 0;

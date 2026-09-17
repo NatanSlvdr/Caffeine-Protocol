@@ -21,7 +21,7 @@ export function ExecutionCursor({ root, line, stepSeconds }: {
       const center = rowRect.top + rowRect.height / 2;
       const next = {
         // Local coordinates scroll with the blocks without scroll listeners.
-        left: 0,
+        left: -16,
         top: center - bounds.top - 16,
         height: rowRect.height + 5,
         width: bounds.width,
@@ -45,7 +45,7 @@ export function ExecutionCursor({ root, line, stepSeconds }: {
     style={{ transform: `translate3d(${position?.left ?? 0}px, ${position?.top ?? 0}px, 0)`, opacity: line >= 0 && position !== undefined ? 1 : 0,
       transitionDuration: placed.current ? `${Math.min(180, stepSeconds * 200)}ms` : '0ms' }}>
     <span className="execution-line-highlight" aria-hidden="true" style={{width: position?.width ?? 0, height: position?.height ?? 0, top: 16 - (position?.height ?? 0) / 2}}/>
-    <svg viewBox="0 0 20 20" width="32" height="32" aria-hidden="true"><path d="M4 3 17 10 4 17Z"/></svg>
+    <svg viewBox="0 0 20 20" width="32" height="32" aria-hidden="true"><path d="M3.5 3 16.5 10 3.5 17Z"/></svg>
   </span>;
   return marker;
 }

@@ -564,8 +564,8 @@ html[data-motion=reduced] .execution-cursor,html[data-motion=reduced] .execution
 
 /* Round the actual painted surfaces without clipping floating drag previews. */
 .workspace .editor-panel>.coding-pane-heading{border-radius:8px 8px 0 0;overflow:hidden}
-.editor-panel .editor-body{margin-left:0;padding-left:0;border-radius:0 0 8px 8px;background-clip:padding-box}
-.editor-panel .visual-program{padding-left:64px}
+.editor-panel .editor-body{margin-left:-16px;padding-left:16px;border-radius:0 0 8px 8px;background-clip:content-box;background-origin:content-box}
+.editor-panel .visual-program{padding-left:48px}
 @media(prefers-reduced-motion:reduce){.floating-code-preview,.drop-projection{animation:none}}
 html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop-projection{animation:none}
 
@@ -601,11 +601,15 @@ html[data-motion=reduced] .floating-code-preview,html[data-motion=reduced] .drop
 .editor-panel .assignment-operands{padding:0;align-items:center;line-height:1.3}
 .editor-panel .assignment-tile{vertical-align:middle;box-shadow:0 3px 0 var(--edge)}
 .editor-panel .code-row .block.failure{animation:none;outline:none;background:var(--tile);border-color:var(--edge);box-shadow:0 3px 0 var(--edge)}
-.robot-action{display:flex;align-items:center;gap:5px;flex-wrap:wrap;padding:3px;color:#493e33;font:600 10px/1.3 ui-monospace,monospace}
+.editor-panel .code-row .block:has(.assignment-operands):is(.active,.failure){background:transparent;border:0;box-shadow:none}
+.robot-action{display:flex;flex-direction:column;align-items:center;text-align:center;gap:7px;padding:8px;color:#493e33;font:600 10px/1.3 ui-monospace,monospace}
 .robot-action-icon{display:inline-flex;transform-origin:center}
+.robot-action-icon .block-icon{width:40px;height:40px}
+.robot-action+ul{border-top:1px solid #cbbda4;margin-top:4px;padding-top:6px}
+.robot-holding .holding-sugar .model-thumbnail{width:16px;height:16px}
 .robot-action progress{width:100%;height:3px;accent-color:#698caa}
 .robot-memory{display:flex;flex-wrap:wrap;gap:4px;border-top:1px solid #cbbda4;margin-top:4px;padding-top:4px;font:600 10px ui-monospace,monospace}
-.robot-memory>span{display:flex;gap:3px;align-items:center}
+.robot-memory>span{display:flex;gap:3px;align-items:center;white-space:nowrap}
 .robot-holding{animation:holding-appear .2s ease-out}
 .robot-holding li{animation:holding-appear .2s ease-out;animation-play-state:inherit}
 @keyframes holding-appear{from{opacity:0;scale:.8}to{opacity:1;scale:1}}
