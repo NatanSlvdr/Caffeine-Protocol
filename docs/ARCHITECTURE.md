@@ -71,6 +71,11 @@ No `as` casts in loaders — campaign files are `safeParse`d with valibot.
 - **v2** — per-robot drafts. Migrated like v1 for Query; kitchen/floor kept.
 - **v3** — current. `robotDrafts`/`robotSolutions` per shift and role.
 
+`complete` is a sticky historical flag (the then-final shift was finished), never
+a length check: imports require earned stars for the unlocked shift instead of
+`unlocked === lessons.length - 1`, and a completed save from a shorter catalog
+unlocks exactly the next appended shift on import.
+
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 
