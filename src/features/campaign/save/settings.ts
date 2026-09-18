@@ -1,5 +1,12 @@
 import type { ProgressSave, Settings } from '@/domain/types';
 
+/**
+ * Stable localStorage namespace, not a schema version.
+ * The `v1` suffix names the storage slot so existing saves can be found;
+ * the save schema version lives inside the JSON payload (`version: 1 | 2 | 3`)
+ * and migrates via `parseSave`. Never rename this key for a schema bump —
+ * renaming would orphan every existing café instead of migrating it.
+ */
 export const SAVE_KEY = 'caffeine-protocol.v1';
 const defaultSettings: Settings = {
   volume: 0.6,

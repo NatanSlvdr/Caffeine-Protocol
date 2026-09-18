@@ -44,7 +44,7 @@ The live game and offline validation drain the same interpreter. Run, Pause, Ste
 
 ## Save migration
 
-Save version 3 replaces incompatible Query programs with the redesigned lesson starters. It clears old Query solutions and Act I stars/story flags while retaining selected/unlocked levels, settings, and kitchen/floor routines. Completed legacy Act I still unlocks the kitchen. Current-version programs continue carrying forward normally. The existing storage key is retained so old saves can be found and migrated.
+Save version 3 replaces incompatible Query programs with the redesigned lesson starters. It clears old Query solutions and Act I stars/story flags while retaining selected/unlocked levels, settings, and kitchen/floor routines. Completed legacy Act I still unlocks the kitchen. Current-version programs continue carrying forward normally. The existing storage key (`caffeine-protocol.v1`) is a stable namespace, not a schema version: it is retained so old saves can be found and migrated, and schema bumps must never rename it. Historical `tests/fixtures/save-v1.json` + `save-v2.json` pin this migration against real serialized payloads.
 
 
 ## Current editor and quantity behavior

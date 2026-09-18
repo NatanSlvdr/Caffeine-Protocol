@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "selected": 8,
+  "unlocked": 9,
+  "complete": false,
+  "drafts": {
+    "5": "POSITION listen\nLISTEN\nTICKET\nIF tea IN CUSTOMER SPEECH\nITEM tea\nELSE\nITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND\nSUBMIT\nCHARGE ORDER",
+    "8": "LISTEN\nEACH\nITEM heard\nSUGAR heard\nEND",
+    "9": "POSITION listen\nLISTEN\nFOR item IN heard orders\nTICKET\nIF tea IN item\nITEM tea\nELSE\nITEM coffee\nEND\nIF number IN item\nREAD number\nSUGAR number\nELSE\nIF sugar IN item\nIF negation IN item\nSUGAR false\nELSE\nSUGAR true\nEND\nEND\nEND\nMOVE RIGHT 1\nSUBMIT\nMOVE LEFT 1\nEND\nJUMP listen"
+  },
+  "solutions": {
+    "0": "LISTEN\nTICKET\nITEM coffee\nSUBMIT",
+    "3": "LISTEN\nTICKET\nIF tea IN CUSTOMER SPEECH\nITEM tea\nELSE\nITEM coffee\nEND\nSUBMIT",
+    "5": "POSITION listen\nLISTEN\nTICKET\nIF tea IN CUSTOMER SPEECH\nITEM tea\nELSE\nITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND\nSUBMIT"
+  },
+  "stars": {
+    "0": 3,
+    "1": 3,
+    "3": 2,
+    "5": 2
+  },
+  "story": {
+    "0": true,
+    "1": true,
+    "3": true
+  },
+  "settings": {
+    "volume": 0.6,
+    "music": 0.55,
+    "effects": 0.65,
+    "reduced_motion": false,
+    "fullscreen": false
+  }
+}
