@@ -30,8 +30,9 @@ import lessonL13 from './lessons/L13.json' with { type: 'json' };
 import lessonL14 from './lessons/L14.json' with { type: 'json' };
 import * as v from 'valibot';
 import type { LevelDefinition } from '../../domain/types';
-import { LessonSchema, LevelSchema, ManifestSchema } from './schema';
+import { ManifestSchema } from './schema';
 import type { Lesson } from './schema';
+import { validateLessonData, validateLevelData, validateManifestData } from './validate';
 
 const levelFiles: Record<string, unknown> = {
   L01: levelL01,
@@ -67,19 +68,21 @@ const lessonFiles: Record<string, unknown> = {
 };
 
 const manifest = v.parse(ManifestSchema, manifestData);
+const manifestErrors = validateManifestData(manifestData);
+if (manifestErrors.length) throw new Error(`Invalid campaign manifest: ${manifestErrors[0]}`);
 if (manifest.order.some((id) => !(id in levelFiles) || !(id in lessonFiles)))
   throw new Error(`Campaign manifest references a missing shift file: ${manifest.order.join(',')}`);
 
 function loadLevel(id: string): LevelDefinition {
-  const parsed = v.safeParse(LevelSchema, levelFiles[id]);
-  if (!parsed.success) throw new Error(`Invalid campaign level ${id}: ${parsed.issues[0]?.message ?? 'unknown issue'}`);
-  return parsed.output;
+  const errors = validateLevelData(levelFiles[id]);
+  if (errors.length) throw new Error(`Invalid campaign level ${id}: ${errors[0]}`);
+  return levelFiles[id] as LevelDefinition;
 }
 
 function loadLesson(id: string): Lesson {
-  const parsed = v.safeParse(LessonSchema, lessonFiles[id]);
-  if (!parsed.success) throw new Error(`Invalid campaign lesson ${id}: ${parsed.issues[0]?.message ?? 'unknown issue'}`);
-  return parsed.output;
+  const errors = validateLessonData(lessonFiles[id]);
+  if (errors.length) throw new Error(`Invalid campaign lesson ${id}: ${errors[0]}`);
+  return lessonFiles[id] as Lesson;
 }
 
 /** Act I levels and lessons in manifest order; every file is schema-validated, never cast. */
