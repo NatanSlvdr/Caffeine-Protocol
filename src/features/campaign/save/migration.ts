@@ -44,7 +44,18 @@ function validateProgress(v: Record<string, unknown>, lessons: LessonCatalog): v
   if (!index(v.selected) || !index(v.unlocked) || v.selected > v.unlocked || typeof v.complete !== 'boolean')
     throw new Error('Invalid campaign progress.');
   if (v.version === 1 && v.unlocked > 13) throw new Error('Invalid campaign progress.');
-  if (v.version !== 1 && v.complete && v.unlocked !== lessons.length - 1) throw new Error('Invalid campaign progress.');
+  // Forward-compatible completion: `complete` records that the player finished the
+  // final shift available when the save was written, not that `unlocked` matches the
+  // current catalog length. Tie it to earned stars for the unlocked shift instead, so
+  // a bare `{ complete: true }` on a fresh save is still rejected while an
+  // L32-complete save stays valid after L33 is appended.
+  if (v.version !== 1 && v.complete) {
+    const stars = v.stars;
+    if (!isRecord(stars)) throw new Error('Invalid campaign progress.');
+    const earned = stars[String(v.unlocked)];
+    if (typeof earned !== 'number' || !Number.isInteger(earned) || earned < 0 || earned > 3)
+      throw new Error('Invalid campaign progress.');
+  }
 }
 
 function validateMaps(v: Record<string, unknown>, lessons: LessonCatalog): void {
@@ -154,12 +165,18 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const settings = validateSettingsMap(v);
   const robotMaps = validateRobotMaps(v, lessons);
   migrateLegacyVersion(v, robotMaps, lessons);
+  const storedComplete = v.version !== 1 && (v.complete as boolean);
+  let unlocked = (v.version === 1 && v.complete ? 14 : v.unlocked) as number;
+  // A save completed against a shorter catalog unlocks exactly the next appended
+  // shift, so an L32-complete save opens L33 on import instead of staying locked
+  // behind (or invalidated by) the new finale.
+  if (storedComplete && unlocked < lessons.length - 1) unlocked += 1;
   return {
     version: 3,
     ...robotMaps,
     selected: v.selected as number,
-    unlocked: v.version === 1 && v.complete ? 14 : (v.unlocked as number),
-    complete: v.version !== 1 && (v.complete as boolean),
+    unlocked,
+    complete: storedComplete,
     drafts: cleanQueryMap(v.drafts as Record<string, string>),
     solutions: cleanQueryMap(v.solutions as Record<string, string>),
     stars: { ...(v.stars as Record<string, number>) },
