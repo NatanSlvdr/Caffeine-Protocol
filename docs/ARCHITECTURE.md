@@ -76,6 +76,13 @@ a length check: imports require earned stars for the unlocked shift instead of
 `unlocked === lessons.length - 1`, and a completed save from a shorter catalog
 unlocks exactly the next appended shift on import.
 
+`SAVE_KEY` (`caffeine-protocol.v1`) is a stable storage namespace, not a schema
+version: the `v1` suffix names the localStorage slot, while the schema version
+lives inside the payload (`version: 1 | 2 | 3`). Schema bumps migrate via
+`parseSave` and must never rename the key, or existing saves become orphans.
+Historical `tests/fixtures/save-v1.json` + `save-v2.json` (pinned by
+`save-fixtures.test.ts`) prove compat with real serialized history.
+
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 
