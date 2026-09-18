@@ -12,10 +12,10 @@ export interface LiveRunInit {
 }
 
 /** Compile the query program and seed per-customer events; executes no player instruction. */
-export function initializeLiveRun(level: LevelDefinition, programs: RobotPrograms): LiveRunInit {
+export function initializeLiveRun(level: LevelDefinition, programs: RobotPrograms, seedIndex = 0): LiveRunInit {
   const program = compileProgram(programs.query, Math.min(Number(level.id.slice(1)), QUERY_PROGRAM_LEVEL_CAP));
   const number = Number(level.id.slice(1));
-  const seed = level.seeds[0];
+  const seed = level.seeds[seedIndex] ?? level.seeds[0];
   const events = seed.customers.map((customer, i): ReplayEvent => ({
     seed_id: seed.id,
     customer: structuredClone(customer),

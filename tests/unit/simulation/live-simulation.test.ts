@@ -124,13 +124,15 @@ describe('live service',()=>{
   expect(failed.result.tickets).toEqual([]);
   expect(Number.isFinite(failed.result.average_satisfaction)).toBe(true);
  });
- it('uses one scenario and produces the same outcome regardless of playback speed',()=>{
-  const slow=createLiveRun(levels[4],programs(4)),fast=createLiveRun(levels[4],programs(4));
-  const a=finish(slow);let b=fast.snapshot();while(!b.done)b=fast.advance(12);
-  expect(a.result.passed).toBe(true);expect(b.result).toEqual(a.result);
-  expect(a.result.required_seeds).toBe(1);
-  expect(a.result.events).toHaveLength(levels[4].seeds[0].customers.length);
- });
+  it('uses every required scenario and produces the same outcome regardless of playback speed',()=>{
+   const slow=createLiveRun(levels[4],programs(4)),fast=createLiveRun(levels[4],programs(4));
+   const a=finish(slow);let b=fast.snapshot();while(!b.done)b=fast.advance(12);
+   expect(a.result.passed).toBe(true);expect(b.result).toEqual(a.result);
+   expect(a.result.required_seeds).toBe(levels[4].seeds.length);
+   expect(a.result.passed_seeds).toBe(levels[4].seeds.length);
+   expect(a.result.events).toHaveLength(levels[4].seeds.reduce((n,s)=>n+s.customers.length,0));
+   expect(a.result.execution).toHaveLength(levels[4].seeds.length);
+  });
  for(const [index,level] of levels.entries())it(`completes ${level.id} live with its reference program`,()=>{
   const frame=finish(createLiveRun(level,programs(index)));
   expect(frame.result.first_failure).toBeNull();
