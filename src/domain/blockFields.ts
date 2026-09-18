@@ -1,44 +1,82 @@
-import { isComparisonCondition } from './program';
-import { isComparisonCondition as isRobotComparison } from './robotConditions';
+/** Presentation-only family classification; operands serialize to the finite instruction language. */
+export function familyFor(command: string): string {
+  if (command.startsWith('WRITE ')) return 'ITEM';
+  if (command.startsWith('STORE ')) return 'STORE';
+  if (command.startsWith('POSITION ')) return 'POSITION';
+  if (command === 'LISTEN') return 'WAIT';
+  if (command === 'TICKET') return 'TAKE';
+  if (command === 'SUBMIT') return 'DEPOSIT';
+  if (command === 'PICKUP' || /^(PICKUP|TAKE) /.test(command)) return 'TAKE';
+  if (command === 'DEPOSIT' || /^DEPOSIT /.test(command)) return 'DEPOSIT';
+  if (command.startsWith('WAIT ')) return 'WAIT';
+  const [verb] = command.split(' ');
+  if (
+    [
+      'FOR',
+      'IF',
+      'ITEM',
+      'SUGAR',
+      'READ',
+      'TAKE',
+      'FILL',
+      'ADD',
+      'MOVE',
+      'FUNCTION',
+      'CALL',
+      'POSITION',
+      'JUMP',
+    ].includes(verb)
+  )
+    return verb;
+  return command;
+}
+
+/** Presentation-only verb/value labels for one serialized command. */
+export function labelFor(command: string): { verb: string; value: string } {
+  if (command.startsWith('WRITE ')) return { verb: 'Write', value: 'Sugar' };
+  if (command.startsWith('STORE ')) return { verb: 'Store', value: command.split(' ')[1] };
+  if (command.startsWith('POSITION ')) return { verb: '', value: '' };
+  if (command === 'LISTEN') return { verb: 'Wait for', value: 'Orders' };
+  if (command === 'TICKET') return { verb: 'Take', value: '' };
+  if (command === 'SUBMIT') return { verb: 'Deposit', value: '' };
+  if (command === 'PICKUP' || /^(PICKUP|TAKE) /.test(command)) return { verb: 'Take', value: '' };
+  if (command === 'DEPOSIT' || /^DEPOSIT /.test(command)) return { verb: 'Deposit', value: '' };
+  if (command.startsWith('WAIT '))
+    return {
+      verb: 'Wait for',
+      value:
+        ({ TICKET: 'Order ticket', DRINK: 'Ready drink', DIRTY: 'Dirty cups' } as Record<string, string>)[
+          command.slice(5)
+        ] ?? command.slice(5),
+    };
+  const [verb, ...parts] = command.split(' ');
+  if (
+    [
+      'FOR',
+      'IF',
+      'ITEM',
+      'SUGAR',
+      'READ',
+      'TAKE',
+      'FILL',
+      'ADD',
+      'MOVE',
+      'FUNCTION',
+      'CALL',
+      'POSITION',
+      'JUMP',
+    ].includes(verb)
+  ) {
+    const operand = parts.join(' ');
+    return {
+      verb: verb === 'ITEM' ? 'Write' : verb[0] + verb.slice(1).toLowerCase(),
+      value: operand === 'coffee' ? 'Coffee' : operand === 'tea' ? 'Tea' : operand.toLowerCase().replaceAll('_', ' '),
+    };
+  }
+  return { verb: command[0] + command.slice(1).toLowerCase(), value: '' };
+}
 
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
-  if (command.startsWith('WRITE ')) return { family: 'ITEM', verb: 'Write', value: 'Sugar' };
-  if (command.startsWith('STORE ')) return { family: 'STORE', verb: 'Store', value: command.split(' ')[1] };
-  if (command.startsWith('POSITION ')) return { family: 'POSITION', verb: '', value: '' };
-  if (command === 'LISTEN') return { family: 'WAIT', verb: 'Wait for', value: 'Orders' };
-  if (command === 'TICKET') return { family: 'TAKE', verb: 'Take', value: '' };
-  if (command === 'SUBMIT') return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
-  if (command === 'PICKUP' || /^(PICKUP|TAKE) /.test(command)) return { family: 'TAKE', verb: 'Take', value: '' };
-  if (command === 'DEPOSIT') return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
-  if (/^DEPOSIT /.test(command)) return { family: 'DEPOSIT', verb: 'Deposit', value: '' };
-  if (command.startsWith('WAIT ')) return {
-    family: 'WAIT', verb: 'Wait for', value: ({ TICKET: 'Order ticket', DRINK: 'Ready drink', DIRTY: 'Dirty cups' } as Record<string, string>)[command.slice(5)] ?? command.slice(5),
-  };
-  const [verb, ...parts] = command.split(' ');
-  if (['FOR', 'IF', 'ITEM', 'SUGAR', 'READ', 'TAKE', 'FILL', 'ADD', 'MOVE', 'FUNCTION', 'CALL', 'POSITION', 'JUMP'].includes(verb)) {
-    const operand = parts.join(' ');
-    return { family: verb, verb: verb === 'ITEM' ? 'Write' : verb[0] + verb.slice(1).toLowerCase(), value: operand === 'coffee' ? 'Coffee' : operand === 'tea' ? 'Tea' : operand.toLowerCase().replaceAll('_', ' ') };
-  }
-  return { family: command, verb: command[0] + command.slice(1).toLowerCase(), value: '' };
-}
-
-export function blockVariants(command: string, available: readonly string[]) {
-  const family = blockFields(command).family;
-  return available.filter(candidate => candidate !== 'ITEM heard' && blockFields(candidate).family === family
-    // Legacy IF blocks keep their compact single selector; comparison blocks
-    // expose their three operands separately in the editor.
-    && !(family === 'IF' && (isComparisonCondition(candidate) || isRobotComparison(candidate))));
-}
-
-/** One library block per action; operands are chosen inside that block. */
-export function blockPrototypes(available: readonly string[]) {
-  const families = new Set<string>();
-  return available.filter(command => {
-    if (['END', 'ELSE', 'REPEAT', 'ITEM heard', 'TICKET', 'SUBMIT', 'DEPOSIT', 'WRITE coffee', 'WRITE tea', 'WRITE heard'].includes(command) || command.startsWith('POSITION ')) return false;
-    const family = blockFields(command).family;
-    if (families.has(family)) return false;
-    families.add(family);
-    return true;
-  });
+  return { family: familyFor(command), ...labelFor(command) };
 }

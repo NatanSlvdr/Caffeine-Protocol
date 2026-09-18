@@ -1,0 +1,55 @@
+{
+  "active_tables": 3,
+  "block_target": 8,
+  "id": "L03",
+  "instruction_target": 14,
+  "programming_enabled": true,
+  "reference_block_count": 6,
+  "seeds": [
+    {
+      "id": "L03_A",
+      "customers": [
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    },
+    {
+      "id": "L03_B",
+      "customers": [
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    }
+  ],
+  "summary": "Listen, TAKE UP from the paper stack, and write coffee on the held paper. MOVE RIGHT 1, DEPOSIT RIGHT at the kitchen handoff, then MOVE LEFT 1 to the register. Checkout is automatic.",
+  "title": "Level 3: First Order",
+  "act": 1
+}

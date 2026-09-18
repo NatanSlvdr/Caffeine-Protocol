@@ -1,0 +1,5 @@
+{
+  "note": "Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.",
+  "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
+  "starter": "LISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
+}

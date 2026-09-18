@@ -1,9 +1,11 @@
-import { ticketUnits } from './ticketUnits';
+import { ticketUnits } from './tickets';
 import { STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
-import { directionVectors, normalizeDirection } from './directions';
-import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
+import { directionVectors } from './directions';
+import { commandDirection } from './commands';
+import { customerApproach, customerExit, customerSeatPath, pathDistance, CUSTOMER_WALK_SPEED, SEAT_CHOICE_SECONDS, SIT_SECONDS, DRINK_SECONDS, samplePath, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, SIDEWALK_X } from './street';
+import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
 /** Sample immutable execution records; presentation never invents a robot route. */
 export function sampleReplay(result:RunResult,time:number){
  const seed=(time<0?result.execution?.[0]:result.execution?.find(s=>time>=s.start&&time<s.start+s.duration))??result.execution?.at(-1);
@@ -25,8 +27,8 @@ export function sampleReplay(result:RunResult,time:number){
   const motion=history.filter(e=>e.from[0]!==e.to[0]||e.from[1]!==e.to[1]).at(-1),settled=history.filter(e=>e.end<=local&&!e.error).at(-1),last=history.at(-1)!;
   let position=settled?.to??last.from;
   if(motion&&motion.end>local){const t=Math.max(0,Math.min(1,(local-motion.start)/(motion.end-motion.start)));position=[motion.from[0]+(motion.to[0]-motion.from[0])*t,motion.from[1]+(motion.to[1]-motion.from[1])*t];}
-  const directional=history.findLast(event=>event.command==='LISTEN'||/^(MOVE|TAKE|PICKUP|DEPOSIT) /.test(event.command)&&normalizeDirection(event.command.split(' ')[1]));
-  const direction=directional?normalizeDirection(directional.command.split(' ')[1]??''):undefined;
+  const directional=history.findLast(event=>event.command==='LISTEN'||commandDirection(event.command)!==undefined);
+  const direction=directional?commandDirection(directional.command):undefined;
   const vector=direction?directionVectors[direction]:undefined;
   const facing=directional?.command==='LISTEN'?-Math.PI/2:vector?Math.atan2(vector[0],vector[1]):id==='query'?-Math.PI/2:0;
   const reach=/^(TAKE|PICKUP|DEPOSIT)( |$)/.test(last.command)&&last.end>local?Math.sin(Math.PI*(local-last.start)/Math.max(.001,last.end-last.start)):0;
@@ -46,9 +48,9 @@ export function sampleReplay(result:RunResult,time:number){
   let path=customerApproach(index), progress=(local-(timing.arrival-STREET_APPROACH_SECONDS))/STREET_APPROACH_SECONDS;
   const queueIndex=intakeEvents.slice(0,intakeEvents.indexOf(event)).filter(previous=>local<Math.min(previous.timing.seating??previous.timing.created,previous.timing.left)).length;
   if(queueIndex>0&&local<seating&&!leaving){
-   const queuePath:Point[]=[STATIONS.orders.floor,[-8,5],[-9.6,5],[-9.6,5-queueIndex]];
+   const queuePath:Point[]=[STATIONS.orders.floor,[-8,5],[SIDEWALK_X,5],[SIDEWALK_X,5-queueIndex]];
    const slot=samplePath(queuePath,queueIndex/pathDistance(queuePath));
-   path=[customerApproach(index)[0],[-9.6,slot[1]],slot];
+   path=[customerApproach(index)[0],[SIDEWALK_X,slot[1]],slot];
   }
   const showOrder=logs.some(log=>log.customerId===event.customer.customer_id&&log.role==='query'&&log.start<=local)
    || local>=timing.created;
@@ -73,10 +75,10 @@ export function sampleReplay(result:RunResult,time:number){
   const sipping=drinks.find(ticket=>local<servedTimes.get(ticket.ticket_id)!+DRINK_SECONDS);
   return {id:event.customer.customer_id,showOrder,position,seated:sit===1,sit,walking,facing,side,drinking:!!sipping&&!leaving,drink:sipping?.item,sippingId:!leaving?sipping?.ticket_id:undefined,table:event.table,drinks};
  });
- const pickup=new Map<string,string>();for(const e of logs.filter(e=>e.end<=local)){if(e.role==='prep'&&e.command.startsWith('DEPOSIT')&&e.ticketId)pickup.set(e.ticketId,result.tickets.flatMap(ticketUnits).find(t=>t.ticket_id===e.ticketId)?.item??'coffee');if(e.role==='floor'&&(e.command.startsWith('PICKUP')||e.command.startsWith('TAKE '))&&e.ticketId)pickup.delete(e.ticketId);}
+ const pickup=samplePickupCounter(logs,result.tickets,local);
  // A submitted ticket stays on the shared counter until prep finishes claiming it.
- const claimed=new Set(logs.filter(e=>e.command==='WAIT TICKET'&&e.end<=local).map(e=>e.ticketId));
- const waitingTickets=result.events.filter(e=>e.seed_id===seed?.seed_id&&e.passed).flatMap(e=>e.tickets).filter(t=>t.created_at<=local).flatMap(ticket=>{const remaining=ticketUnits(ticket).filter(unit=>!claimed.has(unit.ticket_id)).length;return remaining?[{...ticket,quantity:remaining}]:[];});
+ const claimed=sampleClaimedTickets(logs,local);
+ const waitingTickets=waitingCounterTickets(result.events,seed?.seed_id,local,claimed);
  const sippingIds=new Set(customers.map(customer=>customer.sippingId));
  const tableDrinks=result.events.filter(event=>event.seed_id===seed?.seed_id).flatMap(event=>event.tickets.flatMap(ticketUnits).filter(ticket=>servedTimes.has(ticket.ticket_id)&&!collected.has(ticket.ticket_id)&&!sippingIds.has(ticket.ticket_id)).map(ticket=>({id:ticket.ticket_id,item:ticket.item,table:event.table})));
  return {actors,customers,tableDrinks,waitingTickets,pickup:[...pickup.entries()],seed,local,active:logs.filter(e=>e.start<=local).at(-1)};

@@ -1,0 +1,31 @@
+/** Design tokens: palette, type, and shared values. The playful theme overrides these. */
+:root {
+  font-family:
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  color: #29443b;
+  background: #f6f4ed;
+  font-synthesis: none;
+  font-weight: 400;
+  font-size: 14px;
+  --pine: #214d3e;
+  --ink: #29443b;
+  --muted: #849084;
+  --line: #e4e5db;
+  --cream: #f7f5ee;
+  --sage: #e7eddf;
+  --orange: #c87949;
+  --gold: #edcf91;
+  --sand: #cbbda4;
+  --paper: #fffbed;
+  --card: #fffdf7;
+  --veil-white: #ffffff50;
+  --parchment: #fcfbf5;
+  --bark: #514133;
+  --tan: #b59c7a;
+  --glow: #fff4db;
+  --umber: #68543c;
+}

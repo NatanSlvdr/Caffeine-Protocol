@@ -26,3 +26,11 @@ export function interactionTarget(position: Point, direction: string): Point | u
   const [dx, dz] = directionVectors[normalized];
   return [position[0] + dx, position[1] + dz];
 }
+
+/** Paper pickups take a sheet from an adjacent stack (or the retired TICKET instruction). */
+export const isPaperPickup = (command: string) =>
+  command === 'TICKET' || /^(TAKE|PICKUP) (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);
+
+/** Order deposits hand paper to an adjacent counter (or the retired SUBMIT instruction). */
+export const isOrderDeposit = (command: string) =>
+  command === 'SUBMIT' || /^DEPOSIT (UP|UP_RIGHT|RIGHT|DOWN_RIGHT|DOWN|DOWN_LEFT|LEFT|UP_LEFT)$/.test(command);

@@ -5,23 +5,31 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && npm run validate:data && vite build",
     "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "knip": "knip",
+    "validate:data": "node tools/validate-data.mjs",
+    "gen:audio": "python3 tools/audio/generate_audio.py",
+    "audio:sync": "node tools/audio-sync.mjs",
+    "docs:gen": "node tools/docs-gen.mjs",
     "test": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "pretest:e2e": "npm run build"
   },
   "dependencies": {
     "@dnd-kit/core": "6.3.1",
-    "@dnd-kit/sortable": "10.0.0",
-    "@dnd-kit/utilities": "3.2.2",
     "@react-three/drei": "10.7.6",
     "@react-three/fiber": "9.3.0",
     "lucide-react": "0.468.0",
     "react": "19.1.1",
     "react-dom": "19.1.1",
-    "three": "0.180.0"
+    "three": "0.180.0",
+    "valibot": "^1.5.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@playwright/test": "1.63.0",
     "@testing-library/react": "16.3.0",
     "@testing-library/user-event": "14.6.1",
@@ -30,9 +38,27 @@
     "@types/react-dom": "19.1.9",
     "@types/three": "0.180.0",
     "@vitejs/plugin-react": "5.0.3",
+    "@vitest/coverage-v8": "^4.1.11",
+    "eslint": "^9.39.5",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.2.0",
+    "eslint-plugin-import": "^2.32.0",
+    "globals": "^17.12.0",
+    "husky": "^9.1.7",
     "jsdom": "27.0.0",
+    "knip": "^6.36.0",
+    "lint-staged": "^17.5.1",
+    "prettier": "^3.9.8",
     "typescript": "5.9.2",
+    "typescript-eslint": "^8.70.0",
     "vite": "7.3.6",
+    "vite-tsconfig-paths": "^6.1.1",
     "vitest": "4.1.11"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,mjs,json,css,html}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   }
 }

@@ -1,5 +1,11 @@
 # Game Design Specification
 
+> Frozen archive: this folder specifies the original 14-shift Act I slice,
+> including Godot references that no longer apply (the game ships as a
+> React + TypeScript web build). Current truth lives in `docs/ARCHITECTURE.md`
+> and the generated `docs/campaign/` shift table. Do not extend these files;
+> record new decisions in `docs/adr/`.
+
 This folder is the source of truth for gameplay implementation in Caffeine
 Protocol. Gameplay decisions should live here before they are implemented in
 Godot.

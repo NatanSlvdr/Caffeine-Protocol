@@ -1,0 +1,220 @@
+{
+  "active_tables": 5,
+  "block_target": 14,
+  "id": "L05",
+  "instruction_target": 136,
+  "programming_enabled": true,
+  "reference_block_count": 12,
+  "seeds": [
+    {
+      "id": "L05_A",
+      "customers": [
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "tea please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L05_B",
+      "customers": [
+        {
+          "phrase": "tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "tea please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L05_C",
+      "customers": [
+        {
+          "phrase": "tea please",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    }
+  ],
+  "summary": "Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.",
+  "title": "Level 5: Keep Listening",
+  "act": 1
+}

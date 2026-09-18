@@ -1,0 +1,80 @@
+{
+  "active_tables": 2,
+  "block_target": 0,
+  "id": "L01",
+  "instruction_target": 0,
+  "programming_enabled": false,
+  "reference_block_count": 0,
+  "seeds": [
+    {
+      "customers": [
+        {
+          "arrival": 0,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C1",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 12,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C2",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        },
+        {
+          "arrival": 24,
+          "clarification": "",
+          "clarification_intent": {},
+          "customer_id": "C3",
+          "expected": {
+            "item": "coffee"
+          },
+          "intent": {
+            "confidence": "clear",
+            "drink": "coffee"
+          },
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ]
+        }
+      ],
+      "id": "L01_A"
+    }
+  ],
+  "summary": "Watch Niko welcome the first customers and serve their coffee.",
+  "title": "Level 1: Reopening"
+}

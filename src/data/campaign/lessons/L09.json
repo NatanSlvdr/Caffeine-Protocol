@@ -1,0 +1,5 @@
+{
+  "note": "FOR item IN heard orders selects each order group. Take a fresh sheet, interpret that item, deposit it, and return to the register inside every iteration.",
+  "solution": "POSITION listen\nLISTEN\nFOR item IN heard orders\n  TAKE UP\n  IF tea IN item\n    ITEM tea\n  ELSE\n    ITEM coffee\n  END\n  IF sugar IN item\n    IF negation IN item\n      WRITE 0 sugar\n    ELSE\n      WRITE 1 sugar\n    END\n  END\n  MOVE RIGHT 1\n  DEPOSIT RIGHT\n  MOVE LEFT 1\nEND\nJUMP listen",
+  "starter": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nIF sugar IN CUSTOMER SPEECH\n  IF negation IN CUSTOMER SPEECH\n    WRITE 0 sugar\n  ELSE\n    WRITE 1 sugar\n  END\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
+}

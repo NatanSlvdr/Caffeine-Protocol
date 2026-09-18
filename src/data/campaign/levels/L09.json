@@ -1,0 +1,349 @@
+{
+  "active_tables": 6,
+  "block_target": 23,
+  "id": "L09",
+  "instruction_target": 264,
+  "programming_enabled": true,
+  "reference_block_count": 21,
+  "seeds": [
+    {
+      "id": "L09_A",
+      "customers": [
+        {
+          "phrase": "coffee and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "two teas",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "tea",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L09_B",
+      "customers": [
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "two teas",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "tea",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    },
+    {
+      "id": "L09_C",
+      "customers": [
+        {
+          "phrase": "two teas",
+          "heard_orders": [
+            {
+              "tokens": [
+                "tea"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "tea",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee",
+            "with_sugar": false
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee and tea",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "tea"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "tea",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "two coffees",
+          "heard_orders": [
+            {
+              "tokens": [
+                "coffee"
+              ]
+            },
+            {
+              "tokens": [
+                "coffee"
+              ]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "tickets": [
+              {
+                "item": "coffee",
+                "with_sugar": false
+              },
+              {
+                "item": "coffee",
+                "with_sugar": false
+              }
+            ]
+          },
+          "customer_id": "C4",
+          "arrival": 24
+        }
+      ]
+    }
+  ],
+  "summary": "FOR item IN heard orders selects each order group. Take a fresh sheet, interpret that item, deposit it, and return to the register inside every iteration.",
+  "title": "Level 9: Multiple Orders",
+  "act": 1
+}
