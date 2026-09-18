@@ -1,16 +1,21 @@
-import { ModelThumbnail } from './ModelThumbnail';
+import { operandKind } from '@/domain';
+import { ModelThumbnail } from './thumbnails/ModelThumbnail';
 import { Circle, Square, Triangle, Diamond, ReceiptText, Hash, MessageCircle, Package } from 'lucide-react';
+
+const variableIcons = [Circle, Square, Triangle, Diamond];
+const kindIcons = { receipt: ReceiptText, speech: MessageCircle, count: Hash, paper: Package };
 
 /** Give familiar operand values a small visual cue in compact selectors. */
 export function OperandIcon({ value }: { value: string }) {
-  const normalized = value.toLowerCase();
-  const variable=/^var ?([1-4])$/.exec(normalized);
-  if(variable){const Icon=[Circle,Square,Triangle,Diamond][Number(variable[1])-1];return <Icon className={`operand-icon variable-icon variable-${variable[1]}`} size={13} aria-hidden="true"/>;}
-  if (normalized === 'coffee' || normalized === 'tea' || normalized === 'sugar') return <ModelThumbnail model={normalized}/>;
-  if (normalized.includes('sugar') || normalized.includes('sweet')) return <ModelThumbnail model="sugar"/>;
-  const Icon = normalized==='item'?ReceiptText:normalized.includes('speech') || normalized.includes('heard') ? MessageCircle
-    : normalized.includes('count') || normalized.includes('number') ? Hash
-    : normalized.includes('paper') || normalized.includes('ticket') || normalized.includes('order') ? Package
-    : undefined;
-  return Icon ? <Icon className="operand-icon" size={13} strokeWidth={1.9} aria-hidden="true"/> : null;
+  const kind = operandKind(value);
+  if (kind.kind === 'variable') {
+    const Icon = variableIcons[kind.slot - 1];
+    return <Icon className={`operand-icon variable-icon variable-${kind.slot}`} size={13} aria-hidden="true" />;
+  }
+  if (kind.kind === 'model') return <ModelThumbnail model={kind.model} />;
+  if (kind.kind === 'icon') {
+    const Icon = kindIcons[kind.icon];
+    return <Icon className="operand-icon" size={13} strokeWidth={1.9} aria-hidden="true" />;
+  }
+  return null;
 }

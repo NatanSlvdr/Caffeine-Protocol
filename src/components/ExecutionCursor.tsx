@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /** Keep one triangle in the gutter so changes of instruction animate continuously. */
 export function ExecutionCursor({ root, line, stepSeconds }: {
@@ -11,7 +12,7 @@ export function ExecutionCursor({ root, line, stepSeconds }: {
     const surface = root.current;
     if (!surface || line < 0) return;
 
-    const reduced = document.documentElement.dataset.motion === 'reduced' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduced = useReducedMotion();
     surface.querySelector<HTMLElement>(`[data-line="${line}"]`)?.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'instant' : 'smooth' });
     const measure = () => {
       const row = surface.querySelector<HTMLElement>(`[data-line="${line}"]`);

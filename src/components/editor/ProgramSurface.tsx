@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
 import { useDndContext } from '@dnd-kit/core';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /** Hide the original group only while a landing slot displays its full-size preview. */
 export function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivElement | null>; children: React.ReactNode }) {
@@ -10,7 +11,7 @@ export function ProgramSurface({ root, children }: { root: React.RefObject<HTMLD
   useLayoutEffect(() => {
     const surface = root.current;
     if (!surface) return;
-    const reduced = document.documentElement.dataset.motion === 'reduced' || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const reduced = useReducedMotion();
     const next = new Map<HTMLElement, { left: number; top: number }>();
     const bounds = surface.getBoundingClientRect();
     for (const row of surface.querySelectorAll<HTMLElement>('.code-row')) {

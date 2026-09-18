@@ -1,9 +1,9 @@
-import { useEffect, useMemo } from 'react';
 import { CanvasTexture, SRGBColorSpace } from 'three';
+import { useCanvasTexture } from './useCanvasTexture';
 
 /** Canvas-backed lettering texture; disposes itself when the label changes. */
 export function useTextSprite(label: string) {
-  const texture = useMemo(() => {
+  return useCanvasTexture(() => {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 128;
@@ -26,6 +26,4 @@ export function useTextSprite(label: string) {
     map.colorSpace = SRGBColorSpace;
     return map;
   }, [label]);
-  useEffect(() => () => texture.dispose(), [texture]);
-  return texture;
 }

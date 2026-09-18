@@ -1,12 +1,12 @@
-import { useEffect, useMemo } from 'react';
+import { useMemo } from 'react';
 import { ROOM, gridLinePositions } from '@/domain';
 import { Box } from './cafe/primitives';
 import { woodTexture } from './cafe/woodTexture';
+import { useCanvasTexture } from '@/hooks/useCanvasTexture';
 
 /** Every simulation tile gets an outline in editing mode; service shows only wood. */
 export function CafeFloor({ showGrid }: { showGrid: boolean }) {
-  const texture = useMemo(woodTexture, []);
-  useEffect(() => () => texture.dispose(), [texture]);
+  const texture = useCanvasTexture(woodTexture, []);
   const grid = useMemo(gridLinePositions, []);
   return (
     <group>

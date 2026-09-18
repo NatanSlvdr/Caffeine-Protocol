@@ -24,7 +24,7 @@ export function CodingPaneHeader({
   onOptions?: () => void;
 }) {
   return (
-    <>
+    <section className="coding-pane">
       <header className="coding-pane-heading">
         <div className="coding-title-row">
           <h2>{shift}</h2>
@@ -50,6 +50,6 @@ export function CodingPaneHeader({
       <div className="robot-tabs" role="tablist" aria-label="Robot programs">
         <RobotOptions level={level} selected={role} labels={ROBOT_DISPLAY_NAMES} onSelect={onRole} tabs />
       </div>
-    </>
+    </section>
   );
 }

@@ -16,20 +16,15 @@ export function RobotChoice({ robot, label }: { robot: RobotRole; label: string 
   );
 }
 
-/** Group unavailable robots beneath one shared unlock notice. */
-export function RobotOptions({
-  level,
-  selected,
-  labels,
-  onSelect,
-  tabs = false,
-}: {
+interface RobotListProps {
   level: number;
   selected?: RobotRole;
   labels: Record<RobotRole, string>;
   onSelect: (robot: RobotRole) => void;
-  tabs?: boolean;
-}) {
+  tabs: boolean;
+}
+
+function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) {
   const noticeId = useId();
   const { unlocked, locked } = splitByUnlock(level);
   const button = (robot: RobotRole, disabled: boolean) => (
@@ -60,4 +55,21 @@ export function RobotOptions({
       )}
     </>
   );
+}
+
+export type RobotOptionsProps = Omit<RobotListProps, 'tabs'> & { tabs?: boolean };
+
+/** Tab-style robot switcher for the program editor. */
+export function RobotTabs(props: Omit<RobotOptionsProps, 'tabs'>) {
+  return <RobotList {...props} tabs />;
+}
+
+/** Toggle-style robot switcher for the camera controls. */
+export function RobotButtons(props: Omit<RobotOptionsProps, 'tabs'>) {
+  return <RobotList {...props} tabs={false} />;
+}
+
+/** Group unavailable robots beneath one shared unlock notice. */
+export function RobotOptions({ tabs = false, ...props }: RobotOptionsProps) {
+  return tabs ? <RobotTabs {...props} /> : <RobotButtons {...props} />;
 }
