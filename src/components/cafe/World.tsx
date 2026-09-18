@@ -1,4 +1,6 @@
-import { Html, OrthographicCamera } from '@react-three/drei';
+import { OrthographicCamera } from '@react-three/drei';
+import { SceneHtml } from '../three/SceneHtml';
+import { SceneLights } from '../three/SceneLights';
 import { Box, Cup } from '../CafeModels';
 import { Street, StreetClip } from '../Street';
 import { OrderQueueBubble } from '../OrderQueueBubble';
@@ -77,20 +79,7 @@ export function World({
     <>
       <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={150} />
       <CameraFit serviceView={serviceView} reduced={reduced} focusRole={focusRole} />
-      <ambientLight intensity={evening ? 0.65 : 1.1} color={evening ? '#c6c9e4' : '#f4f4ed'} />
-      <hemisphereLight args={['#f1f3ed', '#607477', 1.1]} />
-      <directionalLight
-        position={[-8, 18, 8]}
-        intensity={2}
-        color="#ffe7ca"
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-left={-16}
-        shadow-camera-right={16}
-        shadow-camera-top={18}
-        shadow-camera-bottom={-18}
-        shadow-normalBias={0.04}
-      />
+      <SceneLights evening={evening} />
       <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} />
       {Object.entries(actors).map(
         ([id, actor]) =>
@@ -121,11 +110,8 @@ export function World({
                   actor.inventory.length > 0 ||
                   actor.action ||
                   Object.keys(actor.variables ?? {}).length) && (
-                  <Html
-                    transform={false}
-                    distanceFactor={1 / 70}
+                  <SceneHtml
                     position={[actor.position[0], 2.8, actor.position[1]]}
-                    center
                     zIndexRange={[10, 0]}
                     style={{ pointerEvents: 'none' }}
                   >
@@ -144,7 +130,7 @@ export function World({
                       paused={!moving}
                       reduced={reduced}
                     />
-                  </Html>
+                  </SceneHtml>
                 )}
               {actor.inventory.map((item, i) => (
                 <Cup
@@ -157,15 +143,12 @@ export function World({
           ),
       )}
       {state && (
-        <Html
-          transform={false}
-          distanceFactor={1 / 70}
+        <SceneHtml
           position={[STATIONS.orders.cell[0], 2.7, STATIONS.orders.cell[1]]}
-          center
           zIndexRange={[11, 0]}
         >
           <OrderQueueBubble tickets={state.waitingTickets} />
-        </Html>
+        </SceneHtml>
       )}
       {state?.waitingTickets.slice(0, 4).map((ticket, i) => (
         <group
@@ -216,16 +199,13 @@ export function World({
                 tea={c.drink === 'tea'}
               />
               {event && c.showOrder && (
-                <Html
-                  transform={false}
-                  distanceFactor={1 / 70}
+                <SceneHtml
                   position={[c.position[0], 2.2, c.position[1]]}
-                  center
                   zIndexRange={[12, 0]}
                   style={{ pointerEvents: 'none' }}
                 >
                   <CustomerSpeech customer={event.customer} clarified={clarified} />
-                </Html>
+                </SceneHtml>
               )}
             </group>
           );

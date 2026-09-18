@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Modal } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import type { RunResult } from '@/domain';
 import { pad2, starRow } from '@/shared/lib/format';
 
@@ -41,8 +42,8 @@ export function ReceiptModal({ index, result, observation, isLastShift, onNext, 
         </div>
       </dl>
       <p className="receipt-thanks">Thank you. See you next shift!</p>
-      <button
-        className="primary"
+      <Button
+        variant="primary"
         onClick={() => {
           onClose();
           onNext();
@@ -50,10 +51,10 @@ export function ReceiptModal({ index, result, observation, isLastShift, onNext, 
       >
         {isLastShift ? 'Closing time' : 'Next shift'}
         <ArrowRight size={16} />
-      </button>
-      <button className="text-link" onClick={onClose}>
+      </Button>
+      <Button variant="text-link" onClick={onClose}>
         Back to the café
-      </button>
+      </Button>
     </Modal>
   );
 }

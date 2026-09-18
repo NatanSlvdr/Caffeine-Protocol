@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
 import tsconfigPaths from 'vite-tsconfig-paths';
+import { SOUNDS } from './src/shared/audio-manifest';
 
 /** Precache the complete static game, including the original soundtrack, for offline reloads. */
 export default defineConfig({
@@ -16,7 +17,7 @@ export default defineConfig({
           './index.html',
           './icon.svg',
           ...Object.keys(bundle).map((f) => './' + f),
-          ...['click', 'morning_loop', 'retry', 'serve', 'success'].map((f) => `./audio/${f}.wav`),
+          ...[...SOUNDS].map((f) => `./audio/${f}.wav`),
         ];
         const version = Object.keys(bundle)
           .join('-')

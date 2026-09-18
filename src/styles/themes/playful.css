@@ -22,7 +22,7 @@ button {
   border-radius: 12px;
   color: var(--ink);
   font-weight: 650;
-  background: #fffdf7;
+  background: var(--card);
 }
 button:hover:not(:disabled) {
   background: #eee3d1;
@@ -170,7 +170,7 @@ p {
   background: radial-gradient(ellipse at center, #ede1cf 0%, transparent 66%);
 }
 .home-note {
-  background: #fffdf7;
+  background: var(--card);
   border-color: var(--line);
   border-radius: 18px;
   box-shadow: 0 5px 0 #e9dfc9;
@@ -199,7 +199,7 @@ p {
 .shift-card {
   border: 1px solid #dedfdc;
   border-radius: 16px;
-  background: #fffdf7;
+  background: var(--card);
   box-shadow: 0 3px 0 #e4dfd3;
   min-height: 116px;
 }
@@ -231,7 +231,7 @@ p {
   opacity: 0.65;
 }
 .campaign-preview {
-  background: #fffdf7;
+  background: var(--card);
   border-radius: 20px;
   border-color: var(--line);
   box-shadow: 0 4px 0 #e4dfd3;
@@ -247,7 +247,7 @@ p {
 .settings-card {
   border-color: var(--line);
   border-radius: 20px;
-  background: #fffdf7;
+  background: var(--card);
   box-shadow: 0 4px 0 #e9e1d0;
 }
 .settings-card h2 svg {
@@ -915,15 +915,15 @@ input[type='checkbox']:checked {
     monospace;
 }
 .robot-tabs button[aria-selected='true'] {
-  background: #514133;
+  background: var(--bark);
   color: white;
-  border-color: #b59c7a;
+  border-color: var(--tan);
   box-shadow: inset 0 -2px 0 #e4cba5;
 }
 .robot-tabs button:hover:not(:disabled) {
-  background: #514133;
+  background: var(--bark);
   color: white;
-  border-color: #b59c7a;
+  border-color: var(--tan);
 }
 .robot-readout {
   background: var(--draft-deep);
@@ -971,7 +971,7 @@ input[type='checkbox']:checked {
   font-size: 9px;
   letter-spacing: 0.8px;
   white-space: nowrap;
-  color: #edcf91;
+  color: var(--gold);
   border-left: 1px solid #9f8668;
   padding: 8px 0 8px 10px;
 }
@@ -996,7 +996,7 @@ input[type='checkbox']:checked {
   border-bottom: 2px solid var(--draft-chalk);
 }
 .editor-tabs > button:hover:not(:disabled) {
-  background: #514133;
+  background: var(--bark);
   color: white;
 }
 .editor-tabs > span {
@@ -1046,7 +1046,7 @@ input[type='checkbox']:checked {
   box-shadow:
     0 3px 0 var(--edge),
     0 5px 8px #17110c26,
-    inset 0 1px 0 #ffffff50;
+    inset 0 1px 0 var(--veil-white);
   color: var(--tile-ink);
   background: var(--tile);
   margin-bottom: 10px;
@@ -1071,12 +1071,12 @@ input[type='checkbox']:checked {
 }
 .editor-panel .block .tile-count {
   color: var(--tile-ink);
-  background: #ffffff50;
+  background: var(--veil-white);
   border: 1px solid var(--edge);
   border-radius: 5px;
 }
 .editor-panel .block.selected {
-  outline: 2px solid #fff4db;
+  outline: 2px solid var(--glow);
   outline-offset: 4px;
 }
 .editor-panel .block.selected:after {
@@ -1084,14 +1084,14 @@ input[type='checkbox']:checked {
   position: absolute;
   right: -12px;
   bottom: -10px;
-  color: #fff4db;
+  color: var(--glow);
   font:
     17px ui-monospace,
     monospace;
   pointer-events: none;
 }
 .editor-panel .block.drop-target {
-  border-top: 3px solid #edcf91;
+  border-top: 3px solid var(--gold);
 }
 .editor-panel .insert-hint {
   color: var(--draft-chalk);
@@ -1104,14 +1104,14 @@ input[type='checkbox']:checked {
 }
 .editor-panel .insert-hint:hover:not(:disabled),
 .editor-panel .insert-hint.drop-target {
-  background: #514133;
-  border-color: #edcf91;
-  color: #edcf91;
+  background: var(--bark);
+  border-color: var(--gold);
+  color: var(--gold);
 }
 .editor-panel .code-input {
   color: #f3e6cf;
   background: transparent;
-  caret-color: #edcf91;
+  caret-color: var(--gold);
   font:
     12px/1.85 ui-monospace,
     monospace;
@@ -1129,7 +1129,7 @@ input[type='checkbox']:checked {
   letter-spacing: 1px;
 }
 .editor-panel .palette label span {
-  color: #edcf91;
+  color: var(--gold);
   font-size: 9px;
   letter-spacing: 0;
 }
@@ -1143,8 +1143,8 @@ input[type='checkbox']:checked {
     monospace;
 }
 .editor-panel .add-button {
-  background: #edcf91;
-  border-color: #edcf91;
+  background: var(--gold);
+  border-color: var(--gold);
   color: #193458;
   border-radius: 3px;
 }
@@ -1186,7 +1186,7 @@ input[type='checkbox']:checked {
   color: var(--tile-ink);
   box-shadow:
     0 2px 0 var(--edge),
-    0 0 0 1px #fff4db;
+    0 0 0 1px var(--glow);
 }
 .command-ghost {
   box-shadow:
@@ -1210,7 +1210,7 @@ input[type='checkbox']:checked {
   font-size: 9px;
 }
 .editor-bottom .targets svg {
-  color: #edcf91;
+  color: var(--gold);
 }
 .editor-bottom .tiny-dot {
   background: #b5d4ac;
@@ -1223,7 +1223,7 @@ input[type='checkbox']:checked {
 }
 .editor-panel .auto-service {
   background: #44382d;
-  border: 1px dashed #b59c7a;
+  border: 1px dashed var(--tan);
   border-radius: 4px;
   color: var(--draft-text);
 }
@@ -1294,7 +1294,7 @@ input[type='checkbox']:checked {
 }
 .editor-panel .command-tile select,
 .editor-panel .command-tile .tile-count {
-  background: #ffffff50;
+  background: var(--veil-white);
   border: 1px solid var(--edge);
   border-radius: 4px;
   color: var(--tile-ink);
@@ -1650,7 +1650,7 @@ input[type='checkbox']:checked {
   background: #f4c95d;
 }
 .editor-panel .code-insertion.with-hint.drop-target {
-  box-shadow: 0 0 0 2px #fff4db;
+  box-shadow: 0 0 0 2px var(--glow);
 }
 .editor-panel .code-insertion.else-option {
   gap: 8px;
@@ -2053,7 +2053,7 @@ input[type='checkbox']:checked {
   background: var(--tile);
   box-shadow:
     0 3px 0 var(--edge),
-    inset 0 1px 0 #ffffff50;
+    inset 0 1px 0 var(--veil-white);
 }
 
 /* One shared gutter frames every side of the workspace. */
@@ -2385,7 +2385,7 @@ html[data-motion='reduced'] .direction-menu.direction-closing {
   border: 0;
   border-radius: 0;
   padding: 32px 34px 38px;
-  background: #fffbed;
+  background: var(--paper);
   color: #423f35;
   box-shadow: 0 24px 80px #0004;
   animation: receipt-feed 1.1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
@@ -2503,7 +2503,7 @@ html[data-motion='reduced'] .editor-panel .code-row .block.failure {
   width: max-content;
   max-width: 220px;
   padding: 8px;
-  border: 1px solid #cbbda4;
+  border: 1px solid var(--sand);
   border-radius: 12px;
   background: #fffbedf5;
   color: #423f35;
@@ -2519,9 +2519,9 @@ html[data-motion='reduced'] .editor-panel .code-row .block.failure {
   width: 9px;
   height: 9px;
   transform: rotate(45deg);
-  background: #fffbed;
-  border-right: 1px solid #cbbda4;
-  border-bottom: 1px solid #cbbda4;
+  background: var(--paper);
+  border-right: 1px solid var(--sand);
+  border-bottom: 1px solid var(--sand);
 }
 .customer-speech blockquote {
   margin: 0;
@@ -2546,7 +2546,7 @@ html[data-motion='reduced'] .editor-panel .code-row .block.failure {
   padding: 4px 7px;
   border-radius: 6px;
   background: #eee6d5;
-  color: #68543c;
+  color: var(--umber);
   font:
     600 11px/1.4 Inter,
     sans-serif;
@@ -2577,7 +2577,7 @@ html[data-motion='reduced'] .editor-panel .code-row .block.failure {
   gap: 2px;
   padding: 1px 3px;
   border-radius: 3px;
-  background: #fffbed;
+  background: var(--paper);
   font:
     700 10px/1.2 Inter,
     sans-serif;
@@ -2733,10 +2733,10 @@ html[data-motion='reduced'] .execution-line-highlight {
   width: max-content;
   max-width: 160px;
   padding: 4px;
-  border: 1px solid #cbbda4;
+  border: 1px solid var(--sand);
   border-radius: 12px;
   background: #fffbedf5;
-  color: #68543c;
+  color: var(--umber);
   box-shadow: 0 2px 0 #b4a28b55;
   pointer-events: auto;
 }
@@ -2748,9 +2748,9 @@ html[data-motion='reduced'] .execution-line-highlight {
   width: 9px;
   height: 9px;
   transform: rotate(45deg);
-  background: #fffbed;
-  border-right: 1px solid #cbbda4;
-  border-bottom: 1px solid #cbbda4;
+  background: var(--paper);
+  border-right: 1px solid var(--sand);
+  border-bottom: 1px solid var(--sand);
 }
 .robot-holding ul {
   list-style: none;
@@ -2784,7 +2784,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   position: absolute;
   right: 0;
   bottom: 0;
-  background: #fffbed;
+  background: var(--paper);
   border-radius: 3px;
 }
 .holding-sugar {
@@ -2807,7 +2807,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   z-index: 15;
   flex-wrap: wrap;
   justify-content: center;
-  border: 1px solid #cbbda4;
+  border: 1px solid var(--sand);
   border-radius: 10px;
   background: #e9dfcf;
 }
@@ -2826,7 +2826,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   background: #fffbed80;
 }
 .view-controls button[aria-pressed='true'] {
-  background: #fffbed;
+  background: var(--paper);
   color: var(--coffee);
   font-weight: 650;
   box-shadow: 0 1px 3px #49301c25;
@@ -2911,7 +2911,7 @@ html[data-motion='reduced'] .execution-line-highlight {
 }
 .robot-tabs button:hover:not(:disabled):not([aria-selected='true']) {
   background: #ffffff10;
-  border-color: #b59c7a;
+  border-color: var(--tan);
   color: #fff2de;
 }
 .robot-tabs button:active:not(:disabled) {
@@ -3179,7 +3179,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   outline: 0;
   padding: 3px 5px;
   box-shadow: none;
-  background: #ffffff50;
+  background: var(--veil-white);
 }
 .editor-panel .assignment-operands .assignment-tile:last-child {
   --tile: #f4d27d;
@@ -3416,7 +3416,7 @@ html[data-motion='reduced'] .drop-projection {
   height: 40px;
 }
 .robot-action + ul {
-  border-top: 1px solid #cbbda4;
+  border-top: 1px solid var(--sand);
   margin-top: 4px;
   padding-top: 4px;
 }
@@ -3428,7 +3428,7 @@ html[data-motion='reduced'] .drop-projection {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
-  border-top: 1px solid #cbbda4;
+  border-top: 1px solid var(--sand);
   margin-top: 4px;
   padding-top: 4px;
   font:
@@ -3486,7 +3486,7 @@ html[data-motion='reduced'] .drop-projection {
   height: 29px;
   left: 0;
   top: 0;
-  color: #68543c;
+  color: var(--umber);
   animation: action-turn 4s linear infinite;
 }
 .action-thinking .thinking-gear + .thinking-gear {
@@ -3494,7 +3494,7 @@ html[data-motion='reduced'] .drop-projection {
   top: 19px;
   width: 23px;
   height: 23px;
-  color: #68543c;
+  color: var(--umber);
   animation-direction: reverse;
   animation-duration: 3.2s;
 }

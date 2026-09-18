@@ -1,5 +1,6 @@
 import { ArrowRight } from 'lucide-react';
 import { Modal } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import type { LevelDefinition, RobotPrograms, RobotRole } from '@/domain';
 import { pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
@@ -54,15 +55,15 @@ export function HelpModal({
           {showSolution && (
             <>
               <pre className="code-example">{lesson.robotSolution?.[role] ?? lesson.solution}</pre>
-              <button
-                className="primary"
+              <Button
+                variant="primary"
                 disabled={running}
                 onClick={() => {
                   onUseExample(lesson.robotSolution?.[role] ?? lesson.solution);
                 }}
               >
                 Use this example <ArrowRight size={15} />
-              </button>
+              </Button>
             </>
           )}
         </>

@@ -2,6 +2,8 @@ import { useRef, useState } from 'react';
 import { ArrowLeft, Download, FolderHeart, Leaf, Maximize, Sparkles, Upload, Volume2 } from 'lucide-react';
 import { lessons } from '@/data';
 import { Modal } from '@/components';
+import { Button } from '@/shared/ui/Button';
+import { SettingRow } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
 import type { ProgressSave } from '@/domain';
 import { go } from '@/shared/lib/navigation';
@@ -68,24 +70,18 @@ export function SettingsPage({ onNew }: { onNew: () => void }) {
           <h2>
             <Sparkles size={19} /> Display & movement
           </h2>
-          <label className="setting-row">
-            <span>
-              <strong>Reduced motion</strong>
-              <small>Keep the movement, skip the extra animation.</small>
-            </span>
-            <input
-              type="checkbox"
-              checked={settings.reduced_motion}
-              onChange={(e) => setting('reduced_motion', e.target.checked)}
-            />
-          </label>
-          <label className="setting-row">
-            <span>
-              <strong>Pixel-art shader</strong>
-              <small>Render the café with crisp pixels and outlined edges.</small>
-            </span>
-            <input type="checkbox" checked={settings.pixel_art} onChange={(e) => setting('pixel_art', e.target.checked)} />
-          </label>
+          <SettingRow
+            title="Reduced motion"
+            hint="Keep the movement, skip the extra animation."
+            checked={settings.reduced_motion}
+            onChange={(e) => setting('reduced_motion', e.target.checked)}
+          />
+          <SettingRow
+            title="Pixel-art shader"
+            hint="Render the café with crisp pixels and outlined edges."
+            checked={settings.pixel_art}
+            onChange={(e) => setting('pixel_art', e.target.checked)}
+          />
           <div className="setting-row">
             <span>
               <strong>Fullscreen</strong>
@@ -154,9 +150,9 @@ export function SettingsPage({ onNew }: { onNew: () => void }) {
             <Leaf size={19} /> A fresh start
           </h2>
           <p>Open the doors all over again. Clear campaign progress and programs while keeping your settings.</p>
-          <button className="outline-danger" onClick={onNew}>
+          <Button variant="outline-danger" onClick={onNew}>
             Start a new café
-          </button>
+          </Button>
           <small>We’ll ask before clearing anything.</small>
         </section>
       </div>
@@ -169,15 +165,15 @@ export function SettingsPage({ onNew }: { onNew: () => void }) {
           </p>
           <div className="modal-buttons">
             <button onClick={() => setPending(null)}>Keep current café</button>
-            <button
-              className="primary"
+            <Button
+              variant="primary"
               onClick={() => {
                 importCafe(pending);
                 setPending(null);
               }}
             >
               Replace café
-            </button>
+            </Button>
           </div>
         </Modal>
       )}

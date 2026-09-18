@@ -1,6 +1,7 @@
 import { ArrowRight, Check, CheckCheck, LockKeyhole } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { Cafe } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import { go } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useGame, useProgress } from '@/state/GameStore';
@@ -75,13 +76,13 @@ export function CampaignPage() {
               <span>{levels[save.selected].active_tables} tables</span>
               <span>{levels[save.selected].seeds.length} test shifts</span>
             </div>
-            <button className="primary" onClick={() => launch(save.selected)}>
+            <Button variant="primary" onClick={() => launch(save.selected)}>
               Start shift <ArrowRight size={17} />
-            </button>
+            </Button>
             {save.complete && (
-              <button className="text-link" onClick={() => go('/ending')}>
+              <Button variant="text-link" onClick={() => go('/ending')}>
                 Revisit closing time
-              </button>
+              </Button>
             )}
           </div>
         </aside>

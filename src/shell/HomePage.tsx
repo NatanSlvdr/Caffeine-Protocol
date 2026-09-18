@@ -1,6 +1,7 @@
 import { ArrowRight, Coffee, Leaf, Play, Terminal } from 'lucide-react';
 import { CAMPAIGN_LENGTH } from '@/data';
 import { Cafe } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 
@@ -24,14 +25,14 @@ export function HomePage() {
           <br />
           Teach Query to listen, one cup at a time.
         </p>
-        <button className="primary large" onClick={() => launch(save.selected)}>
+        <Button variant="primary" className="large" onClick={() => launch(save.selected)}>
           <Play size={17} fill="currentColor" />
           {progress.done ? 'Continue your café' : 'Open the café'}
           <ArrowRight size={18} />
-        </button>
-        <button className="text-link" onClick={() => go('/campaign')}>
+        </Button>
+        <Button variant="text-link" onClick={() => go('/campaign')}>
           Explore the {CAMPAIGN_LENGTH} shifts <ArrowRight size={15} />
-        </button>
+        </Button>
         <div className="home-footer">
           <span>
             <Coffee size={16} /> Slow mornings

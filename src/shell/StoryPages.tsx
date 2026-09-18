@@ -1,6 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_LENGTH } from '@/data';
 import { Cafe } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import { stories } from '@/data/campaign/narrative';
 import { go } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
@@ -23,15 +24,15 @@ export function InterludePage({ index }: { index: number }) {
         <span className="eyebrow">BETWEEN SHIFTS / {pad2(index + 1)}</span>
         <h1>{stories[index].title}</h1>
         <p className="story-text">{stories[index].text}</p>
-        <button
-          className="primary"
+        <Button
+          variant="primary"
           onClick={() => {
             update((s) => ({ ...s, story: { ...s.story, [index]: true } }));
             go(`/shift/${index + 1}`);
           }}
         >
           Let's open the café <ArrowRight size={17} />
-        </button>
+        </Button>
       </section>
     </main>
   );
@@ -60,12 +61,12 @@ export function EndingPage() {
         <div className="ending-score">
           {CAMPAIGN_LENGTH} SHIFTS COMPLETE <span>·</span> {progress.stars} / {progress.max} ★
         </div>
-        <button className="primary" onClick={() => go('/')}>
+        <Button variant="primary" onClick={() => go('/')}>
           Back to the café <ArrowRight size={16} />
-        </button>
-        <button className="text-link" onClick={() => go('/campaign')}>
+        </Button>
+        <Button variant="text-link" onClick={() => go('/campaign')}>
           Keep tinkering
-        </button>
+        </Button>
       </section>
     </main>
   );

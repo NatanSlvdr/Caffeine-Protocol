@@ -1,5 +1,5 @@
 /** Campaign data check: manifest order plus per-shift level/lesson files. */
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 
 const root = new URL('../src/data/campaign/', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
@@ -27,6 +27,19 @@ for (const id of manifest.order ?? []) {
   }
 }
 
+if (failures.length) {
+  console.error('validate:data failed:');
+  for (const failure of failures) console.error(` - ${failure}`);
+  process.exit(1);
+}
+
+// Every sound in the shared manifest must ship in public/audio (served offline).
+const manifestSrc = readFileSync(new URL('../src/shared/audio-manifest.ts', import.meta.url), 'utf8');
+const sounds = JSON.parse(`[${manifestSrc.match(/SOUNDS = \[([\s\S]*?)\]/)[1].replace(/'/g, '"')}]`);
+for (const sound of sounds) {
+  if (!existsSync(new URL(`../public/audio/${sound}.wav`, import.meta.url)))
+    failures.push(`missing public/audio/${sound}.wav`);
+}
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);

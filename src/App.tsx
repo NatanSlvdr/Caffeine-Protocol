@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { stories } from '@/data/campaign/narrative';
 import { Modal } from '@/components';
+import { Button } from '@/shared/ui/Button';
 import { Workspace } from '@/features/workspace/Workspace';
 import { SettingsPage } from '@/app/SettingsPage';
 import { AppHeader } from '@/shell/AppHeader';
@@ -11,7 +12,7 @@ import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, InterludePage } from '@/shell/StoryPages';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
-import { playSound } from './audio';
+import { useSound } from '@/hooks/useSound';
 
 export default function App() {
   return (
@@ -40,6 +41,8 @@ function Shell() {
               ? 'ending'
               : 'home';
   const shift = useShift(index);
+  const playSuccess = useSound('success');
+  const playRetry = useSound('retry');
   return (
     <div className={`app ${screen}`}>
       <AppHeader />
@@ -65,7 +68,7 @@ function Shell() {
               }
             }}
             onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
-            onSound={(passed) => playSound(passed ? 'success' : 'retry')}
+            onSound={(passed) => (passed ? playSuccess() : playRetry())}
           />
         )}
         {screen === 'settings' && <SettingsPage onNew={() => setModal('new')} />}
@@ -78,15 +81,15 @@ function Shell() {
           <p>Export your current café first if you want to return to it.</p>
           <div className="modal-buttons">
             <button onClick={() => setModal('')}>Keep my café</button>
-            <button
-              className="danger"
+            <Button
+              variant="danger"
               onClick={() => {
                 resetCafe();
                 setModal('');
               }}
             >
               Start new café
-            </button>
+            </Button>
           </div>
         </Modal>
       )}

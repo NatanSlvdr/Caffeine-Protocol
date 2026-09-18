@@ -1,7 +1,7 @@
 import type { Settings } from '@/domain';
+import type { SoundName } from '@/shared/audio-manifest';
 
-/** Sound ids shipped with the game; assets stay in sync via `npm run audio:sync`. */
-export type SoundName = 'click' | 'success' | 'retry' | 'serve';
+export type { SoundName };
 
 /** Served audio file for a sound id, honoring the static base path. */
 export function audioUrl(name: string): string {

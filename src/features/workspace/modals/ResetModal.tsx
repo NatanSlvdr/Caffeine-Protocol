@@ -1,4 +1,5 @@
 import { Modal } from '@/components';
+import { Button } from '@/shared/ui/Button';
 
 export interface ResetModalProps {
   onClose: () => void;
@@ -12,9 +13,9 @@ export function ResetModal({ onClose, onConfirm }: ResetModalProps) {
       <p>Your current draft will be replaced by the last passing program from the previous shift.</p>
       <div className="modal-buttons">
         <button onClick={onClose}>Keep draft</button>
-        <button className="primary" onClick={onConfirm}>
+        <Button variant="primary" onClick={onConfirm}>
           Reset routine
-        </button>
+        </Button>
       </div>
     </Modal>
   );
