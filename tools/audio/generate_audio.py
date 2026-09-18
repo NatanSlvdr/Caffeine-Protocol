@@ -53,9 +53,9 @@ for bar in range(8):
         for i in range(int(RATE * 0.08)):
             music[(origin + i) % len(music)] += random.uniform(-1, 1) * 0.012 * math.exp(-i / RATE * 55)
 save('morning_loop.wav', music)
-for name, notes, spacing, gain in [('serve.wav', [79, 83], 0.10, 0.15), ('success.wav', [72, 76, 79, 84], 0.11, 0.15), ('retry.wav', [69, 65], 0.13, 0.10), ('click.wav', [84], 0.05, 0.06)]:
+for name, notes, spacing, gain in [('serve.wav', [79, 83], 0.10, 0.15), ('success.wav', [72, 76, 79, 84], 0.11, 0.15), ('retry.wav', [69, 65], 0.13, 0.10), ('click.wav', [84], 0.05, 0.06), ('pour.wav', [76, 74, 72], 0.09, 0.12)]:
     samples = [0.0] * int(RATE * (spacing * len(notes) + 0.3))
     for index, note in enumerate(notes):
         tone(samples, spacing * index, 0.28, note, gain)
     save(name, samples)
-print('Rendered original café music and four sound motifs.')
+print('Rendered original café music and five sound motifs.')

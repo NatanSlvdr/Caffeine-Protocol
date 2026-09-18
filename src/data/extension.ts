@@ -3,6 +3,7 @@ import { floorSource, preparationSource } from '@/domain/defaultPrograms';
 import { TABLE_LAYOUT } from '@/domain/layout';
 import { lessonById } from './campaign/load';
 import { extensionSeeds } from './campaign/extension-seeds';
+import type { LevelSeed } from './campaign/extension-seeds';
 import { extensionSeed } from './campaign/generators/extensionCustomers';
 
 /** Query reference solution for extension shifts (the Act I finale). */
@@ -20,7 +21,10 @@ export function referencePrograms(level: number): RobotPrograms {
     floor: floorSource(level, level >= 29 ? 2 : 1, level >= 31 ? TABLE_LAYOUT.length : level >= 29 ? 4 : level >= 24 ? 2 : 1),
   };
 }
-export const extensionLevels: LevelDefinition[] = extensionSeeds.map((seed) => {
+export const extensionLevels: LevelDefinition[] = extensionSeeds.map(buildExtensionLevel);
+
+/** Derive a playable shift from one seed: no code edits needed for L33 and beyond. */
+export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
   const level = Number(seed.id.slice(1)),
     batch = level >= 21 ? 2 : 1;
   const service: ServiceConfig = {
@@ -45,10 +49,12 @@ export const extensionLevels: LevelDefinition[] = extensionSeeds.map((seed) => {
     service,
     act: level < 23 ? 2 : level < 31 ? 3 : 4,
   };
-});
-export const extensionLessons = extensionLevels.map((_, i) => {
-  const seed = extensionSeeds[i],
-    level = Number(seed.id.slice(1)),
+}
+export const extensionLessons = extensionSeeds.map(buildExtensionLesson);
+
+/** Derive starters (with one TODO omission) and solutions from one seed. */
+export function buildExtensionLesson(seed: LevelSeed) {
+  const level = Number(seed.id.slice(1)),
     role = level < 23 ? 'prep' : 'floor',
     programs = referencePrograms(level),
     starter = { ...programs };
@@ -58,4 +64,4 @@ export const extensionLessons = extensionLevels.map((_, i) => {
     starter.prep = programs.prep.replace('ADD SUGAR', '# TODO: apply requested sugar');
   }
   return { note: seed.note, starter: starter.query, solution: programs.query, robotStarter: starter, robotSolution: programs };
-});
+}
