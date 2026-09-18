@@ -1,16 +1,18 @@
 import type { Customer, ValidationSeed } from '../../../domain/types';
+import { extensionShiftConfig } from '../extension-config';
 
-/** Deterministic extension customers: drinks alternate by seed, sugar counts cycle, finals group up. */
+/** Deterministic extension customers: drinks alternate by seed, sugar counts cycle, finales group up. */
 export function extensionSeed(level: number, seed: number): ValidationSeed {
-  const count = level >= 31 ? 12 : level >= 29 ? 8 : level >= 21 ? 4 : 2;
+  const config = extensionShiftConfig(level);
+  const count = config.customers;
   const customers: Customer[] = Array.from({ length: count }, (_, n) => {
-    const drink = level >= 18 && (n + seed) % 2 ? ('tea' as const) : ('coffee' as const),
-      sugar_count = level >= 19 ? (n + seed) % 3 : 0;
+    const drink = config.tea && (n + seed) % 2 ? ('tea' as const) : ('coffee' as const),
+      sugar_count = config.sugar ? (n + seed) % 3 : 0;
     const intent = { confidence: 'clear' as const, drink, sugar_count };
-    if (level === 32 && n % 4 === 0)
+    if (config.finale && n % 4 === 0)
       return {
         customer_id: `C${n + 1}`,
-        arrival: n * 4,
+        arrival: n * config.arrivalGap,
         phrase: 'Our usual, please',
         intent: { confidence: 'ambiguous' },
         heard_orders: [{ tokens: ['ambiguous'] }],
@@ -19,10 +21,10 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
         clarification_intent: intent,
         expected: { item: drink, sugar_count, ask_help: true },
       };
-    if (level === 32 && n % 4 === 1)
+    if (config.finale && n % 4 === 1)
       return {
         customer_id: `C${n + 1}`,
-        arrival: n * 4,
+        arrival: n * config.arrivalGap,
         phrase: 'Coffee with 0 sugar and tea with 2 sugars, please',
         heard_orders: [
           { tokens: ['coffee', 'sugar', 'number'], number: 0 },
@@ -33,7 +35,7 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
       };
     return {
       customer_id: `C${n + 1}`,
-      arrival: n * (level >= 31 ? 4 : 10),
+      arrival: n * config.arrivalGap,
       phrase: `${drink}, ${sugar_count} sugars`,
       heard_orders: [{ tokens: [drink, 'sugar', 'number'], number: sugar_count }],
       intent,
@@ -44,7 +46,7 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
   if (customers.reduce((n, c) => n + (c.expected.tickets?.length ?? 1), 0) % 2)
     customers.push({
       customer_id: `C${count + 1}`,
-      arrival: count * 4,
+      arrival: count * config.arrivalGap,
       phrase: 'Coffee with 0 sugar',
       heard_orders: [{ tokens: ['coffee', 'sugar', 'number'], number: 0 }],
       intent: { drink: 'coffee', sugar_count: 0 },

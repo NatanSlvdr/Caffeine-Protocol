@@ -4,7 +4,7 @@ import { comparisonUnlocked } from './robotConditions';
 import { TABLE_LAYOUT } from './layout';
 import { DIRECTIONS } from './directions';
 import { DEPOSIT_RE, MOVE_RE, TAKE_RE } from './commands';
-import { QUERY_PROGRAM_LEVEL_CAP, ROBOT_FALLBACK_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
+import { QUERY_PROGRAM_LEVEL_CAP, ROBOT_STAND_IN_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
 import { ROBOT_UNLOCK_LEVELS } from './robots';
 /** Shared motion, branching, and loop scaffolding for the kitchen/floor languages. */
 function baseMotionCommands(level: number): string[] {
@@ -57,7 +57,7 @@ export function robotCommands(role: RobotRole, level: number): string[] {
   if (role === 'query') return availableCommands(Math.min(level, QUERY_PROGRAM_LEVEL_CAP));
   return role === 'prep' ? prepCommands(level) : floorCommands(level);
 }
-export function compileRobot(source: string, role: RobotRole, level = ROBOT_FALLBACK_LEVEL): Program {
+export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAND_IN_LEVEL): Program {
   if (role === 'query') return compileProgram(source, Math.min(level, QUERY_PROGRAM_LEVEL_CAP));
   const p: Program = {
     source,

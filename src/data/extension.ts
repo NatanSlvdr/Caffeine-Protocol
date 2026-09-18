@@ -1,10 +1,11 @@
-import type { LevelDefinition, RobotPrograms } from '@/domain/types';
+import type { LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
 import { floorSource, preparationSource } from '@/domain/defaultPrograms';
-import { TABLE_LAYOUT } from '@/domain/layout';
 import { countProgramBlocks } from '@/domain/scoring';
+import { ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { lessonById } from './campaign/load';
 import { extensionSeeds } from './campaign/extension-seeds';
 import type { LevelSeed } from './campaign/extension-seeds';
+import { extensionShiftConfig } from './campaign/extension-config';
 import { extensionSeed } from './campaign/generators/extensionCustomers';
 import {
   collectBuiltExtensionErrors,
@@ -25,14 +26,11 @@ function escapeRegExp(needle: string): string {
 }
 
 export function referencePrograms(level: number): RobotPrograms {
+  const config = extensionShiftConfig(level);
   return {
     query: queryReference,
-    prep: preparationSource(level, level >= 21 ? 2 : 1),
-    floor: floorSource(
-      level,
-      level >= 29 ? 2 : 1,
-      level >= 31 ? TABLE_LAYOUT.length : level >= 29 ? 4 : level >= 24 ? 2 : 1,
-    ),
+    prep: preparationSource(level, config.prepBatch),
+    floor: floorSource(level, config.floorBatch, config.tables),
   };
 }
 
@@ -55,7 +53,16 @@ export const extensionLevels: LevelDefinition[] = extensionSeeds.map(buildExtens
 
 /** Derive a playable shift from one seed: no code edits needed for L33 and beyond. */
 export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
-  const level = Number(seed.id.slice(1));
+  const level = Number(seed.id.slice(1)),
+    config = extensionShiftConfig(level);
+  const service: ServiceConfig = {
+    prepCapacity: config.prepBatch,
+    floorCapacity: config.floorBatch,
+    clearing: true,
+    objective: 'serve',
+    minLoad: config.minLoad,
+  };
+  const active_tables = config.tables;
   const seeds = [0, 1, 2].map((s) => extensionSeed(level, s));
   return {
     id: seed.id,
@@ -66,9 +73,9 @@ export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
     instruction_target: seed.instructions,
     reference_block_count: referenceBlockCount(level),
     seeds,
-    active_tables: extensionActiveTables(level),
-    service: extensionServiceForLevel(level),
-    act: extensionAct(level),
+    active_tables,
+    service,
+    act: level < ROBOT_UNLOCK_LEVELS.floor ? 2 : config.fullHouse ? 4 : 3,
   };
 }
 export const extensionLessons = extensionSeeds.map(buildExtensionLesson);
@@ -76,14 +83,13 @@ export const extensionLessons = extensionSeeds.map(buildExtensionLesson);
 /** Derive starters (with one TODO omission) and solutions from one seed. */
 export function buildExtensionLesson(seed: LevelSeed) {
   const level = Number(seed.id.slice(1)),
-    role = level < 23 ? 'prep' : 'floor',
+    config = extensionShiftConfig(level),
+    role = level < ROBOT_UNLOCK_LEVELS.floor ? 'prep' : 'floor',
     programs = referencePrograms(level),
     starter = { ...programs };
-  starter[role] = starter[role].replace(
-    new RegExp(`^${escapeRegExp(seed.omission)}[^\\n]*$`, 'm'),
-    `# TODO: ${seed.omission}`,
-  );
-  if (level >= 31) {
+  starter[role] = starter[role].replace(new RegExp(`^${escapeRegExp(seed.omission)}[^\\n]*$`, 'm'), `# TODO: ${seed.omission}`);
+  if (config.fullHouse) {
+
     starter.query = lessonById('L03').solution;
     starter.prep = programs.prep.replace('ADD SUGAR', '# TODO: apply requested sugar');
   }

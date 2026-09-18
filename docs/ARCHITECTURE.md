@@ -41,6 +41,7 @@ Enforced by `eslint.config.mjs` (`boundaries/dependencies`, `import/no-cycle`,
 | Scoring | `domain/scoring.ts` (blocks, stars, satisfaction, tables) |
 | Constants | `domain/constants.ts` (limits, timings, drag tuning) |
 | Narrative | `data/campaign/narrative.ts` (one row per shift) |
+| Extension shift mechanics | `data/campaign/extension-config.json` (stages) merged by `extension-config.ts` |
 | Audio | `src/shared/audio-manifest.ts` (`SOUNDS`) |
 
 Key registries by `id`, never by index. No positional arrays for concepts.
@@ -90,7 +91,16 @@ so validation stays testable without the campaign bundle.
 
 - **Shift L33**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one
   `ShiftNarrative` row in `data/campaign/narrative.ts`. No code edits.
-  Regenerate docs with `npm run docs:gen`.
+  Regenerate docs with `npm run docs:gen`, then check `npm run validate:data`.
+- **Extension constraints**: shift mechanics live only in
+  `data/campaign/extension-config.json` (stages merged by `extensionShiftConfig`).
+  No `level >= N` thresholds or `level === <final>` gates anywhere else; future
+  shifts inherit the latest stage. `tools/docs-gen.mjs` reads the same JSON for
+  table counts and never asserts a seed count; `tools/validate-data.mjs`
+  requires every extension seed to have a narrative row. Locked-robot stand-ins
+  compile at `ROBOT_STAND_IN_LEVEL`, which exceeds every unlock by design — it
+  is not the campaign length. Save validation follows the injected catalog
+  length, so longer campaigns validate without code changes.
 - **Block**: one `BlockRegistry` entry (family/operands) plus the command in
   the compiler's `availableCommands` and interpreter dispatch — the registry
   is the discovery point; the language core stays explicit.
