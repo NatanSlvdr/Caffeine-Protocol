@@ -1,0 +1,25 @@
+{
+  "comment": "Single source of truth for extension shift mechanics (L15+). Stages merge in order: each stage overrides the fields it sets, so a future L33 needs no code edits — it inherits the latest stage. tools/docs-gen.mjs and tools/validate-data.mjs read this file directly.",
+  "stages": [
+    {
+      "from": 15,
+      "customers": 2,
+      "arrivalGap": 10,
+      "prepBatch": 1,
+      "floorBatch": 1,
+      "tables": 1,
+      "tea": false,
+      "sugar": false,
+      "fullHouse": false,
+      "finale": false
+    },
+    { "from": 18, "tea": true },
+    { "from": 19, "sugar": true },
+    { "from": 21, "customers": 4, "prepBatch": 2 },
+    { "from": 24, "tables": 2 },
+    { "from": 29, "customers": 8, "floorBatch": 2, "tables": 4 },
+    { "from": 31, "customers": 12, "arrivalGap": 4, "tables": 16, "fullHouse": true },
+    { "from": 32, "finale": true }
+  ],
+  "minLoadLevels": [21, 29]
+}

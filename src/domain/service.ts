@@ -4,7 +4,7 @@ import {
   BLOCK_SECONDS,
   INSTRUCTION_LIMIT,
   MAX_TRANSITIONS,
-  ROBOT_FALLBACK_LEVEL,
+  ROBOT_STAND_IN_LEVEL,
   SIM_DURATION_SECONDS,
 } from './constants';
 import { compileRobot } from './robotProgram';
@@ -108,10 +108,10 @@ export function* streamService(
       number >= ROBOT_UNLOCK_LEVELS[role]
         ? programs[role]
         : role === 'prep'
-          ? preparationSource(ROBOT_FALLBACK_LEVEL)
-          : floorSource(ROBOT_FALLBACK_LEVEL),
+          ? preparationSource(ROBOT_STAND_IN_LEVEL)
+          : floorSource(ROBOT_STAND_IN_LEVEL),
       role,
-      number >= ROBOT_UNLOCK_LEVELS[role] ? number : ROBOT_FALLBACK_LEVEL,
+      number >= ROBOT_UNLOCK_LEVELS[role] ? number : ROBOT_STAND_IN_LEVEL,
     ),
     pc: 0,
     stack: [],

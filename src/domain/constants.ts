@@ -8,8 +8,8 @@ export const QUERY_MAX_BLOCKS = 128;
 export const QUERY_PROGRAM_LEVEL_CAP = 14;
 /** Compiled blocks per kitchen/floor program. */
 export const ROBOT_MAX_BLOCKS = 512;
-/** Content level when no explicit shift applies; matches the full campaign length. */
-export const ROBOT_FALLBACK_LEVEL = 32;
+/** Stand-in robots (Moka/Pip) always run full programs; exceeds every unlock so future shifts never move it. */
+export const ROBOT_STAND_IN_LEVEL = 99;
 /** Interpreter steps per robot before a run fails. */
 export const INSTRUCTION_LIMIT = 10000;
 /** Simulated seconds per service run before the event clock gives up. */

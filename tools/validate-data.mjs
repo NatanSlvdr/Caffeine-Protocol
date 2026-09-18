@@ -138,6 +138,18 @@ try {
   failures.push('docs/campaign/README.md is stale (run npm run docs:gen)');
 }
 
+// Extension mechanics are data-driven: the config must exist and open at L15
+// so future shifts inherit coverage (seed/narrative pairing is enforced by
+// validateCampaign above via the shared validators).
+let mechanics = null;
+try {
+  mechanics = JSON.parse(readFileSync(new URL('extension-config.json', root), 'utf8'));
+} catch {
+  failures.push('unreadable extension-config.json');
+}
+if (mechanics && (!Array.isArray(mechanics.stages) || mechanics.stages[0]?.from !== 15))
+  failures.push('extension-config.json needs stages opening at L15');
+
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);

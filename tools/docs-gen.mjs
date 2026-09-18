@@ -12,9 +12,21 @@ const actOne = manifest.order.map((id) => ({
   lesson: read(`lessons/${id}.json`),
 }));
 
+// Extension mechanics come from extension-config.json: stages merge in order,
+// so new shifts inherit the latest stage and docs never hardcode a seed count.
+const mechanics = read('extension-config.json');
+function tablesFor(level) {
+  let tables;
+  for (const { from, ...override } of mechanics.stages) {
+    if (level < from) break;
+    if (override.tables !== undefined) tables = override.tables;
+  }
+  if (tables === undefined) throw new Error(`no extension stage covers L${level}; extend extension-config.json`);
+  return tables;
+}
+
 // Extension shifts derive from the structured seed table (no source-text parsing).
 const seeds = extensionSeeds;
-if (seeds.length !== 18) throw new Error(`expected 18 extension seeds, found ${seeds.length}`);
 for (const seed of seeds) {
   for (const key of ['id', 'title', 'note', 'blocks', 'instructions']) {
     if (seed[key] === undefined) throw new Error(`extension seed missing ${key}: ${seed.id ?? '(unknown)'}`);
@@ -31,9 +43,7 @@ for (const { id, level, lesson } of actOne) {
   md += row(id, title, level.active_tables, level.seeds.length, level.block_target, level.instruction_target, lesson.note) + '\n';
 }
 for (const seed of seeds) {
-  const level = Number(seed.id.slice(1));
-  const tables = level >= 31 ? 16 : level >= 29 ? 4 : level >= 24 ? 2 : 1;
-  md += row(seed.id, seed.title, tables, 3, seed.blocks, seed.instructions, seed.note) + '\n';
+  md += row(seed.id, seed.title, tablesFor(Number(seed.id.slice(1))), 3, seed.blocks, seed.instructions, seed.note) + '\n';
 }
 
 const outUrl = new URL('../docs/campaign/README.md', import.meta.url);
