@@ -90,7 +90,11 @@ export function placeBlock(source: string, command: string, at: number, from?: n
   const lines = source ? source.split('\n') : [];
   // An ELSE can only attach to another IF's optional alternative slot.
   if (command === 'ELSE' && !alternative) return source;
-  command = dedupeJump(lines, command);
+  // Distinguish a move of an existing scope (identified by its source line) from a library insert
+  // before dedup runs. A move must preserve its JUMP destination exactly; only a genuinely new
+  // JUMP (no source identity) may allocate a fresh POSITION.
+  const isMove = from !== undefined;
+  if (!isMove) command = dedupeJump(lines, command);
   let adjusted = at;
   const { content, end } = extractMove(lines, command, from);
   if (from !== undefined) {

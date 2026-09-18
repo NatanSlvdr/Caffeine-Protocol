@@ -65,3 +65,59 @@ it('does not keep a now-invalid target after reflow',()=>{
  const point={x:48,y:100};
  expect(pickDropSlot(point,[slot(1,50),slot(2,100),slot(3,150)],{from:0,end:2,command:'IF tea'},'gap:2',point)?.id).toBe('gap:3');
 });
+
+describe('moving an existing JUMP preserves its destination',()=>{
+ const positionsOf=(code:string)=>code.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('POSITION '));
+ const jumpsOf=(code:string)=>code.split('\n').map(l=>l.trim()).filter(l=>l.startsWith('JUMP '));
+ const expectNoOrphans=(code:string)=>{
+  const positions=positionsOf(code), jumps=jumpsOf(code);
+  for(const p of positions) expect(jumps).toContain('JUMP '+p.slice(9));
+  for(const j of jumps) expect(positions).toContain('POSITION '+j.slice(5));
+ };
+ it('moves JUMP above its target row without allocating a fresh POSITION',()=>{
+  const source='POSITION listen\nLISTEN\nITEM coffee\nJUMP listen';
+  const moved=placeBlock(source,'JUMP listen',1,3);
+  expect(moved).toBe('POSITION listen\nJUMP listen\nLISTEN\nITEM coffee');
+  expect(moved).not.toContain('jump_1');
+  expect(positionsOf(moved)).toEqual(['POSITION listen']);
+  expect(jumpsOf(moved)).toEqual(['JUMP listen']);
+  expectNoOrphans(moved);
+ });
+ it('moves JUMP below its target row without allocating a fresh POSITION',()=>{
+  const source='POSITION listen\nJUMP listen\nLISTEN\nITEM coffee';
+  const moved=placeBlock(source,'JUMP listen',4,1);
+  expect(moved).toBe('POSITION listen\nLISTEN\nITEM coffee\nJUMP listen');
+  expect(moved).not.toContain('jump_1');
+  expect(positionsOf(moved)).toEqual(['POSITION listen']);
+  expect(jumpsOf(moved)).toEqual(['JUMP listen']);
+  expectNoOrphans(moved);
+ });
+ it('moves JUMP out of a branch across valid scopes without orphaning its POSITION',()=>{
+  const source='POSITION listen\nLISTEN\nIF tea IN CUSTOMER SPEECH\nJUMP listen\nEND\nITEM coffee';
+  const moved=placeBlock(source,'JUMP listen',5,3);
+  expect(moved).not.toContain('jump_1');
+  expect(moved).toContain('JUMP listen');
+  expect(moved).toContain('POSITION listen');
+  expect(positionsOf(moved)).toEqual(['POSITION listen']);
+  expect(jumpsOf(moved)).toEqual(['JUMP listen']);
+  expectNoOrphans(moved);
+ });
+ it('moves JUMP into a branch across valid scopes without orphaning its POSITION',()=>{
+  const source='POSITION listen\nLISTEN\nIF tea IN CUSTOMER SPEECH\nITEM coffee\nEND\nJUMP listen';
+  const moved=placeBlock(source,'JUMP listen',4,5);
+  expect(moved).not.toContain('jump_1');
+  expect(moved).toContain('JUMP listen');
+  expect(moved).toContain('POSITION listen');
+  expect(positionsOf(moved)).toEqual(['POSITION listen']);
+  expect(jumpsOf(moved)).toEqual(['JUMP listen']);
+  expectNoOrphans(moved);
+ });
+ it('still allocates a fresh POSITION only for genuinely new JUMPs',()=>{
+  const source='POSITION listen\nLISTEN\nJUMP listen';
+  const inserted=placeBlock(source,'JUMP listen',3);
+  expect(inserted).toContain('JUMP jump_1');
+  expect(inserted).toContain('POSITION jump_1');
+  expect(inserted).toContain('JUMP listen');
+  expectNoOrphans(inserted);
+ });
+});
