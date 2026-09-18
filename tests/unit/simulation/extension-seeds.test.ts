@@ -1,10 +1,17 @@
 import { describe, expect, it } from 'vitest';
-import { buildExtensionLesson, buildExtensionLevel, referencePrograms } from '../../../src/data/extension';
+import {
+  buildExtensionLesson,
+  buildExtensionLevel,
+  referenceBlockCount,
+  referencePrograms,
+} from '../../../src/data/extension';
 import { lessons } from '../../../src/data';
 import { completeLevel, newSave, parseSave } from '../../../src/features/campaign/save/persistence';
 import type { LessonCatalog } from '../../../src/features/campaign/save/migration';
+import { extensionSeeds } from '../../../src/data/campaign/extension-seeds';
 import type { LevelSeed } from '../../../src/data/campaign/extension-seeds';
 import { compileProgram } from '../../../src/domain/program';
+import { countProgramBlocks } from '../../../src/domain/scoring';
 import { runLevel } from '../../../src/domain/simulation';
 
 /** A synthetic L33 proves new shifts are data-only: builders derive everything. */
@@ -56,5 +63,19 @@ describe('extension seeds', () => {
     const finale = completeLevel(restored, lessons.length, 3, '', catalog33);
     expect(finale.complete).toBe(true);
     expect(finale.unlocked).toBe(lessons.length);
+  });
+
+  it('measures reference_block_count from the reference programs, not the star target', () => {
+    for (const seed of extensionSeeds) {
+      const levelNumber = Number(seed.id.slice(1));
+      const level = buildExtensionLevel(seed);
+      const programs = referencePrograms(levelNumber);
+      const queryBlocks = programs.query.split('\n').filter((line) => line.trim() && !line.trim().startsWith('#')).length;
+      // Same counter the scorer uses for player programs.
+      expect(level.reference_block_count).toBe(countProgramBlocks(programs, queryBlocks, levelNumber));
+      expect(level.reference_block_count).toBe(referenceBlockCount(levelNumber));
+      // The star target keeps a margin above the measured reference.
+      expect(level.reference_block_count).toBeLessThanOrEqual(level.block_target);
+    }
   });
 });

@@ -5,6 +5,7 @@ export interface ExpectedTicket { item?: Drink; with_sugar?: boolean; sugar_coun
 export interface HeardOrder { tokens: string[]; number?: number }
 export interface Customer { heard_orders: HeardOrder[]; clarification_heard_orders?: HeardOrder[]; customer_id: string; arrival: number; phrase: string; clarification?: string; intent: SpeechIntent; clarification_intent?: SpeechIntent; expected: ExpectedTicket & { tickets?: ExpectedTicket[]; ask_help?: boolean } }
 export interface ValidationSeed { id: string; customers: Customer[] }
+/** block_target is the two-star threshold (reference plus margin); reference_block_count is the measured reference size. */
 export interface LevelDefinition { service?:ServiceConfig; act?:number;  id: string; title: string; programming_enabled: boolean; block_target: number; instruction_target: number; reference_block_count: number; seeds: ValidationSeed[]; summary: string; active_tables: number }
 export interface Program { source: string; instructions: string[]; source_lines: number[]; ends: Record<number, number>; alternatives: Record<number, number>; positions: Record<string, number>; functions: Record<string, number>; compile_error: string; error_line: number; block_count: number }
 export interface TraceStep { line: number; command: string; function_depth: number }

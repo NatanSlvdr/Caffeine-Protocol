@@ -1,6 +1,8 @@
 /** Campaign data check: manifest order plus per-shift level/lesson files. */
 import { existsSync, readFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('../src/data/campaign/', import.meta.url);
 const manifest = JSON.parse(readFileSync(new URL('manifest.json', root), 'utf8'));
@@ -60,6 +62,20 @@ if (!existsSync(iconSrc)) failures.push('missing source assets/icon.svg');
 else if (!existsSync(iconDst)) failures.push('missing public/icon.svg');
 else if (sha256(iconSrc) !== sha256(iconDst))
   failures.push('stale public/icon.svg (diverges from assets/icon.svg; run npm run audio:sync)');
+if (failures.length) {
+  console.error('validate:data failed:');
+  for (const failure of failures) console.error(` - ${failure}`);
+  process.exit(1);
+}
+
+// The generated campaign table is committed; it must match its sources.
+try {
+  execFileSync(process.execPath, [fileURLToPath(new URL('./docs-gen.mjs', import.meta.url)), '--check'], {
+    stdio: 'inherit',
+  });
+} catch {
+  failures.push('docs/campaign/README.md is stale (run npm run docs:gen)');
+}
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);

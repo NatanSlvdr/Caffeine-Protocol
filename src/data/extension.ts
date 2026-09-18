@@ -1,6 +1,7 @@
 import type { LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
 import { floorSource, preparationSource } from '@/domain/defaultPrograms';
 import { TABLE_LAYOUT } from '@/domain/layout';
+import { countProgramBlocks } from '@/domain/scoring';
 import { lessonById } from './campaign/load';
 import { extensionSeeds } from './campaign/extension-seeds';
 import type { LevelSeed } from './campaign/extension-seeds';
@@ -20,6 +21,22 @@ export function referencePrograms(level: number): RobotPrograms {
     prep: preparationSource(level, level >= 21 ? 2 : 1),
     floor: floorSource(level, level >= 29 ? 2 : 1, level >= 31 ? TABLE_LAYOUT.length : level >= 29 ? 4 : level >= 24 ? 2 : 1),
   };
+}
+
+/** Non-comment source lines in one program; mirrors scoring.countProgramBlocks. */
+function codeLines(source: string): number {
+  return source.split('\n').filter((line) => line.trim() && !line.trim().startsWith('#')).length;
+}
+
+/**
+ * Measured size of the reference solution across unlocked robots.
+ * `block_target` is the two-star threshold (reference plus star margin);
+ * `reference_block_count` is the reference itself, computed with the same
+ * counter the scorer uses for player programs.
+ */
+export function referenceBlockCount(level: number): number {
+  const programs = referencePrograms(level);
+  return countProgramBlocks(programs, codeLines(programs.query), level);
 }
 export const extensionLevels: LevelDefinition[] = extensionSeeds.map(buildExtensionLevel);
 
@@ -43,7 +60,7 @@ export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
     programming_enabled: true,
     block_target: seed.blocks,
     instruction_target: seed.instructions,
-    reference_block_count: seed.blocks,
+    reference_block_count: referenceBlockCount(level),
     seeds,
     active_tables,
     service,

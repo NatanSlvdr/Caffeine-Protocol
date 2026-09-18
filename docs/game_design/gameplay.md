@@ -31,16 +31,16 @@ role.
 | 1 | None | Observe the full cafe workflow. |
 | 2 | None | Show that human order intake becomes a bottleneck. |
 | 3 | Wait for event, action | Create a coffee ticket after a customer speaks. |
-| 4 | If, else, intent-chip inspection | Distinguish coffee from tea. |
+| 4 | If, else, token membership | Distinguish coffee from tea in customer speech. |
 | 5 | Position marker, jump to position | Handle repeated customer arrivals. |
-| 6 | For each heard order | Create multiple tickets from one customer speech event. |
-| 7 | Modifier variable | Track binary sugar for coffee and tea. |
-| 8 | Function | Share repeated ticket-building logic across speech variants. |
-| 9 | Runtime error, ask for help | Handle ambiguous speech confidence. |
-| 10 | Number variable, numeric comparison | Track sugar-count chips. |
-| 11 | Refactor review | Improve persistent Query logic with less guidance. |
-| 12 | Intent stress | Handle larger clear-intent batches. |
-| 13 | Ambiguity stress | Combine ambiguous confidence, sugar counts, and error handling. |
+| 6 | Sugar modifier | Track positive sugar with WRITE sugar. |
+| 7 | Negation | Distinguish plain sugar from negated sugar. |
+| 8 | Natural wording, no new commands | Reuse token tests on varied phrasing. |
+| 9 | For each heard order | Create multiple tickets from one customer speech event. |
+| 10 | Number variable, numeric sugar | Track sugar-count metadata with STORE/WRITE. |
+| 11 | Ambiguity, ask for help | Handle ambiguous speech with HELP. |
+| 12 | Mixed orders | Handle larger clear-intent batches. |
+| 13 | Denser service, no new syntax | Combine ambiguous confidence, sugar counts, and error handling. |
 | 14 | Act I certification | Pass all Query concepts in a final exam. |
 
 Levels 1–2 retain the same editor workspace with a locked Automatic service block. Watching the complete service is sufficient to progress; ticket inspection is optional.
