@@ -16,12 +16,12 @@ Open the URL printed by Vite. The production build is fully static and supports 
 ## Play
 
 1. Choose a shift on the **Campaign** screen. The first two shifts use an automatic-service block; observe the complete service to unlock the next shift.
-2. From shift 3, add and arrange instructions in the program workspace. Blocks insert after the selected block; drag a block's grip to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END.
+2. From shift 3, add and arrange instructions in the program workspace. Choosing a library block appends it to the end of the program; drag a block (or its grip) to a drop position to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END.
 3. Select **Run service** (Ctrl/⌘ + Enter) to validate every required seed. Every seed must pass before the next shift unlocks.
 4. Use the café toolbar to stop, pause, and change playback speed. From shift 15, program Brew's kitchen routines; from shift 23, Porter's floor routines.
-5. **Help** explains the lesson and provides a worked example. **Options** contains display and editor controls; sound, save import/export, and progress-reset controls live in **Settings**.
+5. **Help** explains the lesson and provides a worked example. **Options** contains the workspace pixel-art shader, text-editor toggle, and routine reset; sound, display, save import/export, and progress-reset controls live in **Settings**.
 
-One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, programs, story interludes, and settings are stored in the browser. Save files can be exported and imported from **Options**.
+One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, programs, story interludes, and settings are stored in the browser. Save files can be exported and imported from **Settings**.
 
 ## Campaign and scope
 

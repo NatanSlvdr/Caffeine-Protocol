@@ -69,6 +69,7 @@ export const LevelSchema = v.looseObject({
   block_target: v.number(),
   instruction_target: v.number(),
   programming_enabled: v.boolean(),
+  /** Measured reference-solution size; block_target adds the star margin on top. */
   reference_block_count: v.number(),
   seeds: v.array(ValidationSeedSchema),
   service: v.optional(ServiceConfigSchema),

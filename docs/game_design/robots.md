@@ -18,14 +18,15 @@ The floor helper reuses the supplied robot sprite. Niko deposits drinks inside t
 ## Query
 
 Query is the order-taking robot. Query can hear customer speech, inspect the
-current customer event's intent chips, and create structured tickets.
+recognized tokens of the current customer event, and create structured tickets.
+FUNCTION/CALL/RETURN are not part of Query's Act I vocabulary; functions belong
+to Brew's kitchen and Porter's floor routines.
 
 Act I capabilities:
 
 - receive `customer_spoke` events;
 - read source phrase text for display/debug;
-- inspect intent chips such as drink, sugar, count, and confidence;
-- share repeated ticket-building logic through functions;
+- inspect recognized tokens such as drink, sugar, count, and confidence;
 - create coffee and tea tickets;
 - attach sugar modifiers;
 - store binary and numeric sugar values;
@@ -35,6 +36,7 @@ Act I capabilities:
 Act I limits:
 
 - Query may move locally around the counter for animation and flavor.
+- Query has no FUNCTION/CALL/RETURN in Act I.
 - Query does not prepare drinks.
 - Query does not serve tables.
 - Query does not clean.

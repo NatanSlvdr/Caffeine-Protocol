@@ -25,9 +25,10 @@ The program panel contains Help and Options, a short lesson summary, the unlocke
 ## Separate Dialogs
 
 - Help explains the lesson and optionally reveals the worked solution.
-- Options contains the source editor toggle, incoming-program reset and ticket inspection.
+- Options contains the workspace pixel-art shader, the text-editor toggle, and incoming-program reset.
 - Inspect pauses playback and shows the phrase, heard-order tokens, tickets, simulation timestamps, customer navigation, replay, step and restart controls.
 - Results shows seed counts, satisfaction, block/step metrics and the first failure details.
+- Café Settings (header gear) contains sound, display, save import/export, and fresh-start controls.
 
 Editing is locked during playback until Stop & edit or replay completion. Inspection is optional for every shift. Controls and dialogs must remain usable at 1100×720 as well as 1280×720.
 

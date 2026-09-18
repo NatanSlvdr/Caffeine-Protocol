@@ -104,8 +104,9 @@ function Shell() {
             costs 3 credits and tea 2; sugar is included.
           </p>
           <p>
-            Choose a block from the library and click its action name or drag it into your routine. Set its values in
-            the code pane; library selectors only preview the available options. Select a block to insert after it. Drag
+            Choose a block from the library and click its action name to append it to your routine, or drag it to a drop
+            position. Set its values in
+            the code pane; library selectors only preview the available options. Drag
             its grip to move a complete branch, loop or function. Drop a block into the optional else area to add an
             alternative. Move the empty destination tile to route a jump. Grip controls also work with Space, arrow keys
             and Space to drop.

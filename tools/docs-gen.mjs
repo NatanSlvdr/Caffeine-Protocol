@@ -1,5 +1,6 @@
 /** Generate docs/campaign/ from the campaign sources. Run with `npm run docs:gen`. */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { extensionSeeds } from '../src/data/campaign/extension-seeds.ts';
 
 const dir = new URL('../src/data/campaign/', import.meta.url);
 const read = (path) => JSON.parse(readFileSync(new URL(path, dir), 'utf8'));
@@ -11,18 +12,14 @@ const actOne = manifest.order.map((id) => ({
   lesson: read(`lessons/${id}.json`),
 }));
 
-// Extension seeds are machine-generated single-line records; parse them as data.
-const seedsSrc = readFileSync(new URL('extension-seeds.ts', dir), 'utf8');
-const seedLines = seedsSrc.split('\n').filter((line) => line.includes("{ id: 'L"));
-if (seedLines.length !== 18) throw new Error(`expected 18 extension seeds, found ${seedLines.length}`);
-const seeds = seedLines.map((line) => {
-  const pick = (key) => {
-    const m = line.match(new RegExp(`${key}: ('(?:[^'\\\\]|\\\\.)*'|"(?:[^"\\\\]|\\\\.)*"|\\d+)`));
-    if (!m) throw new Error(`seed line missing ${key}: ${line.slice(0, 60)}`);
-    return /^['"]/.test(m[1]) ? eval(m[1]) : Number(m[1]);
-  };
-  return { id: pick('id'), title: pick('title'), note: pick('note'), blocks: pick('blocks'), instructions: pick('instructions') };
-});
+// Extension shifts derive from the structured seed table (no source-text parsing).
+const seeds = extensionSeeds;
+if (seeds.length !== 18) throw new Error(`expected 18 extension seeds, found ${seeds.length}`);
+for (const seed of seeds) {
+  for (const key of ['id', 'title', 'note', 'blocks', 'instructions']) {
+    if (seed[key] === undefined) throw new Error(`extension seed missing ${key}: ${seed.id ?? '(unknown)'}`);
+  }
+}
 
 const row = (id, title, tables, seedsCount, blocks, instructions, note) =>
   `| ${id} | ${title} | ${tables} | ${seedsCount} | ${blocks} | ${instructions} | ${note.split('.')[0]}. |`;
@@ -39,6 +36,22 @@ for (const seed of seeds) {
   md += row(seed.id, seed.title, tables, 3, seed.blocks, seed.instructions, seed.note) + '\n';
 }
 
-mkdirSync(new URL('../docs/campaign/', import.meta.url), { recursive: true });
-writeFileSync(new URL('../docs/campaign/README.md', import.meta.url), md);
-console.log(`docs:gen ok: ${actOne.length + seeds.length} shifts documented.`);
+const outUrl = new URL('../docs/campaign/README.md', import.meta.url);
+if (process.argv.includes('--check')) {
+  let current = null;
+  try {
+    current = readFileSync(outUrl, 'utf8');
+  } catch {
+    console.error('docs:gen --check failed: docs/campaign/README.md is missing (run npm run docs:gen).');
+    process.exit(1);
+  }
+  if (current !== md) {
+    console.error('docs:gen --check failed: docs/campaign/README.md is stale (run npm run docs:gen).');
+    process.exit(1);
+  }
+  console.log(`docs:gen check ok: ${actOne.length + seeds.length} shifts documented.`);
+} else {
+  mkdirSync(new URL('../docs/campaign/', import.meta.url), { recursive: true });
+  writeFileSync(outUrl, md);
+  console.log(`docs:gen ok: ${actOne.length + seeds.length} shifts documented.`);
+}
