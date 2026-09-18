@@ -451,9 +451,11 @@ export function collectBuiltExtensionErrors(inputs: BuiltExtensionInputs): strin
     errors.push(
       `${seed.id}: instruction_target ${level.instruction_target} differs from seed instructions ${seed.instructions}`,
     );
-  if (level.reference_block_count !== seed.blocks)
+  // reference_block_count is measured from the reference programs (same counter
+  // the scorer uses), not the star target: it must stay within the seed budget.
+  if (level.reference_block_count < 1 || level.reference_block_count > seed.blocks)
     errors.push(
-      `${seed.id}: reference_block_count ${level.reference_block_count} differs from seed blocks ${seed.blocks}`,
+      `${seed.id}: reference_block_count ${level.reference_block_count} must be within 1..seed blocks ${seed.blocks}`,
     );
   if (level.act !== extensionAct(levelNumber))
     errors.push(`${seed.id}: act ${level.act} differs from derived ${extensionAct(levelNumber)}`);
