@@ -20,5 +20,7 @@ lived under `scripts/art/`.
 
 ## Consequences
 
-Adding a sound is one manifest entry plus generation; a missing shipped file
-fails the build-time validation.
+Adding a sound is one manifest entry plus generation; a missing or stale
+shipped file fails the build-time validation (`npm run validate:data`
+hash-compares every manifest sound plus the icon, and `prebuild` runs
+`audio:sync --check`; heal with `npm run audio:sync`).
