@@ -11,7 +11,7 @@
     "lint": "eslint .",
     "knip": "knip",
     "validate:data": "node tools/validate-data.mjs",
-    "gen:audio": "python3 scripts/art/generate_audio.py",
+    "gen:audio": "python3 tools/audio/generate_audio.py",
     "audio:sync": "node tools/audio-sync.mjs",
     "docs:gen": "node tools/docs-gen.mjs",
     "test": "vitest run",
