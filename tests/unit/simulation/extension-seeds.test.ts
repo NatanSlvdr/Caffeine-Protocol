@@ -86,13 +86,16 @@ describe('extension seeds', () => {
       const levelNumber = Number(seed.id.slice(1));
       const level = buildExtensionLevel(seed);
       const programs = referencePrograms(levelNumber);
-      const queryBlocks = programs.query.split('\n').filter((line) => line.trim() && !line.trim().startsWith('#')).length;
+      const queryBlocks = programs.query
+        .split('\n')
+        .filter((line) => line.trim() && !line.trim().startsWith('#')).length;
       // Same counter the scorer uses for player programs.
       expect(level.reference_block_count).toBe(countProgramBlocks(programs, queryBlocks, levelNumber));
       expect(level.reference_block_count).toBe(referenceBlockCount(levelNumber));
       // The star target keeps a margin above the measured reference.
       expect(level.reference_block_count).toBeLessThanOrEqual(level.block_target);
     }
+  });
 
   it('keeps L15-L32 mechanics identical through the shared config', () => {
     expect(extensionShiftConfig(15)).toEqual({

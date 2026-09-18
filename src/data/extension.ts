@@ -9,9 +9,6 @@ import { extensionShiftConfig } from './campaign/extension-config';
 import { extensionSeed } from './campaign/generators/extensionCustomers';
 import {
   collectBuiltExtensionErrors,
-  extensionAct,
-  extensionActiveTables,
-  extensionServiceForLevel,
   validateExtensionSeedData,
   validateLessonData,
   validateLevelData,
@@ -87,9 +84,11 @@ export function buildExtensionLesson(seed: LevelSeed) {
     role = level < ROBOT_UNLOCK_LEVELS.floor ? 'prep' : 'floor',
     programs = referencePrograms(level),
     starter = { ...programs };
-  starter[role] = starter[role].replace(new RegExp(`^${escapeRegExp(seed.omission)}[^\\n]*$`, 'm'), `# TODO: ${seed.omission}`);
+  starter[role] = starter[role].replace(
+    new RegExp(`^${escapeRegExp(seed.omission)}[^\\n]*$`, 'm'),
+    `# TODO: ${seed.omission}`,
+  );
   if (config.fullHouse) {
-
     starter.query = lessonById('L03').solution;
     starter.prep = programs.prep.replace('ADD SUGAR', '# TODO: apply requested sugar');
   }

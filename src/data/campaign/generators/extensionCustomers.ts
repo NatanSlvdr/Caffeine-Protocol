@@ -1,5 +1,5 @@
 import type { Customer, ValidationSeed } from '../../../domain/types';
-import { extensionShiftConfig } from '../extension-config';
+import { extensionShiftConfig } from '../extension-config.ts';
 
 /** Deterministic extension customers: drinks alternate by seed, sugar counts cycle, finales group up. */
 export function extensionSeed(level: number, seed: number): ValidationSeed {
@@ -30,8 +30,18 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
           { tokens: ['coffee', 'sugar', 'number'], number: 0 },
           { tokens: ['tea', 'sugar', 'number'], number: 2 },
         ],
-        intent: { orders: [{ drink: 'coffee', sugar_count: 0 }, { drink: 'tea', sugar_count: 2 }] },
-        expected: { tickets: [{ item: 'coffee', sugar_count: 0 }, { item: 'tea', sugar_count: 2 }] },
+        intent: {
+          orders: [
+            { drink: 'coffee', sugar_count: 0 },
+            { drink: 'tea', sugar_count: 2 },
+          ],
+        },
+        expected: {
+          tickets: [
+            { item: 'coffee', sugar_count: 0 },
+            { item: 'tea', sugar_count: 2 },
+          ],
+        },
       };
     return {
       customer_id: `C${n + 1}`,

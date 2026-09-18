@@ -1,6 +1,6 @@
 /** Extension shift mechanics: one merged config per shift, derived from extension-config.json. */
 import * as v from 'valibot';
-import { TABLE_LAYOUT } from '@/domain/layout';
+import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
 import mechanicsData from './extension-config.json' with { type: 'json' };
 
 /** Every mechanic that used to hide in level-number thresholds, named in one place. */

@@ -150,8 +150,6 @@ try {
 if (mechanics && (!Array.isArray(mechanics.stages) || mechanics.stages[0]?.from !== 15))
   failures.push('extension-config.json needs stages opening at L15');
 
-}
-
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);
