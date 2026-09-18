@@ -21,6 +21,15 @@ export const tableSeat = (index: number, side: 0 | 1): Point => {
   const t = TABLE_LAYOUT[index];
   return [t.x + (side === 0 ? -1 : 1), t.z + (t.depth - 1) / 2];
 };
+/** Line-segment positions for the editable tile grid overlay. */
+export function gridLinePositions(): Float32Array {
+  const left = BOUNDS.minX - 0.5,
+    top = BOUNDS.minZ - 0.5;
+  const points: number[] = [];
+  for (let x = 0; x <= ROOM[0]; x++) points.push(left + x, 0.047, top, left + x, 0.047, top + ROOM[1]);
+  for (let z = 0; z <= ROOM[1]; z++) points.push(left, 0.047, top + z, left + ROOM[0], 0.047, top + z);
+  return new Float32Array(points);
+}
 export const FURNITURE: Furniture[] = [
   { id: 'storage', kind: 'counter', x: -1, z: 4, width: 2, depth: 1 },
   { id: 'equipment', kind: 'counter', x: 1, z: 4, width: 7, depth: 1 },
