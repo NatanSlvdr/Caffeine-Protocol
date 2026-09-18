@@ -1,28 +1,28 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
-import App from '../src/App';
-import { newSave, SAVE_KEY } from '../src/features/campaign/save/persistence';
-import { lessons } from '../src/data';
+import { act, fireEvent, render, screen } from '@testing-library/react';
+import App from '../../../src/App';
+import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
+import { makeSave, seedLocalStorage } from '../../helpers/saves';
+import { lessons } from '../../../src/data';
 
-vi.mock('../src/components/Cafe',()=>({Cafe:({serviceView,focusRole}:{serviceView?:boolean;focusRole?:string})=><div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole}/> }));
-vi.mock('../src/audio',()=>({configureAudio:vi.fn(),playSound:vi.fn(),startAudio:vi.fn()}));
+vi.mock('../../../src/components/Cafe',()=>({Cafe:({serviceView,focusRole}:{serviceView?:boolean;focusRole?:string})=><div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole}/> }));
+vi.mock('../../../src/audio',()=>({configureAudio:vi.fn(),playSound:vi.fn(),startAudio:vi.fn()}));
 beforeEach(()=>{
  vi.useFakeTimers();localStorage.clear();window.location.hash='/shift/3';
  HTMLDialogElement.prototype.showModal=function(){this.setAttribute('open','');};
  HTMLDialogElement.prototype.close=function(){this.removeAttribute('open');};
 });
-afterEach(()=>{cleanup();vi.useRealTimers();localStorage.clear();});
+afterEach(()=>{vi.useRealTimers();localStorage.clear();});
 function open(source=lessons[2].solution){
- const save=newSave();save.unlocked=2;save.selected=2;save.robotDrafts[2]={query:source,prep:'',floor:''};
- localStorage.setItem(SAVE_KEY,JSON.stringify(save));render(<App/>);
+ seedLocalStorage({...makeSave(),unlocked:2,selected:2,robotDrafts:{2:{query:source,prep:'',floor:''}}});render(<App/>);
  fireEvent.click(screen.getByRole('button',{name:/Run service/}));
 }
 function savedStars(){return JSON.parse(localStorage.getItem(SAVE_KEY)!).stars;}
 describe('live workspace lifecycle',()=>{
  it('focuses the scene on the robot selected for editing',()=>{
-  const save=newSave();save.unlocked=22;save.selected=22;
+  seedLocalStorage({...makeSave(),unlocked:22,selected:22});
   window.location.hash='/shift/23';
-  localStorage.setItem(SAVE_KEY,JSON.stringify(save));render(<App/>);
+  render(<App/>);
   expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('floor');
   fireEvent.click(screen.getByRole('tab',{name:'Query'}));
   expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('query');
@@ -41,8 +41,7 @@ describe('live workspace lifecycle',()=>{
   expect(screen.getByRole('tab',{name:'Brew'}).getAttribute('aria-selected')).toBe('true');
  });
  it('shows locked robot areas and code tabs before their unlock shifts',()=>{
-  const save=newSave();save.unlocked=2;save.selected=2;
-  localStorage.setItem(SAVE_KEY,JSON.stringify(save));render(<App/>);
+  seedLocalStorage({...makeSave(),unlocked:2,selected:2});render(<App/>);
   for(const name of ['Brew’s kitchen','Porter’s dining room']){
    const button=screen.getByRole('button',{name});
    expect(button.hasAttribute('disabled')).toBe(true);

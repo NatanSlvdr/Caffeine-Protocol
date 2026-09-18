@@ -1,7 +1,7 @@
 import { OrthographicCamera, Vector3 } from 'three';
 import { describe,it,expect } from 'vitest';
-import { CAMERA_POSITION,CAMERA_TARGET,CAMERA_ELEVATION,CAMERA_AZIMUTH,cameraZoom,ENTRANCE,FURNITURE,isWalkable,gridRoute,ROOM,BOUNDS,QUERY_TILES,MANUAL_INTAKE,STAFF_ENTRY,STATIONS,STARTS,TABLE_LAYOUT,tableFront,tableSeat,zoneAt,samePoint } from '../src/domain/layout';
-import type { Point } from '../src/domain/layout';
+import { CAMERA_POSITION,CAMERA_TARGET,CAMERA_ELEVATION,CAMERA_AZIMUTH,cameraZoom,ENTRANCE,FURNITURE,isWalkable,gridRoute,ROOM,BOUNDS,QUERY_TILES,MANUAL_INTAKE,STAFF_ENTRY,STATIONS,STARTS,TABLE_LAYOUT,tableFront,tableSeat,zoneAt,samePoint } from '../../../src/domain/layout';
+import type { Point } from '../../../src/domain/layout';
 
 describe('shared café geometry',()=>{
  it('matches the room plan and integer non-overlapping footprints',()=>{

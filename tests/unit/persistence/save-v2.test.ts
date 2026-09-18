@@ -1,7 +1,7 @@
 import { describe,it,expect } from 'vitest';
-import { completeLevel,incomingRobotPrograms,newSave,parseSave,readSave,saveRobotDraft,writeSave } from '../src/features/campaign/save/persistence';
-import { lessons } from '../src/data';
-import { referencePrograms } from '../src/data/extension';
+import { completeLevel,incomingRobotPrograms,newSave,parseSave,readSave,saveRobotDraft,writeSave } from '../../../src/features/campaign/save/persistence';
+import { lessons } from '../../../src/data';
+import { referencePrograms } from '../../../src/data/extension';
 
 describe('version 3 campaign saves',()=>{
  it.each([1,2])('resets incompatible Query programs from version %i while preserving unlocks and settings',version=>{

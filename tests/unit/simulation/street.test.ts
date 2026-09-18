@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { levels, lessons } from '../src/data';
-import { BOUNDS, ENTRANCE, ROOM, STATIONS, tableFront } from '../src/domain/layout';
-import { compileProgram } from '../src/domain/program';
-import { sampleReplay } from '../src/domain/replay';
-import { runLevel } from '../src/domain/simulation';
-import { customerApproach, customerExit, samplePath, SIDEWALK_X, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, STREET_BOUNDS } from '../src/domain/street';
+import { levels, lessons } from '../../../src/data';
+import { BOUNDS, ENTRANCE, ROOM, STATIONS, tableFront } from '../../../src/domain/layout';
+import { compileProgram } from '../../../src/domain/program';
+import { sampleReplay } from '../../../src/domain/replay';
+import { runLevel } from '../../../src/domain/simulation';
+import { customerApproach, customerExit, samplePath, SIDEWALK_X, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, STREET_BOUNDS } from '../../../src/domain/street';
 
 describe('street customer routes', () => {
   it('matches the café length and places customer spawning beyond the clipped edges', () => {

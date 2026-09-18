@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { levels, lessons } from '../src/data';
-import { compileProgram } from '../src/domain/program';
-import { runLevel } from '../src/domain/simulation';
-import { sampleReplay } from '../src/domain/replay';
+import { levels, lessons } from '../../../src/data';
+import { compileProgram } from '../../../src/domain/program';
+import { runLevel } from '../../../src/domain/simulation';
+import { sampleReplay } from '../../../src/domain/replay';
 
 const base = runLevel(levels[2], compileProgram(lessons[2].solution,3));
 describe('Query paper handoff',()=>{

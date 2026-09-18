@@ -1,9 +1,9 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { act, cleanup, render, screen } from '@testing-library/react';
-import { RobotHolding } from '../src/components/RobotHolding';
-import type { Cargo } from '../src/domain/types';
+import { act, render, screen } from '@testing-library/react';
+import { RobotHolding } from '../../../src/components/RobotHolding';
+import type { Cargo } from '../../../src/domain/types';
 
-afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
 it('hides empty hands and shows accessible cargo icons',()=>{
  const cargo:Cargo={ticketId:'one',table:2,item:'coffee',stage:'beans',sugar:0};
  const {rerender}=render(<RobotHolding name="Brew" inventory={[]}/>);

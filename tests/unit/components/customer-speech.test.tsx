@@ -1,7 +1,6 @@
-import { afterEach, expect, it } from 'vitest';
-import { cleanup, render, screen, within } from '@testing-library/react';
-import { CustomerSpeech } from '../src/components/CustomerSpeech';
-afterEach(cleanup);
+import { expect, it } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import { CustomerSpeech } from '../../../src/components/CustomerSpeech';
 it('shows each recognized order group, negation and numeric metadata',()=>{
  render(<CustomerSpeech customer={{customer_id:'C1',arrival:0,phrase:'coffee without sugar and tea with 2 sugars',intent:{},heard_orders:[{tokens:['coffee','sugar','negation']},{tokens:['tea','sugar','number'],number:2}],expected:{tickets:[{item:'coffee',with_sugar:false},{item:'tea',sugar_count:2}]}}}/>);
  expect(within(screen.getByRole('list',{name:'Heard orders'})).getAllByRole('listitem').map(e=>e.getAttribute('aria-label'))).toEqual(['coffee ×1','tea ×1 + 2 sugar']);

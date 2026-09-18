@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import { keyboardDropSlot, pickDropSlot } from '../src/domain/dragPlacement';
-import type { DropSlot } from '../src/domain/dragPlacement';
-import { placeBlock } from '../src/domain/visualProgram';
+import { keyboardDropSlot, pickDropSlot } from '../../../src/domain/dragPlacement';
+import type { DropSlot } from '../../../src/domain/dragPlacement';
+import { placeBlock } from '../../../src/domain/visualProgram';
 
 const slot = (at: number, y: number, left=48, alternative=false): DropSlot => ({id:(alternative?'else:':'gap:')+at,at,left,top:y-6,height:12,alternative});
 describe('stable insertion-based dragging',()=>{

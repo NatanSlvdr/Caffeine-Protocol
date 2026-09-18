@@ -1,13 +1,14 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Editor } from '../src/components/Editor';
-import { CodingPaneHeader } from '../src/components/CodingPaneHeader';
-import { campaignNarrative, narrativeFor } from '../src/data/campaign/narrative';
-import { levels } from '../src/data';
+import { Editor } from '../../../src/components/Editor';
+import { CodingPaneHeader } from '../../../src/components/CodingPaneHeader';
+import { campaignNarrative, narrativeFor } from '../../../src/data/campaign/narrative';
+import { levels } from '../../../src/data';
+import { staticEditorProps } from '../../helpers/editorHarness';
 
-afterEach(()=>{cleanup();vi.restoreAllMocks();vi.unstubAllGlobals();});
-const editor={source:'LISTEN\nTICKET\nITEM coffee',onChange:()=>{},level:4,locked:true,observation:false,textMode:false};
+afterEach(()=>{vi.restoreAllMocks();vi.unstubAllGlobals();});
+const editor=staticEditorProps('LISTEN\nTICKET\nITEM coffee',{level:4,locked:true});
 describe('clear execution feedback',()=>{
  it('keeps the same moving cursor and adapts its travel time to playback speed',()=>{
   vi.spyOn(HTMLElement.prototype,'getBoundingClientRect').mockImplementation(function(this:HTMLElement){

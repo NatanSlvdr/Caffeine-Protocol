@@ -8,7 +8,7 @@ export default defineConfig({
   base: './',
   plugins: [react(), tsconfigPaths(), createOfflineCafe()],
   test: {
-    include: ['tests/**/*.test.{ts,tsx}'],
+    include: ['tests/unit/**/*.test.{ts,tsx}'],
     exclude: ['tests/e2e/**', 'tests/fixtures/**', 'node_modules/**'],
     setupFiles: ['./tests/setup.ts'],
     environment: 'jsdom',

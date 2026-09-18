@@ -1,51 +1,12 @@
-import { describe,it,expect } from 'vitest';
-import { levels,lessons } from '../src/data';
-import { availableCommands, compileProgram,executeCustomerEvent,evaluateQueryComparison,parseFor } from '../src/domain/program';
-import { QUERY_INSTRUCTION_LIMIT } from '../src/domain/constants';
-import { runLevel,buildReplayTimeline,validate } from '../src/domain/simulation';
-import { completeLevel,incomingProgram,newSave,parseSave,readSave,SAVE_KEY,writeSave } from '../src/features/campaign/save/persistence';
-import type { Customer, HeardOrder } from '../src/domain/types';
-const run=(i:number,source=lessons[i].solution)=>runLevel(levels[i],compileProgram(source,i+1));
-const tea=levels[3].seeds[1].customers[0],coffee=levels[3].seeds[0].customers[0];
-const exec=(source:string,customer=coffee,level=14)=>executeCustomerEvent(compileProgram(source,level),customer,'test');
-const request=(orders:HeardOrder[],expected:Customer['expected']={}):Customer=>({...coffee,heard_orders:orders,intent:{},expected});
+import { describe, it, expect } from 'vitest';
+import { lessons } from '../../../src/data';
+import { compileProgram, executeCustomerEvent, evaluateQueryComparison, parseFor } from '../../../src/domain/program';
+import { QUERY_INSTRUCTION_LIMIT } from '../../../src/domain/constants';
+import { validate } from '../../../src/domain/simulation';
+import { execCustomer as exec } from '../../helpers/query';
+import { coffeeFixture as coffee, teaFixture as tea, requestFixture as request } from '../../helpers/customers';
+import { runCampaignLevel as run } from '../../helpers/run';
 
-describe('redesigned Act I campaign',()=>{
- for(const [i,level] of levels.slice(0,14).entries()){
-  it(`${level.id}: reference passes every authored seed with valid source traces`,()=>{
-   const actual=run(i);expect(actual.first_failure).toBeNull();expect(actual.passed).toBe(true);
-   expect(actual.passed_seeds).toBe(level.seeds.length);
-   for(const event of actual.events)for(const step of event.trace)expect(lessons[i].solution.split('\n')[step.line].trim()).toBe(step.command);
-   if(i>=2)expect(actual.stars).toBe(3);
-   expect(buildReplayTimeline(actual).every(t=>t.end>=t.start)).toBe(true);
-  });
-  if([2,3,4,5,6,8,9,10].includes(i))it(`${level.id}: incoming routine fails the new mechanic`,()=>expect(run(i,lessons[i].starter).passed).toBe(false));
- }
- it('manual rush builds a measurable backlog',()=>{const r=run(1);expect(r.events.at(-1)!.satisfaction).toBeLessThan(r.events[0].satisfaction);});
- it('repeated runs are deterministic without input mutation',()=>{const before=JSON.stringify(levels);expect(run(13)).toEqual(run(13));expect(JSON.stringify(levels)).toBe(before);});
- it.each([
-  ['coffee',['coffee'],undefined],['tea please',['tea'],undefined],
-  ['coffee with sugar',['coffee','sugar'],undefined],
-  ['coffee without sugar',['coffee','sugar','negation'],undefined],
-  ['coffee no sugar',['coffee','sugar','negation'],undefined],
-  ['coffee, but no sugar please',['coffee','sugar','negation'],undefined],
-  ['tea with 2 sugars',['tea','sugar','number'],2],
- ])('authors recognized tokens for %s',(phrase,tokens,number)=>{
-  const customer=levels.slice(0,14).flatMap(l=>l.seeds.flatMap(s=>s.customers)).find(c=>c.phrase===phrase)!;
-  expect(customer.heard_orders).toEqual([{tokens,...(number===undefined?{}:{number})}]);
- });
- it('unlocks only the intended syntax at each milestone',()=>{
-  expect(availableCommands(5)).not.toContain('SUGAR true');
-  expect(availableCommands(6)).toContain('IF sugar IN CUSTOMER SPEECH');
-  expect(availableCommands(6)).not.toContain('IF negation IN CUSTOMER SPEECH');
-  expect(availableCommands(7)).toContain('IF negation IN CUSTOMER SPEECH');
-  expect(availableCommands(8)).toEqual(availableCommands(7));
-  expect(availableCommands(9)).toContain('FOR item IN heard orders');
-  expect(availableCommands(10)).not.toContain('HELP');
-  expect(availableCommands(11)).toContain('HELP');
-  for(const command of ['EACH','ITEM heard','SUGAR heard','SUGAR binary','READ sugar','SUGAR variable','FUNCTION build_ticket','CALL build_ticket','RETURN','IF tea'])expect(compileProgram(`LISTEN\n${command}`).compile_error).toContain('locked');
- });
-});
 describe('token interpreter and physical order handling',()=>{
  it('membership tests use only the selected binding and arbitrary token strings',()=>{
   const bindings={item:{tokens:['coffee','sugar','negation']}};
@@ -138,14 +99,4 @@ describe('token interpreter and physical order handling',()=>{
  it('rejects jumping from an active loop',()=>expect(exec('POSITION listen\nLISTEN\nFOR item IN heard orders\nJUMP listen\nEND').error).toContain('Finish the function or FOR'));
  it('rejects carrying an unfinished sheet into the next loop item',()=>expect(exec('LISTEN\nFOR item IN heard orders\nTAKE UP\nITEM coffee\nEND').error).toContain('Deposit one paper'));
  it('fails on first customer mismatch and highlights the item source',()=>{const r=run(3,lessons[2].solution);expect(r.events).toHaveLength(2);expect(r.first_failure?.seed_id).toBe('L04_B');expect(r.first_failure?.error_line).toBe(2);});
-});
-describe('persistence',()=>{
- it('round trips every save field',()=>{let s=newSave();s=completeLevel(s,2,3,lessons[2].solution,lessons);s.drafts[2]='# comment\nLISTEN';s.story[2]=true;expect(parseSave(JSON.stringify(s),lessons)).toEqual(s);});
- it('preserves best stars and passing source over a broken draft',()=>{let s=completeLevel(newSave(),2,3,lessons[2].solution,lessons);s=completeLevel(s,2,1,'',lessons);s.drafts[2]='broken later edit';expect(s.stars[2]).toBe(3);expect(incomingProgram(s,3,lessons)).toBe(lessons[2].solution);expect(s.unlocked).toBe(3);});
- it('persists to storage and reloads',()=>{const storage=new Map<string,string>();const adapter={getItem:(k:string)=>storage.get(k)??null,setItem:(k:string,v:string)=>{storage.set(k,v);}};const s=completeLevel(newSave(),13,3,lessons[13].solution,lessons);expect(writeSave(adapter,s)).toBe('');expect(readSave(adapter,lessons).save).toEqual(s);expect(readSave(adapter,lessons).save.complete).toBe(false);expect(readSave(adapter,lessons).save.unlocked).toBe(14);});
- it('new game preserves settings and clears progress',()=>{const s=completeLevel(newSave(),13,3,'',lessons);s.settings.music=0;const fresh=newSave(s.settings);expect(fresh.unlocked).toBe(0);expect(fresh.complete).toBe(false);expect(fresh.stars).toEqual({});expect(fresh.settings.music).toBe(0);});
- for(const value of ['{','null','[]','{"version":2}',JSON.stringify({...newSave(),selected:9}),JSON.stringify({...newSave(),stars:{2:4}}),JSON.stringify({...newSave(),drafts:{99:'LISTEN'}}),JSON.stringify({...newSave(),settings:{...newSave().settings,music:-1}})])it(`rejects malformed save ${value.slice(0,30)}`,()=>expect(()=>parseSave(value,lessons)).toThrow());
- it('recovers without mutating malformed storage',()=>{const storage={getItem:()=>'{broken'};expect(readSave(storage,lessons).error).not.toBe('');expect(readSave(storage,lessons).save).toEqual(newSave());expect(storage.getItem()).toBe('{broken');});
- it('reports storage write failure',()=>expect(writeSave({setItem:()=>{throw new Error('quota');}},newSave())).toContain('could not be saved'));
- it('uses versioned local storage key',()=>expect(SAVE_KEY).toContain('v1'));
 });

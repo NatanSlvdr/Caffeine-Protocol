@@ -1,9 +1,9 @@
 import {describe,it,expect} from 'vitest';
-import {levels} from '../src/data';
-import {compileProgram,executeCustomerEvent,migrateQuerySource} from '../src/domain/program';
-import {runLevel,validate} from '../src/domain/simulation';
-import {createLiveRun} from '../src/domain/liveSimulation';
-import {sampleReplay} from '../src/domain/replay';
+import {levels} from '../../../src/data';
+import {compileProgram,executeCustomerEvent,migrateQuerySource} from '../../../src/domain/program';
+import {runLevel,validate} from '../../../src/domain/simulation';
+import {createLiveRun} from '../../../src/domain/liveSimulation';
+import {sampleReplay} from '../../../src/domain/replay';
 
 const customer={...levels[8].seeds[0].customers[0],heard_orders:[{tokens:['coffee']},{tokens:['coffee']}],expected:{tickets:[{item:'coffee' as const},{item:'coffee' as const}]}};
 const level={...levels[8],seeds:[{id:'quantity',customers:[customer]}]};

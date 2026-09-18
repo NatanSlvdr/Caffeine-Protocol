@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { levels, lessons } from '../src/data';
-import { DIRECTIONS } from '../src/domain/directions';
-import { migrateQuerySource, compileProgram, executeCustomerEvent } from '../src/domain/program';
-import { compileRobot } from '../src/domain/robotProgram';
-import { referencePrograms } from '../src/data/extension';
-import { runLevel } from '../src/domain/simulation';
-import { newSave, parseSave } from '../src/features/campaign/save/persistence';
+import { levels, lessons } from '../../../src/data';
+import { DIRECTIONS } from '../../../src/domain/directions';
+import { migrateQuerySource, compileProgram, executeCustomerEvent } from '../../../src/domain/program';
+import { compileRobot } from '../../../src/domain/robotProgram';
+import { referencePrograms } from '../../../src/data/extension';
+import { runLevel } from '../../../src/domain/simulation';
+import { newSave, parseSave } from '../../../src/features/campaign/save/persistence';
 
 const customer = levels[2].seeds[0].customers[0];
 

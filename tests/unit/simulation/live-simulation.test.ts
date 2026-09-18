@@ -1,20 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { createLiveRun } from '../src/domain/liveSimulation';
-import { levels, lessons } from '../src/data';
-import { referencePrograms } from '../src/data/extension';
-import { sampleReplay } from '../src/domain/replay';
-import { STATIONS, tableSeat } from '../src/domain/layout';
-import { STREET_APPROACH_SECONDS, customerApproach, DRINK_SECONDS, SIT_SECONDS } from '../src/domain/street';
+import { createLiveRun } from '../../../src/domain/liveSimulation';
+import { levels } from '../../../src/data';
+import { sampleReplay } from '../../../src/domain/replay';
+import { STATIONS, tableSeat } from '../../../src/domain/layout';
+import { finishLiveRun as finish, referenceProgramsFor as programs } from '../../helpers/run';
+import { STREET_APPROACH_SECONDS, customerApproach, DRINK_SECONDS, SIT_SECONDS } from '../../../src/domain/street';
 
-function programs(index: number) {
- return index >= 14 ? referencePrograms(index+1) : {query:lessons[index].solution,prep:'',floor:''};
-}
-function finish(run: ReturnType<typeof createLiveRun>) {
- let frame=run.snapshot();
- for(let i=0;i<10000&&!frame.done;i++)frame=run.advance(.5);
- expect(frame.done).toBe(true);
- return frame;
-}
+
 describe('live service',()=>{
  it('lines up simultaneous arrivals and reveals each order only when intake starts',()=>{
   const level=structuredClone(levels[4]);

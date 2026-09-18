@@ -1,23 +1,12 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
-import { act, cleanup, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { useState } from 'react';
-import { Editor } from '../src/components/Editor';
-import { CodingPaneHeader } from '../src/components/CodingPaneHeader';
-import { compileProgram } from '../src/domain/program';
-import { placeBlock, removeVisualBlock, visualProgram } from '../src/domain/visualProgram';
-import type { RobotRole } from '../src/domain/types';
-afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
-function Harness({ initial = 'LISTEN', locked = false, role = 'query', level = 32 }: { initial?: string; locked?: boolean; role?: RobotRole; level?: number }) {
- const [source, setSource] = useState(initial);
- return <><Editor role={role} source={source} onChange={setSource} level={level} locked={locked} observation={false} textMode={false}/><output aria-label="Current source">{source}</output></>;
-}
-const source = () => screen.getByLabelText('Current source').textContent ?? '';
-async function choose(label: string, option: string) {
- const user = userEvent.setup();
- await user.click(screen.getByRole('combobox', { name: label }));
- await user.click(within(screen.getByRole('listbox', { name: label })).getByRole('option', { name: option === 'coffee' ? 'Coffee' : option === 'tea' ? 'Tea' : option }));
-}
+import { Editor } from '../../../src/components/Editor';
+import { Harness, choose, currentSource as source } from '../../helpers/editorHarness';
+import { CodingPaneHeader } from '../../../src/components/CodingPaneHeader';
+import { compileProgram } from '../../../src/domain/program';
+import { placeBlock, removeVisualBlock, visualProgram } from '../../../src/domain/visualProgram';
+afterEach(() => { vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 describe('compact visual code', () => {
  it('offers the simplified library and matching action icons', async () => {
   render(<Harness/>);

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { compileProgram, executeCustomerEvent, migrateQuerySource, streamCustomerEvent } from '../src/domain/program';
-import type { Customer } from '../src/domain/types';
+import { compileProgram, executeCustomerEvent, migrateQuerySource, streamCustomerEvent } from '../../../src/domain/program';
+import type { Customer } from '../../../src/domain/types';
 
 const customer:Customer={customer_id:'C1',arrival:0,phrase:'coffee with two sugars',intent:{},heard_orders:[{tokens:['coffee','sugar','number'],number:2}],expected:{}};
 const source='LISTEN\nTAKE UP\nITEM 2 coffee\nSTORE var2 FROM number\nWRITE var2 sugar\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';

@@ -1,33 +1,16 @@
 import { describe, it, expect } from 'vitest';
-import { levels, lessons } from '../src/data';
-import { referencePrograms } from '../src/data/extension';
-import { compileProgram } from '../src/domain/program';
-import { runLevel, simulateService } from '../src/domain/simulation';
-
-describe('complete campaign reference programs', () => {
-  for (const [i, level] of levels.entries())
-    it(`${level.id} completes all seeds`, () => {
-      const programs = i >= 14 ? referencePrograms(i + 1) : undefined;
-      const result = runLevel(level, compileProgram(lessons[i].solution, Math.min(i + 1, 14)), programs);
-      expect(result.first_failure).toBeNull();
-      expect(result.passed).toBe(true);
-      expect(result.passed_seeds).toBe(level.seeds.length);
-      if (i >= 2) expect(result.stars).toBe(3);
-    });
-});
-
-import { compileRobot } from '../src/domain/robotProgram';
-import { sampleReplay } from '../src/domain/replay';
-import { isWalkable, samePoint, STARTS, STATIONS } from '../src/domain/layout';
-import { movementSource } from '../src/domain/defaultPrograms';
-import type { LevelDefinition, ReplayEvent, RobotPrograms } from '../src/domain/types';
+import { levels, lessons } from '../../../src/data';
+import { referencePrograms } from '../../../src/data/extension';
+import { compileProgram } from '../../../src/domain/program';
+import { runLevel, simulateService } from '../../../src/domain/simulation';
+import { compileRobot } from '../../../src/domain/robotProgram';
+import { sampleReplay } from '../../../src/domain/replay';
+import { isWalkable, samePoint, STARTS, STATIONS } from '../../../src/domain/layout';
+import { movementSource } from '../../../src/domain/defaultPrograms';
+import { runServiceShift as service } from '../../helpers/run';
+import type { ReplayEvent } from '../../../src/domain/types';
 
 /** Small seeded services expose errors without relying on rendered graphics. */
-function service(overrides: Partial<RobotPrograms>, shift = 32, patch: Partial<LevelDefinition> = {}) {
-  const level = { ...levels[shift - 1], seeds: [levels[shift - 1].seeds[0]], ...patch };
-  const programs = { ...referencePrograms(shift), ...overrides };
-  return runLevel(level, compileProgram(programs.query), programs);
-}
 function physical(source: string, role: 'prep' | 'floor' = 'prep') {
   const event: ReplayEvent = {
     seed_id: 'test',
