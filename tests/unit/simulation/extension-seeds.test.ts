@@ -72,13 +72,15 @@ describe('extension seeds', () => {
     expect(restored.stars).toEqual(l32Complete.stars);
     expect(restored.solutions).toEqual(l32Complete.solutions);
     expect(restored.drafts).toEqual(l32Complete.drafts);
-    expect(restored.complete).toBe(true);
+    expect(restored.complete).toBe(false);
     expect(restored.selected).toBe(l32Complete.selected);
     // L33 becomes the next playable shift while earlier progress is preserved.
     expect(restored.unlocked).toBe(lessons.length);
+    expect(parseSave(JSON.stringify(restored), catalog33)).toEqual(restored);
     const finale = completeLevel(restored, lessons.length, 3, '', catalog33);
     expect(finale.complete).toBe(true);
     expect(finale.unlocked).toBe(lessons.length);
+    expect(parseSave(JSON.stringify(finale), catalog33)).toEqual(finale);
   });
 
   it('measures reference_block_count from the reference programs, not the star target', () => {
