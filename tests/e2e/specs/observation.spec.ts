@@ -10,7 +10,7 @@ test('observation opens the café, watches service, and issues a receipt', async
   await seedSave(page, { ...newSave(), unlocked: 0, selected: 0 });
   await ready(page);
   await expect(page.locator('.shift-card')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Explore the 32 shifts' }).click();
+  await page.getByRole('button', { name: 'Choose a shift' }).click();
   await expect(page.locator('.shift-card')).toHaveCount(32);
   await expect(page.getByRole('button', { name: 'Shift 3: First Order, locked', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Start shift', exact: true }).click();

@@ -17,8 +17,10 @@ test('offline reload retains the complete static game', async ({ page, context }
   });
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Good coffee. Better instructions.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Open the café', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Caffeine Protocol' })).toBeVisible();
+  await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
+  await expect(page.locator('.campaign-page')).toBeVisible();
+  await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Watch service' })).toBeVisible();
   await expect(page.locator('canvas')).toBeVisible();
 });
@@ -117,7 +119,7 @@ test('offline upgrade rotates the precache and removes obsolete caches', async (
     // The upgraded worker still serves the app offline.
     await context.setOffline(true);
     await page.reload();
-    await expect(page.getByRole('heading', { name: 'Good coffee. Better instructions.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Caffeine Protocol' })).toBeVisible();
   } finally {
     await writeFile(swPath, original);
     await context.setOffline(false);

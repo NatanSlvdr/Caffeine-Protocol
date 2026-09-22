@@ -7,7 +7,8 @@ for (const width of [1280, 1100])
     await page.setViewportSize({ width, height: 720 });
     await seedSave(page, { ...newSave(), unlocked: 13, selected: 13, story: { 13: true } });
     await ready(page);
-    await page.getByRole('button', { name: 'Open the café', exact: true }).click();
+    await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
+    await page.getByRole('button', { name: 'Start shift', exact: true }).click();
     await fit(page, '.editor-panel');
     await fit(page, '.scene-space');
     await fit(page, '.run-button');

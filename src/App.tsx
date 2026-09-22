@@ -45,7 +45,7 @@ function Shell() {
   const playRetry = useSound('retry');
   return (
     <div className={`app ${screen}`}>
-      <AppHeader />
+      {screen !== 'home' && <AppHeader />}
       <div className="app-body">
         {screen !== 'home' && screen !== 'workspace' && <Rail screen={screen} onGuide={() => setModal('guide')} />}
         {screen === 'home' && <HomePage />}
@@ -105,9 +105,8 @@ function Shell() {
           </p>
           <p>
             Choose a block from the library and click its action name to append it to your routine, or drag it to a drop
-            position. Set its values in
-            the code pane; library selectors only preview the available options. Drag
-            its grip to move a complete branch, loop or function. Drop a block into the optional else area to add an
+            position. Set its values in the code pane; library selectors only preview the available options. Drag its
+            grip to move a complete branch, loop or function. Drop a block into the optional else area to add an
             alternative. Move the empty destination tile to route a jump. Grip controls also work with Space, arrow keys
             and Space to drop.
           </p>

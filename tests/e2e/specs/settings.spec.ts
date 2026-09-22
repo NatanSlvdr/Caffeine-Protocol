@@ -6,7 +6,8 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   const seed = { ...newSave(), unlocked: 13, selected: 7, story: { 7: true } };
   await seedSave(page, seed);
   await ready(page);
-  await page.getByRole('button', { name: 'Open the café', exact: true }).click();
+  await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
+  await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   // Text mode round-trips comments and whitespace exactly.
   await page.getByRole('button', { name: 'Options', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Text editor' }).check();
@@ -31,10 +32,7 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
     input.dispatchEvent(new Event('input', { bubbles: true }));
   }, '0');
   await page.getByRole('checkbox', { name: 'Reduced motion' }).check();
-  await page.waitForFunction(
-    (key) => JSON.parse(localStorage.getItem(key)!).settings.music === 0,
-    SAVE_KEY,
-  );
+  await page.waitForFunction((key) => JSON.parse(localStorage.getItem(key)!).settings.music === 0, SAVE_KEY);
   await page.reload();
   await ready(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
@@ -46,13 +44,19 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   const file = await exported;
   expect(file.suggestedFilename()).toBe('caffeine-protocol-save.json');
   // Broken imports alert without replacing anything.
-  await page.getByLabel('Import save file').setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{bad') });
+  await page
+    .getByLabel('Import save file')
+    .setInputFiles({ name: 'broken.json', mimeType: 'application/json', buffer: Buffer.from('{bad') });
   await expect(page.getByRole('alert')).toBeVisible();
   // Valid imports ask first, then apply.
-  await page.getByLabel('Import save file').setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
+  await page
+    .getByLabel('Import save file')
+    .setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
   await expect(page.getByRole('dialog')).toContainText('Replace this café?');
   await page.getByRole('button', { name: 'Keep current café' }).click();
-  await page.getByLabel('Import save file').setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
+  await page
+    .getByLabel('Import save file')
+    .setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
   await page.getByRole('button', { name: 'Replace café', exact: true }).click();
   await page.getByRole('button', { name: 'Back to campaign' }).click();
   await expect(page.getByRole('button', { name: 'Shift 14: Query Certification', exact: true })).toBeEnabled();

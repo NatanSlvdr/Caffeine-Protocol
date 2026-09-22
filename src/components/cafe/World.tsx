@@ -50,7 +50,7 @@ export function isGateOpen(state: ReturnType<typeof sampleReplay> | undefined): 
   );
 }
 
-/** Scale bubbles with the café so zooming out also reduces their screen footprint. */
+/** Render replay actors and scenery, with optional status overlays for passive previews. */
 export function World({
   evening,
   result,
@@ -61,6 +61,10 @@ export function World({
   showLabels,
   serviceView,
   focusRole,
+  showStatusBubbles,
+  zoomScale,
+  cameraTarget,
+  cameraAngleDegrees,
 }: {
   evening: boolean;
   result?: RunResult;
@@ -71,6 +75,10 @@ export function World({
   showLabels: boolean;
   serviceView: boolean;
   focusRole?: RobotRole;
+  showStatusBubbles: boolean;
+  zoomScale: number;
+  cameraTarget?: readonly [number, number, number];
+  cameraAngleDegrees: number;
 }) {
   const state = result ? sampleReplay(result, time) : undefined;
   const actors = state?.actors ?? fallbackActors(level);
@@ -78,7 +86,14 @@ export function World({
   return (
     <>
       <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={150} />
-      <CameraFit serviceView={serviceView} reduced={reduced} focusRole={focusRole} />
+      <CameraFit
+        serviceView={serviceView}
+        reduced={reduced}
+        focusRole={focusRole}
+        zoomScale={zoomScale}
+        cameraTarget={cameraTarget}
+        cameraAngleDegrees={cameraAngleDegrees}
+      />
       <SceneLights evening={evening} />
       <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} />
       {Object.entries(actors).map(
@@ -87,7 +102,11 @@ export function World({
             <group key={id}>
               <Character
                 at={actor.position}
-                robot={id === 'query' || (id === 'prep' && robotUnlocked('prep', level)) || (id === 'floor' && robotUnlocked('floor', level))}
+                robot={
+                  id === 'query' ||
+                  (id === 'prep' && robotUnlocked('prep', level)) ||
+                  (id === 'floor' && robotUnlocked('floor', level))
+                }
                 label={
                   id === 'prep' && !robotUnlocked('prep', level)
                     ? 'Moka · Auto'
@@ -104,8 +123,12 @@ export function World({
                 reduced={reduced}
               />
               {serviceView &&
+                showStatusBubbles &&
                 state &&
-                !((id === 'prep' && !robotUnlocked('prep', level)) || (id === 'floor' && !robotUnlocked('floor', level))) &&
+                !(
+                  (id === 'prep' && !robotUnlocked('prep', level)) ||
+                  (id === 'floor' && !robotUnlocked('floor', level))
+                ) &&
                 (actor.heldPaper ||
                   actor.inventory.length > 0 ||
                   actor.action ||
@@ -142,11 +165,8 @@ export function World({
             </group>
           ),
       )}
-      {state && (
-        <SceneHtml
-          position={[STATIONS.orders.cell[0], 2.7, STATIONS.orders.cell[1]]}
-          zIndexRange={[11, 0]}
-        >
+      {state && showStatusBubbles && (
+        <SceneHtml position={[STATIONS.orders.cell[0], 2.7, STATIONS.orders.cell[1]]} zIndexRange={[11, 0]}>
           <OrderQueueBubble tickets={state.waitingTickets} />
         </SceneHtml>
       )}
@@ -198,7 +218,7 @@ export function World({
                 drinking={c.drinking}
                 tea={c.drink === 'tea'}
               />
-              {event && c.showOrder && (
+              {event && c.showOrder && showStatusBubbles && (
                 <SceneHtml
                   position={[c.position[0], 2.2, c.position[1]]}
                   zIndexRange={[12, 0]}
@@ -218,4 +238,3 @@ export function World({
     </>
   );
 }
-

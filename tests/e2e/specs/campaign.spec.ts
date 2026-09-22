@@ -10,7 +10,8 @@ test('Shift 3 interlude, worked example, and a three-star receipt', async ({ pag
   page.on('pageerror', (e) => errors.push(e.message));
   await seedSave(page, { ...newSave(), unlocked: 2, selected: 2 });
   await ready(page);
-  await page.getByRole('button', { name: 'Open the café' }).click();
+  await page.getByRole('button', { name: 'Choose a shift' }).click();
+  await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   await expect(page.getByRole('heading', { name: stories[2].title })).toBeVisible();
   await page.getByRole('button', { name: "Let's open the café" }).click();
   await useWorkedExample(page);
