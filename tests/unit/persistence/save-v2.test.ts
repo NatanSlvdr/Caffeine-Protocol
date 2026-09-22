@@ -48,6 +48,18 @@ describe('version 3 campaign saves',()=>{
   const save=completeLevel(newSave(),21,3,'',lessons);save.robotSolutions[21]={...referencePrograms(22),query:'# custom Query',prep:'# custom Brew'};const next=incomingRobotPrograms(save,22,lessons);expect(next.query).toBe('# custom Query');expect(next.prep).toBe('# custom Brew');expect(next.floor).toContain('TODO');
  });
  it('unlocks the new acts and completes only at shift 32',()=>{expect(completeLevel(newSave(),13,3,'',lessons).complete).toBe(false);const end=completeLevel(newSave(),31,3,'',lessons);expect(end.complete).toBe(true);expect(end.unlocked).toBe(31);expect(parseSave(JSON.stringify(end),lessons)).toEqual(end);});
+ it('keeps an L32-complete save readable after L33 is appended',()=>{
+  const expandedLessons=[...lessons,lessons[31]];
+  const completed=completeLevel(newSave(),31,3,'',lessons);
+  const migrated=parseSave(JSON.stringify(completed),expandedLessons);
+  expect(migrated.unlocked).toBe(32);
+  expect(migrated.complete).toBe(false);
+  expect(migrated.stars[31]).toBe(3);
+  expect(parseSave(JSON.stringify(migrated),expandedLessons)).toEqual(migrated);
+  const completedNewShift=completeLevel(migrated,32,3,'',expandedLessons);
+  expect(completedNewShift.complete).toBe(true);
+  expect(parseSave(JSON.stringify(completedNewShift),expandedLessons)).toEqual(completedNewShift);
+ });
  it('rejects malformed role data and out-of-range shifts without replacing storage',()=>{
   for(const value of [{...newSave(),robotDrafts:{15:{query:'LISTEN',prep:2,floor:''}}},{...newSave(),robotSolutions:{32:referencePrograms(32)}},{...newSave(),complete:true}])expect(()=>parseSave(JSON.stringify(value),lessons)).toThrow();
  });

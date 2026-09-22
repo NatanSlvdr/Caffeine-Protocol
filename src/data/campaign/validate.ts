@@ -11,7 +11,9 @@
 import * as v from 'valibot';
 import { LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
+import { ROBOT_UNLOCK_LEVELS } from '../../domain/robots.ts';
 import type { Customer, LevelDefinition, ServiceConfig, ValidationSeed } from '../../domain/types.ts';
+import { extensionShiftConfig } from './extension-config.ts';
 
 /** Number of playable tables backing `active_tables` bounds. */
 export const MAX_TABLES = TABLE_LAYOUT.length;
@@ -23,31 +25,26 @@ export const CUSTOMER_ID_RE = /^C\d+$/;
 /** Closed concept vocabulary shared with schema.ts for semantic checks. */
 const TOKENS = new Set(['ambiguous', 'coffee', 'negation', 'number', 'sugar', 'tea']);
 
-/** Table count derivation shared with src/data/extension.ts (do not fork). */
+/** Expected table count from the same config used to build extension shifts. */
 export function extensionActiveTables(levelNumber: number): number {
-  if (levelNumber >= 31) return TABLE_LAYOUT.length;
-  if (levelNumber >= 29) return 4;
-  if (levelNumber >= 24) return 2;
-  return 1;
+  return extensionShiftConfig(levelNumber).tables;
 }
 
-/** Worker capacity derivation shared with src/data/extension.ts (do not fork). */
+/** Expected service mechanics from the same config used to build extension shifts. */
 export function extensionServiceForLevel(levelNumber: number): ServiceConfig {
-  const batch = levelNumber >= 21 ? 2 : 1;
+  const config = extensionShiftConfig(levelNumber);
   return {
-    prepCapacity: batch,
-    floorCapacity: levelNumber >= 29 ? 2 : 1,
+    prepCapacity: config.prepBatch,
+    floorCapacity: config.floorBatch,
     clearing: true,
     objective: 'serve',
-    minLoad: levelNumber === 21 || levelNumber === 29 ? 2 : 0,
+    minLoad: config.minLoad,
   };
 }
 
-/** Act derivation shared with src/data/extension.ts (do not fork). */
+/** Expected act from the same config and robot unlock used by the builder. */
 export function extensionAct(levelNumber: number): number {
-  if (levelNumber < 23) return 2;
-  if (levelNumber < 31) return 3;
-  return 4;
+  return levelNumber < ROBOT_UNLOCK_LEVELS.floor ? 2 : extensionShiftConfig(levelNumber).fullHouse ? 4 : 3;
 }
 
 function formatIssues(issues: readonly v.GenericIssue[], context: string): string[] {
