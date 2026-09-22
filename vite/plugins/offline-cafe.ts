@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import type { Plugin } from 'vite';
 import { SOUNDS } from '../../src/shared/audio-manifest';
 
@@ -24,15 +24,6 @@ export function buildPrecacheFiles(bundleFileNames: readonly string[], audio: re
     ...audio.map((f) => `./audio/${f}.wav`),
   ];
   return [...new Set(files)].sort();
-}
-
-/** Extract the servable bytes from a Rollup bundle entry (chunk or asset). */
-export function bundleEntryContent(entry: unknown): string | Uint8Array | undefined {
-  if (typeof entry !== 'object' || entry === null) return undefined;
-  const record = entry as { code?: unknown; source?: unknown };
-  if (typeof record.code === 'string') return record.code;
-  if (typeof record.source === 'string' || record.source instanceof Uint8Array) return record.source;
-  return undefined;
 }
 
 /**
@@ -61,44 +52,37 @@ export function buildServiceWorkerSource(version: string, files: readonly string
   return `const prefix='caffeine-'+encodeURIComponent(self.registration.scope)+'-';const name=prefix+${JSON.stringify(version)};const files=${JSON.stringify(files)};self.addEventListener('install',event=>event.waitUntil(caches.open(name).then(cache=>cache.addAll(files)).then(()=>self.skipWaiting())));self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(prefix)&&k!==name).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));self.addEventListener('fetch',event=>{if(event.request.method!=='GET'||new URL(event.request.url).origin!==self.location.origin)return;event.respondWith(caches.match(event.request,{ignoreVary:true}).then(cached=>cached||fetch(event.request).catch(()=>event.request.mode==='navigate'?caches.match('./index.html'):Response.error())));});`;
 }
 
+/** Hash the bytes Vite actually wrote, including its final index.html. */
+export async function writeOfflineServiceWorker(
+  outputDir: string,
+  bundleFileNames: readonly string[],
+  audio: readonly string[] = SOUNDS,
+): Promise<void> {
+  const files = buildPrecacheFiles(bundleFileNames, audio);
+  const entries = await Promise.all(
+    files.map(async (url): Promise<PrecacheEntry> => {
+      const key = url === './' ? 'index.html' : url.slice(2);
+      return { path: url, content: await readFile(join(outputDir, key)) };
+    }),
+  );
+  const version = hashPrecacheRevision(entries);
+  await writeFile(join(outputDir, 'sw.js'), buildServiceWorkerSource(version, files));
+}
+
 /** Precache the complete static game, including the original soundtrack, for offline reloads. */
 export function createOfflineCafe({ audio = SOUNDS }: { audio?: readonly string[] } = {}): Plugin {
-  let publicDir: string | undefined;
+  let outputDir: string | undefined;
+  let bundleFileNames: string[] | undefined;
   return {
     name: 'offline-cafe',
     configResolved(config) {
-      publicDir = config.publicDir;
+      outputDir = resolve(config.root, config.build.outDir);
     },
-    async generateBundle(_, bundle) {
-      const files = buildPrecacheFiles(Object.keys(bundle), audio);
-      const entries = await Promise.all(
-        files.map(async (url): Promise<PrecacheEntry> => {
-          const key = url.startsWith('./') ? url.slice(2) : url;
-          // `./` is an alias for the built index.html.
-          const bundleKey = key === '' ? 'index.html' : key;
-          const direct = bundle[bundleKey];
-          const directContent = direct ? bundleEntryContent(direct) : undefined;
-          if (directContent !== undefined) return { path: url, content: directContent };
-          // Static public/ assets are not in the Rollup bundle; hash them from disk.
-          if (publicDir && (key === 'icon.png' || key.startsWith('audio/'))) {
-            try {
-              return { path: url, content: await readFile(join(publicDir, key)) };
-            } catch {
-              this.warn(`offline-cafe: public asset missing, hashing URL only: ${key}`);
-              return { path: url, content: '' };
-            }
-          }
-          // URL has no known bytes (e.g. `./` when index.html is missing):
-          // still hash the URL so the manifest itself is covered.
-          return { path: url, content: '' };
-        }),
-      );
-      const version = hashPrecacheRevision(entries);
-      this.emitFile({
-        type: 'asset',
-        fileName: 'sw.js',
-        source: buildServiceWorkerSource(version, files),
-      });
+    generateBundle(_, bundle) {
+      bundleFileNames = Object.keys(bundle);
+    },
+    async closeBundle() {
+      if (outputDir && bundleFileNames) await writeOfflineServiceWorker(outputDir, bundleFileNames, audio);
     },
   };
 }

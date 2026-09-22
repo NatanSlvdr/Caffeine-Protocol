@@ -1,9 +1,12 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   buildPrecacheFiles,
   buildServiceWorkerSource,
-  bundleEntryContent,
   hashPrecacheRevision,
+  writeOfflineServiceWorker,
 } from '../../vite/plugins/offline-cafe';
 
 /** Legacy fragile revision from before the fix (bundle keys joined + sliced). */
@@ -110,12 +113,24 @@ describe('offline precache revision', () => {
     expect(new Set(files).size).toBe(files.length);
   });
 
-  it('reads both chunk code and asset source from bundle entries', () => {
-    expect(bundleEntryContent({ code: 'js' })).toBe('js');
-    const bytes = new Uint8Array([7]);
-    expect(bundleEntryContent({ source: bytes })).toBe(bytes);
-    expect(bundleEntryContent({ source: 'css' })).toBe('css');
-    expect(bundleEntryContent({})).toBeUndefined();
+  it('rotates the built worker when only the final HTML changes', async () => {
+    const outputDir = await mkdtemp(join(tmpdir(), 'caffeine-offline-'));
+    try {
+      await mkdir(join(outputDir, 'assets'));
+      await mkdir(join(outputDir, 'audio'));
+      await writeFile(join(outputDir, 'assets/app.js'), 'console.log(1)');
+      await writeFile(join(outputDir, 'icon.png'), 'png');
+      await writeFile(join(outputDir, 'audio/click.wav'), new Uint8Array([1]));
+      await writeFile(join(outputDir, 'index.html'), '<html>first</html>');
+      await writeOfflineServiceWorker(outputDir, ['assets/app.js'], ['click']);
+      const first = await readFile(join(outputDir, 'sw.js'), 'utf8');
+      await writeFile(join(outputDir, 'index.html'), '<html>second</html>');
+      await writeOfflineServiceWorker(outputDir, ['assets/app.js'], ['click']);
+      const second = await readFile(join(outputDir, 'sw.js'), 'utf8');
+      expect(first).not.toBe(second);
+    } finally {
+      await rm(outputDir, { recursive: true, force: true });
+    }
   });
 
   it('emits an upgrade-safe worker: skipWaiting, claim, and obsolete-cache cleanup', () => {
