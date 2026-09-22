@@ -14,6 +14,10 @@ export function Cafe({
   showLabels = false,
   serviceView = false,
   focusRole,
+  showStatusBubbles = true,
+  zoomScale = 1,
+  cameraTarget,
+  cameraAngleDegrees = 0,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -25,6 +29,10 @@ export function Cafe({
   showLabels?: boolean;
   serviceView?: boolean;
   focusRole?: RobotRole;
+  showStatusBubbles?: boolean;
+  zoomScale?: number;
+  cameraTarget?: readonly [number, number, number];
+  cameraAngleDegrees?: number;
 }) {
   return (
     <div className="cafe-canvas" aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room">
@@ -39,10 +47,13 @@ export function Cafe({
           showLabels={showLabels}
           serviceView={serviceView}
           focusRole={focusRole}
+          showStatusBubbles={showStatusBubbles}
+          zoomScale={zoomScale}
+          cameraTarget={cameraTarget}
+          cameraAngleDegrees={cameraAngleDegrees}
         />
         {pixelArt && <PixelArtEffect />}
       </SceneCanvas>
     </div>
   );
 }
-

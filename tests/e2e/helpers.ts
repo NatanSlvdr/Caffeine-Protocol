@@ -6,7 +6,7 @@ import type { ProgressSave } from '../../src/domain/types';
 /** Land on the home page with the app booted. */
 export async function ready(page: Page) {
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: 'Good coffee. Better instructions.' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Caffeine Protocol' })).toBeVisible();
 }
 
 /** Seed browser storage before first load; reloads keep the live save, not the seed. */

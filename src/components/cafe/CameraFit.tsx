@@ -9,15 +9,21 @@ const robotViews = {
   floor: { target: [0, 0.7, -1], width: 17, depth: 11.5 },
 } satisfies Record<RobotRole, { target: number[]; width: number; depth: number }>;
 
-/** Pan and zoom together when the code editor switches robots. */
+/** Pan and zoom for editor focus or a scene-specific view. */
 export function CameraFit({
   serviceView,
   reduced,
   focusRole,
+  zoomScale = 1,
+  cameraTarget,
+  cameraAngleDegrees = 0,
 }: {
   serviceView: boolean;
   reduced: boolean;
   focusRole?: RobotRole;
+  zoomScale?: number;
+  cameraTarget?: readonly [number, number, number];
+  cameraAngleDegrees?: number;
 }) {
   const { size, camera } = useThree();
   const angle = useRef(0),
@@ -26,8 +32,8 @@ export function CameraFit({
   useFrame((_, delta) => {
     const blend = reduced ? 1 : 1 - Math.exp(-delta * 5);
     const view = focusRole ? robotViews[focusRole] : undefined;
-    const target = view?.target ?? CAMERA_TARGET;
-    angle.current += ((serviceView ? (10 * Math.PI) / 180 : 0) - angle.current) * blend;
+    const target = view?.target ?? cameraTarget ?? CAMERA_TARGET;
+    angle.current += (((serviceView ? 10 : cameraAngleDegrees) * Math.PI) / 180 - angle.current) * blend;
     center.current = center.current.map((value, index) => value + (target[index] - value) * blend);
     const cos = Math.cos(angle.current),
       sin = Math.abs(Math.sin(angle.current));
@@ -43,7 +49,7 @@ export function CameraFit({
           ),
         )
       : cameraZoom(size.width, size.height) * (serviceView ? 0.8 : 1);
-    zoom.current += (targetZoom - zoom.current) * blend;
+    zoom.current += (targetZoom * zoomScale - zoom.current) * blend;
     const radius = CAMERA_POSITION[2] - CAMERA_TARGET[2];
     camera.position.set(
       center.current[0] + Math.sin(angle.current) * radius,
@@ -56,4 +62,3 @@ export function CameraFit({
   });
   return null;
 }
-

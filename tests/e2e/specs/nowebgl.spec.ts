@@ -22,7 +22,8 @@ test('without WebGL the editor and validation remain readable and usable', async
     });
   });
   await ready(page);
-  await page.getByRole('button', { name: 'Open the café', exact: true }).click();
+  await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
+  await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   await expect(page.locator('.webgl-fallback')).toBeVisible();
   await page.getByLabel('Playback speed').evaluate((el, value) => {
     const input = el as HTMLInputElement;

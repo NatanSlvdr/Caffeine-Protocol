@@ -1,68 +1,39 @@
-import { ArrowRight, Coffee, Leaf, Play, Terminal } from 'lucide-react';
-import { CAMPAIGN_LENGTH } from '@/data';
-import { Cafe } from '@/components';
+import { ArrowRight, BookOpen, Settings2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
 import { go } from '@/shared/lib/navigation';
-import { useGame, useProgress } from '@/state/GameStore';
+import { useGame } from '@/state/GameStore';
+import { HomeCafePreview } from './HomeCafePreview';
 
-/** Landing page: pitch, café preview, and continue/explore entries. */
+/** A quiet entry into the café and the shift board. */
 export function HomePage() {
-  const { save, launch } = useGame();
-  const progress = useProgress();
+  const { save } = useGame();
+
   return (
     <main className="home-page">
       <section className="home-copy">
-        <div className="eyebrow">
-          <span /> A COZY PROGRAMMING ADVENTURE
-        </div>
-        <h1>
-          Good coffee.
+        <span className="home-kicker">A COZY CODING ADVENTURE</span>
+        <h1 aria-label="Caffeine Protocol">
+          Caffeine
           <br />
-          Better <em>instructions.</em>
+          <em>Protocol</em>
         </h1>
-        <p>
-          A little café. A secondhand robot. A fresh start.
-          <br />
-          Teach Query to listen, one cup at a time.
-        </p>
-        <Button variant="primary" className="large" onClick={() => launch(save.selected)}>
-          <Play size={17} fill="currentColor" />
-          {progress.done ? 'Continue your café' : 'Open the café'}
-          <ArrowRight size={18} />
-        </Button>
-        <Button variant="text-link" onClick={() => go('/campaign')}>
-          Explore the {CAMPAIGN_LENGTH} shifts <ArrowRight size={15} />
-        </Button>
-        <div className="home-footer">
-          <span>
-            <Coffee size={16} /> Slow mornings
-          </span>
-          <span>
-            <Terminal size={16} /> Small puzzles
-          </span>
-          <span>
-            <Leaf size={16} /> No rush
-          </span>
+        <p>A little café, a secondhand robot, and a fresh start. Teach Query one thoughtful routine at a time.</p>
+        <div className="home-actions">
+          <Button variant="primary" className="large" onClick={() => go('/campaign')}>
+            <BookOpen size={16} />
+            Choose a shift
+            <ArrowRight size={18} />
+          </Button>
+          <Button variant="text-link" onClick={() => go('/settings')}>
+            <Settings2 size={16} /> Settings
+          </Button>
         </div>
       </section>
-      <section className="home-world">
-        <div className="world-caption">
-          <span className="status-dot" /> OPEN FOR A FRESH START
-        </div>
-        <Cafe reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
-        <div className="home-note">
-          <span className="note-icon">
-            Q<span>••</span>
-          </span>
-          <div>
-            <strong>“What is a coffee?”</strong>
-            <small>QUERY · YOUR NEW COUNTER COMPANION</small>
-          </div>
+      <section className="home-world" aria-label="Preview of the café">
+        <div className="home-scene">
+          <HomeCafePreview reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
         </div>
       </section>
-      <span className="home-bottom">
-        HANDCRAFTED ROUTINES, HAPPILY SERVED. <span>ACT I — QUERY</span>
-      </span>
     </main>
   );
 }
