@@ -19,7 +19,7 @@ export function buildPrecacheFiles(bundleFileNames: readonly string[], audio: re
   const files = [
     './',
     './index.html',
-    './icon.svg',
+    './icon.png',
     ...bundleFileNames.filter((f) => f !== 'sw.js').map((f) => './' + f),
     ...audio.map((f) => `./audio/${f}.wav`),
   ];
@@ -80,7 +80,7 @@ export function createOfflineCafe({ audio = SOUNDS }: { audio?: readonly string[
           const directContent = direct ? bundleEntryContent(direct) : undefined;
           if (directContent !== undefined) return { path: url, content: directContent };
           // Static public/ assets are not in the Rollup bundle; hash them from disk.
-          if (publicDir && (key === 'icon.svg' || key.startsWith('audio/'))) {
+          if (publicDir && (key === 'icon.png' || key.startsWith('audio/'))) {
             try {
               return { path: url, content: await readFile(join(publicDir, key)) };
             } catch {

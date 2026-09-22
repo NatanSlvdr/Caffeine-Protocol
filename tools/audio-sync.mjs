@@ -3,8 +3,8 @@
  *
  * Source of truth (ADR 003):
  * - `assets/audio/<id>.wav` for every id in `src/shared/audio-manifest.ts` (SOUNDS)
- * - `assets/icon.svg`
- * Served copies: `public/audio/<id>.wav` and `public/icon.svg`.
+ * - `assets/icon.png`
+ * Served copies: `public/audio/<id>.wav` and `public/icon.png`.
  *
  * Usage:
  * - `npm run audio:sync` (default) copies every manifest sound + the icon into public/.
@@ -34,7 +34,7 @@ const sha256 = (path) => createHash('sha256').update(readFileSync(path)).digest(
 /** [source, served] pairs: every manifest sound plus the icon. */
 function assetPairs() {
   const pairs = readSoundIds().map((id) => [`assets/audio/${id}.wav`, `public/audio/${id}.wav`]);
-  pairs.push(['assets/icon.svg', 'public/icon.svg']);
+  pairs.push(['assets/icon.png', 'public/icon.png']);
   return pairs;
 }
 

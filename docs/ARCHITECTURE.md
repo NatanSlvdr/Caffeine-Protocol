@@ -113,7 +113,7 @@ so validation stays testable without the campaign bundle.
 ## Offline build
 
 `vite/plugins/offline-cafe.ts` emits `sw.js` precaching `./`, `index.html`,
-`icon.svg`, bundles, and every `SOUNDS` wav. `Vary: Origin` on static responses
+`icon.png`, bundles, and every `SOUNDS` wav. `Vary: Origin` on static responses
 means the worker matches with `ignoreVary: true`. No PWA manifest or
 OpenGraph tags by design: the game is a self-contained static page, not an
 installed app.

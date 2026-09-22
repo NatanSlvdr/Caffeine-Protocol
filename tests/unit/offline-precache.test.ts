@@ -18,12 +18,12 @@ describe('offline precache revision', () => {
   it('is deterministic regardless of entry order', () => {
     const a = hashPrecacheRevision([
       { path: './index.html', content: '<html/>' },
-      { path: './icon.svg', content: '<svg/>' },
+      { path: './icon.png', content: 'png' },
       { path: './audio/click.wav', content: new Uint8Array([1, 2, 3]) },
     ]);
     const b = hashPrecacheRevision([
       { path: './audio/click.wav', content: new Uint8Array([1, 2, 3]) },
-      { path: './icon.svg', content: '<svg/>' },
+      { path: './icon.png', content: 'png' },
       { path: './index.html', content: '<html/>' },
     ]);
     expect(a).toBe(b);
@@ -50,17 +50,17 @@ describe('offline precache revision', () => {
   it('covers static public assets (icon + audio) that never appear in the bundle', () => {
     const base = [
       { path: './index.html', content: '<html/>' },
-      { path: './icon.svg', content: '<svg>one</svg>' },
+      { path: './icon.png', content: 'png-one' },
       { path: './audio/click.wav', content: new Uint8Array([1, 2, 3]) },
     ] as const;
     const iconChanged = hashPrecacheRevision([
       { path: './index.html', content: '<html/>' },
-      { path: './icon.svg', content: '<svg>two</svg>' },
+      { path: './icon.png', content: 'png-two' },
       { path: './audio/click.wav', content: new Uint8Array([1, 2, 3]) },
     ]);
     const audioChanged = hashPrecacheRevision([
       { path: './index.html', content: '<html/>' },
-      { path: './icon.svg', content: '<svg>one</svg>' },
+      { path: './icon.png', content: 'png-one' },
       { path: './audio/click.wav', content: new Uint8Array([9, 9, 9]) },
     ]);
     expect(hashPrecacheRevision([...base])).not.toBe(iconChanged);
@@ -83,7 +83,7 @@ describe('offline precache revision', () => {
     const buildA = [
       { path: './', content: '<html>a</html>' },
       { path: './index.html', content: '<html>a</html>' },
-      { path: './icon.svg', content: '<svg>a</svg>' },
+      { path: './icon.png', content: 'png-a' },
       { path: './assets/app.js', content: 'v1' },
       { path: './audio/morning_loop.wav', content: new Uint8Array([1]) },
     ];
@@ -101,7 +101,7 @@ describe('offline precache revision', () => {
     const files = buildPrecacheFiles(['assets/app.js', 'index.html', 'sw.js'], ['click', 'serve']);
     expect(files).toContain('./');
     expect(files).toContain('./index.html');
-    expect(files).toContain('./icon.svg');
+    expect(files).toContain('./icon.png');
     expect(files).toContain('./assets/app.js');
     expect(files).toContain('./audio/click.wav');
     expect(files).toContain('./audio/serve.wav');
