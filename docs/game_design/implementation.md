@@ -6,11 +6,11 @@ The sections below describe an earlier prototype. The current TypeScript Query i
 
 The design specification was recovered from commit `5a31554` after its deletion in `770783a`. The 14 documented Act I levels remain the campaign. The older 10-level draft in Downloads is superseded by these documents. No undocumented future acts have been invented.
 
-## Supplied artwork overrides the earlier production pipeline
+## Historical supplied artwork
 
-The user's current instruction is to use the supplied assets without inventing additional world art; interface drawing is allowed. This supersedes the older custom-art generation and tile-reset directions in `art_direction.md` and `asset_pipeline.md`.
+The Godot prototype used supplied assets without generating additional world art. At the time, this superseded the custom-art generation and tile-reset directions in `art_direction.md` and `asset_pipeline.md`.
 
-The room uses the seven existing `assets/tiles/tile-B-*.png` sheets through `cafe_tiles.tres` and real TileMapLayer nodes. Existing `assets/art/characters.png` supplies actors. No new raster world art was made. `assets/art/cafe_day.png` is retained as an unused existing file. The atlas is rendered in a portrait 14×19 room with 2–10 active tables. Niko works in the top kitchen, Query takes orders at a separate bottom till, and a scripted floor helper collects drinks from the pickup counter from shift 3. The helper reuses the existing robot sprite; its programming remains a future-act mechanic.
+The retired Godot prototype used seven `assets/tiles/tile-B-*.png` sheets and `assets/art/characters.png`; those prototype assets and Godot scene files have since been removed. The web implementation and current campaign data live in `src/`. The prototype used a portrait 14×19 room with 2–10 active tables, a top kitchen, a separate bottom till, and a scripted floor helper.
 
 ## Visual programming implementation
 

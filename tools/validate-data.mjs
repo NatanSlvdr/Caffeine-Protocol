@@ -117,12 +117,12 @@ for (const sound of sounds) {
   else if (sha256(src) !== sha256(dst))
     failures.push(`stale public/audio/${sound}.wav (diverges from assets/audio/${sound}.wav; run npm run audio:sync)`);
 }
-const iconSrc = new URL('../assets/icon.svg', import.meta.url);
-const iconDst = new URL('../public/icon.svg', import.meta.url);
-if (!existsSync(iconSrc)) failures.push('missing source assets/icon.svg');
-else if (!existsSync(iconDst)) failures.push('missing public/icon.svg');
+const iconSrc = new URL('../assets/icon.png', import.meta.url);
+const iconDst = new URL('../public/icon.png', import.meta.url);
+if (!existsSync(iconSrc)) failures.push('missing source assets/icon.png');
+else if (!existsSync(iconDst)) failures.push('missing public/icon.png');
 else if (sha256(iconSrc) !== sha256(iconDst))
-  failures.push('stale public/icon.svg (diverges from assets/icon.svg; run npm run audio:sync)');
+  failures.push('stale public/icon.png (diverges from assets/icon.png; run npm run audio:sync)');
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);

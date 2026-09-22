@@ -29,7 +29,7 @@ test('precache manifest covers every offline asset with a full content hash', as
   const versionMatch = swText.match(/prefix\+"([0-9a-f]{64})"/);
   expect(versionMatch, 'sw.js embeds a full 64-char sha256 revision (no truncation)').not.toBeNull();
   for (const sound of SOUNDS) expect(swText, `sw.js precaches audio ${sound}`).toContain(`./audio/${sound}.wav`);
-  expect(swText).toContain('./icon.svg');
+  expect(swText).toContain('./icon.png');
   expect(swText).toContain('./index.html');
 
   await page.evaluate(async () => {
@@ -48,7 +48,7 @@ test('precache manifest covers every offline asset with a full content hash', as
   });
   const has = (suffix: string) => cachedUrls.some((u) => u.endsWith(suffix));
   expect(has('/index.html') || cachedUrls.some((u) => u.endsWith('/'))).toBe(true);
-  expect(has('/icon.svg')).toBe(true);
+  expect(has('/icon.png')).toBe(true);
   for (const sound of SOUNDS) expect(has(`/audio/${sound}.wav`)).toBe(true);
 });
 
@@ -111,7 +111,7 @@ test('offline upgrade rotates the precache and removes obsolete caches', async (
       };
     }, nextName);
     expect(served.urls.some((u) => u.endsWith('/index.html') || u.endsWith('/'))).toBe(true);
-    expect(served.urls.some((u) => u.endsWith('/icon.svg'))).toBe(true);
+    expect(served.urls.some((u) => u.endsWith('/icon.png'))).toBe(true);
     expect(served.hasIndex).toBeGreaterThan(0);
 
     // The upgraded worker still serves the app offline.

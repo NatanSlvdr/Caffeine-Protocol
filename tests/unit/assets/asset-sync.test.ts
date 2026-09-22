@@ -62,7 +62,7 @@ describe('asset source-of-truth sync (ADR 003)', () => {
     for (const sound of SOUNDS) {
       expect(sha256(join(root, `public/audio/${sound}.wav`))).toBe(sha256(join(root, `assets/audio/${sound}.wav`)));
     }
-    expect(sha256(join(root, 'public/icon.svg'))).toBe(sha256(join(root, 'assets/icon.svg')));
+    expect(sha256(join(root, 'public/icon.png'))).toBe(sha256(join(root, 'assets/icon.png')));
   });
 
   it('audio:sync --check passes on a clean tree', () => {
@@ -81,10 +81,10 @@ describe('asset source-of-truth sync (ADR 003)', () => {
   });
 
   it('validate:data detects a divergent served icon', () => {
-    withDivergedServedCopy('public/icon.svg', () => {
+    withDivergedServedCopy('public/icon.png', () => {
       const result = runTool('tools/validate-data.mjs');
       expect(result.ok).toBe(false);
-      expect(result.output).toContain('icon.svg');
+      expect(result.output).toContain('icon.png');
       expect(result.output).toContain('audio:sync');
     });
   });

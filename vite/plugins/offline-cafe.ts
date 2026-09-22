@@ -19,7 +19,7 @@ export function buildPrecacheFiles(bundleFileNames: readonly string[], audio: re
   const files = [
     './',
     './index.html',
-    './icon.svg',
+    './icon.png',
     ...bundleFileNames.filter((f) => f !== 'sw.js').map((f) => './' + f),
     ...audio.map((f) => `./audio/${f}.wav`),
   ];

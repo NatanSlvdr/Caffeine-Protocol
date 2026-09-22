@@ -1,9 +1,8 @@
 # Art Direction
 
-> September 2026: the user explicitly requested the supplied assets only.
-> The shipped implementation uses the existing seven tile sheets and character
-> sprites; no new world art was generated. This overrides the older custom-art
-> production and reset instructions below. See [implementation.md](implementation.md).
+> This is a frozen Godot-era art specification. Its prototype tile sheets and
+> character sprites were retired during the move to the web implementation. The
+> visual direction below is historical; current implementation lives in `src/`.
 
 ## Style Goal
 
