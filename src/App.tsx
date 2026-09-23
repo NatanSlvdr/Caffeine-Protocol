@@ -45,9 +45,11 @@ function Shell() {
   const playRetry = useSound('retry');
   return (
     <div className={`app ${screen}`}>
-      {screen !== 'home' && <AppHeader />}
+      {screen !== 'home' && screen !== 'campaign' && <AppHeader />}
       <div className="app-body">
-        {screen !== 'home' && screen !== 'workspace' && <Rail screen={screen} onGuide={() => setModal('guide')} />}
+        {screen !== 'home' && screen !== 'campaign' && screen !== 'workspace' && (
+          <Rail screen={screen} onGuide={() => setModal('guide')} />
+        )}
         {screen === 'home' && <HomePage />}
         {screen === 'campaign' && <CampaignPage />}
         {screen === 'workspace' && (
