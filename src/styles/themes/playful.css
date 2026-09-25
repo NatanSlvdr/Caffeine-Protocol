@@ -181,7 +181,6 @@ p {
 .world-caption {
   color: var(--coffee);
 }
-.campaign-page,
 .settings-page {
   padding-top: 36px;
 }
@@ -190,59 +189,6 @@ p {
 }
 .page-heading p {
   font-size: 14px;
-}
-.progress-pill {
-  color: #245745;
-  background: var(--mint);
-  font-weight: 750;
-}
-.shift-card {
-  border: 1px solid #dedfdc;
-  border-radius: 16px;
-  background: var(--card);
-  box-shadow: 0 3px 0 #e4dfd3;
-  min-height: 116px;
-}
-.shift-card strong {
-  font-size: 15px;
-  font-weight: 750;
-}
-.card-number {
-  color: var(--coffee);
-  font-weight: 800;
-}
-.card-bottom {
-  font-size: 8px;
-  color: var(--muted);
-}
-.card-bottom > span {
-  color: #b67818;
-}
-.shift-card.selected {
-  background: #f0e1c7;
-  border-color: var(--coffee);
-  box-shadow: 0 3px 0 var(--coffee);
-}
-.shift-card.complete:not(.selected) {
-  background: #eef8f2;
-}
-.shift-card:disabled {
-  background: #f0eee7;
-  opacity: 0.65;
-}
-.campaign-preview {
-  background: var(--card);
-  border-radius: 20px;
-  border-color: var(--line);
-  box-shadow: 0 4px 0 #e4dfd3;
-}
-.preview-world {
-  background: #ede1cf;
-}
-.preview-copy h2 {
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 26px;
 }
 .settings-card {
   border-color: var(--line);
@@ -1431,9 +1377,6 @@ input[type='checkbox']:checked {
   .story-page section {
     max-width: none;
   }
-  .campaign-page {
-    padding: 25px 18px;
-  }
 }
 @media (max-width: 560px) {
   .app-header {
@@ -1475,12 +1418,6 @@ input[type='checkbox']:checked {
   }
   .workspace-tools button svg {
     width: 13px;
-  }
-  .shift-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-  .shift-card strong {
-    font-size: 13px;
   }
   .page-heading h1 {
     font-size: 30px;

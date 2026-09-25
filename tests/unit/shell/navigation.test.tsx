@@ -19,7 +19,7 @@ describe('shift entry navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Choose a shift' }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
-    expect(screen.getByRole('heading', { name: 'Every shift tells a story.' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Choose a shift' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Selected shift' })).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));

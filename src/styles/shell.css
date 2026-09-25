@@ -172,291 +172,758 @@
   }
 }
 
-/* The level selector uses the full canvas without the app navigation chrome. */
+/* Shift roster: the level selector runs full-bleed without the app navigation chrome. */
 .app.campaign .app-body {
   min-width: 0;
   min-height: 100dvh;
 }
-.app.campaign .campaign-page {
+.campaign-page {
+  --roster-card: #fffdf8;
+  --roster-ink: #2f2520;
+  --roster-gold: #c48a1c;
+  --light-idle: #bdb2a3;
+  --light-live: #e9b949;
+  --light-done: #5fae7f;
   width: 100%;
-  max-width: 1380px;
+  max-width: 1440px;
   flex: 1 1 auto;
   margin: 0 auto;
-  padding: clamp(38px, 5vw, 72px) clamp(20px, 6vw, 92px) 72px;
+  padding: 22px clamp(20px, 4.5vw, 64px) 72px;
 }
-.app.campaign .campaign-heading {
+
+/* Status lights are the robots' only cyan/yellow automation accent. */
+.campaign-page .status-light {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--light-idle);
+}
+.campaign-page .crew-badge.active .status-light,
+.campaign-page .shift-card.next .status-light,
+.campaign-page .ticket-state.open .status-light {
+  background: var(--light-live);
+  box-shadow: 0 0 0 0 #e9b94999;
+  animation: roster-pulse 1.8s ease-out infinite;
+}
+.campaign-page .crew-badge.done .status-light,
+.campaign-page .ticket-state.done .status-light {
+  background: var(--light-done);
+}
+@keyframes roster-pulse {
+  70% {
+    box-shadow: 0 0 0 6px #e9b94900;
+  }
+  100% {
+    box-shadow: 0 0 0 0 #e9b94900;
+  }
+}
+
+/* Top bar */
+.roster-bar {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 32px;
-  margin-bottom: 48px;
-}
-.app.campaign .campaign-heading h1 {
-  margin: 10px 0 8px;
-  font-family: inherit;
-  font-size: clamp(42px, 4.8vw, 62px);
-  font-weight: 750;
-  letter-spacing: -2.8px;
-}
-.app.campaign .campaign-heading p {
-  color: var(--shell-muted);
-  font-size: 14px;
-}
-.campaign-heading-actions {
-  display: grid;
-  grid-template-columns: minmax(150px, 210px) auto;
   align-items: center;
-  gap: 14px 25px;
-}
-.app.campaign .campaign-progress {
-  width: auto;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-}
-.campaign-progress-summary {
-  display: flex;
-  align-items: baseline;
   justify-content: space-between;
+  gap: 16px;
+}
+.roster-bar-actions {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  color: var(--shell-muted);
-  font-size: 9px;
-  font-weight: 750;
-  letter-spacing: 1px;
 }
-.campaign-progress-summary strong {
-  color: var(--shell-ink);
-  font-family: inherit;
-  font-size: 15px;
-  font-weight: 700;
-}
-.campaign-progress-summary small {
-  color: var(--shell-muted);
-  font-size: 12px;
-  font-weight: 500;
-}
-.app.campaign .campaign-progress-track {
-  height: 3px;
-  margin: 8px 0 0;
-  background: #e7ddce;
-}
-.app.campaign .campaign-progress-track span {
-  background: var(--shell-accent);
-}
-.campaign-selected {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-}
-.campaign-selected > div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-}
-.campaign-selected > div > span {
-  color: var(--shell-muted);
-  font-size: 8px;
+.campaign-page .roster-home {
+  min-height: 40px;
+  padding: 8px 12px 8px 8px;
+  border-color: transparent;
+  background: transparent;
+  color: var(--roster-ink);
   font-weight: 800;
-  letter-spacing: 1px;
-  white-space: nowrap;
+  letter-spacing: -0.2px;
 }
-.campaign-selected strong {
-  max-width: 160px;
-  overflow: hidden;
-  color: var(--shell-ink);
+.campaign-page .roster-home:hover:not(:disabled) {
+  border-color: var(--line);
+  background: var(--roster-card);
+}
+.campaign-page .roster-ending {
+  gap: 6px;
+  margin-right: 6px;
   font-size: 13px;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
-.campaign-selected .primary {
-  min-height: 42px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  box-shadow: none;
-  white-space: nowrap;
+.roster-stars {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  padding: 9px 14px;
+  border: 1px solid #ead9ad;
+  border-radius: 999px;
+  background: #fbf1d6;
+  color: #8a5f10;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
 }
-.campaign-selected .primary svg:last-child {
-  margin-left: 3px;
-}
-.campaign-ending-link {
-  grid-column: 2;
-  justify-self: start;
-  padding: 0;
+.roster-stars small {
+  color: #a8854a;
   font-size: 11px;
+  font-weight: 700;
 }
-.app.campaign .chapter-list {
-  display: flex;
-  min-width: 0;
-  flex-direction: column;
-  gap: 38px;
+.campaign-page .roster-icon {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  background: var(--roster-card);
+  color: var(--roster-ink);
 }
-.app.campaign .chapter-heading {
-  display: flex;
+
+/* Hero */
+.roster-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 28px 40px;
+  margin: 34px 0 34px;
+}
+.roster-kicker {
+  display: inline-flex;
   align-items: center;
   gap: 9px;
-  margin-bottom: 13px;
-  padding-bottom: 11px;
-  border-bottom: 1px solid var(--shell-rule);
-}
-.app.campaign .chapter-index {
-  display: inline;
-  width: auto;
-  height: auto;
-  flex: 0 0 auto;
-  border-radius: 0;
-  color: var(--shell-muted);
-  background: transparent;
-  font-family: inherit;
+  color: var(--coffee);
   font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.8px;
+  text-transform: uppercase;
+}
+.roster-kicker::before {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  content: '';
+}
+.campaign-page .roster-title h1 {
+  margin: 12px 0 10px;
+  color: var(--roster-ink);
+  font-size: clamp(40px, 4.4vw, 66px);
+  letter-spacing: -2.6px;
+  line-height: 1;
+}
+.roster-title p {
+  max-width: 520px;
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.55;
+}
+.roster-progress {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 20px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.roster-progress strong {
+  color: var(--roster-ink);
+  font-size: 14px;
+}
+.roster-progress-track {
+  width: min(240px, 40vw);
+  height: 8px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #ece3d3;
+}
+.roster-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--coffee);
+  transition: width 400ms ease;
+}
+
+/* Crew strip */
+.crew-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.crew-badge {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  min-width: 176px;
+  padding: 9px 16px 9px 9px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--roster-card);
+}
+.crew-avatar,
+.act-avatar {
+  display: grid;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1.5px solid #392b241f;
+  background: var(--act);
+  color: var(--roster-ink);
+  box-shadow: inset 0 -3px 0 #392b2417;
+}
+.crew-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.crew-copy {
+  display: grid;
+  gap: 3px;
+}
+.crew-copy strong {
+  color: var(--roster-ink);
+  font-size: 14px;
+  font-weight: 800;
+}
+.crew-copy > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.crew-badge.locked {
+  border-style: dashed;
+  background: transparent;
+}
+.crew-badge.locked .crew-avatar,
+.roster-act.locked .act-avatar {
+  border-style: dashed;
+  background: #efe8dc;
+  color: #a4968a;
+  box-shadow: none;
+}
+
+/* Roster */
+.roster-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 380px;
+  align-items: start;
+  gap: 28px;
+}
+.roster-acts {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.roster-act {
+  padding: 18px 20px 20px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--roster-card);
+  box-shadow: 0 1px 0 #392b240d;
+}
+.roster-act.locked {
+  border-style: dashed;
+  background: #fbf7ef;
+}
+.act-head {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+}
+.act-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 15px;
+}
+.act-kicker {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.campaign-page .act-copy h2 {
+  margin: 3px 0 2px;
+  color: var(--roster-ink);
+  font-size: 20px;
+  letter-spacing: -0.5px;
+}
+.act-copy p {
+  margin: 0;
+  font-size: 13px;
+}
+.act-meter {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: center;
+  justify-items: end;
+  gap: 8px 10px;
+}
+.act-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border-radius: 999px;
+  background: #f0eadf;
+  color: #86786b;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+}
+.act-chip.active {
+  background: #fbefc9;
+  color: #7f5b11;
+}
+.act-chip.done {
+  background: #dfeee3;
+  color: #2f6b4a;
+}
+.act-count {
+  color: var(--roster-ink);
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.act-bar {
+  grid-column: 1 / -1;
+  width: 132px;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eee6d8;
+}
+.act-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: color-mix(in srgb, var(--act) 70%, var(--roster-ink));
+}
+
+/* Shift tiles */
+.campaign-page .shift-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(136px, 1fr));
+  gap: 10px;
+  margin-top: 18px;
+}
+.campaign-page .shift-card {
+  display: flex;
+  min-width: 0;
+  min-height: 112px;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 11px 12px 11px;
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--roster-ink);
+  text-align: left;
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    border-color 160ms ease;
+}
+.campaign-page .shift-card:hover:not(:disabled) {
+  border-color: color-mix(in srgb, var(--act) 55%, var(--roster-ink));
+  background: #fff;
+  box-shadow: 0 8px 16px -12px #392b2480;
+  transform: translateY(-2px);
+}
+.campaign-page .shift-card:active:not(:disabled) {
+  transform: translateY(0);
+}
+.shift-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 22px;
+}
+.shift-number {
+  color: var(--muted);
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
 }
-.app.campaign .chapter-heading h2 {
-  font-family: inherit;
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.25px;
+.shift-story {
+  color: #a28f7d;
 }
-.app.campaign .chapter-heading p {
-  margin: 0;
-  color: var(--shell-muted);
-  font-size: 11px;
-}
-.app.campaign .chapter-range {
+.shift-mark {
+  display: grid;
+  width: 22px;
+  height: 22px;
   margin-left: auto;
-  color: var(--shell-muted);
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
+  place-items: center;
+  border-radius: 50%;
+  color: var(--muted);
 }
-.app.campaign .shift-grid {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 9px;
-}
-.app.campaign .shift-card {
-  min-height: 100px;
-  gap: 10px;
-  padding: 13px 14px;
-  border: 1px solid var(--shell-rule);
-  border-radius: 8px;
-  background: transparent;
-  box-shadow: none;
-}
-.app.campaign .shift-card:hover:not(:disabled) {
-  transform: none;
-  border-color: #bda78c;
-  background: #fffaf1;
-}
-.app.campaign .shift-card.selected {
-  border-color: var(--shell-accent);
-  background: #fffaf1;
-  box-shadow: inset 0 0 0 1px var(--shell-accent);
-}
-.app.campaign .shift-card.complete:not(.selected) {
-  background: transparent;
-}
-.app.campaign .shift-card:disabled {
-  background: transparent;
-}
-.app.campaign .card-number {
-  color: var(--shell-muted);
-  font-size: 9px;
-  letter-spacing: 0.6px;
-}
-.app.campaign .shift-card strong {
-  color: var(--shell-ink);
-  font-family: inherit;
+.shift-title {
+  display: -webkit-box;
+  overflow: hidden;
   font-size: 14px;
-  font-weight: 700;
-  letter-spacing: -0.1px;
-  line-height: 1.3;
+  font-weight: 750;
+  letter-spacing: -0.2px;
+  line-height: 1.22;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
-.app.campaign .card-bottom {
-  color: var(--shell-muted);
-  font-size: 8px;
-  font-weight: 700;
-  letter-spacing: 0.6px;
+.shift-foot {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
 }
-.app.campaign .card-bottom > span:last-child:not(:first-child) {
-  color: #aa7931;
-  font-size: 11px;
-  letter-spacing: 0;
+.shift-stars {
+  color: var(--roster-gold);
+  font-size: 13px;
+  letter-spacing: 1.5px;
+}
+.campaign-page .shift-card.complete {
+  border-color: color-mix(in srgb, var(--act) 60%, #fff);
+  background: color-mix(in srgb, var(--act) 16%, #fff);
+}
+.campaign-page .shift-card.complete:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--act) 22%, #fff);
+}
+.shift-card.complete .shift-mark {
+  border: 1.5px solid #392b241f;
+  background: var(--act);
+  color: var(--roster-ink);
+}
+.campaign-page .shift-card.next {
+  border-color: #e2b53f;
+  box-shadow: 0 0 0 3px #f7e6b3;
+}
+.shift-card.next .shift-foot {
+  color: #93680c;
+}
+.campaign-page .shift-card.locked,
+.campaign-page .shift-card:disabled {
+  border-style: dashed;
+  background: transparent;
+  color: #a79a8c;
+  opacity: 1;
+}
+.shift-card.locked .shift-number,
+.shift-card.locked .shift-foot,
+.shift-card.locked .shift-mark {
+  color: #b6aa9c;
+}
+.campaign-page .shift-card.selected,
+.campaign-page .shift-card.selected:hover:not(:disabled) {
+  border-color: var(--roster-ink);
+  box-shadow:
+    0 0 0 1.5px var(--roster-ink),
+    0 12px 20px -14px #392b24b3;
+  transform: translateY(-2px);
+}
+.campaign-page .shift-card.selected .shift-number {
+  color: var(--roster-ink);
 }
 
-@media (max-width: 1150px) {
-  .app.campaign .campaign-page {
-    padding-right: 34px;
-    padding-left: 34px;
-  }
-  .app.campaign .shift-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+/* Order ticket */
+.shift-ticket {
+  position: sticky;
+  top: 20px;
+  filter: drop-shadow(0 0 0.6px #392b2466) drop-shadow(0 16px 24px #392b241f);
+}
+.ticket-band {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 4px solid var(--act);
+  border-radius: 18px 18px 0 0;
+  background: #362a24;
+  color: #d9ccbb;
+  font-family: ui-monospace, 'SF Mono', Menlo, monospace;
+  font-size: 11.5px;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.ticket-band strong {
+  color: #fff8ec;
+  font-size: 17px;
+  letter-spacing: 0.5px;
+}
+.ticket-state {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+.ticket-body {
+  --zig: 9px;
+  padding: 22px 24px calc(26px + var(--zig));
+  background: var(--roster-card);
+  mask: conic-gradient(from -45deg at bottom, #0000, #000 1deg 89deg, #0000 90deg) 50% / calc(2 * var(--zig)) 100%;
+}
+.ticket-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--roster-ink);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 1.4px;
+  text-transform: uppercase;
+}
+.ticket-act-icon {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--act);
+}
+.campaign-page .ticket-body h2 {
+  margin: 14px 0 10px;
+  color: var(--roster-ink);
+  font-size: 30px;
+  letter-spacing: -1px;
+  line-height: 1.08;
+}
+.ticket-story {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.55;
+}
+.ticket-rule {
+  margin: 20px 0 16px;
+  border-top: 2px dashed #e1d6c5;
+}
+.ticket-label {
+  color: var(--coffee);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 1.6px;
+  text-transform: uppercase;
+}
+.campaign-page .ticket-goal {
+  margin: 7px 0 16px;
+  color: var(--roster-ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.5;
+}
+.ticket-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ticket-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f2ebdf;
+  color: #5d4b3f;
+  font-size: 11.5px;
+  font-weight: 750;
+}
+.ticket-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  margin: 18px 0 16px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f7f0e3;
+}
+.ticket-stars {
+  color: var(--roster-gold);
+  font-size: 21px;
+  letter-spacing: 3px;
+}
+.ticket-observe {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+.campaign-page .ticket-start {
+  width: 100%;
+  min-height: 54px;
+  gap: 10px;
+  border-radius: 14px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.campaign-page .ticket-start svg:last-child {
+  margin-left: 2px;
+  transition: transform 160ms ease;
+}
+.campaign-page .ticket-start:hover:not(:disabled) svg:last-child {
+  transform: translateX(3px);
+}
+
+/* Reduced motion: the in-game setting and the OS preference both still the roster. */
+.campaign-page.still *,
+.campaign-page.still *::before {
+  animation: none !important;
+  transition: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  .campaign-page *,
+  .campaign-page *::before {
+    animation: none !important;
+    transition: none !important;
   }
 }
-@media (max-width: 1000px) {
-  .app.campaign .campaign-heading {
-    display: block;
+
+/* Roster responsive styles */
+@media (max-width: 1180px) {
+  .roster-hero {
+    grid-template-columns: 1fr;
   }
-  .campaign-heading-actions {
-    width: min(100%, 470px);
-    margin-top: 25px;
-    grid-template-columns: minmax(140px, 1fr) auto;
-    column-gap: 15px;
+  .roster-layout {
+    grid-template-columns: minmax(0, 1fr) 340px;
   }
-  .app.campaign .campaign-heading h1 {
-    font-size: clamp(42px, 8vw, 56px);
+}
+@media (max-width: 960px) {
+  .roster-layout {
+    grid-template-columns: 1fr;
+  }
+  /* The ticket becomes a docked order bar that follows the roster. */
+  .shift-ticket {
+    top: auto;
+    bottom: 12px;
+    z-index: 5;
+    filter: drop-shadow(0 0 0.6px #392b2466) drop-shadow(0 -6px 22px #392b2429);
+  }
+  .ticket-band {
+    padding: 10px 18px;
+    border-bottom-width: 3px;
+  }
+  .ticket-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 4px 18px;
+    padding: 14px 18px 16px;
+    border-radius: 0 0 18px 18px;
+    mask: none;
+  }
+  .ticket-act,
+  .ticket-story,
+  .ticket-rule,
+  .ticket-label,
+  .ticket-tags,
+  .ticket-score {
+    display: none;
+  }
+  .campaign-page .ticket-body h2 {
+    margin: 0;
+    font-size: 20px;
+  }
+  .campaign-page .ticket-goal {
+    display: -webkit-box;
+    overflow: hidden;
+    grid-column: 1;
+    margin: 0;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 600;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+  .campaign-page .ticket-start {
+    grid-row: 1 / span 2;
+    grid-column: 2;
+    width: auto;
+    padding-inline: 22px;
   }
 }
 @media (max-width: 620px) {
-  .app.campaign .campaign-page {
-    padding: 32px 18px 52px;
+  .campaign-page {
+    padding: 14px 14px 20px;
   }
-  .app.campaign .campaign-heading {
-    margin-bottom: 36px;
+  .roster-hero {
+    margin: 22px 0 24px;
   }
-  .campaign-heading-actions {
-    grid-template-columns: 1fr;
-    gap: 15px;
+  .campaign-page .roster-title h1 {
+    letter-spacing: -1.8px;
   }
-  .campaign-ending-link {
-    grid-column: 1;
+  .roster-title p {
+    font-size: 14px;
   }
-  .app.campaign .campaign-progress {
-    width: 100%;
-  }
-  .campaign-selected {
-    justify-content: space-between;
-  }
-  .app.campaign .chapter-heading {
-    flex-wrap: wrap;
-    gap: 7px;
-  }
-  .app.campaign .chapter-heading p {
-    flex-basis: 100%;
-    margin: -4px 0 0 25px;
-  }
-  .app.campaign .chapter-range {
-    display: inline;
-  }
-  .app.campaign .shift-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .crew-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 8px;
   }
-  .app.campaign .shift-card {
-    min-height: 96px;
-    padding: 11px;
+  .crew-badge {
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 10px;
   }
-  .app.campaign .shift-card strong {
-    font-size: 13px;
+  .crew-copy > span {
+    font-size: 10.5px;
+  }
+  .roster-act {
+    padding: 16px 14px 14px;
+    border-radius: 18px;
+  }
+  .act-head {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 12px 14px;
+  }
+  .act-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+  }
+  .act-meter {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+  }
+  .act-bar {
+    flex: 1;
+  }
+  .campaign-page .shift-grid {
+    grid-template-columns: repeat(auto-fill, minmax(118px, 1fr));
+    gap: 8px;
+  }
+  .campaign-page .shift-card {
+    min-height: 104px;
+  }
+  .ticket-body {
+    grid-template-columns: 1fr;
+  }
+  .campaign-page .ticket-goal {
+    display: none;
+  }
+  .campaign-page .ticket-start {
+    grid-row: auto;
+    grid-column: 1;
+    width: 100%;
+    min-height: 48px;
+    margin-top: 10px;
   }
 }
-@media (max-width: 360px) {
-  .app.campaign .campaign-page {
-    padding-right: 13px;
-    padding-left: 13px;
+@media (max-width: 380px) {
+  .roster-stars small,
+  .campaign-page .roster-ending {
+    display: none;
   }
-  .app.campaign .shift-grid {
-    grid-template-columns: 1fr;
+  .crew-avatar {
+    width: 34px;
+    height: 34px;
   }
 }
