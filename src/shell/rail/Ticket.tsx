@@ -19,12 +19,9 @@ interface TicketProps {
   onStart(index: number): void;
 }
 
-/** Line lengths for a sealed act's blanked-out shifts, so the ticket reads as printed but unreadable. */
-const REDACTED_WIDTHS = [72, 54, 86, 62, 78, 48, 68, 58];
-
 /**
  * One act printed as a kitchen order ticket, unrolled into its full list of shifts. Acts not yet
- * reached hang at full length with their lines blanked out and an "Opens soon" stamp.
+ * reached hang at full length but blank: just the act name and an "Opens soon" stamp.
  */
 export function Ticket({
   act,
@@ -44,7 +41,7 @@ export function Ticket({
   const served = shifts.filter((shift) => stars[shift] !== undefined).length;
   const earned = shifts.reduce((sum, shift) => sum + (shift < 2 ? 0 : (stars[shift] ?? 0)), 0);
   const rated = shifts.filter((shift) => shift >= 2).length;
-  // A sealed ticket shows only the act number, never the crew or the shift names.
+  // A sealed ticket shows only the act name, never the crew or the shift names.
   const sealed = state === 'locked';
   const unlockedBy = acts[number - 1]?.kicker;
 
@@ -65,11 +62,10 @@ export function Ticket({
         <span className="ticket-shop">
           {current && 'Café Niko · '}Order #{pad2(number + 1)}
         </span>
-        <span className="ticket-kicker">{act.kicker}</span>
-        <strong className="ticket-crew">
-          {sealed ? <span className="ticket-redacted" style={{ width: '4.5em' }} aria-hidden="true" /> : act.crew}
-        </strong>
-        <span className="ticket-tagline">{sealed ? `Unlocks after ${unlockedBy}.` : act.tagline}</span>
+        {/* Sealed, the act name takes the crew's place; the blank lines keep the head its open height. */}
+        <span className="ticket-kicker">{sealed ? '\u00a0' : act.kicker}</span>
+        <strong className="ticket-crew">{sealed ? act.kicker : act.crew}</strong>
+        <span className="ticket-tagline">{sealed ? '\u00a0' : act.tagline}</span>
       </button>
 
       {sealed && (
@@ -79,18 +75,12 @@ export function Ticket({
         </span>
       )}
       <ol className="ticket-lines" aria-hidden={sealed || undefined}>
-        {shifts.map((shift, offset) => {
-          // A sealed act keeps one blanked-out line per shift, so the ticket hangs as long as it will once open.
+        {shifts.map((shift) => {
+          // A sealed act keeps one empty line per shift, so the ticket hangs as long as it will once open.
           if (sealed)
             return (
               <li key={shift}>
-                <div className="shift-card redacted">
-                  <span className="shift-no">{pad2(shift + 1)}</span>
-                  <span
-                    className="ticket-redacted"
-                    style={{ width: `${REDACTED_WIDTHS[offset % REDACTED_WIDTHS.length]}%` }}
-                  />
-                </div>
+                <div className="shift-card" />
               </li>
             );
           const locked = shift > unlocked;

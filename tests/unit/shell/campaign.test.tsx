@@ -118,7 +118,7 @@ describe('campaign order rail', () => {
     expect(screen.getByRole('button', { name: 'Act II, locked until Act I is served' }).hasAttribute('disabled')).toBe(
       true,
     );
-    expect(screen.getByText('Unlocks after Act I.')).toBeTruthy();
+    expect(screen.getAllByText('Opens soon').length).toBe(3);
     expect(screen.queryByText('Brew')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Shift 15/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Prologue · Niko/ }));

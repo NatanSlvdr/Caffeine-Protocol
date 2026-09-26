@@ -423,23 +423,17 @@ html[data-motion='reduced'] .front-page *::after {
   z-index: 1;
   animation: ticket-swing 0.9s ease-out;
 }
-/* Acts not yet reached hang at full length, their lines blanked out under an "Opens soon" rubber stamp. */
-.ticket.locked .ticket-kicker,
-.ticket.locked .ticket-tagline {
+/* Acts not yet reached hang at full length but blank: just the act name under an "Opens soon" rubber stamp.
+   The order line, dividers and footer keep their space so the ticket doesn't change height when it opens. */
+.ticket.locked .ticket-crew {
   color: #a8957e;
 }
-.ticket-redacted {
-  display: inline-block;
-  height: 0.7em;
-  border-radius: 3px;
-  background: #ece3d3;
-  vertical-align: middle;
+.ticket.locked .ticket-shop,
+.ticket.locked .ticket-foot {
+  visibility: hidden;
 }
-.campaign-page .shift-card.redacted {
-  align-items: center;
-}
-.campaign-page .shift-card.redacted .shift-no {
-  color: #b9a891;
+.campaign-page .ticket.locked .ticket-head {
+  border-bottom-color: transparent;
 }
 .ticket-stamp {
   position: absolute;
@@ -582,7 +576,7 @@ html[data-motion='reduced'] .front-page *::after {
   font-weight: 800;
   animation: line-blink 1.6s steps(1) infinite;
 }
-.campaign-page .shift-card:not(.redacted):hover:not(:disabled) {
+.campaign-page .ticket:not(.locked) .shift-card:hover:not(:disabled) {
   background: #f5ecdc;
 }
 .campaign-page .shift-card.selected,

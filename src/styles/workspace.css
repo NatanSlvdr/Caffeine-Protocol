@@ -1,0 +1,271 @@
+/* In-game workspace: the shift's toolbar pills speak the same paper-and-ink language as the campaign rail. */
+.workspace-main {
+  --desk-ink: #392b24;
+  --desk-muted: #817062;
+  --desk-paper: #fffcf4;
+  --desk-pill: #fffcf4cc;
+  --desk-rule: #e3d6c1;
+  --desk-shadow: 0 1px 2px #392b241a;
+  --workspace-padding: 14px;
+}
+.workspace .workbench {
+  gap: 14px;
+}
+.workspace .cafe-panel {
+  gap: 10px;
+  padding: 0;
+}
+
+/* Heading row: the way back on the left, the camera on the right. */
+.workspace .workspace-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 0;
+}
+.workspace .workspace-heading .error-text {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  font-size: 12px;
+}
+.workspace-main .breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  margin: 0;
+  padding: 0 15px 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--desk-pill);
+  box-shadow: var(--desk-shadow);
+  color: var(--desk-ink);
+  font-size: 13px;
+  font-weight: 700;
+}
+.workspace-main .breadcrumb:hover:not(:disabled) {
+  background: var(--desk-paper);
+  color: var(--desk-ink);
+}
+.workspace-main .breadcrumb span {
+  margin: 0;
+  color: var(--desk-rule);
+  font-weight: 400;
+}
+
+/* Camera view: one segmented pill, with locked areas tucked behind a single chip. */
+.workspace-main .view-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 2px;
+  max-width: 100%;
+  padding: 3px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--desk-pill);
+  box-shadow: var(--desk-shadow);
+}
+.workspace-main .view-controls button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--desk-muted);
+  font-size: 12px;
+  font-weight: 650;
+  box-shadow: none;
+}
+.workspace-main .view-controls button svg {
+  width: 15px;
+  height: 15px;
+}
+.workspace-main .view-controls button:hover:not(:disabled) {
+  background: #f1e6d2;
+  color: var(--desk-ink);
+}
+.workspace-main .view-controls button[aria-pressed='true'],
+.workspace-main .view-controls button[aria-pressed='true']:hover:not(:disabled) {
+  background: var(--coffee);
+  color: #fffcf4;
+}
+
+/* Locked robots stay visible but quiet; the lock reads as a chip beside them, never over their names. */
+.workspace-main .locked-robot-zone {
+  display: flex;
+  align-items: center;
+  flex-basis: auto;
+  gap: 2px;
+  min-width: 0;
+}
+.workspace-main .locked-robot-buttons {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 2px;
+  height: auto;
+}
+.workspace-main .locked-robot-buttons button:disabled {
+  flex: 0 1 auto;
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.workspace-main .robot-choice-lock {
+  position: static;
+  flex-shrink: 0;
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: #ecdfca;
+  color: var(--desk-muted);
+  font:
+    700 9.5px/1.4 ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.workspace-main .view-controls .robot-choice-label {
+  padding: 0;
+  gap: 6px;
+}
+
+/* Program tabs on the dark board reuse the same chip for their locked robots. */
+.workspace-main .robot-tabs {
+  flex-wrap: nowrap;
+  gap: 6px;
+  padding: 10px 14px;
+}
+.workspace-main .robot-tabs > button,
+.workspace-main .robot-tabs .locked-robot-zone {
+  flex: 1 1 0;
+}
+.workspace-main .robot-tabs .locked-robot-buttons {
+  flex: 1;
+  gap: 6px;
+}
+.workspace-main .robot-tabs .locked-robot-buttons button:disabled {
+  flex: 1 1 0;
+  min-width: 0;
+  border-style: dashed;
+  background: transparent;
+  opacity: 0.4;
+}
+.workspace-main .robot-tabs .robot-choice-lock {
+  background: #ffffff10;
+  color: var(--draft-muted);
+}
+
+/* The scene rests on the desk; the playback strip is the only thing beneath it. */
+.workspace-main .scene-space {
+  border-radius: 18px;
+}
+.workspace-main .playback-toolbar {
+  align-self: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin: 0;
+  padding: 5px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--desk-pill);
+  box-shadow: var(--desk-shadow);
+}
+.workspace-main .playback-toolbar .run-button {
+  min-height: 40px;
+  min-width: 150px;
+  padding: 0 18px 0 16px;
+  border-radius: 999px;
+  font-size: 14px;
+  font-weight: 750;
+}
+.workspace-main .playback-toolbar .run-button kbd {
+  display: inline-block;
+  margin-left: 2px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff24;
+  color: inherit;
+  font:
+    600 10px/1.4 ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+  opacity: 0.85;
+}
+.workspace-main .playback-toolbar > button:not(.run-button) {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  color: var(--desk-ink);
+  font-size: 13px;
+  font-weight: 650;
+}
+.workspace-main .playback-toolbar > button:not(.run-button):hover:not(:disabled) {
+  background: #f1e6d2;
+}
+.workspace-main .playback-toolbar > button:disabled {
+  color: var(--desk-muted);
+  opacity: 0.55;
+}
+.workspace-main .playback-speed {
+  gap: 5px;
+  min-width: 170px;
+  padding: 0 16px 0 10px;
+  border-left: 1px solid var(--desk-rule);
+}
+.workspace-main .playback-speed > span {
+  color: var(--desk-ink);
+  font-size: 12px;
+  font-weight: 650;
+}
+.workspace-main .playback-speed small {
+  color: var(--desk-muted);
+  font:
+    500 10px ui-monospace,
+    'SF Mono',
+    Menlo,
+    monospace;
+}
+
+/* The dark board: a clear title, a readable action shelf. */
+.workspace-main .coding-pane-heading {
+  padding: 18px 20px 16px;
+}
+.workspace-main .coding-tools button {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+.workspace-main .coding-pane-heading .shift-objective {
+  margin-top: 12px;
+}
+.editor-panel .compact-palette .command-tile {
+  zoom: 0.84;
+}
+.editor-panel .compact-palette .command-library {
+  gap: 7px;
+}
+@keyframes shop-block-grow {
+  from {
+    transform: scale(0.86);
+    opacity: 0.75;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

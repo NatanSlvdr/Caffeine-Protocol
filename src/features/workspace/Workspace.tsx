@@ -40,7 +40,18 @@ export interface WorkspaceProps {
 }
 
 /** Shift workspace layout: scene panel, editor panel, playback, and modals. Run state lives in useLiveRun. */
-export function Workspace({ index, save, update, lessons, shift, saveError, isLastShift, onNext, onComplete, onSound }: WorkspaceProps) {
+export function Workspace({
+  index,
+  save,
+  update,
+  lessons,
+  shift,
+  saveError,
+  isLastShift,
+  onNext,
+  onComplete,
+  onSound,
+}: WorkspaceProps) {
   const { level, lesson, brief } = shift;
   const observation = index < 2;
   const [modal, setModal] = useState(''),
@@ -96,13 +107,28 @@ export function Workspace({ index, save, update, lessons, shift, saveError, isLa
         <section className="cafe-panel">
           <div className="workspace-heading">
             <button className="breadcrumb" onClick={() => go('/campaign')}>
-              <ArrowLeft size={13} /> Campaign <span>/</span> Shift {pad2(index + 1)}
+              <ArrowLeft size={14} /> Campaign <span>/</span> Shift {pad2(index + 1)}
             </button>
             {saveError && (
               <p className="error-text" role="alert">
                 {saveError}
               </p>
             )}
+            <div className="view-controls" role="group" aria-label="Camera view">
+              <button type="button" aria-pressed={!zoomToRobot || observation} onClick={() => setZoomToRobot(false)}>
+                <Store size={16} aria-hidden="true" />
+                Full café
+              </button>
+              <RobotOptions
+                level={index + 1}
+                selected={zoomToRobot && !observation ? role : undefined}
+                labels={ROBOT_AREA_LABELS}
+                onSelect={(robot) => {
+                  setRole(robot);
+                  setZoomToRobot(true);
+                }}
+              />
+            </div>
           </div>
           <div className="scene-space">
             <Cafe
@@ -117,24 +143,6 @@ export function Workspace({ index, save, update, lessons, shift, saveError, isLa
               focusRole={zoomToRobot && !observation ? role : undefined}
               level={index + 1}
             />
-            <div className="scene-footer camera-controls">
-              <span className="camera-view-label">Camera view</span>
-              <div className="view-controls" role="group" aria-label="Camera view">
-                <button type="button" aria-pressed={!zoomToRobot || observation} onClick={() => setZoomToRobot(false)}>
-                  <Store size={16} aria-hidden="true" />
-                  Full café
-                </button>
-                <RobotOptions
-                  level={index + 1}
-                  selected={zoomToRobot && !observation ? role : undefined}
-                  labels={ROBOT_AREA_LABELS}
-                  onSelect={(robot) => {
-                    setRole(robot);
-                    setZoomToRobot(true);
-                  }}
-                />
-              </div>
-            </div>
           </div>
           <PlaybackToolbar
             running={running}
