@@ -2,20 +2,30 @@ import { Suspense, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { SceneBoundary } from '@/shared/ui/SceneBoundary';
 
-/** Probe once per mount; renderer creation itself throws outside error boundaries. */
+/** Three's renderer requires WebGL 2; probe before its asynchronous creation can throw. */
 function webglSupported(): boolean {
   try {
     const canvas = document.createElement('canvas');
-    return !!(canvas.getContext('webgl2') || canvas.getContext('webgl'));
+    return !!canvas.getContext('webgl2');
   } catch {
     return false;
   }
 }
 
 /** Shared 3D stage: bounded canvas with pixel-art switching, suspense, and WebGL fallback. */
-export function SceneCanvas({ pixelArt, children }: { pixelArt: boolean; children: React.ReactNode }) {
+export function SceneCanvas({
+  pixelArt,
+  fallback,
+  children,
+}: {
+  pixelArt: boolean;
+  /** Replaces the café's "no 3D" notice where the scene is purely decorative. */
+  fallback?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const [supported] = useState(webglSupported);
   const [lost, setLost] = useState(false);
+  if (fallback !== undefined && (!supported || lost)) return <>{fallback}</>;
   if (!supported)
     return (
       <div className="webgl-fallback">
@@ -33,8 +43,10 @@ export function SceneCanvas({ pixelArt, children }: { pixelArt: boolean; childre
           The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.
         </div>
       ) : (
-        <SceneBoundary>
-          <Suspense fallback={<div className="scene-loading">Warming up the café…</div>}>
+        <SceneBoundary fallback={fallback}>
+          <Suspense
+            fallback={fallback !== undefined ? fallback : <div className="scene-loading">Warming up the café…</div>}
+          >
             <Canvas
               key={pixelArt ? 'pixelated' : 'smooth'}
               shadows

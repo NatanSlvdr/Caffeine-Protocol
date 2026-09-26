@@ -13,19 +13,14 @@
           "phrase": "the usual",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "coffee with sugar",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "expected": {
@@ -40,18 +35,14 @@
           "phrase": "something warm",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "expected": {
@@ -66,20 +57,14 @@
           "phrase": "regular",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea with 2 sugars",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -95,9 +80,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -112,11 +95,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -137,18 +116,14 @@
           "phrase": "something warm",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "expected": {
@@ -163,20 +138,14 @@
           "phrase": "regular",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea with 2 sugars",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -192,9 +161,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -209,11 +176,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -229,19 +192,14 @@
           "phrase": "the usual",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "coffee with sugar",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "expected": {
@@ -261,20 +219,14 @@
           "phrase": "regular",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea with 2 sugars",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -290,9 +242,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -307,11 +257,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -327,19 +273,14 @@
           "phrase": "the usual",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "coffee with sugar",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "expected": {
@@ -354,18 +295,14 @@
           "phrase": "something warm",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "expected": {
@@ -385,9 +322,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -402,11 +337,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -422,19 +353,14 @@
           "phrase": "the usual",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "coffee with sugar",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "expected": {
@@ -449,18 +375,14 @@
           "phrase": "something warm",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "expected": {
@@ -475,20 +397,14 @@
           "phrase": "regular",
           "heard_orders": [
             {
-              "tokens": [
-                "ambiguous"
-              ]
+              "tokens": ["ambiguous"]
             }
           ],
           "intent": {},
           "clarification": "tea with 2 sugars",
           "clarification_heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -504,6 +420,6 @@
     }
   ],
   "summary": "An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN CUSTOMER SPEECH and HELP. Niko replaces the heard orders with a clarification.",
-  "title": "Level 11: Ambiguity",
+  "title": "Level 11: The Usual Suspect",
   "act": 1
 }

@@ -1,346 +1,262 @@
-import { useEffect, type CSSProperties } from 'react';
-import {
-  ArrowLeft,
-  ArrowRight,
-  BookOpen,
-  Check,
-  ChefHat,
-  ConciergeBell,
-  Coffee,
-  LockKeyhole,
-  Play,
-  ReceiptText,
-  Settings2,
-  Store,
-  type LucideIcon,
-} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { ArrowLeft, BookOpen, Play, Settings2, Star } from 'lucide-react';
+import { playSound } from '@/audio';
 import { levels, titleFor } from '@/data';
 import { narrativeFor, stories } from '@/data/campaign/narrative';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
-import { go } from '@/shared/lib/navigation';
+import { go, openSettings } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useGame, useProgress } from '@/state/GameStore';
+import { actIndexFor, acts } from './rail/acts';
+import { Ticket, type ActState } from './rail/Ticket';
 
-type ActState = 'locked' | 'active' | 'done';
+/** How long "Order up!" stays on the specials board before the shift opens. */
+const ORDER_UP_MS = 650;
 
-interface Act {
-  kicker: string;
-  title: string;
-  tagline: string;
-  crew: string;
-  icon: LucideIcon;
-  tone: string;
-  from: number;
-  to: number;
-}
+const titles = levels.map((_, index) => titleFor(index));
 
-/** The campaign reads as a staffing story: each act brings a new robot onto the roster. */
-const acts: Act[] = [
-  {
-    kicker: 'Prologue',
-    title: 'First days',
-    tagline: 'Niko shows you how the café runs.',
-    crew: 'Niko',
-    icon: Coffee,
-    tone: '#c3acf0',
-    from: 0,
-    to: 2,
-  },
-  {
-    kicker: 'Act I',
-    title: 'The front counter',
-    tagline: 'Query learns to take orders.',
-    crew: 'Query',
-    icon: ReceiptText,
-    tone: '#9bcef2',
-    from: 2,
-    to: 14,
-  },
-  {
-    kicker: 'Act II',
-    title: 'Behind the counter',
-    tagline: 'Brew learns the recipes.',
-    crew: 'Brew',
-    icon: ChefHat,
-    tone: '#f49b83',
-    from: 14,
-    to: 22,
-  },
-  {
-    kicker: 'Act III',
-    title: 'The café floor',
-    tagline: 'Porter learns the room.',
-    crew: 'Porter',
-    icon: ConciergeBell,
-    tone: '#91d5b6',
-    from: 22,
-    to: 30,
-  },
-  {
-    kicker: 'Finale',
-    title: 'Together at last',
-    tagline: 'The whole crew runs the café.',
-    crew: 'The whole crew',
-    icon: Store,
-    tone: '#f4c95d',
-    from: 30,
-    to: levels.length,
-  },
-];
-
-const crewActs = acts.slice(1, 4);
-const crewStatus: Record<ActState, string> = {
-  locked: 'In the scrapyard',
-  active: 'In training',
-  done: 'Certified',
-};
-const actStatus: Record<ActState, string> = { locked: 'Locked', active: 'In progress', done: 'Complete' };
-
-const actFor = (index: number) => acts.find((act) => index >= act.from && index < act.to) ?? acts[0];
-const tone = (act: Act) => ({ '--act': act.tone }) as CSSProperties;
-
-/** Shift roster: pick a shift by act, read its ticket, and clock in. */
+/**
+ * The campaign as Niko's kitchen rail. Each act hangs there as an order ticket, one line per shift,
+ * and the selected shift is chalked up beside it as today’s special.
+ */
 export function CampaignPage() {
   const { save, select, launch } = useGame();
   const progress = useProgress();
-  const reducedMotion = save.settings.reduced_motion;
+  const prefersReducedMotion = useReducedMotion();
+  const reducedMotion = save.settings.reduced_motion || prefersReducedMotion;
+  const rail = useRef<HTMLDivElement>(null);
+  const orderTimer = useRef<number | undefined>(undefined);
+  const [ordering, setOrdering] = useState<number | null>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
-  const stateOf = (act: Act): ActState => {
+  const stateOf = (actIndex: number): ActState => {
+    const act = acts[actIndex];
     if (act.from > save.unlocked) return 'locked';
     for (let index = act.from; index < act.to; index++) if (!isComplete(index)) return 'active';
     return 'done';
   };
 
+  const selected = save.selected;
+  const current = actIndexFor(selected);
+  const level = levels[selected];
+  const shift = narrativeFor(selected);
+  const observation = !level.programming_enabled;
+  const upNext = !isComplete(selected) && selected === save.unlocked;
+  const previous = selected > 0 ? selected - 1 : undefined;
+  const next = selected < Math.min(save.unlocked, levels.length - 1) ? selected + 1 : undefined;
+
+  useEffect(() => () => window.clearTimeout(orderTimer.current), []);
+
+  // Slide the rail so the current act's ticket hangs in the middle.
   useEffect(() => {
-    document.querySelector('.shift-card.selected')?.scrollIntoView?.({ block: 'center', behavior: 'auto' });
+    const track = rail.current;
+    const ticket = track?.querySelector<HTMLElement>(`[data-act="${current}"]`);
+    if (!track || !ticket || track.scrollWidth <= track.clientWidth) return;
+    const left = ticket.offsetLeft - (track.clientWidth - ticket.offsetWidth) / 2;
+    track.scrollTo?.({ left: Math.max(0, left), behavior: reducedMotion ? 'auto' : 'smooth' });
+  }, [current, reducedMotion]);
+
+  const turnTo = (index: number | undefined) => {
+    if (ordering !== null) return;
+    if (index === undefined || index === selected || index < 0 || index > save.unlocked || index >= levels.length)
+      return;
+    select(index);
+  };
+
+  /** Opening an act lands on its next unserved shift. */
+  const openAct = (actIndex: number) => {
+    const target = acts[actIndex];
+    if (stateOf(actIndex) === 'locked' || actIndex === current) return;
+    let focus = target.from;
+    for (let index = target.from; index < target.to && index <= save.unlocked; index++) {
+      if (!isComplete(index)) {
+        focus = index;
+        break;
+      }
+    }
+    turnTo(focus);
+  };
+
+  /** Call the order, then clock in. With reduced motion, go straight in. */
+  const start = (index: number) => {
+    if (ordering !== null || index > save.unlocked) return;
+    if (reducedMotion) {
+      launch(index);
+      return;
+    }
+    if (index !== selected) select(index);
+    setOrdering(index);
+    playSound('click');
+    orderTimer.current = window.setTimeout(() => launch(index), ORDER_UP_MS);
+  };
+
+  // Arrow keys move down the order unless focus is in a text field.
+  const keys = useRef((direction: -1 | 1) => turnTo(direction === 1 ? next : previous));
+  keys.current = (direction) => turnTo(direction === 1 ? next : previous);
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
+      const target = event.target;
+      if (
+        target instanceof Element &&
+        target.closest(
+          'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [role="slider"], [role="tablist"], dialog',
+        )
+      )
+        return;
+      if (event.key === 'ArrowLeft') keys.current(-1);
+      else if (event.key === 'ArrowRight') keys.current(1);
+      else return;
+      event.preventDefault();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const selected = save.selected;
-  const selectedAct = actFor(selected);
-  const shift = narrativeFor(selected);
-  const SelectedIcon = selectedAct.icon;
-  const observation = selected < 2;
-
   return (
-    <main className={`campaign-page ${reducedMotion ? 'still' : ''}`}>
-      <nav className="roster-bar" aria-label="Campaign">
-        <button className="roster-home" onClick={() => go('/')}>
+    <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
+      <nav className="pass-bar" aria-label="Campaign">
+        <button className="pass-home" onClick={() => go('/')}>
           <ArrowLeft size={16} /> Caffeine Protocol
         </button>
-        <div className="roster-bar-actions">
+        <div className="pass-bar-actions">
           {save.complete && (
-            <Button className="roster-ending" variant="text-link" onClick={() => go('/ending')}>
-              <BookOpen size={15} /> Revisit closing time
+            <Button
+              className="pass-ending"
+              variant="text-link"
+              aria-label="Revisit closing time"
+              title="Revisit closing time"
+              onClick={() => go('/ending')}
+            >
+              <BookOpen size={15} /> <span>Revisit closing time</span>
             </Button>
           )}
-          <span className="roster-stars" aria-label={`${progress.stars} of ${progress.max} stars`}>
-            ★ {progress.stars}
+          <span className="pass-stars" aria-label={`${progress.stars} of ${progress.max} stars`}>
+            <Star size={14} fill="currentColor" aria-hidden="true" /> {progress.stars}
             <small> / {progress.max}</small>
           </span>
-          <button className="roster-icon" aria-label="Settings" title="Settings" onClick={() => go('/settings')}>
+          <button className="pass-icon" aria-label="Settings" title="Settings" onClick={openSettings}>
             <Settings2 size={18} />
           </button>
         </div>
       </nav>
 
-      <header className="roster-hero">
-        <div className="roster-title">
-          <span className="roster-kicker">The shift roster</span>
-          <h1>Choose a shift</h1>
-          <p>
-            Every shift teaches the crew one new routine. Pick up where you left off, or replay a day to chase three
-            stars.
-          </p>
-          <div className="roster-progress" aria-label={`${progress.done} of ${progress.total} shifts complete`}>
-            <div className="roster-progress-track">
-              <span style={{ width: `${(progress.done / progress.total) * 100}%` }} />
-            </div>
-            <span>
-              <strong>{progress.done}</strong> / {progress.total} shifts worked
-            </span>
-          </div>
-        </div>
-        <ul className="crew-strip" aria-label="Crew">
-          {crewActs.map((act) => {
-            const state = stateOf(act);
-            const Icon = act.icon;
-            return (
-              <li key={act.crew} className={`crew-badge ${state}`} style={tone(act)}>
-                <span className="crew-avatar">
-                  <Icon size={20} strokeWidth={2.2} />
-                </span>
-                <span className="crew-copy">
-                  <strong>{act.crew}</strong>
-                  <span>
-                    <i className="status-light" aria-hidden="true" />
-                    {crewStatus[state]}
-                  </span>
-                </span>
-              </li>
-            );
-          })}
-        </ul>
+      <header className="pass-title">
+        <p className="pass-kicker">Niko’s kitchen · Order rail</p>
+        <h1>Choose a shift</h1>
+        <p className="pass-progress">
+          <strong>{progress.done}</strong> of {progress.total} shifts served
+        </p>
       </header>
 
-      <div className="roster-layout">
-        <div className="roster-acts">
-          {acts.map((act, actIndex) => {
-            const state = stateOf(act);
-            const Icon = act.icon;
-            const total = act.to - act.from;
-            let done = 0;
-            for (let index = act.from; index < act.to; index++) if (isComplete(index)) done++;
-            return (
-              <section
+      <div className="pass-stage">
+        <div className="pass" ref={rail}>
+          <nav className="pass-track" aria-label="Shifts">
+            {acts.map((act, actIndex) => (
+              <Ticket
                 key={act.kicker}
-                className={`roster-act ${state}`}
-                style={tone(act)}
-                aria-labelledby={`act-${actIndex}`}
-              >
-                <header className="act-head">
-                  <span className="act-avatar" aria-hidden="true">
-                    <Icon size={22} strokeWidth={2.1} />
-                  </span>
-                  <div className="act-copy">
-                    <span className="act-kicker">
-                      {act.kicker} · Shifts {pad2(act.from + 1)}–{pad2(act.to)}
-                    </span>
-                    <h2 id={`act-${actIndex}`}>{act.title}</h2>
-                    <p>{act.tagline}</p>
-                  </div>
-                  <div className="act-meter">
-                    <span className={`act-chip ${state}`}>
-                      {state === 'locked' && <LockKeyhole size={11} />}
-                      {state === 'done' && <Check size={12} strokeWidth={3} />}
-                      {actStatus[state]}
-                    </span>
-                    <span className="act-count">
-                      {done} / {total}
-                    </span>
-                    <span className="act-bar">
-                      <span style={{ width: `${(done / total) * 100}%` }} />
-                    </span>
-                  </div>
-                </header>
-
-                <div className="shift-grid">
-                  {levels.slice(act.from, act.to).map((level, offset) => {
-                    const index = act.from + offset;
-                    const locked = index > save.unlocked;
-                    const complete = isComplete(index);
-                    const next = !locked && !complete && index === save.unlocked;
-                    const stars = save.stars[index] ?? 0;
-                    const classes = [
-                      'shift-card',
-                      locked && 'locked',
-                      complete && 'complete',
-                      next && 'next',
-                      selected === index && 'selected',
-                    ];
-                    return (
-                      <button
-                        key={level.id}
-                        disabled={locked}
-                        className={classes.filter(Boolean).join(' ')}
-                        onClick={() => select(index)}
-                        onDoubleClick={() => launch(index)}
-                        aria-label={`Shift ${index + 1}: ${titleFor(index)}${locked ? ', locked' : ''}`}
-                        aria-pressed={!locked && selected === index}
-                      >
-                        <span className="shift-top">
-                          <span className="shift-number">{pad2(index + 1)}</span>
-                          {stories[index] && !locked && (
-                            <BookOpen className="shift-story" size={13} aria-hidden="true" />
-                          )}
-                          <span className="shift-mark" aria-hidden="true">
-                            {locked ? (
-                              <LockKeyhole size={13} />
-                            ) : complete ? (
-                              <Check size={13} strokeWidth={3} />
-                            ) : (
-                              <i className="status-light" />
-                            )}
-                          </span>
-                        </span>
-                        <strong className="shift-title">{titleFor(index)}</strong>
-                        <span className="shift-foot" aria-hidden="true">
-                          {locked ? (
-                            'Locked'
-                          ) : index < 2 ? (
-                            complete ? (
-                              'Observed'
-                            ) : (
-                              'Watch'
-                            )
-                          ) : complete ? (
-                            <span className="shift-stars">{starRow(stars)}</span>
-                          ) : next ? (
-                            'Up next'
-                          ) : (
-                            'Ready'
-                          )}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
+                act={act}
+                number={actIndex}
+                state={stateOf(actIndex)}
+                current={actIndex === current}
+                selected={selected}
+                unlocked={save.unlocked}
+                stars={save.stars}
+                titles={titles}
+                ordering={ordering}
+                onOpen={() => openAct(actIndex)}
+                onSelect={turnTo}
+                onStart={start}
+              />
+            ))}
+          </nav>
         </div>
+      </div>
 
-        <aside className="shift-ticket" style={tone(selectedAct)} aria-label="Selected shift">
-          <div className="ticket-band">
-            <span>
-              Shift <strong>{pad2(selected + 1)}</strong> / {levels.length}
-            </span>
-            <span className={`ticket-state ${isComplete(selected) ? 'done' : 'open'}`}>
-              <i className="status-light" aria-hidden="true" />
-              {isComplete(selected) ? 'Worked' : selected === save.unlocked ? 'Up next' : 'Open'}
-            </span>
-          </div>
-          <div className="ticket-body">
-            <span className="ticket-act">
-              <span className="ticket-act-icon" aria-hidden="true">
-                <SelectedIcon size={14} strokeWidth={2.4} />
-              </span>
-              {selectedAct.kicker} · {selectedAct.title}
-            </span>
-            <h2>{titleFor(selected)}</h2>
-            <p className="ticket-story">{shift.story}</p>
-            <div className="ticket-rule" aria-hidden="true" />
-            <span className="ticket-label">Today&apos;s goal</span>
-            <p className="ticket-goal">{shift.objective}</p>
-            <div className="ticket-tags">
-              <span className="ticket-tag">
-                <SelectedIcon size={13} /> {observation ? 'Niko on duty' : `${selectedAct.crew} on duty`}
-              </span>
-              {stories[selected] && (
-                <span className="ticket-tag">
-                  <BookOpen size={13} /> Story scene
+      <aside className="recipe" aria-label="Selected shift" aria-live="polite" aria-atomic="true">
+        <div className="board">
+          <div className="board-chalk" key={selected}>
+            <p className="board-kicker">
+              <span>Today’s special · № {pad2(selected + 1)}</span>
+              {(upNext || isComplete(selected)) && (
+                <span className={`board-tag ${isComplete(selected) ? 'done' : 'next'}`}>
+                  {isComplete(selected) ? 'Served' : 'Up next'}
                 </span>
               )}
-            </div>
-            <div className="ticket-score">
+            </p>
+            <h2>{titleFor(selected)}</h2>
+            <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
+              <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
+            </svg>
+            <dl className="board-menu">
+              <div>
+                <dt>Tables</dt>
+                <dd>{level.active_tables}</dd>
+              </div>
               {observation ? (
-                <span className="ticket-observe">Observation shift · no stars</span>
+                <div>
+                  <dt>Service</dt>
+                  <dd>Watch only</dd>
+                </div>
               ) : (
                 <>
-                  <span className="ticket-label">Best</span>
-                  <span className="ticket-stars" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
-                    {starRow(save.stars[selected] ?? 0)}
-                  </span>
+                  <div>
+                    <dt>★★</dt>
+                    <dd>≤ {level.block_target} blocks</dd>
+                  </div>
+                  <div>
+                    <dt>★★★</dt>
+                    <dd>≤ {level.instruction_target} steps</dd>
+                  </div>
                 </>
               )}
-            </div>
-            <Button className="ticket-start" variant="primary" onClick={() => launch(selected)}>
-              <Play size={15} fill="currentColor" /> Start shift
-              <ArrowRight size={17} />
-            </Button>
+            </dl>
+            <p className="board-story">{shift.story}</p>
+            <p className="board-note">
+              <strong>Chef’s note</strong> {shift.objective}
+            </p>
+            <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
+              <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />
+              <path d="M24 42h68v16c0 14-15 22-34 22s-34-8-34-22z" />
+              <path d="M92 47c12 0 14 8 12 13-2 6-8 8-13 7" />
+              <path d="M14 86c10 5 78 5 90 0" />
+            </svg>
+            <p className="board-foot">
+              {observation ? (
+                isComplete(selected) ? (
+                  'Watched'
+                ) : (
+                  'Sit back and watch'
+                )
+              ) : (
+                <span className="board-stars" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
+                  {starRow(save.stars[selected] ?? 0)}
+                </span>
+              )}
+              {stories[selected] && <span className="board-scene">Story scene first</span>}
+            </p>
           </div>
-        </aside>
-      </div>
+          <div className="board-launch">
+            <Button
+              className="recipe-start"
+              variant="primary"
+              onClick={() => start(selected)}
+              disabled={ordering !== null}
+            >
+              <Play size={17} fill="currentColor" /> {ordering !== null ? 'Order up…' : 'Start shift'}
+            </Button>
+            <p className="board-hint" aria-hidden="true">
+              <kbd>←</kbd> <kbd>→</kbd> browse · double-click to start
+            </p>
+          </div>
+          {ordering !== null && (
+            <span className="board-order-up" aria-hidden="true">
+              Order up!
+            </span>
+          )}
+        </div>
+      </aside>
     </main>
   );
 }

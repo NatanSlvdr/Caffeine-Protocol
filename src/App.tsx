@@ -1,17 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { stories } from '@/data/campaign/narrative';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { Workspace } from '@/features/workspace/Workspace';
-import { SettingsPage } from '@/app/SettingsPage';
+import { SettingsWindow } from '@/app/SettingsWindow';
 import { AppHeader } from '@/shell/AppHeader';
 import { Rail } from '@/shell/Rail';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, InterludePage } from '@/shell/StoryPages';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
-import { go } from '@/shared/lib/navigation';
+import { go, onOpenSettings } from '@/shared/lib/navigation';
 import { useSound } from '@/hooks/useSound';
 
 export default function App() {
@@ -25,21 +25,21 @@ export default function App() {
 function Shell() {
   const { save, saveError, route, update, select, completeShift, resetCafe } = useGame();
   const [modal, setModal] = useState('');
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  useEffect(() => onOpenSettings(() => setSettingsOpen(true)), []);
   const index = Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, Number(route.split('/')[2] || 1) - 1));
   const accessible = Number.isInteger(index) && index <= save.unlocked;
   const page = route.split('/')[1];
   const screen =
     page === 'shift' && accessible
       ? 'workspace'
-      : page === 'campaign'
+      : page === 'campaign' || page === 'settings'
         ? 'campaign'
-        : page === 'settings'
-          ? 'settings'
-          : page === 'interlude' && accessible && stories[index]
-            ? 'interlude'
-            : page === 'ending' && save.complete
-              ? 'ending'
-              : 'home';
+        : page === 'interlude' && accessible && stories[index]
+          ? 'interlude'
+          : page === 'ending' && save.complete
+            ? 'ending'
+            : 'home';
   const shift = useShift(index);
   const playSuccess = useSound('success');
   const playRetry = useSound('retry');
@@ -73,10 +73,18 @@ function Shell() {
             onSound={(passed) => (passed ? playSuccess() : playRetry())}
           />
         )}
-        {screen === 'settings' && <SettingsPage onNew={() => setModal('new')} />}
         {screen === 'interlude' && <InterludePage index={index} />}
         {screen === 'ending' && <EndingPage />}
       </div>
+      {(settingsOpen || page === 'settings') && (
+        <SettingsWindow
+          onNew={() => setModal('new')}
+          onClose={() => {
+            setSettingsOpen(false);
+            if (page === 'settings') go('/campaign');
+          }}
+        />
+      )}
       {modal === 'new' && (
         <Modal title="Start a new café?" onClose={() => setModal('')}>
           <p>This clears all shifts, stars, programs and story progress. Your audio and display settings will stay.</p>
@@ -88,6 +96,7 @@ function Shell() {
               onClick={() => {
                 resetCafe();
                 setModal('');
+                setSettingsOpen(false);
               }}
             >
               Start new café

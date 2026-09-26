@@ -133,56 +133,8 @@ p {
 .rail-leaf {
   color: #39a47c;
 }
-.home-page {
-  background: var(--cream);
-}
-.home-copy h1 {
-  font-size: clamp(42px, 4.8vw, 76px);
-  letter-spacing: -3px;
-  line-height: 1.04;
-}
-.home-copy h1 em {
-  font-style: normal;
-  font-weight: 850;
-  color: var(--coffee);
-  text-decoration: underline;
-  text-decoration-color: var(--yellow);
-  text-decoration-thickness: 8px;
-  text-underline-offset: 7px;
-}
-.home-copy .eyebrow {
-  color: var(--red);
-}
-.home-copy .eyebrow > span {
-  height: 9px;
-  width: 9px;
-  border-radius: 50%;
-  background: var(--red);
-}
-.home-copy p {
-  color: var(--muted);
-  font-size: 15px;
-}
-.home-footer {
-  color: var(--muted);
-}
-.home-world {
-  background: radial-gradient(ellipse at center, #ede1cf 0%, transparent 66%);
-}
-.home-note {
-  background: var(--card);
-  border-color: var(--line);
-  border-radius: 18px;
-  box-shadow: 0 5px 0 #e9dfc9;
-}
-.home-bottom {
-  color: #817062;
-}
 .world-caption {
   color: var(--coffee);
-}
-.settings-page {
-  padding-top: 36px;
 }
 .page-heading h1 {
   font-size: 38px;
@@ -190,34 +142,12 @@ p {
 .page-heading p {
   font-size: 14px;
 }
-.settings-card {
-  border-color: var(--line);
-  border-radius: 20px;
-  background: var(--card);
-  box-shadow: 0 4px 0 #e9e1d0;
-}
-.settings-card h2 svg {
-  color: var(--coffee);
-}
-.settings-card p {
-  font-size: 13px;
-}
-.settings-card:nth-child(2) {
-  border-top: 5px solid var(--yellow);
-}
 .setting-row strong {
   font-size: 14px;
   font-weight: 750;
 }
 .setting-row small {
   font-size: 12px;
-  color: var(--muted);
-}
-.volume-setting > span {
-  color: var(--ink);
-  font-size: 13px;
-}
-.volume-setting strong {
   color: var(--muted);
 }
 input[type='range'] {
@@ -1325,9 +1255,6 @@ input[type='checkbox']:checked {
 }
 @media (max-width: 900px) {
   .app-body,
-  .home-page {
-    min-width: 0;
-  }
   .workspace-main {
     height: auto;
     min-height: 100dvh;
@@ -1345,27 +1272,6 @@ input[type='checkbox']:checked {
   }
   .scene-space {
     min-height: 330px;
-  }
-  .home-page {
-    grid-template-columns: 1fr;
-  }
-  .home-copy {
-    padding: 50px 28px 10px;
-  }
-  .home-world {
-    height: 460px;
-  }
-  .home-bottom {
-    display: none;
-  }
-  .home-copy h1 {
-    font-size: 54px;
-  }
-  .settings-page {
-    width: 100%;
-  }
-  .settings-grid {
-    grid-template-columns: 1fr;
   }
   .story-page {
     grid-template-columns: 1fr;

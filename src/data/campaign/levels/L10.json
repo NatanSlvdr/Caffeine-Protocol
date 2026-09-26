@@ -13,11 +13,7 @@
           "phrase": "coffee with 0 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 0
             }
           ],
@@ -33,11 +29,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -53,11 +45,7 @@
           "phrase": "tea with 2 sugars",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -73,10 +61,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -91,11 +76,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -115,11 +96,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -135,11 +112,7 @@
           "phrase": "tea with 2 sugars",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -155,10 +128,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -173,11 +143,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -192,11 +158,7 @@
           "phrase": "coffee with 0 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 0
             }
           ],
@@ -217,11 +179,7 @@
           "phrase": "tea with 2 sugars",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -237,10 +195,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -255,11 +210,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -274,11 +225,7 @@
           "phrase": "coffee with 0 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 0
             }
           ],
@@ -294,11 +241,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -319,10 +262,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -337,11 +277,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -356,11 +292,7 @@
           "phrase": "coffee with 0 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 0
             }
           ],
@@ -376,11 +308,7 @@
           "phrase": "coffee with 1 sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["coffee", "sugar", "number"],
               "number": 1
             }
           ],
@@ -396,11 +324,7 @@
           "phrase": "tea with 2 sugars",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "number"
-              ],
+              "tokens": ["tea", "sugar", "number"],
               "number": 2
             }
           ],
@@ -416,6 +340,6 @@
     }
   ],
   "summary": "IF number IN item detects numeric metadata. STORE var1 FROM number, then WRITE var1 sugar writes the exact amount, including zero. Keep modifier logic for orders without numbers.",
-  "title": "Level 10: Numbers",
+  "title": "Level 10: One Lump or Two?",
   "act": 1
 }

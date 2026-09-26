@@ -23,9 +23,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -44,9 +42,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -65,9 +61,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         }
@@ -76,5 +70,5 @@
     }
   ],
   "summary": "Watch Niko welcome the first customers and serve their coffee.",
-  "title": "Level 1: Reopening"
+  "title": "Level 1: Brew Beginnings"
 }

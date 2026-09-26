@@ -13,9 +13,7 @@
           "phrase": "a coffee please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -30,9 +28,7 @@
           "phrase": "can I get a tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -47,10 +43,7 @@
           "phrase": "coffee with sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -65,11 +58,7 @@
           "phrase": "tea without sugar thanks",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -89,9 +78,7 @@
           "phrase": "can I get a tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -106,10 +93,7 @@
           "phrase": "coffee with sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -124,11 +108,7 @@
           "phrase": "tea without sugar thanks",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -143,9 +123,7 @@
           "phrase": "a coffee please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -165,10 +143,7 @@
           "phrase": "coffee with sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -183,11 +158,7 @@
           "phrase": "tea without sugar thanks",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -202,9 +173,7 @@
           "phrase": "a coffee please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -219,9 +188,7 @@
           "phrase": "can I get a tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -236,6 +203,6 @@
     }
   ],
   "summary": "Different wording exposes the same recognized concepts. Reuse the same token tests; no new commands are needed.",
-  "title": "Level 8: Natural Wording",
+  "title": "Level 8: Latte Lingo",
   "act": 1
 }

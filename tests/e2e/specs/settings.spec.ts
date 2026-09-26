@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { titleFor } from '../../../src/data';
 import { newSave, SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { ready, seedSave } from '../helpers';
 
@@ -21,9 +22,10 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page.getByRole('checkbox', { name: 'Text editor' }).check();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await expect(page.getByRole('textbox', { name: 'Program source' })).toHaveValue(text);
-  // The workspace hides the app header; return through the campaign rail.
+  // The workspace hides the app header; return to the campaign and open settings over it.
   await page.getByRole('button', { name: /Campaign \/ Shift/ }).click();
-  await page.getByRole('button', { name: 'Audio and display settings' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'The little things.' })).toBeVisible();
   // Settings survive a reload.
   await page.getByRole('slider', { name: 'Music volume', exact: true }).evaluate((el, value) => {
     const input = el as HTMLInputElement;
@@ -52,14 +54,16 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page
     .getByLabel('Import save file')
     .setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
-  await expect(page.getByRole('dialog')).toContainText('Replace this café?');
+  await expect(page.getByRole('dialog', { name: 'Replace this café?' })).toBeVisible();
   await page.getByRole('button', { name: 'Keep current café' }).click();
   await page
     .getByLabel('Import save file')
     .setInputFiles({ name: 'cafe.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(seed)) });
   await page.getByRole('button', { name: 'Replace café', exact: true }).click();
-  await page.getByRole('button', { name: 'Back to campaign' }).click();
-  await expect(page.getByRole('button', { name: 'Shift 14: Query Certification', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Close dialog' }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
+  await expect(page.getByRole('button', { name: `Shift 14: ${titleFor(13)}`, exact: true })).toBeEnabled();
   // A fresh start keeps settings while clearing progress (the imported seed uses defaults).
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Start a new café', exact: true }).click();

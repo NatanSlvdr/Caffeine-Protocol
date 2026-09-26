@@ -4,26 +4,16 @@ import { STREET_APPROACH_SECONDS } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { HOME_PREVIEW_LEVEL, homePreviewResult } from './homePreview';
 
-/** Leave space for the title while centering the full room in the right side. */
-const WIDE_CAMERA_TARGET = [-8.5, 0.2, -0.5] as const;
-
 /** Loop a completed service in the landing preview, respecting reduced motion. */
 export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixelArt: boolean }) {
   const [result] = useState(homePreviewResult);
   const [time, setTime] = useState(-STREET_APPROACH_SECONDS);
-  const [wide, setWide] = useState(() => window.innerWidth > 950);
   const prefersReducedMotion = useReducedMotion();
   const reduceMotion = reduced || prefersReducedMotion;
   const duration = result.execution?.[0]?.duration ?? 60;
   const stillTime = result.execution?.[0]?.events.find(
     (event) => event.actor === 'prep' && /^(BREW|STEEP)$/.test(event.command),
   );
-
-  useEffect(() => {
-    const update = () => setWide(window.innerWidth > 950);
-    window.addEventListener('resize', update);
-    return () => window.removeEventListener('resize', update);
-  }, []);
 
   useEffect(() => {
     if (reduceMotion) return;
@@ -53,8 +43,7 @@ export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixel
       pixelArt={pixelArt}
       moving={!reduceMotion}
       showStatusBubbles={false}
-      zoomScale={wide ? 0.64 : 0.9}
-      cameraTarget={wide ? WIDE_CAMERA_TARGET : undefined}
+      zoomScale={1.02}
       cameraAngleDegrees={7}
     />
   );

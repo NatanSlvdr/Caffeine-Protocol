@@ -13,9 +13,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -30,10 +28,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -48,9 +43,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -65,10 +58,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -88,10 +78,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -106,9 +93,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -123,10 +108,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -141,9 +123,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -163,9 +143,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -180,10 +158,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -198,9 +173,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -215,10 +188,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -233,6 +203,6 @@
     }
   ],
   "summary": "IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use WRITE 1 sugar on the held paper. New paper starts without sugar.",
-  "title": "Level 6: Sugar",
+  "title": "Level 6: Sugar, Sugar",
   "act": 1
 }

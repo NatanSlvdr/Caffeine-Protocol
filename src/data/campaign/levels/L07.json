@@ -13,10 +13,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -31,11 +28,7 @@
           "phrase": "coffee without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -50,10 +43,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -68,11 +58,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -87,11 +73,7 @@
           "phrase": "coffee no sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -106,11 +88,7 @@
           "phrase": "coffee, but no sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -130,11 +108,7 @@
           "phrase": "coffee without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -149,10 +123,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -167,11 +138,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -186,11 +153,7 @@
           "phrase": "coffee no sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -205,11 +168,7 @@
           "phrase": "coffee, but no sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -224,10 +183,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -247,10 +203,7 @@
           "phrase": "tea with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar"
-              ]
+              "tokens": ["tea", "sugar"]
             }
           ],
           "intent": {},
@@ -265,11 +218,7 @@
           "phrase": "tea without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "tea",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["tea", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -284,11 +233,7 @@
           "phrase": "coffee no sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -303,11 +248,7 @@
           "phrase": "coffee, but no sugar please",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -322,10 +263,7 @@
           "phrase": "coffee with sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar"
-              ]
+              "tokens": ["coffee", "sugar"]
             }
           ],
           "intent": {},
@@ -340,11 +278,7 @@
           "phrase": "coffee without sugar",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee",
-                "sugar",
-                "negation"
-              ]
+              "tokens": ["coffee", "sugar", "negation"]
             }
           ],
           "intent": {},
@@ -359,6 +293,6 @@
     }
   ],
   "summary": "Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write WRITE 0 sugar or WRITE 1 sugar.",
-  "title": "Level 7: Negation",
+  "title": "Level 7: No Sugar, No Cry",
   "act": 1
 }

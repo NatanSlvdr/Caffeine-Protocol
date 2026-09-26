@@ -1,12 +1,14 @@
 import { Component } from 'react';
 import type { ReactNode } from 'react';
 
-export class SceneBoundary extends Component<{ children: ReactNode }, { failed: boolean }> {
+/** Keep scene failures local, with an optional replacement for decorative scenes. */
+export class SceneBoundary extends Component<{ children: ReactNode; fallback?: ReactNode }, { failed: boolean }> {
   state = { failed: false };
   static getDerivedStateFromError() {
     return { failed: true };
   }
   render() {
+    if (this.state.failed && this.props.fallback !== undefined) return this.props.fallback;
     return this.state.failed ? (
       <div className="webgl-fallback">
         <strong>The café is still open.</strong>

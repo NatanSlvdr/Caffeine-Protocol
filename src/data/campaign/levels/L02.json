@@ -23,9 +23,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -44,9 +42,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -65,9 +61,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -86,9 +80,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -107,9 +99,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -128,9 +118,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -149,9 +137,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         },
@@ -170,9 +156,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ]
         }
@@ -181,5 +165,5 @@
     }
   ],
   "summary": "Watch the morning rush, then help Query take over the counter.",
-  "title": "Level 2: Rush"
+  "title": "Level 2: The Morning Grind"
 }

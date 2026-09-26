@@ -1,5 +1,5 @@
 import { Coffee, Settings2, Star } from 'lucide-react';
-import { go } from '@/shared/lib/navigation';
+import { go, openSettings } from '@/shared/lib/navigation';
 import { useProgress } from '@/state/GameStore';
 
 /** Brand, café status, star total, and settings entry. */
@@ -24,7 +24,7 @@ export function AppHeader() {
           <Star size={15} /> {progress.stars}
           <small>/ {progress.max}</small>
         </span>
-        <button aria-label="Settings" title="Settings" onClick={() => go('/settings')}>
+        <button aria-label="Settings" title="Settings" onClick={openSettings}>
           <Settings2 size={19} />
         </button>
       </div>

@@ -13,9 +13,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -34,9 +32,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -50,6 +46,6 @@
     }
   ],
   "summary": "Listen, TAKE UP from the paper stack, and write coffee on the held paper. MOVE RIGHT 1, DEPOSIT RIGHT at the kitchen handoff, then MOVE LEFT 1 to the register. Checkout is automatic.",
-  "title": "Level 3: First Order",
+  "title": "Level 3: Hello, World Roast",
   "act": 1
 }

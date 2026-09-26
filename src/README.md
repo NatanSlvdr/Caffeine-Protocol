@@ -3,7 +3,7 @@
 - `App.tsx` — shell composer only (`GameProvider` + route screens).
 - `main.tsx` — React mount, one stylesheet import, service-worker register.
 - `audio.ts` — backwards-compatible audio entry (service: `shared/lib/audio`).
-- `app/` — hash routing (`navigation`, `useHashRoute`) and `SettingsPage`.
+- `app/` — hash routing (`navigation`, `useHashRoute`) and `SettingsWindow`.
 - `shell/` — header, rail, home/campaign/story pages.
 - `state/` — `GameStore`: persisted save, route, campaign actions, selectors.
 - `shared/domain/` conceptually is `domain/` (see `docs/ARCHITECTURE.md`):

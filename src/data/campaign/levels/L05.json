@@ -13,9 +13,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -29,9 +27,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -45,9 +41,7 @@
           "phrase": "tea please",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -61,9 +55,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -82,9 +74,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -98,9 +88,7 @@
           "phrase": "tea please",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -114,9 +102,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -130,9 +116,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -151,9 +135,7 @@
           "phrase": "tea please",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -167,9 +149,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -183,9 +163,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -199,9 +177,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -215,6 +191,6 @@
     }
   ],
   "summary": "Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.",
-  "title": "Level 5: Keep Listening",
+  "title": "Level 5: Groundhog Latte",
   "act": 1
 }

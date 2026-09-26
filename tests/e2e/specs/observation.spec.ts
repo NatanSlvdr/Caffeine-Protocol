@@ -11,8 +11,8 @@ test('observation opens the café, watches service, and issues a receipt', async
   await ready(page);
   await expect(page.locator('.shift-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Choose a shift' }).click();
-  await expect(page.locator('.shift-card')).toHaveCount(32);
-  await expect(page.getByRole('button', { name: 'Shift 3: First Order, locked', exact: true })).toBeDisabled();
+  await expect(page.locator('.shift-card')).toHaveCount(2);
+  await expect(page.getByRole('button', { name: 'Act I, sealed', exact: true })).toBeDisabled();
   await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Watch service' })).toBeVisible();
   await fit(page, '.scene-space');

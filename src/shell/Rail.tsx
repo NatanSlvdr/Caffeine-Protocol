@@ -1,5 +1,5 @@
 import { FolderHeart, HelpCircle, Home, Leaf, SlidersHorizontal } from 'lucide-react';
-import { go } from '@/shared/lib/navigation';
+import { go, openSettings } from '@/shared/lib/navigation';
 
 /** Side rail for every page except home and workspace. */
 export function Rail({ screen, onGuide }: { screen: string; onGuide: () => void }) {
@@ -15,7 +15,7 @@ export function Rail({ screen, onGuide }: { screen: string; onGuide: () => void 
       <button aria-label="Game guide" onClick={onGuide}>
         <HelpCircle size={21} />
       </button>
-      <button aria-label="Audio and display settings" onClick={() => go('/settings')}>
+      <button aria-label="Audio and display settings" onClick={openSettings}>
         <SlidersHorizontal size={21} />
       </button>
       <Leaf className="rail-leaf" size={19} />
