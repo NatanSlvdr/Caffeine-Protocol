@@ -36,6 +36,7 @@ const narrative33: ShiftNarrative = {
   title: 'The whole café is busier',
   story: 'Another busy day. The team runs the full service at full volume.',
   objective: 'Complete the service: grouped orders, both drinks, sugar, clarification, deliveries, and clearing.',
+  hint: 'Everything, at full volume.',
   lessonNote:
     'The final service combines groups, clarification, both recipes, sugar, two-item trays, and clearing at full volume.',
 };

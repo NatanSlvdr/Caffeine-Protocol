@@ -64,7 +64,7 @@ export function CampaignPage() {
     select(index);
   };
 
-  /** Opening an act lands on its next unserved shift. */
+  /** Clicking an act's header lands on its next unserved shift. */
   const openAct = (actIndex: number) => {
     const target = acts[actIndex];
     if (stateOf(actIndex) === 'locked' || actIndex === current) return;
@@ -214,7 +214,7 @@ export function CampaignPage() {
             </dl>
             <p className="board-story">{shift.story}</p>
             <p className="board-note">
-              <strong>Chef’s note</strong> {shift.objective}
+              <strong>Chef’s note</strong> {shift.hint}
             </p>
             <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
               <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />

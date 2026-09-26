@@ -32,7 +32,7 @@ describe('campaign order rail', () => {
     openCampaign();
     const notes = within(screen.getByRole('complementary', { name: 'Selected shift' }));
     expect(notes.getByRole('heading', { name: titleFor(0) })).toBeTruthy();
-    expect(notes.getByText(narrativeFor(0).objective)).toBeTruthy();
+    expect(notes.getByText(narrativeFor(0).hint)).toBeTruthy();
     expect(screen.queryByText('The café is still open.')).toBeNull();
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
@@ -52,7 +52,7 @@ describe('campaign order rail', () => {
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
-    expect(within(screen.getByRole('complementary')).getByText(narrativeFor(2).objective)).toBeTruthy();
+    expect(within(screen.getByRole('complementary')).getByText(narrativeFor(2).hint)).toBeTruthy();
     expect(stories[2]).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
     await waitFor(() => expect(window.location.hash).toBe('#/interlude/3'));
@@ -109,13 +109,16 @@ describe('campaign order rail', () => {
     expect(window.location.hash).toBe('#/ending');
   });
 
-  it('opens one act at a time and lands on its next unfinished part', () => {
+  it('unrolls every reached act and lands on its next unfinished part', () => {
     openCampaign(makeSave({ unlocked: 5, selected: 1, stars: { 0: 0, 1: 0, 2: 3, 3: 2 } }));
-    expect(screen.queryByRole('button', { name: /^Shift 3:/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /^Shift 1:/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Shift 3:/ })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Act I · Query/ }));
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 5:');
-    expect(screen.queryByRole('button', { name: /^Shift 1:/ })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Act II, sealed' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: 'Act II, locked until Act I is served' }).hasAttribute('disabled')).toBe(
+      true,
+    );
+    expect(screen.getByText('Unlocks after Act I.')).toBeTruthy();
     expect(screen.queryByText('Brew')).toBeNull();
     expect(screen.queryByRole('button', { name: /^Shift 15/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Prologue · Niko/ }));

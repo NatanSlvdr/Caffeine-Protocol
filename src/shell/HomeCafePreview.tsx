@@ -43,7 +43,7 @@ export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixel
       pixelArt={pixelArt}
       moving={!reduceMotion}
       showStatusBubbles={false}
-      zoomScale={1.02}
+      zoomScale={0.92}
       cameraAngleDegrees={7}
     />
   );

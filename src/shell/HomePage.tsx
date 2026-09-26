@@ -4,13 +4,16 @@ import { go, openSettings } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 import { HomeCafePreview } from './HomeCafePreview';
 
-/** The café's front door: a menu ticket clipped to the wall beside the shop window. */
+/** The café's front door: a menu ticket pinned over the live café, which runs in the background. */
 export function HomePage() {
   const { save } = useGame();
   const progress = useProgress();
 
   return (
     <main className="front-page">
+      <div className="front-scene" aria-hidden="true">
+        <HomeCafePreview reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
+      </div>
       <section className="front-menu">
         <article className="front-ticket">
           <span className="front-clip" aria-hidden="true" />
@@ -50,15 +53,6 @@ export function HomePage() {
             <small>{progress.done > 0 ? 'Welcome back' : 'Doors open soon'}</small>
           </footer>
         </article>
-      </section>
-      <section className="front-window" aria-label="Preview of the café">
-        <span className="front-awning" aria-hidden="true" />
-        <div className="front-scene">
-          <HomeCafePreview reduced={save.settings.reduced_motion} pixelArt={save.settings.pixel_art} />
-        </div>
-        <span className="front-sign" aria-hidden="true">
-          Open
-        </span>
       </section>
     </main>
   );

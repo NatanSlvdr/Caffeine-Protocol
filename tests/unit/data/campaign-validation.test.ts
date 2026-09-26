@@ -242,8 +242,8 @@ describe('unified campaign validation', () => {
     expect(collectNarrativeErrors([]).length).toBeGreaterThan(0);
     expect(
       collectNarrativeErrors([
-        { level: 1, title: 'A', story: 'S', objective: 'O', lessonNote: 'L' },
-        { level: 1, title: 'B', story: 'S', objective: 'O', lessonNote: 'L' },
+        { level: 1, title: 'A', story: 'S', objective: 'O', hint: 'H', lessonNote: 'L' },
+        { level: 1, title: 'B', story: 'S', objective: 'O', hint: 'H', lessonNote: 'L' },
       ]).length,
     ).toBeGreaterThan(0);
   });
