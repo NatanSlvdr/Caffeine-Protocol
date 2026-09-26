@@ -4,6 +4,8 @@ import {
   robotCommands,
   blockPrototypes,
   placeBlock,
+  DRAG_SCROLL_EDGE,
+  DRAG_SCROLL_SPEED,
   type DraggedScope,
   type RobotRole,
 } from '@/domain';
@@ -57,8 +59,6 @@ export function Editor({
     pointer = useRef<{ x: number; y: number } | null>(null);
   const dragScope = useRef<DraggedScope | undefined>(undefined),
     lastSlot = useRef<string | undefined>(undefined);
-  const landingX = useRef<number | undefined>(undefined);
-  const measuredPointer = useRef<{ x: number; y: number; scrollTop: number; viewportTop: number } | undefined>(undefined);
   const options = robotCommands(role, level),
     disabled = locked || observation;
 
@@ -67,12 +67,12 @@ export function Editor({
     instructionProgress,
     failureLine,
   });
-  const keyboardCoordinates = useKeyboardCoordinates(dragScope, lastSlot);
+  const keyboardCoordinates = useKeyboardCoordinates(root, dragScope, lastSlot);
   const sensors = useSensors(
     useSensor(BlockPointerSensor, { activationConstraint: { distance: 6 } }),
     useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
   );
-  const collisionDetection = useDropCollision({ root, codeArea, pointer, dragScope, lastSlot, landingX, measuredPointer });
+  const collisionDetection = useDropCollision({ root, codeArea, pointer, dragScope, lastSlot });
   const change = (value: string) => {
     if (!disabled) onChange(value);
   };
@@ -82,8 +82,6 @@ export function Editor({
     pointer,
     dragScope,
     lastSlot,
-    landingX,
-    measuredPointer,
   });
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
 
@@ -91,6 +89,12 @@ export function Editor({
     <DndContext
       sensors={sensors}
       measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}
+      // The default scrolls from a fifth of the pane at up to 2000px/s, racing the target past rows.
+      autoScroll={{
+        threshold: { x: 0, y: DRAG_SCROLL_EDGE },
+        acceleration: DRAG_SCROLL_SPEED,
+        canScroll: (element) => element === codeArea.current,
+      }}
       collisionDetection={collisionDetection}
       onDragStart={onDragStart}
       onDragCancel={onDragCancel}
@@ -100,12 +104,20 @@ export function Editor({
         <section className="palette compact-palette" aria-label="Available code blocks">
           <div className="command-library">
             {blockPrototypes(options).map((c) => (
-              <CommandTile key={role + ':' + level + ':' + c} initial={c} options={options} disabled={disabled} onChange={insert} />
+              <CommandTile
+                key={role + ':' + level + ':' + c}
+                initial={c}
+                options={options}
+                disabled={disabled}
+                onChange={insert}
+              />
             ))}
           </div>
         </section>
         <div className="editor-body" aria-label="Code zone" ref={codeArea}>
-          {failureMessage && (textMode || !rows.length) && <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined} />}
+          {failureMessage && (textMode || !rows.length) && (
+            <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined} />
+          )}
           {observation ? null : textMode ? (
             <textarea
               onClick={failureLine >= 0 ? onDismissFailure : undefined}
@@ -118,7 +130,11 @@ export function Editor({
             />
           ) : (
             <ProgramSurface root={root}>
-              <ExecutionCursor root={root} line={failureLine >= 0 ? visibleFailureLine : markerLine} stepSeconds={stepSeconds} />
+              <ExecutionCursor
+                root={root}
+                line={failureLine >= 0 ? visibleFailureLine : markerLine}
+                stepSeconds={stepSeconds}
+              />
               <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'} />
               <ProgramRows
                 tree={tree}

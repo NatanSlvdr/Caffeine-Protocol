@@ -33,12 +33,14 @@ export const MAX_ITEM_QUANTITY = 19;
 /** Separator between a submitted paper id and its per-cup unit suffix. */
 export const TICKET_UNIT_SEPARATOR = '#';
 
-/** Pointer x-distance weight when scoring insertion slots. */
-export const DROP_X_WEIGHT = 0.2;
-/** Sticky bonus keeping the current slot while the pointer rests between rows. */
+/** Weight of the dragged block's left-edge x-distance when scoring insertion slots. */
+export const DROP_X_WEIGHT = 0.5;
+/** Sticky bonus keeping the current slot while the dragged block rests between rows. */
 export const DROP_STICKY_BONUS = 5;
-/** Pointer travel tolerance (px) before a reflowed preview retargets. */
-export const DROP_REFLOW_TOLERANCE = 3;
+/** Share of the code zone's height, at its top and bottom, where a held block scrolls the program. */
+export const DRAG_SCROLL_EDGE = 0.1;
+/** Peak auto-scroll step (px per 5 ms tick) at the very edge of the code zone. */
+export const DRAG_SCROLL_SPEED = 2;
 /** Keyboard drag step granularity (px) when searching rows. */
 export const KEYBOARD_NUDGE = 2;
 /** Keyboard left/right row proximity (px) for branch selection. */

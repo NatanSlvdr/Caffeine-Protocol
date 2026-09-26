@@ -14,17 +14,29 @@ export function Insertion({
   alternative?: boolean;
   hint?: string;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: (alternative ? 'else:' : 'gap:') + at, data: { at, alternative }, disabled });
+  const { setNodeRef, isOver } = useDroppable({
+    id: (alternative ? 'else:' : 'gap:') + at,
+    data: { at, alternative },
+    disabled,
+  });
   const { blocks } = useContext(DragPreview);
   const isElse = hint === 'Else';
   const preview = isOver && !!blocks.length;
+  // The anchor is the droppable: its top edge is exactly where a dropped block's top lands.
   return (
-    <div className={'insertion-anchor ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-preview' : '')}>
+    <div
+      ref={setNodeRef}
+      data-drop-slot={(alternative ? 'else:' : 'gap:') + at}
+      className={'insertion-anchor ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-preview' : '')}
+    >
       <div
-        ref={setNodeRef}
-        data-drop-slot={(alternative ? 'else:' : 'gap:') + at}
         aria-label={isElse ? 'Else branch drop target' : hint || undefined}
-        className={'code-insertion ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-option ' : '') + (isOver ? 'drop-target' : '')}
+        className={
+          'code-insertion ' +
+          (hint ? 'with-hint ' : '') +
+          (isElse ? 'else-option ' : '') +
+          (isOver ? 'drop-target' : '')
+        }
       >
         {isElse ? (
           <>

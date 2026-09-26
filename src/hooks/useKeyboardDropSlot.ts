@@ -1,9 +1,11 @@
 import type { RefObject } from 'react';
 import type { KeyboardCoordinateGetter } from '@dnd-kit/core';
 import { keyboardDropSlot, type DraggedScope } from '@/domain';
+import { measureDropSlots } from './measureDropSlots';
 
 /** Keyboard drags advance between actual slots, not arbitrary pixel increments. */
 export function useKeyboardCoordinates(
+  root: RefObject<HTMLDivElement | null>,
   dragScope: RefObject<DraggedScope | undefined>,
   lastSlot: RefObject<string | undefined>,
 ): KeyboardCoordinateGetter {
@@ -11,17 +13,16 @@ export function useKeyboardCoordinates(
     const rect = context.collisionRect;
     if (!rect || !['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(event.code)) return;
     event.preventDefault();
-    const point = { x: rect.left, y: rect.top + rect.height / 2 };
-    const slots = context.droppableContainers.getEnabled().flatMap((container) => {
-      const target = context.droppableRects.get(container.id),
-        data = container.data.current;
-      return target && typeof data?.at === 'number'
-        ? [{ id: String(container.id), at: data.at, alternative: !!data.alternative, left: target.left, top: target.top, height: target.height }]
-        : [];
-    });
-    const slot = keyboardDropSlot(event.code, point, slots, dragScope.current);
+    const corner = { x: rect.left, y: rect.top };
+    const slot = keyboardDropSlot(
+      event.code,
+      corner,
+      measureDropSlots(context.droppableContainers.getEnabled(), root.current),
+      dragScope.current,
+      lastSlot.current,
+    );
     if (!slot) return;
     lastSlot.current = slot.id;
-    return { x: currentCoordinates.x + slot.left - point.x, y: currentCoordinates.y + slot.top + slot.height / 2 - point.y };
+    return { x: currentCoordinates.x + slot.left - corner.x, y: currentCoordinates.y + slot.top - corner.y };
   };
 }

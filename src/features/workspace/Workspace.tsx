@@ -96,7 +96,8 @@ export function Workspace({
         e.preventDefault();
         run();
       }
-      if (e.key === 'Escape' && !modal) go('/campaign');
+      // Menus and drags claim their own Escape; only an unclaimed one leaves the shift.
+      if (e.key === 'Escape' && !modal && !e.defaultPrevented) go('/campaign');
     };
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
