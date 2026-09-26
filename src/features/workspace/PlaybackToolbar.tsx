@@ -13,13 +13,26 @@ export interface PlaybackToolbarProps {
 }
 
 /** Run/stop, pause, and speed controls for the live simulation clock. */
-export function PlaybackToolbar({ running, observation, paused, pausable, speed, onRun, onTogglePause, onSpeed }: PlaybackToolbarProps) {
+export function PlaybackToolbar({
+  running,
+  observation,
+  paused,
+  pausable,
+  speed,
+  onRun,
+  onTogglePause,
+  onSpeed,
+}: PlaybackToolbarProps) {
   return (
     <div className="playback-toolbar" aria-label="Simulation controls">
-      <button className={`primary run-button ${running ? 'stop-button' : ''}`} onClick={onRun}>
+      <button
+        className={`primary run-button ${running ? 'stop-button' : ''}`}
+        aria-keyshortcuts="Control+Enter Meta+Enter"
+        onClick={onRun}
+      >
         {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}
         {running ? 'Stop & edit' : observation ? 'Watch service' : 'Run service'}
-        <kbd>{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'} ↵</kbd>
+        <kbd aria-hidden="true">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'} ↵</kbd>
       </button>
       <button aria-label={paused ? 'Resume playback' : 'Pause playback'} disabled={!pausable} onClick={onTogglePause}>
         {paused ? <Play size={15} /> : <Pause size={15} />} {paused ? 'Resume' : 'Pause'}
@@ -27,9 +40,7 @@ export function PlaybackToolbar({ running, observation, paused, pausable, speed,
       <label className="playback-speed">
         <span>
           Speed <strong>{speed}×</strong>
-          <small>
-            1 block · {(BLOCK_SECONDS / speed).toFixed(2)}s
-          </small>
+          <small>1 block · {(BLOCK_SECONDS / speed).toFixed(2)}s</small>
         </span>
         <input
           type="range"

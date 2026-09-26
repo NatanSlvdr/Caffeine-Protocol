@@ -12,6 +12,7 @@
   gap: 14px;
 }
 .workspace .cafe-panel {
+  container: cafe-panel / inline-size;
   gap: 10px;
   padding: 0;
 }
@@ -60,7 +61,7 @@
 .workspace-main .view-controls {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   gap: 2px;
   max-width: 100%;
@@ -96,6 +97,18 @@
 .workspace-main .view-controls button[aria-pressed='true']:hover:not(:disabled) {
   background: var(--coffee);
   color: #fffcf4;
+}
+
+/* When the stage is narrow, only the chosen view keeps its name; the rest keep an icon and a tooltip. */
+@container cafe-panel (max-width: 760px) {
+  .workspace-main .view-controls > button:not([aria-pressed='true']),
+  .workspace-main .view-controls button:not([aria-pressed='true']) .robot-choice-label {
+    gap: 0;
+    font-size: 0;
+  }
+  .workspace-main .view-controls button:not([aria-pressed='true']) {
+    padding: 0 9px;
+  }
 }
 
 /* Locked robots stay visible but quiet; the lock reads as a chip beside them, never over their names. */
@@ -138,29 +151,67 @@
   padding: 0;
   gap: 6px;
 }
+/* A locked area has nothing to film yet, so the camera shows only its icon; the name stays accessible. */
+.workspace-main .view-controls .locked-robot-buttons button:disabled {
+  padding: 0 8px;
+}
+.workspace-main .view-controls .locked-robot-buttons .robot-choice-label {
+  gap: 0;
+  font-size: 0;
+}
 
-/* Program tabs on the dark board reuse the same chip for their locked robots. */
+/* Program tabs: the dark board's version of the camera pill, one recessed track with the open program raised. */
 .workspace-main .robot-tabs {
+  position: relative;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 4px;
   padding: 10px 14px;
+}
+.workspace-main .robot-tabs::before {
+  content: '';
+  position: absolute;
+  inset: 6px 10px;
+  border: 1px solid #ffffff0d;
+  border-radius: 12px;
+  background: #0000001f;
+  pointer-events: none;
 }
 .workspace-main .robot-tabs > button,
 .workspace-main .robot-tabs .locked-robot-zone {
+  position: relative;
   flex: 1 1 0;
+}
+.workspace-main .robot-tabs button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+.workspace-main .robot-tabs .robot-choice-label {
+  padding: 7px 9px;
+}
+.workspace-main .robot-tabs button[aria-selected='true'] {
+  background: #ead8b8;
+  color: #493727;
+  box-shadow: 0 1px 3px #0000004d;
+}
+.workspace-main .robot-tabs button:hover:not(:disabled):not([aria-selected='true']) {
+  background: #ffffff0d;
+  color: #fff2de;
+}
+.workspace-main .robot-tabs button:focus-visible {
+  outline-offset: 1px;
 }
 .workspace-main .robot-tabs .locked-robot-buttons {
   flex: 1;
-  gap: 6px;
+  gap: 4px;
 }
 .workspace-main .robot-tabs .locked-robot-buttons button:disabled {
   flex: 1 1 0;
   min-width: 0;
-  border-style: dashed;
-  background: transparent;
   opacity: 0.4;
 }
 .workspace-main .robot-tabs .robot-choice-lock {
+  margin-right: 3px;
   background: #ffffff10;
   color: var(--draft-muted);
 }
@@ -243,7 +294,14 @@
 
 /* The dark board: a clear title, a readable action shelf. */
 .workspace-main .coding-pane-heading {
-  padding: 18px 20px 16px;
+  padding: 18px 20px 8px;
+  border-bottom: 0;
+  border-radius: 8px 8px 0 0;
+}
+/* The board keeps a 16px transparent gutter on its left for the run marker, so the bottom-left
+   radius is 16px wider than it looks; that way the painted grid itself gets the 8px curve. */
+.workspace-main .editor-panel .editor-body {
+  border-radius: 0 0 8px 24px / 0 0 8px 8px;
 }
 .workspace-main .coding-tools button {
   width: 30px;

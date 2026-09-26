@@ -115,7 +115,12 @@ export function Workspace({
               </p>
             )}
             <div className="view-controls" role="group" aria-label="Camera view">
-              <button type="button" aria-pressed={!zoomToRobot || observation} onClick={() => setZoomToRobot(false)}>
+              <button
+                type="button"
+                title="Full café"
+                aria-pressed={!zoomToRobot || observation}
+                onClick={() => setZoomToRobot(false)}
+              >
                 <Store size={16} aria-hidden="true" />
                 Full café
               </button>

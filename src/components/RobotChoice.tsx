@@ -35,6 +35,7 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
       aria-selected={tabs ? !disabled && selected === robot : undefined}
       aria-pressed={tabs ? undefined : !disabled && selected === robot}
       aria-describedby={disabled ? noticeId : undefined}
+      title={tabs ? undefined : labels[robot]}
       disabled={disabled}
       onClick={() => onSelect(robot)}
     >
