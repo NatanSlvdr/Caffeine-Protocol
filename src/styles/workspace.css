@@ -292,16 +292,20 @@
     monospace;
 }
 
-/* The dark board: a clear title, a readable action shelf. */
+/* The dark board: a clear title, a readable action shelf. It shares the scene's 18px corners;
+   the painted surfaces inside sit within its 1px border, so they curve at 17px. */
+.workspace-main .editor-panel {
+  border-radius: 18px;
+}
 .workspace-main .coding-pane-heading {
   padding: 18px 20px 8px;
   border-bottom: 0;
-  border-radius: 8px 8px 0 0;
+  border-radius: 17px 17px 0 0;
 }
 /* The board keeps a 16px transparent gutter on its left for the run marker, so the bottom-left
-   radius is 16px wider than it looks; that way the painted grid itself gets the 8px curve. */
+   radius is 16px wider than it looks; that way the painted grid itself gets the 17px curve. */
 .workspace-main .editor-panel .editor-body {
-  border-radius: 0 0 8px 24px / 0 0 8px 8px;
+  border-radius: 0 0 17px 33px / 0 0 17px 17px;
 }
 .workspace-main .coding-tools button {
   width: 30px;
