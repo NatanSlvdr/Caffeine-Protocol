@@ -9,10 +9,17 @@ export interface ResetModalProps {
 /** Confirm replacing the current draft with the incoming program. */
 export function ResetModal({ onClose, onConfirm }: ResetModalProps) {
   return (
-    <Modal title="Reset this routine?" onClose={onClose}>
+    <Modal
+      className="settings-window confirm-slip"
+      kicker="Workspace options"
+      title="Reset this routine?"
+      onClose={onClose}
+    >
       <p>Your current draft will be replaced by the last passing program from the previous shift.</p>
       <div className="modal-buttons">
-        <button onClick={onClose}>Keep draft</button>
+        <button className="settings-chip" onClick={onClose}>
+          Keep draft
+        </button>
         <Button variant="primary" onClick={onConfirm}>
           Reset routine
         </Button>

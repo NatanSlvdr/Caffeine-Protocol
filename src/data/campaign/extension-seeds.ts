@@ -11,7 +11,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L15',
     title: 'A Brew-tiful Friendship',
-    note: 'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Niko still serves the room.',
+    note: 'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Pip still serves the room.',
     omission: 'DEPOSIT',
     blocks: 55,
     instructions: 241,
@@ -19,7 +19,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L16',
     title: 'Tile Be Right There',
-    note: 'MOVE uses screen directions and whole tile counts. A blocked move stops early and the next instruction runs. Fix the route to the ingredients.',
+    note: 'Move uses screen directions and whole tile counts. A blocked move stops early and the next block runs. Fix the route to the ingredients.',
     omission: 'MOVE UP',
     blocks: 55,
     instructions: 241,
@@ -51,7 +51,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L20',
     title: 'Call Me Maybe',
-    note: 'Move a repeated recipe into FUNCTION recipe. CALL recipe handles the oldest unfinished ticket.',
+    note: 'Move a repeated recipe into Function recipe. Call recipe handles the oldest unfinished ticket.',
     omission: 'CALL recipe',
     blocks: 59,
     instructions: 248,
@@ -67,7 +67,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L22',
     title: 'Kitchen Confidential',
-    note: 'Keep Query and Brew working through mixed tickets and sugar requests. Niko owns delivery until Porter arrives.',
+    note: 'Keep Query and Brew working through mixed tickets and sugar requests. Pip handles delivery until Porter arrives.',
     omission: 'DEPOSIT',
     blocks: 61,
     instructions: 486,
@@ -75,7 +75,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L23',
     title: 'Special Delivery',
-    note: 'Porter owns floor work now. WAIT DRINK claims a delivery; TAKE down collects it from the outside of the kitchen counter.',
+    note: 'Porter owns floor work now. Wait for Ready drink claims a delivery; Take down collects it from the outside of the kitchen counter.',
     omission: 'TAKE',
     blocks: 95,
     instructions: 868,
@@ -83,7 +83,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L24',
     title: 'Latte, Where Art Thou?',
-    note: 'Read the assigned TABLE, count the route, and SERVE beside that table. Furniture blocks movement; customers do not.',
+    note: 'Check the assigned table, count the route, and Serve beside that table. Furniture blocks movement; customers do not.',
     omission: 'SERVE',
     blocks: 117,
     instructions: 895,
@@ -99,7 +99,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L26',
     title: 'Cups and Robbers',
-    note: 'WAIT DIRTY selects a used cup. COLLECT at its table, then RETURN CUPS at the return station.',
+    note: 'Wait for Dirty cups picks a used cup. Collect it at its table, then Return cups at the sink.',
     omission: 'COLLECT',
     blocks: 117,
     instructions: 895,
@@ -123,7 +123,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L29',
     title: 'Tea for Two',
-    note: 'Porter now holds two items. Take two drinks before serving, then clear both tables. FIFO keeps the tray predictable.',
+    note: 'Porter now holds two items. Take two drinks before serving, then clear both tables. The tray empties in the order it was filled.',
     omission: 'TAKE',
     blocks: 177,
     instructions: 1940,

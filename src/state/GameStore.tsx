@@ -42,7 +42,11 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [recovery, setRecovery] = useState(!!initial.error);
   const [route] = useHashRoute();
   useEffect(() => {
-    if (!recovery) setSaveError(writeSave(localStorage, save));
+    if (!recovery) {
+      // Only a change of error re-renders: every keystroke saves, and a no-op update per save piles up during fast typing.
+      const error = writeSave(localStorage, save);
+      if (error !== saveError) setSaveError(error);
+    }
     configureAudio(save.settings);
     document.documentElement.dataset.motion = save.settings.reduced_motion ? 'reduced' : 'full';
   }, [save, recovery]);
@@ -119,13 +123,18 @@ export function useShift(index: number): {
   };
 }
 
+/** Stars across rated shifts only, matching MAX_STARS, so an edited save can't total past the maximum. */
+export function starTotal(stars: ProgressSave['stars']): number {
+  return Object.entries(stars).reduce((a, [i, b]) => a + (levels[Number(i)]?.programming_enabled ? b : 0), 0);
+}
+
 /** Campaign progress: completed shifts, star totals, and maxima. */
 export function useProgress(): { done: number; total: number; stars: number; max: number } {
   const { save } = useGame();
   return {
     done: Object.keys(save.stars).length,
     total: CAMPAIGN_LENGTH,
-    stars: Object.values(save.stars).reduce((a, b) => a + b, 0),
+    stars: starTotal(save.stars),
     max: MAX_STARS,
   };
 }

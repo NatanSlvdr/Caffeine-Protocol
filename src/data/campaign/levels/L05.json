@@ -190,7 +190,7 @@
       ]
     }
   ],
-  "summary": "Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.",
+  "summary": "Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. Keep serving every customer.",
   "title": "Level 5: Groundhog Latte",
   "act": 1
 }

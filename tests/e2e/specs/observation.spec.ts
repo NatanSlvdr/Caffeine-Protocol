@@ -9,10 +9,12 @@ test('observation opens the café, watches service, and issues a receipt', async
   page.on('pageerror', (e) => errors.push(e.message));
   await seedSave(page, { ...newSave(), unlocked: 0, selected: 0 });
   await ready(page);
-  await expect(page.locator('.shift-card')).toHaveCount(0);
+  await expect(page.locator('button.shift-card')).toHaveCount(0);
   await page.getByRole('button', { name: 'Choose a shift' }).click();
-  await expect(page.locator('.shift-card')).toHaveCount(2);
-  await expect(page.getByRole('button', { name: 'Act I, sealed', exact: true })).toBeDisabled();
+  await expect(page.locator('button.shift-card')).toHaveCount(2);
+  await expect(
+    page.getByRole('button', { name: 'Act I, locked until Prologue is served', exact: true }),
+  ).toBeDisabled();
   await page.getByRole('button', { name: 'Start shift', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Watch service' })).toBeVisible();
   await fit(page, '.scene-space');

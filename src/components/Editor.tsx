@@ -1,8 +1,9 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, useSensors } from '@dnd-kit/core';
 import {
   robotCommands,
   blockPrototypes,
+  indentSource,
   placeBlock,
   DRAG_SCROLL_EDGE,
   DRAG_SCROLL_SPEED,
@@ -20,6 +21,7 @@ import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
 import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
+import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
 import { ExecutionCursor } from './ExecutionCursor';
 import { InstructionError } from './FailureFeedback';
 
@@ -56,7 +58,8 @@ export function Editor({
 }) {
   const root = useRef<HTMLDivElement>(null),
     codeArea = useRef<HTMLDivElement>(null),
-    pointer = useRef<{ x: number; y: number } | null>(null);
+    pointer = useRef<{ x: number; y: number } | null>(null),
+    failedText = useRef<HTMLDivElement>(null);
   const dragScope = useRef<DraggedScope | undefined>(undefined),
     lastSlot = useRef<string | undefined>(undefined);
   const options = robotCommands(role, level),
@@ -70,20 +73,40 @@ export function Editor({
   const keyboardCoordinates = useKeyboardCoordinates(root, dragScope, lastSlot);
   const sensors = useSensors(
     useSensor(BlockPointerSensor, { activationConstraint: { distance: 6 } }),
-    useSensor(KeyboardSensor, { coordinateGetter: keyboardCoordinates }),
+    // Space alone lifts a block, so Enter on a library block adds it like a click.
+    useSensor(KeyboardSensor, {
+      coordinateGetter: keyboardCoordinates,
+      keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space', 'Enter'] },
+    }),
   );
   const collisionDetection = useDropCollision({ root, codeArea, pointer, dragScope, lastSlot });
   const change = (value: string) => {
     if (!disabled) onChange(value);
   };
-  const insert = (command: string) => change(placeBlock(source, command, source ? source.split('\n').length : 0));
-  const { dragged, draggedLine, onDragStart, onDragCancel, onDragEnd } = useBlockDrag(source, rows, disabled, change, {
-    codeArea,
-    pointer,
-    dragScope,
-    lastSlot,
-  });
+  // Block edits keep the source laid out by depth, so the text view reads like the blocks.
+  const blockChange = (value: string) => change(indentSource(value));
+  const insert = (command: string) => blockChange(placeBlock(source, command, source ? source.split('\n').length : 0));
+  // A program that has never been indented, such as a shift's starting code, opens in the text view laid out too.
+  useEffect(() => {
+    if (textMode && !disabled && !/^[ \t]/m.test(source) && indentSource(source) !== source)
+      onChange(indentSource(source));
+    // Only on opening the text view or switching robots: text typed by hand keeps its layout.
+  }, [textMode, role]);
+  const { dragged, draggedLine, onDragStart, onDragCancel, onDragEnd } = useBlockDrag(
+    source,
+    rows,
+    disabled,
+    blockChange,
+    {
+      codeArea,
+      pointer,
+      dragScope,
+      lastSlot,
+    },
+  );
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
+  const lines = source.split('\n');
+  const textFailure = textMode && !!failureMessage && failureLine >= 0 && failureLine < lines.length;
 
   return (
     <DndContext
@@ -96,6 +119,7 @@ export function Editor({
         canScroll: (element) => element === codeArea.current,
       }}
       collisionDetection={collisionDetection}
+      accessibility={{ announcements: dragAnnouncements(rows), screenReaderInstructions: dragInstructions }}
       onDragStart={onDragStart}
       onDragCancel={onDragCancel}
       onDragEnd={onDragEnd}
@@ -114,20 +138,35 @@ export function Editor({
             ))}
           </div>
         </section>
-        <div className="editor-body" aria-label="Code zone" ref={codeArea}>
-          {failureMessage && (textMode || !rows.length) && (
+        <div className="editor-body" role="group" aria-label="Code zone" ref={codeArea}>
+          {failureMessage && (textMode ? !textFailure : !rows.length) && (
             <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined} />
           )}
           {observation ? null : textMode ? (
-            <textarea
-              onClick={failureLine >= 0 ? onDismissFailure : undefined}
-              spellCheck={false}
-              aria-label="Program source"
-              value={source}
-              onChange={(e) => change(e.target.value)}
-              readOnly={locked}
-              className={'code-input ' + (failureLine >= 0 ? 'code-error' : '')}
-            />
+            <div className="code-text">
+              {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
+              <div className="code-text-lines" aria-hidden="true">
+                {lines.map((line, i) => (
+                  <div
+                    key={i}
+                    ref={i === failureLine ? failedText : undefined}
+                    className={i === failureLine ? 'failed' : i === markerLine ? 'active' : undefined}
+                  >
+                    {line || ' '}
+                  </div>
+                ))}
+              </div>
+              <textarea
+                onClick={failureLine >= 0 ? onDismissFailure : undefined}
+                spellCheck={false}
+                aria-label="Program source"
+                value={source}
+                onChange={(e) => change(e.target.value)}
+                readOnly={locked}
+                className="code-input"
+              />
+              {textFailure && <InstructionError message={failureMessage} anchor={failedText} />}
+            </div>
           ) : (
             <ProgramSurface root={root}>
               <ExecutionCursor
@@ -150,7 +189,7 @@ export function Editor({
                 inLoop={inLoop}
                 dragged={dragged}
                 draggedLine={draggedLine}
-                change={change}
+                change={blockChange}
               />
               <JumpArrows root={root} source={source} dragging={!!dragged} />
             </ProgramSurface>

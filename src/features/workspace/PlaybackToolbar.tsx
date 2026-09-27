@@ -24,7 +24,7 @@ export function PlaybackToolbar({
   onSpeed,
 }: PlaybackToolbarProps) {
   return (
-    <div className="playback-toolbar" aria-label="Simulation controls">
+    <div className="playback-toolbar" role="group" aria-label="Simulation controls">
       <button
         className={`primary run-button ${running ? 'stop-button' : ''}`}
         aria-keyshortcuts="Control+Enter Meta+Enter"

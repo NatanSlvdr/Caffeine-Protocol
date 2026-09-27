@@ -1,11 +1,12 @@
 import { ArrowRight } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import type { RunResult } from '@/domain';
+import type { LevelDefinition, RunResult } from '@/domain';
 import { pad2, starRow } from '@/shared/lib/format';
 
 export interface ReceiptModalProps {
   index: number;
+  level: LevelDefinition;
   result: RunResult;
   observation: boolean;
   isLastShift: boolean;
@@ -13,48 +14,62 @@ export interface ReceiptModalProps {
   onClose: () => void;
 }
 
-/** Service receipt: stars, totals, and the next shift. */
-export function ReceiptModal({ index, result, observation, isLastShift, onNext, onClose }: ReceiptModalProps) {
+/** Service receipt: stars, the totals measured against this shift's targets, and the next shift. */
+export function ReceiptModal({ index, level, result, observation, isLastShift, onNext, onClose }: ReceiptModalProps) {
+  const blocks = result.block_count ?? 0;
   return (
-    <Modal title="Service complete" onClose={onClose} className="receipt-modal">
-      <div className="receipt-heading">
-        CAFFEINE PROTOCOL<small>SHIFT {pad2(index + 1)} · SERVICE RECEIPT</small>
-      </div>
-      <h3>Every order, taken care of.</h3>
-      <p>Your routine completed the service successfully.</p>
+    <Modal
+      title="Service complete"
+      kicker={`Shift ${pad2(index + 1)} · Service receipt`}
+      onClose={onClose}
+      className="settings-window confirm-slip receipt-slip"
+    >
+      <p className="receipt-lead">
+        {observation ? 'The crew served every order on their own.' : 'Every order, taken care of.'}
+      </p>
       {!observation && (
-        <div className="receipt-stars" aria-label={`${result.stars} stars`}>
+        <p className="receipt-stars" role="img" aria-label={`${result.stars} of 3 stars`}>
           {starRow(result.stars)}
-        </div>
+        </p>
       )}
       <dl className="receipt-totals">
         <div>
-          <dt>Orders</dt>
+          <dt>Orders served</dt>
           <dd>{result.tickets.length}</dd>
         </div>
-        <div>
-          <dt>Instructions</dt>
-          <dd>{result.executed_instructions}</dd>
-        </div>
-        <div>
-          <dt>Status</dt>
-          <dd>Complete ✓</dd>
-        </div>
+        {!observation && (
+          <>
+            <div className={blocks <= level.block_target ? 'met' : ''}>
+              <dt>Blocks used</dt>
+              <dd>
+                {blocks} <small>/ {level.block_target}</small>
+              </dd>
+            </div>
+            <div className={result.executed_instructions <= level.instruction_target ? 'met' : ''}>
+              <dt>Steps run</dt>
+              <dd>
+                {result.executed_instructions} <small>/ {level.instruction_target}</small>
+              </dd>
+            </div>
+          </>
+        )}
       </dl>
-      <p className="receipt-thanks">Thank you. See you next shift!</p>
-      <Button
-        variant="primary"
-        onClick={() => {
-          onClose();
-          onNext();
-        }}
-      >
-        {isLastShift ? 'Closing time' : 'Next shift'}
-        <ArrowRight size={16} />
-      </Button>
-      <Button variant="text-link" onClick={onClose}>
-        Back to the café
-      </Button>
+      <p className="receipt-thanks">{isLastShift ? 'Last order of the day.' : 'Thank you. See you next shift!'}</p>
+      <div className="modal-buttons">
+        <button className="settings-chip" onClick={onClose}>
+          Stay on this shift
+        </button>
+        <Button
+          variant="primary"
+          onClick={() => {
+            onClose();
+            onNext();
+          }}
+        >
+          {isLastShift ? 'Closing time' : 'Next shift'}
+          <ArrowRight size={16} />
+        </Button>
+      </div>
     </Modal>
   );
 }

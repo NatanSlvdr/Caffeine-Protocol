@@ -32,7 +32,6 @@ export interface WorkspaceProps {
   update: (updater: (save: ProgressSave) => ProgressSave) => void;
   lessons: LessonCatalog;
   shift: WorkspaceShift;
-  saveError: string;
   isLastShift: boolean;
   onNext: () => void;
   onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
@@ -46,7 +45,6 @@ export function Workspace({
   update,
   lessons,
   shift,
-  saveError,
   isLastShift,
   onNext,
   onComplete,
@@ -110,11 +108,6 @@ export function Workspace({
             <button className="breadcrumb" onClick={() => go('/campaign')}>
               <ArrowLeft size={14} /> Campaign <span>/</span> Shift {pad2(index + 1)}
             </button>
-            {saveError && (
-              <p className="error-text" role="alert">
-                {saveError}
-              </p>
-            )}
             <div className="view-controls" role="group" aria-label="Camera view">
               <button
                 type="button"
@@ -196,6 +189,7 @@ export function Workspace({
       {modal === 'help' && (
         <HelpModal
           index={index}
+          title={shift.title}
           lesson={lesson}
           brief={brief}
           level={level}
@@ -235,6 +229,7 @@ export function Workspace({
       {modal === 'receipt' && result?.passed && (
         <ReceiptModal
           index={index}
+          level={level}
           result={result}
           observation={observation}
           isLastShift={isLastShift}

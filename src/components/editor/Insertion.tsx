@@ -61,7 +61,7 @@ export function Insertion({
         )}
       </div>
       {!isElse && preview && (
-        <div className="drop-projection" aria-label="Block placement preview">
+        <div className="drop-projection" aria-hidden="true">
           <ProjectedBlocks blocks={blocks} />
         </div>
       )}

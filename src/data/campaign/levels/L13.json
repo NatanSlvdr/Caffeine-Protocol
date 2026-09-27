@@ -1347,7 +1347,7 @@
       ]
     }
   ],
-  "summary": "The queue is denser and requests contain more orders. Keep every ticket correct and return to listen; there is no new syntax.",
+  "summary": "The queue is denser and requests contain more orders. Keep every ticket correct and jump back to Wait for Orders; there are no new blocks.",
   "title": "Level 13: The Lunch Crunch",
   "act": 1
 }

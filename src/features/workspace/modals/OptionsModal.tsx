@@ -25,7 +25,7 @@ export function OptionsModal({
   onClose,
 }: OptionsModalProps) {
   return (
-    <Modal title="Workspace options" onClose={onClose}>
+    <Modal className="settings-window confirm-slip" kicker="This shift" title="Workspace options" onClose={onClose}>
       <SettingRow
         title="Pixel-art shader"
         hint="Render the café with crisp pixels and outlined edges."
@@ -40,7 +40,7 @@ export function OptionsModal({
         onChange={(e) => onToggleTextMode(e.target.checked)}
       />
       <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
-      <button disabled={running || observation} onClick={onRequestReset}>
+      <button className="settings-chip" disabled={running || observation} onClick={onRequestReset}>
         <RotateCcw size={15} /> Reset to incoming program
       </button>
     </Modal>

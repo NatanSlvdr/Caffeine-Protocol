@@ -1,3 +1,5 @@
+import { parseStore, variableLabels } from './program/vars';
+
 /** Presentation-only family classification; operands serialize to the finite instruction language. */
 export function familyFor(command: string): string {
   if (command.startsWith('WRITE ')) return 'ITEM';
@@ -79,4 +81,20 @@ export function labelFor(command: string): { verb: string; value: string } {
 /** Presentation-only operands serialize to the finite instruction language. */
 export function blockFields(command: string) {
   return { family: familyFor(command), ...labelFor(command) };
+}
+
+/** A block as a screen reader hears it, in the words its tile shows. */
+export function spokenBlock(command: string): string {
+  if (command.startsWith('POSITION ')) return 'jump destination';
+  const store = parseStore(command);
+  const { verb, value } = labelFor(command);
+  // Directions and sugar counts sit in the tile's fields, so the command itself says them best.
+  const text = store
+    ? `store ${store.variable} = ${store.value === 'number' ? 'number in item' : store.value}`
+    : /^(TAKE|DEPOSIT|WRITE) /.test(command)
+      ? command
+      : `${verb} ${value}`;
+  return variableLabels(text.toLowerCase().replace('heard orders', 'order').replace('customer speech', 'orders'))
+    .toLowerCase()
+    .trim();
 }

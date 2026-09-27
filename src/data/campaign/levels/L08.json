@@ -202,7 +202,7 @@
       ]
     }
   ],
-  "summary": "Different wording exposes the same recognized concepts. Reuse the same token tests; no new commands are needed.",
+  "summary": "Different wording still yields the same recognized words. Reuse the same checks; no new blocks are needed.",
   "title": "Level 8: Latte Lingo",
   "act": 1
 }

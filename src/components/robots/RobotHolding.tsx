@@ -1,5 +1,5 @@
 import type { ActorSnapshot, Cargo, OrderTicket } from '@/domain';
-import { blockFields, cargoLabel, variableLabels } from '@/domain';
+import { blockFields, cargoLabel, parseSugarWrite, variableLabels } from '@/domain';
 import { Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
 import { OperandIcon } from '../OperandIcon';
@@ -27,15 +27,22 @@ export function RobotHolding({
 }) {
   const memory = Object.entries(variables ?? {}).filter((entry): entry is [string, number] => entry[1] !== undefined);
   const fields = action ? blockFields(action.command) : undefined;
-  const thinking = !!fields && ['IF', 'ELSE', 'FOR', 'REPEAT', 'END', 'JUMP', 'CALL', 'RETURN', 'FUNCTION', 'READ', 'POSITION'].includes(fields.family);
+  const thinking =
+    !!fields &&
+    ['IF', 'ELSE', 'FOR', 'REPEAT', 'END', 'JUMP', 'CALL', 'RETURN', 'FUNCTION', 'READ', 'POSITION'].includes(
+      fields.family,
+    );
   const visibleAction =
-    fields && (thinking || ['TAKE', 'DEPOSIT', 'ITEM', 'STORE', 'MOVE', 'WAIT'].includes(fields.family)) ? action : undefined;
+    fields && (thinking || ['TAKE', 'DEPOSIT', 'ITEM', 'STORE', 'MOVE', 'WAIT'].includes(fields.family))
+      ? action
+      : undefined;
   if (!paper && !inventory.length && !visibleAction && !memory.length) return null;
-  const actionLabel =
-    thinking
-      ? 'Thinking'
-      : action?.command.startsWith('STORE ')
-        ? `Store ${variableLabels(action.command.split(' ')[1])} in memory`
+  const actionLabel = thinking
+    ? 'Thinking'
+    : action?.command.startsWith('STORE ')
+      ? `Store ${variableLabels(action.command.split(' ')[1])} in memory`
+      : action && parseSugarWrite(action.command) !== undefined
+        ? `Write ${variableLabels(parseSugarWrite(action.command)!)} Sugar`
         : fields
           ? `${fields.verb} ${fields.value}`.trim()
           : '';
@@ -50,10 +57,20 @@ export function RobotHolding({
           : '')
     : '';
   return (
-    <AutoHeight className="robot-holding" contentClassName="robot-holding-content" label={`${name} is holding`} paused={paused} reduced={reduced} extraHeight={10}>
+    <AutoHeight
+      className="robot-holding"
+      contentClassName="robot-holding-content"
+      label={`${name} is holding`}
+      paused={paused}
+      reduced={reduced}
+      extraHeight={10}
+    >
       {visibleAction && (
-        <div className="robot-action" aria-label={`${name}: ${actionLabel}`}>
-          <span className={`robot-action-icon action-${thinking ? 'thinking' : fields?.family.toLowerCase()}`} aria-hidden="true">
+        <div className="robot-action" role="group" aria-label={`${name}: ${actionLabel}`}>
+          <span
+            className={`robot-action-icon action-${thinking ? 'thinking' : fields?.family.toLowerCase()}`}
+            aria-hidden="true"
+          >
             {thinking ? (
               <>
                 <Settings className="thinking-gear" strokeWidth={1.8} />
@@ -69,7 +86,11 @@ export function RobotHolding({
       {(paper || inventory.length > 0) && (
         <ul aria-label={`${name} inventory`}>
           {paper && (
-            <li key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`} title={paperLabel} aria-label={paperLabel}>
+            <li
+              key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`}
+              title={paperLabel}
+              aria-label={paperLabel}
+            >
               <span className="holding-item-icon">
                 <HoldingIcon item={paper.item} stage="paper" />
                 {(paper.quantity ?? 1) > 1 && <span className="order-quantity">×{paper.quantity}</span>}
@@ -101,7 +122,7 @@ export function RobotHolding({
         </ul>
       )}
       {!!memory.length && (
-        <div className="robot-memory" aria-label={`${name} memory`}>
+        <div className="robot-memory" role="group" aria-label={`${name} memory`}>
           {memory.map(([variable, value]) => (
             <span key={variable}>
               <OperandIcon value={variable} />

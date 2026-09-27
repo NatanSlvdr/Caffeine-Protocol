@@ -13,13 +13,13 @@ afterEach(() => {
 describe('compact visual code', () => {
   it('offers the simplified library and matching action icons', async () => {
     render(<Harness />);
-    expect(screen.queryByRole('button', { name: 'Insert REPEAT' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Insert CHARGE ORDER' })).toBeNull();
-    expect(screen.getByRole('button', { name: 'Insert TAKE UP' }).querySelector('.lucide-hand')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Insert MOVE RIGHT 1' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Insert DEPOSIT RIGHT' }).querySelector('.lucide-hand')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Insert ITEM coffee' }).querySelector('.lucide-pen-line')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Insert JUMP listen' }).querySelector('.jump-icon')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Insert repeat' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Insert charge order' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Insert take up' }).querySelector('.lucide-hand')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Insert move right 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Insert deposit right' }).querySelector('.lucide-hand')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Insert write coffee' }).querySelector('.lucide-pen-line')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Insert jump listen' }).querySelector('.jump-icon')).toBeTruthy();
     expect(
       screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span'),
     ).toHaveLength(9);
@@ -126,14 +126,14 @@ describe('compact visual code', () => {
     render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nEND'} />);
     await user.click(document.querySelector('[data-line="1"] .block-verb')!);
     await choose('Library Write value', 'tea');
-    await user.click(screen.getByRole('button', { name: 'Insert ITEM coffee' }));
+    await user.click(screen.getByRole('button', { name: 'Insert write coffee' }));
     expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\nEND\nITEM coffee');
     expect(document.querySelectorAll('.block.selected')).toHaveLength(0);
   });
   it('preserves branch contents when editing the condition', async () => {
     render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nTICKET\nEND'} />);
     await choose('Block 2 value', 'coffee');
-    expect(source()).toBe('LISTEN\nIF coffee IN CUSTOMER SPEECH\nTICKET\nEND');
+    expect(source()).toBe('LISTEN\nIF coffee IN CUSTOMER SPEECH\n  TICKET\nEND');
     expect(compileProgram(source()).compile_error).toBe('');
   });
   it('edits token membership using one condition block with scoped operands', async () => {
@@ -146,7 +146,7 @@ describe('compact visual code', () => {
   });
   it('inserts a FOR scope with separate variable and collection selectors', async () => {
     render(<Harness level={9} />);
-    await userEvent.click(screen.getByRole('button', { name: 'Insert FOR item IN heard orders' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Insert for item in order' }));
     expect(source()).toBe('LISTEN\nFOR item IN heard orders\nEND');
     expect(screen.getByLabelText('Block 2 variable').textContent).toBe('item');
     expect(screen.getByLabelText('Block 2 selector').textContent).toBe('order');
@@ -164,13 +164,13 @@ describe('compact visual code', () => {
     await choose('Block 2 connector', 'AND');
     await choose('Block 2 condition 2 value', 'Negation');
     await choose('Block 2 condition 2 operator', 'NOT IN');
-    expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH\nSUGAR true\nEND');
+    expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH\n  SUGAR true\nEND');
     expect(document.querySelectorAll('[data-line="1"] .if-comparison-operands')).toHaveLength(2);
     expect(compileProgram(source(), 7).compile_error).toBe('');
     await choose('Block 2 connector', 'OR');
     expect(source()).toContain('sugar IN CUSTOMER SPEECH OR negation NOT IN CUSTOMER SPEECH');
     await choose('Block 2 connector', 'Remove following condition');
-    expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND');
+    expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH\n  SUGAR true\nEND');
   });
   it('offers item only when editing a condition inside FOR', async () => {
     render(
@@ -182,7 +182,7 @@ describe('compact visual code', () => {
     await userEvent.click(screen.getByLabelText('Block 2 source'));
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Orders']);
     await userEvent.keyboard('{Escape}');
-    await userEvent.click(screen.getByLabelText('Block 5 source'));
+    await userEvent.click(screen.getByLabelText('Block 4 source'));
     expect(screen.getAllByRole('option').map((option) => option.textContent)).toEqual(['Orders', 'item']);
   });
   it('edits quantity before the drink without a paper suffix', () => {
@@ -224,7 +224,7 @@ describe('compact visual code', () => {
     await userEvent.click(screen.getByLabelText('Block 3 direction'));
     expect(screen.getAllByRole('option')).toHaveLength(8);
     await userEvent.click(screen.getByRole('option', { name: 'up left' }));
-    expect(source()).toBe('LISTEN\nIF tea\nMOVE UP_LEFT 1\nEND');
+    expect(source()).toBe('LISTEN\nIF tea\n  MOVE UP_LEFT 1\nEND');
   });
   it('locks editing during replay', async () => {
     render(<Harness locked />);
@@ -233,12 +233,12 @@ describe('compact visual code', () => {
         button instanceof HTMLButtonElement ? button.disabled : button.getAttribute('aria-disabled') === 'true',
       ).toBe(true);
     for (const combo of screen.getAllByRole('combobox')) expect((combo as HTMLButtonElement).disabled).toBe(true);
-    await userEvent.click(screen.getByRole('button', { name: 'Insert TAKE UP' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Insert take up' }));
     expect(source()).toBe('LISTEN');
   });
   it('connects a jump to a draggable empty marker', async () => {
     render(<Harness />);
-    await userEvent.click(screen.getByRole('button', { name: 'Insert JUMP listen' }));
+    await userEvent.click(screen.getByRole('button', { name: 'Insert jump listen' }));
     expect(source()).toBe('POSITION listen\nLISTEN\nJUMP listen');
     expect(screen.getByLabelText('Drag jump destination')).toBeTruthy();
     expect(document.querySelector('[data-target] .block-verb')).toBeNull();
@@ -348,7 +348,7 @@ describe('compact visual code', () => {
       },
     );
     render(<Harness initial={initial} />);
-    const tile = screen.getByLabelText('Drag block 3 and its group');
+    const tile = screen.getByLabelText('Drag block 3 (if coffee in orders) and its group');
     fireEvent.pointerDown(tile, { button: 0, buttons: 1, clientX: 60, clientY: 355 });
     // The block's top edge (340 - 70) rests on the Else slot.
     fireEvent.pointerMove(document, { clientX: 60, clientY: 290 });
@@ -358,7 +358,9 @@ describe('compact visual code', () => {
     );
     expect(source()).toBe(initial);
     fireEvent.pointerUp(document);
-    expect(source()).toBe('IF tea IN CUSTOMER SPEECH\nTICKET\nELSE\nIF coffee IN CUSTOMER SPEECH\nHELP\nEND\nEND');
+    expect(source()).toBe(
+      'IF tea IN CUSTOMER SPEECH\n  TICKET\nELSE\n  IF coffee IN CUSTOMER SPEECH\n    HELP\n  END\nEND',
+    );
     expect(document.querySelector('.else-body .scope-body .code-scope')).toBeTruthy();
     // dnd-kit briefly suppresses the click following a pointer drop.
     await new Promise((resolve) => setTimeout(resolve, 60));
@@ -569,7 +571,7 @@ it('keeps jump endpoints attached while the final layout animation settles', () 
 });
 it('places the Store icon and label inside the variable tile in both shop and program', () => {
   render(<Harness level={10} initial={'LISTEN\nSTORE var1 FROM number'} />);
-  const shop = screen.getByRole('button', { name: 'Insert STORE var1 FROM number' });
+  const shop = screen.getByRole('button', { name: 'Insert store var a = number in item' });
   expect(shop.querySelector('.lucide-save')).toBeTruthy();
   expect(shop.textContent).toBe('Store :');
   expect(shop.closest('.assignment-tile')?.querySelector('[role=combobox]')).toBeTruthy();

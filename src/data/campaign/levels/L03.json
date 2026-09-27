@@ -45,7 +45,7 @@
       ]
     }
   ],
-  "summary": "Listen, TAKE UP from the paper stack, and write coffee on the held paper. MOVE RIGHT 1, DEPOSIT RIGHT at the kitchen handoff, then MOVE LEFT 1 to the register. Checkout is automatic.",
+  "summary": "Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.",
   "title": "Level 3: Hello, World Roast",
   "act": 1
 }

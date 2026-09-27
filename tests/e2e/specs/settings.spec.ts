@@ -63,7 +63,7 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
-  await expect(page.getByRole('button', { name: `Shift 14: ${titleFor(13)}`, exact: true })).toBeEnabled();
+  await expect(page.getByRole('button', { name: `Shift 14: ${titleFor(13)}, next up`, exact: true })).toBeEnabled();
   // A fresh start keeps settings while clearing progress (the imported seed uses defaults).
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Start a new café', exact: true }).click();

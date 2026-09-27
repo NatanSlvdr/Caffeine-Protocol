@@ -18,6 +18,7 @@ export function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
           data-target={block.command.startsWith('POSITION ') ? block.command.slice(9) : undefined}
           data-line={block.line}
         >
+          {block.command.startsWith('POSITION ') && <BlockIcon command={block.command} />}
           {!block.command.startsWith('POSITION ') && (
             <>
               {!parseStore(block.command) && (
@@ -33,7 +34,11 @@ export function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
       </div>
       {block.children && (
         <div className="scope-body">
-          {block.children.length ? <ProjectedBlocks blocks={block.children} /> : <div className="empty-scope">Drop a block here</div>}
+          {block.children.length ? (
+            <ProjectedBlocks blocks={block.children} />
+          ) : (
+            <div className="empty-scope">Drop a block here</div>
+          )}
         </div>
       )}
       {!!block.alternative?.length && (

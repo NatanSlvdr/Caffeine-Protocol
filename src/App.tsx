@@ -4,14 +4,14 @@ import { stories } from '@/data/campaign/narrative';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { Workspace } from '@/features/workspace/Workspace';
+import { GuideWindow } from '@/app/GuideWindow';
+import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
-import { AppHeader } from '@/shell/AppHeader';
-import { Rail } from '@/shell/Rail';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, InterludePage } from '@/shell/StoryPages';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
-import { go, onOpenSettings } from '@/shared/lib/navigation';
+import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { useSound } from '@/hooks/useSound';
 
 export default function App() {
@@ -23,12 +23,16 @@ export default function App() {
 }
 
 function Shell() {
-  const { save, saveError, route, update, select, completeShift, resetCafe } = useGame();
+  const { save, route, update, select, completeShift, resetCafe } = useGame();
   const [modal, setModal] = useState('');
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [guideOpen, setGuideOpen] = useState(false);
   useEffect(() => onOpenSettings(() => setSettingsOpen(true)), []);
-  const index = Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, Number(route.split('/')[2] || 1) - 1));
-  const accessible = Number.isInteger(index) && index <= save.unlocked;
+  useEffect(() => onOpenGuide(() => setGuideOpen(true)), []);
+  // A hand-typed address like #/shift/abc falls back to the home page rather than loading no shift at all.
+  const requested = Number(route.split('/')[2] || 1);
+  const index = Number.isInteger(requested) ? Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, requested - 1)) : 0;
+  const accessible = Number.isInteger(requested) && index <= save.unlocked;
   const page = route.split('/')[1];
   const screen =
     page === 'shift' && accessible
@@ -45,11 +49,7 @@ function Shell() {
   const playRetry = useSound('retry');
   return (
     <div className={`app ${screen}`}>
-      {screen !== 'home' && screen !== 'campaign' && <AppHeader />}
       <div className="app-body">
-        {screen !== 'home' && screen !== 'campaign' && screen !== 'workspace' && (
-          <Rail screen={screen} onGuide={() => setModal('guide')} />
-        )}
         {screen === 'home' && <HomePage />}
         {screen === 'campaign' && <CampaignPage />}
         {screen === 'workspace' && (
@@ -60,7 +60,6 @@ function Shell() {
             update={update}
             lessons={lessons}
             shift={shift}
-            saveError={saveError}
             isLastShift={index === CAMPAIGN_LENGTH - 1}
             onNext={() => {
               if (index === CAMPAIGN_LENGTH - 1) go('/ending');
@@ -76,6 +75,7 @@ function Shell() {
         {screen === 'interlude' && <InterludePage index={index} />}
         {screen === 'ending' && <EndingPage />}
       </div>
+      <SaveNotice />
       {(settingsOpen || page === 'settings') && (
         <SettingsWindow
           onNew={() => setModal('new')}
@@ -86,11 +86,18 @@ function Shell() {
         />
       )}
       {modal === 'new' && (
-        <Modal title="Start a new café?" onClose={() => setModal('')}>
+        <Modal
+          className="settings-window confirm-slip"
+          kicker="A fresh start"
+          title="Start a new café?"
+          onClose={() => setModal('')}
+        >
           <p>This clears all shifts, stars, programs and story progress. Your audio and display settings will stay.</p>
           <p>Export your current café first if you want to return to it.</p>
           <div className="modal-buttons">
-            <button onClick={() => setModal('')}>Keep my café</button>
+            <button className="settings-chip" onClick={() => setModal('')}>
+              Keep my café
+            </button>
             <Button
               variant="danger"
               onClick={() => {
@@ -104,33 +111,7 @@ function Shell() {
           </div>
         </Modal>
       )}
-      {modal === 'guide' && (
-        <Modal title="A little logic. A lot of heart." onClose={() => setModal('')}>
-          <p>
-            Follow 32 shifts. Query takes orders from shift 3; Brew takes over the kitchen at shift 15; Porter takes
-            over the floor at shift 23. Moka handles the kitchen and Pip handles the floor automatically until you
-            program those roles. MOVE uses screen directions and whole tiles. Blocked moves stop early; customers never
-            block paths. Use station actions beside the matching equipment. Query moves right one tile to Submit Ticket
-            at the shared kitchen counter, then left one tile back to the register, where checkout is automatic. Coffee
-            costs 3 credits and tea 2; sugar is included.
-          </p>
-          <p>
-            Choose a block from the library and click its action name to append it to your routine, or drag it to a drop
-            position. Set its values in the code pane; library selectors only preview the available options. Drag its
-            grip to move a complete branch, loop or function. Drop a block into the optional else area to add an
-            alternative. Move the empty destination tile to route a jump. Grip controls also work with Space, arrow keys
-            and Space to drop.
-          </p>
-          <p>
-            Run service with <kbd>Ctrl / ⌘ + Enter</kbd>. Run the current shift one instruction at a time. One star
-            rewards correctness; the second rewards the block target, and the third rewards the step target.
-          </p>
-          <p>
-            Follow each customer’s request above their head. If an instruction fails, its line is highlighted and you
-            can edit immediately. Help in each shift includes its lesson and a worked example.
-          </p>
-        </Modal>
-      )}
+      {guideOpen && <GuideWindow onClose={() => setGuideOpen(false)} />}
     </div>
   );
 }

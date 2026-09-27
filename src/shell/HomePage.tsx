@@ -1,6 +1,6 @@
-import { ArrowRight, BookOpen, Settings2 } from 'lucide-react';
+import { ArrowRight, BookOpen, CircleHelp, Settings2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
-import { go, openSettings } from '@/shared/lib/navigation';
+import { go, openGuide, openSettings } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 import { HomeCafePreview } from './HomeCafePreview';
 
@@ -32,11 +32,16 @@ export function HomePage() {
               Choose a shift
               <ArrowRight size={19} />
             </Button>
-            <button className="front-link" onClick={openSettings}>
-              <Settings2 size={17} /> Settings
-            </button>
+            <div className="front-links">
+              <button className="front-link" onClick={openGuide}>
+                <CircleHelp size={17} /> How to play
+              </button>
+              <button className="front-link" onClick={openSettings}>
+                <Settings2 size={17} /> Settings
+              </button>
+            </div>
           </div>
-          <footer className="front-foot" aria-hidden="true">
+          <footer className="front-foot">
             <p>
               <span>Served</span>
               <span>
@@ -49,7 +54,7 @@ export function HomePage() {
                 {progress.stars}/{progress.max}
               </span>
             </p>
-            <span className="front-barcode" />
+            <span className="front-barcode" aria-hidden="true" />
             <small>{progress.done > 0 ? 'Welcome back' : 'Doors open soon'}</small>
           </footer>
         </article>

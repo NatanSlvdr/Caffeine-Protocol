@@ -18,7 +18,9 @@ export interface LiveRunArgs {
 
 /** Owns the live run lifecycle: programs, role, result, clock, and completion. View state stays in Workspace. */
 export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, onFinish }: LiveRunArgs) {
-  const [programs, setPrograms] = useState(() => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons)),
+  const [programs, setPrograms] = useState(
+      () => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons),
+    ),
     [role, setRole] = useState<RobotRole>(robotForLevel(index + 1));
   const source = programs[role];
   const [result, setResult] = useState<RunResult | null>(null),
@@ -38,9 +40,13 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
   // instruction waiting for the next customer when no action is in flight.
   const activeLine =
-    running && (!result || result.passed) ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine)) : -1;
+    running && (!result || result.passed)
+      ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine))
+      : -1;
   const failureLine =
-    showFailure && result && !result.passed && result.first_failure?.role === role ? (result.first_failure?.error_line ?? -1) : -1;
+    showFailure && result && !result.passed && result.first_failure?.role === role
+      ? (result.first_failure?.error_line ?? -1)
+      : -1;
   const instructionProgress =
     displayedTrace && sampled && displayedTrace.end > displayedTrace.start
       ? (sampled.local - displayedTrace.start) / (displayedTrace.end - displayedTrace.start)
@@ -58,9 +64,25 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPaused(false);
     setShowFailure(false);
   };
+  const fail = (failed: RunResult) => {
+    setPaused(true);
+    setShowFailure(true);
+    if (failed.first_failure?.role) setRole(failed.first_failure.role);
+    onFinish(false);
+  };
   const run = () => {
     if (running) {
       stop();
+      return;
+    }
+    // A program that fails as the doors open, like a typo, reports at once instead of after the street intro.
+    const opening = createLiveRun(level, programs).advance(STREET_APPROACH_SECONDS);
+    if (opening.done && !opening.result.passed) {
+      liveRun.current = null;
+      setResult(opening.result);
+      setReplayTime(opening.time);
+      setRunning(true);
+      fail(opening.result);
       return;
     }
     liveRun.current = createLiveRun(level, programs);
@@ -85,12 +107,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
         setPaused(false);
         onComplete(frame.result.stars, programs.query, programs);
         onFinish(true);
-      } else {
-        setPaused(true);
-        setShowFailure(true);
-        if (frame.result.first_failure?.role) setRole(frame.result.first_failure.role);
-        onFinish(false);
-      }
+      } else fail(frame.result);
     },
     [speed, index, level, programs],
   );

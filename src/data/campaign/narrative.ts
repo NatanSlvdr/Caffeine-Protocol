@@ -18,7 +18,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Watch how one customer’s order goes from the register to a finished drink and a cleared table.',
     hint: 'Just watch one order go round.',
     lessonNote:
-      'Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Open the paper details to inspect the lifecycle.',
+      'Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Follow each order from the register, through the kitchen, to the table.',
   },
   {
     level: 2,
@@ -26,10 +26,10 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'The morning queue is growing faster than the foam. Moka brews, Pip delivers, and Niko juggles every order. Someone should really help.',
     objective:
-      'Orders pile up at the register while Niko is busy brewing. Watch the rush and find the job Query could take over.',
+      'Orders pile up at the register while Niko takes them one at a time. Watch the rush and find the job Query could take over.',
     hint: 'Spot the job Query could take.',
     lessonNote:
-      'Niko: Eight orders, one pair of hands. The counter queue keeps growing while I brew. Query could help, once we repair the controller.',
+      'Niko: Eight orders, one pair of hands. The counter queue keeps growing while I write every ticket. Query could help, once we repair the controller.',
   },
   {
     level: 3,
@@ -39,7 +39,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'A customer wants a coffee, but the kitchen can only make drinks from a written ticket handed over from the counter.',
     hint: 'Take paper, write it, hand it over.',
     lessonNote:
-      'Listen, TAKE UP from the paper stack, and write coffee on the held paper. MOVE RIGHT 1, DEPOSIT RIGHT at the kitchen handoff, then MOVE LEFT 1 to the register. Checkout is automatic.',
+      'Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.',
     interlude: {
       title: 'A voice at the counter',
       text: "Niko tightens the last screw. The scrapyard robot's display blinks.\n\nQUERY: Hearing module online. What is a coffee?\nNIKO: Let's begin with one customer, one ticket. Moka will handle the brewing, and Pip will serve the drinks.",
@@ -54,7 +54,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Customers now order either coffee or tea. Each ticket must name the drink the customer actually asked for.',
     hint: 'Listen for the word tea.',
     lessonNote:
-      'Conditions inspect the recognized customer speech. Use IF tea IN CUSTOMER SPEECH to test its tokens, then write tea or coffee. No loop is needed yet.',
+      'Conditions check what the customer said. Use If Tea IN Orders to test it, then Write Tea or Write Coffee. No loop is needed yet.',
   },
   {
     level: 5,
@@ -64,7 +64,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Several customers are waiting, but Query stops after the first order. Every customer in the queue needs to be served.',
     hint: 'Jump back and listen again.',
     lessonNote:
-      'Put POSITION listen before LISTEN and JUMP listen after returning to the register. Keep serving every customer.',
+      'Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. Keep serving every customer.',
   },
   {
     level: 6,
@@ -73,7 +73,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Some customers ask for sugar. If their ticket doesn’t say so, their drink arrives unsweetened.',
     hint: 'Sweet requests need a sugar note.',
     lessonNote:
-      'IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use WRITE 1 sugar on the held paper. New paper starts without sugar.',
+      'If Sugar IN Orders catches a request for sugar. Use Write 1 Sugar on the held paper. New paper starts without sugar.',
   },
   {
     level: 7,
@@ -83,7 +83,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Some customers say “without sugar”. They mention sugar but don’t want any, and their tickets must reflect that.',
     hint: 'Watch out for “without”.',
     lessonNote:
-      'Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write WRITE 0 sugar or WRITE 1 sugar.',
+      '“Without sugar” still contains Sugar, plus Negation. Inside If Sugar IN Orders, test If Negation IN Orders, then Write 0 Sugar or Write 1 Sugar.',
   },
   {
     level: 8,
@@ -94,7 +94,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Regulars phrase the same orders in different ways. Each ticket must still match what the customer meant.',
     hint: 'Different words, same order.',
     lessonNote:
-      'Different wording exposes the same recognized concepts. Reuse the same token tests; no new commands are needed.',
+      'Different wording still yields the same recognized words. Reuse the same checks; no new blocks are needed.',
     interlude: {
       title: 'The regulars',
       text: "QUERY: 'One tea' and 'tea please' have different lengths.\nNIKO: But the same recognized tokens. Test the concepts you hear.\n\nQuery opens a fresh page in the service manual.",
@@ -108,7 +108,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Some customers order several drinks at once. The kitchen needs a separate ticket for every drink.',
     hint: 'One sheet per drink.',
     lessonNote:
-      'FOR item IN heard orders selects each order group. Take a fresh sheet, interpret that item, deposit it, and return to the register inside every iteration.',
+      'For item in order visits each drink in the order. Take a fresh sheet, write that item, deposit it, and return to the register on every pass.',
   },
   {
     level: 10,
@@ -119,7 +119,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Customers now ask for an exact number of sugars, including zero. A simple yes or no is no longer enough.',
     hint: 'Count the sugars exactly.',
     lessonNote:
-      'IF number IN item detects numeric metadata. STORE var1 FROM number, then WRITE var1 sugar writes the exact amount, including zero. Keep modifier logic for orders without numbers.',
+      'If Number IN item checks for a count. Store Var A = Number in item, then Write Var A Sugar writes the exact amount, including zero. Keep the sugar and negation checks for orders without numbers.',
     interlude: {
       title: 'Two is not yes',
       text: "CUSTOMER: Two sugars, please.\nQUERY: Sugar: yes.\nNIKO: You're not wrong. You're just not precise enough.\n\nA number variable should help.",
@@ -133,7 +133,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Some customers order “the usual”, which Query can’t interpret. Guessing would send the wrong drink to the kitchen.',
     hint: 'When unsure, ask Niko.',
     lessonNote:
-      'An unclear request contains the ambiguous token. Before taking paper or starting FOR, use IF ambiguous IN CUSTOMER SPEECH and HELP. Niko replaces the heard orders with a clarification.',
+      'An unclear request contains Ambiguous. Before taking paper or starting For item in order, use If Ambiguous IN Orders and Help. Niko replaces the heard orders with a clarification.',
   },
   {
     level: 12,
@@ -152,7 +152,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'The queue is longer and customers order more drinks at once. Every ticket must still be correct.',
     hint: 'Same moves, longer queue.',
     lessonNote:
-      'The queue is denser and requests contain more orders. Keep every ticket correct and return to listen; there is no new syntax.',
+      'The queue is denser and requests contain more orders. Keep every ticket correct and jump back to Wait for Orders; there are no new blocks.',
   },
   {
     level: 14,
@@ -176,7 +176,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Brew’s recipe is almost complete, but the finished drink never reaches pickup, so nobody can serve it.',
     hint: 'Finish the recipe at pickup.',
     lessonNote:
-      'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Niko still serves the room.',
+      'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Pip still serves the room.',
     interlude: {
       title: 'A place at the workbench',
       text: 'Niko sets Brew beside the kitchen counter.\nQuery knows the orders. Now teach Brew the recipes, one tile and one ingredient at a time.\nPip will keep serving until you program Porter for the floor.',
@@ -190,7 +190,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Brew’s route doesn’t line up with the kitchen stations, so it tries to use them from the wrong place.',
     hint: 'Count the tiles to each station.',
     lessonNote:
-      'MOVE uses screen directions and whole tile counts. A blocked move stops early and the next instruction runs. Fix the route to the ingredients.',
+      'Move uses screen directions and whole tile counts. A blocked move stops early and the next block runs. Fix the route to the ingredients.',
   },
   {
     level: 17,
@@ -225,7 +225,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story: 'Brew has made the same recipes all morning. Let’s give those familiar steps a name, and just call them.',
     objective: 'Brew’s program repeats the same recipe steps for every ticket, which makes it long and hard to change.',
     hint: 'Name the recipe, then call it.',
-    lessonNote: 'Move a repeated recipe into FUNCTION recipe. CALL recipe handles the oldest unfinished ticket.',
+    lessonNote: 'Move a repeated recipe into Function recipe. Call recipe handles the oldest unfinished ticket.',
   },
   {
     level: 21,
@@ -246,7 +246,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Moka is gone and Brew runs the kitchen alone. A full service of mixed coffee, tea, and sugar requests must reach pickup.',
     hint: 'Keep the kitchen moving.',
     lessonNote:
-      'Keep Query and Brew working through mixed tickets and sugar requests. Niko owns delivery until Porter arrives.',
+      'Keep Query and Brew working through mixed tickets and sugar requests. Pip handles delivery until Porter arrives.',
   },
   {
     level: 23,
@@ -256,7 +256,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Finished drinks are waiting at pickup, and each ticket names the table that ordered it. Porter has never delivered one.',
     hint: 'The ticket names the table.',
     lessonNote:
-      'Porter owns floor work now. WAIT DRINK claims a delivery; TAKE down collects it from the outside of the kitchen counter.',
+      'Porter owns floor work now. Wait for Ready drink claims a delivery; Take down collects it from the outside of the kitchen counter.',
     interlude: {
       title: 'A tray and a little courage',
       text: 'Porter rolls up to the pickup counter.\nBrew has the kitchen. Query has the orders. The room is yours to program.\nEvery delivery begins with one tile.',
@@ -270,7 +270,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Guests sit at several tables and furniture blocks the direct path. Each drink must reach the table on its ticket.',
     hint: 'Mind the furniture.',
     lessonNote:
-      'Read the assigned TABLE, count the route, and SERVE beside that table. Furniture blocks movement; customers do not.',
+      'Check the assigned table, count the route, and Serve beside that table. Furniture blocks movement; customers do not.',
   },
   {
     level: 25,
@@ -288,7 +288,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Happy guests leave their empty cups behind. A clean table is the next guest’s first impression, so round them up.',
     objective: 'Guests leave empty cups on their tables. They need to go back to the sink before new guests arrive.',
     hint: 'Empty cups go to the sink.',
-    lessonNote: 'WAIT DIRTY selects a used cup. COLLECT at its table, then RETURN CUPS at the return station.',
+    lessonNote: 'Wait for Dirty cups picks a used cup. Collect it at its table, then Return cups at the sink.',
   },
   {
     level: 27,
@@ -315,7 +315,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Porter’s tray now holds two items, and one-at-a-time trips are too slow for this service. Anything beyond two won’t fit.',
     hint: 'Fill the tray before you go.',
     lessonNote:
-      'Porter now holds two items. Take two drinks before serving, then clear both tables. FIFO keeps the tray predictable.',
+      'Porter now holds two items. Take two drinks before serving, then clear both tables. The tray empties in the order it was filled.',
   },
   {
     level: 30,

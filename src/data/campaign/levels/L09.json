@@ -301,7 +301,7 @@
       ]
     }
   ],
-  "summary": "FOR item IN heard orders selects each order group. Take a fresh sheet, interpret that item, deposit it, and return to the register inside every iteration.",
+  "summary": "For item in order visits each drink in the order. Take a fresh sheet, write that item, deposit it, and return to the register on every pass.",
   "title": "Level 9: For Each Their Own",
   "act": 1
 }

@@ -339,7 +339,7 @@
       ]
     }
   ],
-  "summary": "IF number IN item detects numeric metadata. STORE var1 FROM number, then WRITE var1 sugar writes the exact amount, including zero. Keep modifier logic for orders without numbers.",
+  "summary": "If Number IN item checks for a count. Store Var A = Number in item, then Write Var A Sugar writes the exact amount, including zero. Keep the sugar and negation checks for orders without numbers.",
   "title": "Level 10: One Lump or Two?",
   "act": 1
 }

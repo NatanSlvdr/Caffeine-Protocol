@@ -13,9 +13,7 @@
           "phrase": "coffee",
           "heard_orders": [
             {
-              "tokens": [
-                "coffee"
-              ]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
@@ -34,9 +32,7 @@
           "phrase": "tea",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -55,9 +51,7 @@
           "phrase": "tea please",
           "heard_orders": [
             {
-              "tokens": [
-                "tea"
-              ]
+              "tokens": ["tea"]
             }
           ],
           "intent": {},
@@ -70,7 +64,7 @@
       ]
     }
   ],
-  "summary": "Conditions inspect the recognized customer speech. Use IF tea IN CUSTOMER SPEECH to test its tokens, then write tea or coffee. No loop is needed yet.",
+  "summary": "Conditions check what the customer said. Use If Tea IN Orders to test it, then Write Tea or Write Coffee. No loop is needed yet.",
   "title": "Level 4: Coffee or Tea?",
   "act": 1
 }

@@ -1,12 +1,13 @@
 import { ArrowRight } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import type { LevelDefinition, RobotPrograms, RobotRole } from '@/domain';
+import { indentSource, ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotPrograms, type RobotRole } from '@/domain';
 import { pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
 
 export interface HelpModalProps {
   index: number;
+  title: string;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
   level: LevelDefinition;
@@ -22,6 +23,7 @@ export interface HelpModalProps {
 /** Shift field notes: lesson, goal, star targets, and the worked example. */
 export function HelpModal({
   index,
+  title,
   lesson,
   brief,
   level,
@@ -33,8 +35,14 @@ export function HelpModal({
   onUseExample,
   onClose,
 }: HelpModalProps) {
+  const example = lesson.robotSolution?.[role] ?? lesson.solution;
   return (
-    <Modal title={`Shift ${pad2(index + 1)} · Field notes`} onClose={onClose}>
+    <Modal
+      className="settings-window confirm-slip help-slip"
+      kicker={`Shift ${pad2(index + 1)} · Field notes`}
+      title={title}
+      onClose={onClose}
+    >
       <div className="lesson-note">{lesson.note}</div>
       <p>{brief.story}</p>
       <p>
@@ -42,28 +50,53 @@ export function HelpModal({
       </p>
       {!observation && (
         <>
-          <div className="help-targets">
-            <span>★ Correct tickets</span>
-            <span>
-              ★★ ≤ {level.block_target} blocks
-            </span>
-            <span>
-              ★★★ ≤ {level.instruction_target} steps
-            </span>
-          </div>
-          <button onClick={onToggleSolution}>{showSolution ? 'Hide worked example' : 'Reveal worked example'}</button>
-          {showSolution && (
-            <>
-              <pre className="code-example">{lesson.robotSolution?.[role] ?? lesson.solution}</pre>
+          <dl className="help-targets">
+            <div>
+              <dt>
+                <span aria-hidden="true">★</span>
+                <span className="sr-only">One star</span>
+              </dt>
+              <dd>Every ticket correct</dd>
+            </div>
+            <div>
+              <dt>
+                <span aria-hidden="true">★★</span>
+                <span className="sr-only">Two stars</span>
+              </dt>
+              <dd>{level.block_target} blocks or fewer</dd>
+            </div>
+            <div>
+              <dt>
+                <span aria-hidden="true">★★★</span>
+                <span className="sr-only">Three stars</span>
+              </dt>
+              <dd>{level.instruction_target} steps or fewer</dd>
+            </div>
+          </dl>
+          <div className="modal-buttons help-example-actions">
+            <button className="settings-chip" aria-expanded={showSolution} onClick={onToggleSolution}>
+              {showSolution ? 'Hide worked example' : 'Reveal worked example'}
+            </button>
+            {showSolution && (
               <Button
                 variant="primary"
                 disabled={running}
                 onClick={() => {
-                  onUseExample(lesson.robotSolution?.[role] ?? lesson.solution);
+                  onUseExample(example);
                 }}
               >
                 Use this example <ArrowRight size={15} />
               </Button>
+            )}
+          </div>
+          {showSolution && (
+            <>
+              {lesson.robotSolution && (
+                <p className="code-example-label">
+                  {ROBOT_DISPLAY_NAMES[role]}’s routine · the other robots keep theirs
+                </p>
+              )}
+              <pre className="code-example">{indentSource(example)}</pre>
             </>
           )}
         </>

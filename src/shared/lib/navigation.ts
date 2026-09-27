@@ -17,3 +17,15 @@ export const onOpenSettings = (listener: () => void): (() => void) => {
   window.addEventListener(SETTINGS_EVENT, listener);
   return () => window.removeEventListener(SETTINGS_EVENT, listener);
 };
+
+const GUIDE_EVENT = 'caffeine:guide';
+
+/** The how-to-play guide opens over the current screen the same way. */
+export const openGuide = (): void => {
+  window.dispatchEvent(new Event(GUIDE_EVENT));
+};
+
+export const onOpenGuide = (listener: () => void): (() => void) => {
+  window.addEventListener(GUIDE_EVENT, listener);
+  return () => window.removeEventListener(GUIDE_EVENT, listener);
+};

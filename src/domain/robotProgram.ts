@@ -5,7 +5,7 @@ import { TABLE_LAYOUT } from './layout';
 import { DIRECTIONS } from './directions';
 import { DEPOSIT_RE, MOVE_RE, TAKE_RE } from './commands';
 import { QUERY_PROGRAM_LEVEL_CAP, ROBOT_STAND_IN_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
-import { ROBOT_UNLOCK_LEVELS } from './robots';
+import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from './robots';
 /** Shared motion, branching, and loop scaffolding for the kitchen/floor languages. */
 function baseMotionCommands(level: number): string[] {
   return [
@@ -90,7 +90,7 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
       !legacyAction &&
       !comparisonUnlocked(c, level)
     )
-      return fail(`Unknown or locked ${role} instruction: ${c}`, line);
+      return fail(`Unknown or locked instruction for ${ROBOT_DISPLAY_NAMES[role]}: ${c}`, line);
     const i = p.instructions.length;
     p.instructions.push(c);
     p.source_lines.push(line);

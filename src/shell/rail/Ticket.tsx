@@ -100,7 +100,18 @@ export function Ticket({
                 className={classes.filter(Boolean).join(' ')}
                 onClick={() => onSelect(shift)}
                 onDoubleClick={() => onStart(shift)}
-                aria-label={`Shift ${shift + 1}: ${titles[shift]}${locked ? ', locked' : ''}`}
+                // The marks beside the name are visual only, so the label carries the same status.
+                aria-label={`Shift ${shift + 1}: ${titles[shift]}${
+                  locked
+                    ? ', locked'
+                    : !done
+                      ? shift === unlocked
+                        ? ', next up'
+                        : ''
+                      : shift < 2
+                        ? ', served'
+                        : `, ${stars[shift]} of 3 stars`
+                }`}
                 aria-pressed={!locked && selected === shift}
                 title={titles[shift]}
               >

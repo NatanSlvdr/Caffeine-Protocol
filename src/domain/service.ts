@@ -11,11 +11,11 @@ import { compileRobot } from './robotProgram';
 import { floorSource, preparationSource } from './defaultPrograms';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, tableFront } from './layout';
 import type { Point } from './layout';
-import { directionVectors } from './directions';
+import { directionVectors, tilesAway } from './directions';
 import { isOrderDeposit, moveQuery } from './queryMovement';
 import { evaluateWorkerComparison, parseWorkerComparison } from './robotConditions';
 import { parseDepositCommand, parseMoveCommand, parseTakeCommand, isMoveCommand } from './commands';
-import { RECIPE_RULES } from './drinks';
+import { RECIPE_RULES, recipeStepError } from './drinks';
 import { satisfactionFor, tableForShift } from './scoring';
 import { ROBOT_UNLOCK_LEVELS } from './robots';
 import type {
@@ -290,7 +290,7 @@ export function* streamService(
   };
   const station = (w: Worker, p: Point, name: string) => {
     if (!samePoint(w.position, p)) {
-      fail(w, `Move to the ${name} interaction tile (${p.join(', ')}) first.`);
+      fail(w, `Move to ${name} first: it’s ${tilesAway(w.position, p)} from here.`);
       return false;
     }
     return true;
@@ -457,7 +457,7 @@ export function* streamService(
     }
     if (c.startsWith('CALL ')) {
       if (w.stack.length) {
-        fail(w, 'Recursive calls are not supported.');
+        fail(w, 'A function can’t call itself.');
         return false;
       }
       return control(() => {
@@ -468,7 +468,7 @@ export function* streamService(
     if (c === 'RETURN' || (c === 'END' && p.instructions[p.ends[w.pc]]?.startsWith('FUNCTION '))) {
       const back = w.stack.pop();
       if (back === undefined) {
-        fail(w, 'RETURN requires an active function.');
+        fail(w, 'Return only works inside a function that was called.');
         return false;
       }
       return control(() => {
@@ -485,9 +485,9 @@ export function* streamService(
     let apply: () => void = () => {},
       seconds = 1;
     if (c === 'WAIT TICKET') {
-      if (!station(w, STATIONS.orders.prep, 'order handoff')) return false;
+      if (!station(w, STATIONS.orders.prep, 'the order handoff')) return false;
       if (w.inventory.length >= capacity(w)) {
-        fail(w, 'Carrying capacity reached. Deposit a drink before claiming another ticket.');
+        fail(w, 'Brew’s hands are full. Deposit a drink before waiting for another ticket.');
         return false;
       }
       const next = nextWork(c)!;
@@ -497,7 +497,7 @@ export function* streamService(
       };
     } else if (c === 'WAIT DRINK' || c === 'WAIT DIRTY') {
       if (w.job) {
-        fail(w, 'Finish the claimed job before waiting for another.');
+        fail(w, 'Finish this delivery or cup before waiting for another.');
         return false;
       }
       const next = nextWork(c)!;
@@ -507,14 +507,14 @@ export function* streamService(
         if (c === 'WAIT DRINK') tableOwners.set(next.table, next.event.customer.customer_id);
       };
     } else if (w.role === 'floor' && (c === 'PICKUP' || c.startsWith('PICKUP ') || c.startsWith('TAKE '))) {
-      if (!station(w, STATIONS.pickup.floor, 'pickup')) return false;
+      if (!station(w, STATIONS.pickup.floor, 'the drink pickup')) return false;
       const direction = c === 'PICKUP' ? 'DOWN' : parseTakeCommand(c)?.direction;
       if (direction !== 'DOWN') {
-        fail(w, 'Take the ready drink downward from the pickup counter.');
+        fail(w, 'The drink pickup is below Porter: use Take down.');
         return false;
       }
       if (!w.job || w.job.status !== 'reserved' || w.job.dirtyAt !== Infinity) {
-        fail(w, 'WAIT DRINK before taking a ready drink.');
+        fail(w, 'Wait for a ready drink before taking one.');
         return false;
       }
       if (w.inventory.length >= capacity(w)) {
@@ -560,7 +560,7 @@ export function* streamService(
       };
     } else if (c === 'COLLECT') {
       if (!w.job || w.job.dirtyAt > now) {
-        fail(w, 'WAIT DIRTY before collecting a used cup.');
+        fail(w, 'Wait for dirty cups before collecting one.');
         return false;
       }
       if (!station(w, tableFront(w.job.table - 1), `table ${w.job.table}`)) return false;
@@ -575,7 +575,7 @@ export function* streamService(
         w.job = undefined;
       };
     } else if (c === 'RETURN CUPS') {
-      if (!station(w, STATIONS.returns.floor, 'cup return')) return false;
+      if (!station(w, STATIONS.returns.floor, 'the sink')) return false;
       if (!cargo || cargo.stage !== 'dirty' || !job) {
         fail(w, 'Carry a used cup before returning it.');
         return false;
@@ -589,15 +589,15 @@ export function* streamService(
       };
     } else {
       if (!cargo || !job) {
-        fail(w, 'WAIT TICKET before preparing a drink.');
+        fail(w, 'Wait for an order ticket before preparing a drink.');
         return false;
       }
       let recipeCommand = c;
       const take = parseTakeCommand(c);
       if (take) {
-        if (!station(w, STATIONS.ingredients.prep, 'ingredients')) return false;
+        if (!station(w, STATIONS.ingredients.prep, 'the storage counter')) return false;
         if (take.direction !== 'UP') {
-          fail(w, 'Take ingredients upward from the storage counter.');
+          fail(w, 'The storage counter is above Brew: use Take up.');
           return false;
         }
         recipeCommand = job.item === 'coffee' ? 'TAKE BEANS' : 'TAKE LEAVES';
@@ -616,7 +616,7 @@ export function* streamService(
           !station(
             w,
             c === 'ADD SUGAR' ? STATIONS.sugar.prep : STATIONS.pickup.prep,
-            c === 'ADD SUGAR' ? 'sugar' : 'pickup',
+            c === 'ADD SUGAR' ? 'the sugar station' : 'the drink pickup',
           )
         )
           return false;
@@ -627,7 +627,7 @@ export function* streamService(
         else {
           const direction = c === 'DEPOSIT' ? 'UP' : parseDepositCommand(c)?.direction;
           if (direction !== 'UP') {
-            fail(w, 'Deposit the prepared drink upward into the pickup counter.');
+            fail(w, 'The pickup counter is above Brew: use Deposit up.');
             return false;
           }
           if (ready.sugar !== readyJob.sugar) {
@@ -641,9 +641,10 @@ export function* streamService(
           };
         }
       } else if (rule) {
-        if (!station(w, rule.point, c.toLowerCase())) return false;
+        const place = Object.values(STATIONS).find((s) => 'prep' in s && samePoint(s.prep, rule.point));
+        if (!station(w, rule.point, `the ${place?.label.toLowerCase() ?? 'station'}`)) return false;
         if (!rule.previous.includes(cargo.stage) || (rule.item && rule.item !== cargo.item)) {
-          fail(w, `Invalid recipe step: ${c} after ${cargo.stage} for ${cargo.item}.`);
+          fail(w, recipeStepError(c, cargo));
           return false;
         }
         seconds = rule.duration ?? 1;
@@ -739,22 +740,20 @@ export function* streamService(
       const event = events[manualIndex++],
         path = gridRoute(nikoPosition, MANUAL_INTAKE);
       let arrival = now;
-      path
-        .slice(1)
-        .forEach((to, i) =>
-          log.push({
-            seed_id: seed,
-            actor: 'niko',
-            role: 'query',
-            start: arrival,
-            end: ++arrival,
-            line: -1,
-            command: 'WALK TO ORDER COUNTER',
-            from: path[i],
-            to,
-            inventory: [],
-          }),
-        );
+      path.slice(1).forEach((to, i) =>
+        log.push({
+          seed_id: seed,
+          actor: 'niko',
+          role: 'query',
+          start: arrival,
+          end: ++arrival,
+          line: -1,
+          command: 'WALK TO ORDER COUNTER',
+          from: path[i],
+          to,
+          inventory: [],
+        }),
+      );
       const end = arrival + 9;
       intakeFree = end;
       log.push({

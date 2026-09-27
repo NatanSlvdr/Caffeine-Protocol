@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowLeft, BookOpen, Play, Settings2, Star } from 'lucide-react';
+import { BookOpen, CircleHelp, Play } from 'lucide-react';
 import { playSound } from '@/audio';
 import { levels, titleFor } from '@/data';
 import { narrativeFor, stories } from '@/data/campaign/narrative';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
-import { go, openSettings } from '@/shared/lib/navigation';
+import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
+import { ShellBar } from './ShellBar';
 
 /** How long "Order up!" stays on the specials board before the shift opens. */
 const ORDER_UP_MS = 650;
@@ -116,31 +117,22 @@ export function CampaignPage() {
 
   return (
     <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
-      <nav className="pass-bar" aria-label="Campaign">
-        <button className="pass-home" onClick={() => go('/')}>
-          <ArrowLeft size={16} /> Caffeine Protocol
+      <ShellBar label="Campaign" back="Caffeine Protocol" onBack={() => go('/')}>
+        {save.complete && (
+          <Button
+            className="shell-link"
+            variant="text-link"
+            aria-label="Revisit closing time"
+            title="Revisit closing time"
+            onClick={() => go('/ending')}
+          >
+            <BookOpen size={15} /> <span>Revisit closing time</span>
+          </Button>
+        )}
+        <button className="shell-icon" aria-label="How to play" title="How to play" onClick={openGuide}>
+          <CircleHelp size={18} />
         </button>
-        <div className="pass-bar-actions">
-          {save.complete && (
-            <Button
-              className="pass-ending"
-              variant="text-link"
-              aria-label="Revisit closing time"
-              title="Revisit closing time"
-              onClick={() => go('/ending')}
-            >
-              <BookOpen size={15} /> <span>Revisit closing time</span>
-            </Button>
-          )}
-          <span className="pass-stars" aria-label={`${progress.stars} of ${progress.max} stars`}>
-            <Star size={14} fill="currentColor" aria-hidden="true" /> {progress.stars}
-            <small> / {progress.max}</small>
-          </span>
-          <button className="pass-icon" aria-label="Settings" title="Settings" onClick={openSettings}>
-            <Settings2 size={18} />
-          </button>
-        </div>
-      </nav>
+      </ShellBar>
 
       <header className="pass-title">
         <p className="pass-kicker">Niko’s kitchen · Order rail</p>
@@ -178,7 +170,9 @@ export function CampaignPage() {
         <div className="board">
           <div className="board-chalk" key={selected}>
             <p className="board-kicker">
-              <span>Today’s special · № {pad2(selected + 1)}</span>
+              <span>
+                Today’s special <span className="board-no">No. {pad2(selected + 1)}</span>
+              </span>
               {(upNext || isComplete(selected)) && (
                 <span className={`board-tag ${isComplete(selected) ? 'done' : 'next'}`}>
                   {isComplete(selected) ? 'Served' : 'Up next'}
@@ -224,13 +218,9 @@ export function CampaignPage() {
             </svg>
             <p className="board-foot">
               {observation ? (
-                isComplete(selected) ? (
-                  'Watched'
-                ) : (
-                  'Sit back and watch'
-                )
+                <span className="board-scene">{isComplete(selected) ? 'Watched' : 'Sit back and watch'}</span>
               ) : (
-                <span className="board-stars" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
+                <span className="board-stars" role="img" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
                   {starRow(save.stars[selected] ?? 0)}
                 </span>
               )}

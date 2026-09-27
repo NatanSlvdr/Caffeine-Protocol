@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { blockFields, parseStore, type VisualBlock } from '@/domain';
+import { blockFields, parseStore, spokenBlock, type VisualBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { InstructionError } from '../FailureFeedback';
 import { Operands } from './Operands';
@@ -36,7 +36,7 @@ export function Row({
   const rowRef = useRef<HTMLDivElement | null>(null),
     target = command.startsWith('POSITION ');
   useEffect(() => {
-    if (failure) rowRef.current?.parentElement?.scrollIntoView?.({ block: 'nearest', behavior: 'instant' });
+    if (failure) rowRef.current?.parentElement?.scrollIntoView?.({ block: 'center', behavior: 'instant' });
   }, [failure]);
   return (
     <div className="code-row" onClickCapture={failure ? onDismissFailure : undefined}>
@@ -50,15 +50,26 @@ export function Row({
         }}
         {...attributes}
         {...listeners}
-        aria-label={target ? 'Drag jump destination' : 'Drag block ' + ordinal + ' and its group'}
+        aria-label={
+          target
+            ? 'Drag jump destination'
+            : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`
+        }
         aria-disabled={locked}
         tabIndex={locked ? -1 : 0}
-        className={['block', category(command), target ? 'jump-target' : '', active ? 'active' : '', failure ? 'failure' : ''].join(' ')}
+        className={[
+          'block',
+          category(command),
+          target ? 'jump-target' : '',
+          active ? 'active' : '',
+          failure ? 'failure' : '',
+        ].join(' ')}
         aria-current={active && !failure ? 'step' : undefined}
         data-line={id}
         data-depth={depth}
         data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined}
         data-target={target ? command.slice(9) : undefined}
+        title={target ? 'The jump lands here. Drag to move it.' : undefined}
       >
         {!target && (
           <>
@@ -68,10 +79,22 @@ export function Row({
                 <strong className="block-verb">{blockFields(command).verb}</strong>
               </>
             )}
-            <Operands command={command} options={options} disabled={locked} label={'Block ' + (id + 1)} inLoop={inLoop} onChange={onChange} />
+            <Operands
+              command={command}
+              options={options}
+              disabled={locked}
+              label={'Block ' + ordinal}
+              inLoop={inLoop}
+              onChange={onChange}
+            />
           </>
         )}
-        {target && <span className="sr-only">Jump destination</span>}
+        {target && (
+          <>
+            <BlockIcon command={command} />
+            <span className="sr-only">Jump destination</span>
+          </>
+        )}
       </div>
       {failure && failureMessage && <InstructionError message={failureMessage} anchor={rowRef} />}
     </div>

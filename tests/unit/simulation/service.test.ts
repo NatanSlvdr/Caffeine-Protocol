@@ -99,8 +99,10 @@ describe('movement language and execution', () => {
 
 describe('recipes, handoffs, and capacities', () => {
   it('requires a claimed ticket and the correct station', () => {
-    expect(physical('GRIND').failure?.reason).toContain('WAIT TICKET');
-    expect(physical('WAIT TICKET\nGRIND').failure?.reason).toContain('interaction tile');
+    expect(physical('GRIND').failure?.reason).toBe('Wait for an order ticket before preparing a drink.');
+    expect(physical('WAIT TICKET\nGRIND').failure?.reason).toBe(
+      'Move to the coffee machine first: it’s 4 tiles right from here.',
+    );
   });
   it('claims tickets at the shared order counter, separately from drink pickup', () => {
     const atPickup = [...movementSource(STARTS.prep, STATIONS.pickup.prep, 'prep'), 'WAIT TICKET'].join('\n');
@@ -126,7 +128,9 @@ describe('recipes, handoffs, and capacities', () => {
       ...movementSource(STATIONS.ingredients.prep, STATIONS.water.prep, 'prep'),
       'FILL WATER',
     ];
-    expect(physical(commands.join('\n')).failure?.reason).toContain('Invalid recipe');
+    expect(physical(commands.join('\n')).failure?.reason).toBe(
+      'Fill water can’t come next for this coffee. Next step: Grind.',
+    );
   });
   it('validates sugar on deposited drinks', () => {
     const r = service({ prep: referencePrograms(32).prep.replace('ADD SUGAR', '# omitted') });
@@ -134,13 +138,17 @@ describe('recipes, handoffs, and capacities', () => {
     expect(r.first_failure?.role).toBe('prep');
   });
   it('rejects claiming beyond capacity', () => {
-    expect(service({ prep: 'WAIT TICKET\nWAIT TICKET' }, 15).first_failure?.reason).toContain('capacity');
+    expect(service({ prep: 'WAIT TICKET\nWAIT TICKET' }, 15).first_failure?.reason).toBe(
+      'Brew’s hands are full. Deposit a drink before waiting for another ticket.',
+    );
   });
   it('rejects pickup without a claimed ready drink', () => {
-    expect(physical('PICKUP', 'floor').failure?.reason).toContain('WAIT DRINK');
+    expect(physical('PICKUP', 'floor').failure?.reason).toBe('Wait for a ready drink before taking one.');
   });
   it('rejects delivering at the wrong table', () => {
-    expect(physical('WAIT DRINK\nPICKUP\nSERVE', 'floor').failure?.reason).toContain('table 1 interaction tile');
+    expect(physical('WAIT DRINK\nPICKUP\nSERVE', 'floor').failure?.reason).toBe(
+      'Move to table 1 first: it’s 12 tiles left and 7 tiles up from here.',
+    );
   });
   it('supports grouped tickets and preserves carried item identity', () => {
     const r = service({}, 32);
@@ -158,7 +166,9 @@ describe('recipes, handoffs, and capacities', () => {
         ).toBe(true);
   });
   it('clears only collected cups at the return station', () => {
-    expect(physical('RETURN CUPS', 'floor').failure?.reason).toContain('cup return interaction tile');
+    expect(physical('RETURN CUPS', 'floor').failure?.reason).toBe(
+      'Move to the sink first: it’s 1 tile right from here.',
+    );
     const r = service({}, 30);
     expect(r.events.every((e) => e.timing.cleaned > e.timing.served)).toBe(true);
   });

@@ -1,5 +1,5 @@
 import { useDraggable } from '@dnd-kit/core';
-import { blockFields } from '@/domain';
+import { blockFields, spokenBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
@@ -16,14 +16,18 @@ export function CommandTile({
   onChange: (command: string) => void;
 }) {
   const command = initial;
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({ id: 'library:' + initial, data: { command }, disabled });
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: 'library:' + initial,
+    data: { command },
+    disabled,
+  });
   const fields = blockFields(command);
   const insertButton = (
     <button
       type="button"
       className={fields.family === 'STORE' ? 'store-label' : undefined}
       disabled={disabled}
-      aria-label={'Insert ' + command}
+      aria-label={'Insert ' + spokenBlock(command)}
       onClick={() => onChange(command)}
       {...attributes}
       {...listeners}

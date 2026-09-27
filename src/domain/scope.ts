@@ -53,3 +53,18 @@ export function cleanAlternatives(lines: string[]): string[] {
   }
   return kept;
 }
+
+/** Source laid out by nesting, two spaces a level, for reading; the program itself ignores indentation. */
+export function indentSource(source: string): string {
+  let depth = 0;
+  return source
+    .split('\n')
+    .map((raw) => {
+      const command = raw.trim();
+      if (command === 'END' || command === 'ELSE') depth = Math.max(0, depth - 1);
+      const line = command && '  '.repeat(depth) + command;
+      if (isOpening(command) || command === 'ELSE') depth++;
+      return line;
+    })
+    .join('\n');
+}

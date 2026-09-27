@@ -20,3 +20,20 @@ export const RECIPE_RULES: Record<string, RecipeRule> = {
   BREW: { point: STATIONS.brewer.prep, stage: 'brewed', previous: ['water'], item: 'coffee', duration: 6 },
   STEEP: { point: STATIONS.brewer.prep, stage: 'brewed', previous: ['water'], item: 'tea', duration: 7 },
 };
+
+/** A kitchen command as its block reads, like "Fill water". */
+export function recipeStepLabel(command: string) {
+  if (command === 'TAKE BEANS') return 'Take up the beans';
+  if (command === 'TAKE LEAVES') return 'Take up the tea leaves';
+  return command.charAt(0) + command.slice(1).toLowerCase();
+}
+
+/** Why a kitchen step can't run yet, naming the step that would. */
+export function recipeStepError(command: string, cargo: Pick<Cargo, 'stage' | 'item'>) {
+  const next = Object.entries(RECIPE_RULES).find(
+    ([, rule]) => rule.previous.includes(cargo.stage) && (!rule.item || rule.item === cargo.item),
+  )?.[0];
+  return `${recipeStepLabel(command)} can’t come next for this ${cargo.item}. ${
+    next ? `Next step: ${recipeStepLabel(next)}.` : 'It’s brewed: add sugar or deposit it.'
+  }`;
+}

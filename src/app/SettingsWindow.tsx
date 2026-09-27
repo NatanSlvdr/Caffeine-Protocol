@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { Download, FolderHeart, Leaf, Maximize, Sparkles, Upload, Volume2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Download, FolderHeart, Leaf, Maximize, Minimize, Sparkles, Upload, Volume2 } from 'lucide-react';
 import { lessons } from '@/data';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -7,7 +7,7 @@ import { SettingRow } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
 import type { ProgressSave } from '@/domain';
 import { download } from '@/shared/lib/download';
-import { useGame, useSettings } from '@/state/GameStore';
+import { starTotal, useGame, useSettings } from '@/state/GameStore';
 
 const volumes = [
   { key: 'volume', name: 'Master volume', label: 'Master volume' },
@@ -22,6 +22,13 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
     [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const [settings, setting] = useSettings();
+  // Track the browser's own state, so leaving with Esc relabels the button too.
+  const [isFullscreen, setIsFullscreen] = useState(() => !!document.fullscreenElement);
+  useEffect(() => {
+    const sync = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', sync);
+    return () => document.removeEventListener('fullscreenchange', sync);
+  }, []);
   const fullscreen = async () => {
     try {
       if (document.fullscreenElement) {
@@ -89,7 +96,15 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 <small>A little more room for your café.</small>
               </span>
               <button className="settings-chip" onClick={() => void fullscreen()}>
-                <Maximize size={15} /> Toggle
+                {isFullscreen ? (
+                  <>
+                    <Minimize size={15} /> Exit fullscreen
+                  </>
+                ) : (
+                  <>
+                    <Maximize size={15} /> Go fullscreen
+                  </>
+                )}
               </button>
             </div>
           </section>
@@ -159,18 +174,24 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
         </div>
         <p className="settings-foot" aria-hidden="true">
           <span className="settings-barcode" />
-          Saved as you go · Thank you, come again
+          {saveError ? 'Not saving right now' : 'Saved as you go'} · Thank you, come again
         </p>
       </Modal>
       {pending && (
-        <Modal title="Replace this café?" onClose={() => setPending(null)}>
+        <Modal
+          className="settings-window confirm-slip"
+          kicker="Import a café"
+          title="Replace this café?"
+          onClose={() => setPending(null)}
+        >
           <p>
-            This export contains {Object.keys(pending.stars).length} completed shifts and{' '}
-            {Object.values(pending.stars).reduce((a, b) => a + b, 0)} stars. Importing it will replace your current
-            progress, programs and settings.
+            This export contains {Object.keys(pending.stars).length} completed shifts and {starTotal(pending.stars)}{' '}
+            stars. Importing it will replace your current progress, programs and settings.
           </p>
           <div className="modal-buttons">
-            <button onClick={() => setPending(null)}>Keep current café</button>
+            <button className="settings-chip" onClick={() => setPending(null)}>
+              Keep current café
+            </button>
             <Button
               variant="primary"
               onClick={() => {

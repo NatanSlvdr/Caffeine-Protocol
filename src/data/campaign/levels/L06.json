@@ -202,7 +202,7 @@
       ]
     }
   ],
-  "summary": "IF sugar IN CUSTOMER SPEECH detects a positive modifier. Use WRITE 1 sugar on the held paper. New paper starts without sugar.",
+  "summary": "If Sugar IN Orders catches a request for sugar. Use Write 1 Sugar on the held paper. New paper starts without sugar.",
   "title": "Level 6: Sugar, Sugar",
   "act": 1
 }

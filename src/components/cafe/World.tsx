@@ -50,6 +50,18 @@ export function isGateOpen(state: ReturnType<typeof sampleReplay> | undefined): 
   );
 }
 
+/** Extra height for a bubble with another robot's bubble just in front of it, easing in and out with distance. */
+function bubbleLift(at: readonly [number, number], others: readonly (readonly [number, number])[]): number {
+  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+  return Math.max(
+    0,
+    ...others.map(([x, z]) => {
+      const ahead = z - at[1];
+      return 0.9 * clamp((1.7 - Math.abs(x - at[0])) / 0.7) * clamp(ahead / 0.5) * clamp(3 - ahead);
+    }),
+  );
+}
+
 /** Render replay actors and scenery, with optional status overlays for passive previews. */
 export function World({
   evening,
@@ -83,6 +95,15 @@ export function World({
   const state = result ? sampleReplay(result, time) : undefined;
   const actors = state?.actors ?? fallbackActors(level);
   const gateOpen = isGateOpen(state);
+  const bubbleShown = (id: string, actor: ActorSnapshot) =>
+    serviceView &&
+    showStatusBubbles &&
+    !!state &&
+    !((id === 'prep' || id === 'floor') && !robotUnlocked(id, level)) &&
+    !!(actor.heldPaper || actor.inventory.length > 0 || actor.action || Object.keys(actor.variables ?? {}).length);
+  const bubbles = Object.entries(actors).flatMap(([id, actor]) =>
+    actor && bubbleShown(id, actor) ? [actor.position] : [],
+  );
   return (
     <>
       <OrthographicCamera makeDefault position={CAMERA_POSITION} near={0.1} far={150} />
@@ -108,11 +129,13 @@ export function World({
                   (id === 'floor' && robotUnlocked('floor', level))
                 }
                 label={
-                  id === 'prep' && !robotUnlocked('prep', level)
-                    ? 'Moka · Auto'
-                    : id === 'floor' && !robotUnlocked('floor', level)
-                      ? 'Pip · Auto'
-                      : undefined
+                  !showStatusBubbles
+                    ? undefined
+                    : id === 'prep' && !robotUnlocked('prep', level)
+                      ? 'Moka · Auto'
+                      : id === 'floor' && !robotUnlocked('floor', level)
+                        ? 'Pip · Auto'
+                        : undefined
                 }
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}
                 walking={moving && actor.walking}
@@ -122,39 +145,37 @@ export function World({
                 phase={time}
                 reduced={reduced}
               />
-              {serviceView &&
-                showStatusBubbles &&
-                state &&
-                !(
-                  (id === 'prep' && !robotUnlocked('prep', level)) ||
-                  (id === 'floor' && !robotUnlocked('floor', level))
-                ) &&
-                (actor.heldPaper ||
-                  actor.inventory.length > 0 ||
-                  actor.action ||
-                  Object.keys(actor.variables ?? {}).length) && (
-                  <SceneHtml
-                    position={[actor.position[0], 2.8, actor.position[1]]}
-                    zIndexRange={[10, 0]}
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    <RobotHolding
-                      name={
-                        id === 'niko'
-                          ? 'Niko'
-                          : id === 'query'
-                            ? ROBOT_DISPLAY_NAMES.query
-                            : robotActorName(id === 'prep' ? 'prep' : 'floor', level)
-                      }
-                      inventory={actor.inventory}
-                      paper={actor.heldPaper}
-                      action={actor.action}
-                      variables={actor.variables}
-                      paused={!moving}
-                      reduced={reduced}
-                    />
-                  </SceneHtml>
-                )}
+              {bubbleShown(id, actor) && (
+                <SceneHtml
+                  position={[
+                    actor.position[0],
+                    2.8 +
+                      bubbleLift(
+                        actor.position,
+                        bubbles.filter((at) => at !== actor.position),
+                      ),
+                    actor.position[1],
+                  ]}
+                  zIndexRange={[10, 0]}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  <RobotHolding
+                    name={
+                      id === 'niko'
+                        ? 'Niko'
+                        : id === 'query'
+                          ? ROBOT_DISPLAY_NAMES.query
+                          : robotActorName(id === 'prep' ? 'prep' : 'floor', level)
+                    }
+                    inventory={actor.inventory}
+                    paper={actor.heldPaper}
+                    action={actor.action}
+                    variables={actor.variables}
+                    paused={!moving}
+                    reduced={reduced}
+                  />
+                </SceneHtml>
+              )}
               {actor.inventory.map((item, i) => (
                 <Cup
                   key={item.ticketId}
@@ -166,7 +187,7 @@ export function World({
           ),
       )}
       {state && showStatusBubbles && (
-        <SceneHtml position={[STATIONS.orders.cell[0], 2.7, STATIONS.orders.cell[1]]} zIndexRange={[11, 0]}>
+        <SceneHtml position={[STATIONS.orders.cell[0] - 0.25, 2.8, STATIONS.orders.cell[1]]} zIndexRange={[11, 0]}>
           <OrderQueueBubble tickets={state.waitingTickets} />
         </SceneHtml>
       )}
@@ -224,7 +245,15 @@ export function World({
                   zIndexRange={[12, 0]}
                   style={{ pointerEvents: 'none' }}
                 >
-                  <CustomerSpeech customer={event.customer} clarified={clarified} />
+                  <CustomerSpeech
+                    customer={event.customer}
+                    clarified={clarified}
+                    atCounter={
+                      !c.sit &&
+                      Math.hypot(c.position[0] - STATIONS.orders.floor[0], c.position[1] - STATIONS.orders.floor[1]) <
+                        0.5
+                    }
+                  />
                 </SceneHtml>
               )}
             </group>

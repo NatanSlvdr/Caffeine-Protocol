@@ -292,7 +292,7 @@
       ]
     }
   ],
-  "summary": "Without sugar still contains sugar, plus negation. Inside IF sugar IN CUSTOMER SPEECH, test IF negation IN CUSTOMER SPEECH and write WRITE 0 sugar or WRITE 1 sugar.",
+  "summary": "“Without sugar” still contains Sugar, plus Negation. Inside If Sugar IN Orders, test If Negation IN Orders, then Write 0 Sugar or Write 1 Sugar.",
   "title": "Level 7: No Sugar, No Cry",
   "act": 1
 }

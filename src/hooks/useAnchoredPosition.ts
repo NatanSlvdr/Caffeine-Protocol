@@ -10,7 +10,10 @@ export function useAnchoredPosition(anchor?: RefObject<HTMLDivElement | null>) {
       if (!row) return;
       const rect = row.getBoundingClientRect();
       const pane = row.closest('.editor-panel')?.getBoundingClientRect();
-      setPosition({ left: (pane?.left ?? rect.left) - 12, top: rect.top + rect.height / 2 });
+      // Stay clear of the playback controls docked under the scene.
+      const controls = document.querySelector('.playback-toolbar')?.getBoundingClientRect();
+      const top = rect.top + rect.height / 2;
+      setPosition({ left: (pane?.left ?? rect.left) - 12, top: controls ? Math.min(top, controls.top - 28) : top });
     };
     place();
     window.addEventListener('resize', place);

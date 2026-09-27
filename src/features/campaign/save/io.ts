@@ -14,7 +14,7 @@ export function readSave(
     return {
       save: newSave(),
       error:
-        'Saved progress could not be read. The original data is untouched; export a recovery copy in Settings before saving a new café.',
+        'Saved progress could not be read, so new progress isn’t being saved. The original data is untouched: export a recovery copy from Settings.',
     };
   }
 }
