@@ -6,7 +6,7 @@ import { QUERY_MAX_BLOCKS } from '../constants';
 import { isOpening } from '../scope';
 import { QUERY_CONDITION_SOURCES, QUERY_CONDITION_VALUES, parseConditionExpression } from './conditions';
 import { legacyQueryAction } from './migration';
-import { VARIABLES, parseStore, parseSugarWrite } from './vars';
+import { ROBOT_STORE_VALUES, VARIABLES, parseStore, parseSugarWrite } from './vars';
 
 const writePattern = /^ITEM ([1-9]|1[0-9]) (coffee|tea)$/;
 
@@ -74,7 +74,10 @@ export function compileProgram(source: string, level = 14): Program {
     const sugar = parseSugarWrite(c);
     const stored = parseStore(c);
     const dataInstruction =
-      (level >= 10 && !!stored && VARIABLES.some((variable) => variable === stored.variable)) ||
+      (level >= 10 &&
+        !!stored &&
+        VARIABLES.some((variable) => variable === stored.variable) &&
+        !(ROBOT_STORE_VALUES as readonly string[]).includes(stored.value)) ||
       (level >= 6 &&
         sugar !== undefined &&
         (/^\d+$/.test(sugar) || (level >= 10 && VARIABLES.some((variable) => variable === sugar)))) ||

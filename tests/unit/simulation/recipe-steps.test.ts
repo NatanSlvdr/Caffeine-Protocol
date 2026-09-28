@@ -4,20 +4,20 @@ import { tilesAway } from '../../../src/domain/directions';
 
 describe('recipe step errors', () => {
   it('names the step that comes next, in the words the blocks use', () => {
-    expect(recipeStepError('BREW', { stage: 'water', item: 'tea' })).toBe(
-      'Brew can’t come next for this tea. Next step: Steep.',
+    expect(recipeStepError('FILL WATER', { stage: 'beans', item: 'coffee' })).toBe(
+      'Take up water at the sink can’t come next for this coffee. Next step: Use the coffee machine to grind the beans.',
     );
-    expect(recipeStepError('GRIND', { stage: 'claimed', item: 'coffee' })).toBe(
-      'Grind can’t come next for this coffee. Next step: Take up the beans.',
+    expect(recipeStepError('TAKE BEANS', { stage: 'water', item: 'tea' })).toBe(
+      'Take up the beans can’t come next for this tea. Next step: Use the coffee machine to steep the tea.',
     );
     expect(recipeStepError('TAKE UP', { stage: 'leaves', item: 'tea' })).toBe(
-      'Take up can’t come next for this tea. Next step: Fill water.',
+      'Take up can’t come next for this tea. Next step: Take up water at the sink.',
     );
   });
 
   it('points a finished drink toward sugar or the counter', () => {
     expect(recipeStepError('FILL WATER', { stage: 'brewed', item: 'coffee' })).toBe(
-      'Fill water can’t come next for this coffee. It’s brewed: add sugar or deposit it.',
+      'Take up water at the sink can’t come next for this coffee. It’s brewed: take up sugar or deposit it up at pickup.',
     );
   });
 });

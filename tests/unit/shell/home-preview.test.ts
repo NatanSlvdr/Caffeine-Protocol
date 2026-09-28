@@ -11,7 +11,7 @@ describe('landing café preview', () => {
     expect(result.passed).toBe(true);
     expect(result.execution).toHaveLength(1);
     expect(actors).toEqual(new Set(['query', 'prep', 'floor']));
-    expect(events.some((event) => event.command === 'SERVE')).toBe(true);
+    expect(events.some((event) => event.action === 'SERVE')).toBe(true);
     expect(result.execution?.[0]?.duration).toBeGreaterThan(0);
   });
 });

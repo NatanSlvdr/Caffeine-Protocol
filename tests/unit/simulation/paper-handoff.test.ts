@@ -118,7 +118,7 @@ describe('directional worker handoffs', () => {
 
     const wrongFloor = runLevel(levels[22], compileProgram(referencePrograms(23).query), {
       ...referencePrograms(23),
-      floor: floor.replace('TAKE DOWN', 'TAKE UP'),
+      floor: floor.replace('TAKE DOWN', 'TAKE LEFT'),
     });
     expect(wrongFloor.first_failure?.role).toBe('floor');
     expect(wrongFloor.first_failure?.reason).toBe('The drink pickup is below Porter: use Take down.');
@@ -126,7 +126,7 @@ describe('directional worker handoffs', () => {
 
   it('executes diagonal MOVE directions for floor robots', () => {
     expect(compileRobot('MOVE UP_LEFT 1', 'floor', 23).compile_error).toBe('');
-    const programs = { ...referencePrograms(23), floor: 'MOVE UP_LEFT 1\nMOVE DOWN_RIGHT 1\nWAIT DRINK' };
+    const programs = { ...referencePrograms(23), floor: 'MOVE UP_LEFT 1\nMOVE DOWN_RIGHT 1\nLISTEN' };
     const result = runLevel(levels[22], compileProgram(programs.query), programs);
     const edge = result.execution?.[0].events.find(
       (event) => event.actor === 'floor' && event.command === 'MOVE UP_LEFT 1' && event.from[0] !== event.to[0],

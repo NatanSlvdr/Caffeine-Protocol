@@ -21,19 +21,43 @@ export const RECIPE_RULES: Record<string, RecipeRule> = {
   STEEP: { point: STATIONS.brewer.prep, stage: 'brewed', previous: ['water'], item: 'tea', duration: 7 },
 };
 
-/** A kitchen command as its block reads, like "Fill water". */
+/** Grinding, brewing and steeping are what Use does at the coffee machine, depending on the cup. */
+const MACHINE_STEPS = ['GRIND', 'BREW', 'STEEP'];
+
+/** The step the coffee machine runs on this cup, if it can run one. */
+export function machineStep(cargo: Pick<Cargo, 'stage' | 'item'>) {
+  return MACHINE_STEPS.find((step) => {
+    const rule = RECIPE_RULES[step];
+    return rule.previous.includes(cargo.stage) && (!rule.item || rule.item === cargo.item);
+  });
+}
+
+/** A kitchen step as the player writes it, like "Take up water at the sink". */
 export function recipeStepLabel(command: string) {
   if (command === 'TAKE BEANS') return 'Take up the beans';
   if (command === 'TAKE LEAVES') return 'Take up the tea leaves';
+  if (command === 'FILL WATER') return 'Take up water at the sink';
+  if (command === 'GRIND') return 'Use the coffee machine to grind the beans';
+  if (command === 'BREW') return 'Use the coffee machine to brew';
+  if (command === 'STEEP') return 'Use the coffee machine to steep the tea';
   return command.charAt(0) + command.slice(1).toLowerCase();
+}
+
+/** Why the coffee machine has nothing to do with this cup yet. */
+export function machineStepError(cargo: Pick<Cargo, 'stage' | 'item'>) {
+  return cargo.stage === 'brewed'
+    ? `This ${cargo.item} is already brewed: take up sugar or deposit it up at pickup.`
+    : `The coffee machine can’t work on this ${cargo.item} yet. ${nextStep(cargo)}`;
+}
+
+function nextStep(cargo: Pick<Cargo, 'stage' | 'item'>) {
+  const next = Object.entries(RECIPE_RULES).find(
+    ([, rule]) => rule.previous.includes(cargo.stage) && (!rule.item || rule.item === cargo.item),
+  )?.[0];
+  return next ? `Next step: ${recipeStepLabel(next)}.` : 'It’s brewed: take up sugar or deposit it up at pickup.';
 }
 
 /** Why a kitchen step can't run yet, naming the step that would. */
 export function recipeStepError(command: string, cargo: Pick<Cargo, 'stage' | 'item'>) {
-  const next = Object.entries(RECIPE_RULES).find(
-    ([, rule]) => rule.previous.includes(cargo.stage) && (!rule.item || rule.item === cargo.item),
-  )?.[0];
-  return `${recipeStepLabel(command)} can’t come next for this ${cargo.item}. ${
-    next ? `Next step: ${recipeStepLabel(next)}.` : 'It’s brewed: add sugar or deposit it.'
-  }`;
+  return `${recipeStepLabel(command)} can’t come next for this ${cargo.item}. ${nextStep(cargo)}`;
 }

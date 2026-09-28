@@ -26,7 +26,7 @@ const seed33: LevelSeed = {
   id: 'L33',
   title: 'The whole café is busier',
   note: 'The final service combines groups, clarification, both recipes, sugar, two-item trays, and clearing at full volume.',
-  omission: 'SERVE',
+  omission: 'DEPOSIT UP',
   blocks: 420,
   instructions: 5200,
 };
@@ -52,7 +52,7 @@ describe('extension seeds', () => {
     expect(level.seeds[0].id).toBe('L33_A');
     const lesson = buildExtensionLesson(seed33);
     expect(lesson.note).toBe(seed33.note);
-    expect(lesson.robotStarter.floor).toContain('# TODO: SERVE');
+    expect(lesson.robotStarter.floor).toContain('# TODO: DEPOSIT UP');
     const programs = referencePrograms(33);
     const result = runLevel(level, compileProgram(programs.query), programs);
     expect(result.first_failure).toBeNull();
@@ -149,7 +149,7 @@ describe('extension seeds', () => {
     });
     expect(level.act).toBe(4);
     const lesson = buildExtensionLesson(seed33);
-    expect(lesson.robotStarter.floor).toContain('# TODO: SERVE');
+    expect(lesson.robotStarter.floor).toContain('# TODO: DEPOSIT UP');
 
     // Narrative: every extension seed (plus synthetic L33) pairs with a narrative row.
     for (const seed of extensionSeeds)
@@ -186,8 +186,8 @@ describe('extension seeds', () => {
     expect(compileProgram(programs.query).compile_error).toBe('');
     expect(compileRobot(programs.prep, 'prep', 33).compile_error).toBe('');
     expect(compileRobot(programs.floor, 'floor', 33).compile_error).toBe('');
-    expect(programs.prep.split('\n').filter((line) => line === 'WAIT TICKET')).toHaveLength(2);
-    expect(programs.floor).toContain('IF TABLE 16');
+    expect(programs.prep.split('\n').filter((line) => line === 'LISTEN')).toHaveLength(2);
+    expect(programs.floor).toContain('MOVE var1');
 
     // Sim: the reference clears every synthetic seed.
     const result = runLevel(level, compileProgram(programs.query), programs);

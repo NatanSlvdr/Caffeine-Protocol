@@ -99,54 +99,56 @@ describe('movement language and execution', () => {
 
 describe('recipes, handoffs, and capacities', () => {
   it('requires a claimed ticket and the correct station', () => {
-    expect(physical('GRIND').failure?.reason).toBe('Wait for an order ticket before preparing a drink.');
-    expect(physical('WAIT TICKET\nGRIND').failure?.reason).toBe(
+    expect(physical('MOVE RIGHT 4\nUSE UP').failure?.reason).toBe('Wait for an order ticket before preparing a drink.');
+    expect(physical('LISTEN\nUSE UP').failure?.reason).toBe(
       'Move to the coffee machine first: it’s 4 tiles right from here.',
     );
   });
   it('claims tickets at the shared order counter, separately from drink pickup', () => {
-    const atPickup = [...movementSource(STARTS.prep, STATIONS.pickup.prep, 'prep'), 'WAIT TICKET'].join('\n');
+    const atPickup = [...movementSource(STARTS.prep, STATIONS.pickup.prep, 'prep'), 'LISTEN'].join('\n');
     expect(physical(atPickup).failure?.reason).toContain('order handoff');
     const result = service({}, 20);
     expect(result.first_failure).toBeNull();
     const seed = result.execution![0];
-    const claim = seed.events.find((e) => e.command === 'WAIT TICKET')!;
+    const claim = seed.events.find((e) => e.role === 'prep' && e.command === 'LISTEN')!;
     expect(claim.from).toEqual(STATIONS.orders.prep);
     const before = sampleReplay(result, seed.start + claim.start);
     expect(before.waitingTickets.some((t) => t.ticket_id === claim.ticketId)).toBe(true);
     const after = sampleReplay(result, seed.start + claim.end);
     expect(after.waitingTickets.some((t) => t.ticket_id === claim.ticketId)).toBe(false);
     expect(
-      seed.events.filter((e) => e.command === 'DEPOSIT').every((e) => samePoint(e.from, STATIONS.pickup.prep)),
+      seed.events.filter((e) => e.action === 'DEPOSIT').every((e) => samePoint(e.from, STATIONS.pickup.prep)),
     ).toBe(true);
   });
   it('rejects invalid recipe order', () => {
     const commands = [
-      'WAIT TICKET',
+      'LISTEN',
       ...movementSource(STARTS.prep, STATIONS.ingredients.prep, 'prep'),
-      'TAKE BEANS',
+      'TAKE UP',
       ...movementSource(STATIONS.ingredients.prep, STATIONS.water.prep, 'prep'),
-      'FILL WATER',
+      'TAKE UP',
     ];
     expect(physical(commands.join('\n')).failure?.reason).toBe(
-      'Fill water can’t come next for this coffee. Next step: Grind.',
+      'Take up water at the sink can’t come next for this coffee. Next step: Use the coffee machine to grind the beans.',
     );
   });
   it('validates sugar on deposited drinks', () => {
-    const r = service({ prep: referencePrograms(32).prep.replace('ADD SUGAR', '# omitted') });
-    expect(r.first_failure?.reason).toContain('sugar');
+    // Skipping the sugar loop deposits a drink that still needs its cubes.
+    const prep = referencePrograms(32).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
+    const r = service({ prep });
+    expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
     expect(r.first_failure?.role).toBe('prep');
   });
   it('rejects claiming beyond capacity', () => {
-    expect(service({ prep: 'WAIT TICKET\nWAIT TICKET' }, 15).first_failure?.reason).toBe(
+    expect(service({ prep: 'LISTEN\nLISTEN' }, 15).first_failure?.reason).toBe(
       'Brew’s hands are full. Deposit a drink before waiting for another ticket.',
     );
   });
   it('rejects pickup without a claimed ready drink', () => {
-    expect(physical('PICKUP', 'floor').failure?.reason).toBe('Wait for a ready drink before taking one.');
+    expect(physical('TAKE DOWN', 'floor').failure?.reason).toBe('Wait for a ready drink before taking one.');
   });
   it('rejects delivering at the wrong table', () => {
-    expect(physical('WAIT DRINK\nPICKUP\nSERVE', 'floor').failure?.reason).toBe(
+    expect(physical('LISTEN\nTAKE DOWN\nDEPOSIT UP', 'floor').failure?.reason).toBe(
       'Move to table 1 first: it’s 12 tiles left and 7 tiles up from here.',
     );
   });
@@ -166,9 +168,7 @@ describe('recipes, handoffs, and capacities', () => {
         ).toBe(true);
   });
   it('clears only collected cups at the return station', () => {
-    expect(physical('RETURN CUPS', 'floor').failure?.reason).toBe(
-      'Move to the sink first: it’s 1 tile right from here.',
-    );
+    expect(physical('DEPOSIT DOWN', 'floor').failure?.reason).toBe('Porter isn’t holding anything to deposit.');
     const r = service({}, 30);
     expect(r.events.every((e) => e.timing.cleaned > e.timing.served)).toBe(true);
   });
@@ -216,12 +216,12 @@ describe('concurrency and replay', () => {
     expect(JSON.stringify(levels[30])).toBe(before);
   });
   it('reports a blocked queue instead of hanging and identifies the robot and line', () => {
-    const r = service({ prep: 'WAIT TICKET\nMOVE LEFT 19' });
+    const r = service({ prep: 'LISTEN\nMOVE LEFT 19' });
     expect(r.first_failure?.reason).toContain('Unfinished work');
     expect(r.first_failure?.role).toBeDefined();
   });
   it('freezes replay at the failure clock', () => {
-    const r = service({ floor: 'SERVE' }, 31);
+    const r = service({ floor: 'DEPOSIT UP' }, 31);
     expect(r.first_failure?.role).toBe('floor');
     expect(r.execution![0].events.every((e) => e.start <= r.first_failure!.event_time)).toBe(true);
   });

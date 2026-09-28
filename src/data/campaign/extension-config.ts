@@ -9,9 +9,9 @@ export interface ExtensionShiftConfig {
   customers: number;
   /** Seconds between customer arrivals. */
   arrivalGap: number;
-  /** WAIT TICKET claims per prep routine (tray size). */
+  /** Brew's Wait for Orders claims per routine (tray size). */
   prepBatch: number;
-  /** WAIT DRINK claims per floor routine (tray size). */
+  /** Porter's Wait for Orders claims per routine (tray size). */
   floorBatch: number;
   /** Tables in play. */
   tables: number;

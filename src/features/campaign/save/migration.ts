@@ -1,5 +1,6 @@
 import type { ProgressSave, RobotPrograms, Settings } from '@/domain/types';
 import { migrateQuerySource } from '@/domain/program';
+import { migrateRobotSource } from '@/domain/robotProgram';
 import { isRecord, isShiftIndex } from './validate';
 
 /** Campaign starters injected by the caller so the save layer never imports data. */
@@ -121,8 +122,8 @@ function validateRobotMaps(
             throw new Error('Invalid robot source.');
         robotMaps[key][shift] = {
           query: cleanQuery(programs.query as string),
-          prep: programs.prep as string,
-          floor: cleanFloor(programs.floor as string),
+          prep: migrateRobotSource(programs.prep as string, 'prep'),
+          floor: migrateRobotSource(cleanFloor(programs.floor as string), 'floor'),
         };
       }
     }

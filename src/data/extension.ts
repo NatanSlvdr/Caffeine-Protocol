@@ -17,9 +17,21 @@ import {
 /** Query reference solution for extension shifts (the Act I finale). */
 const queryReference = lessonById('L14').solution;
 
-/** Escape a literal omission so it can anchor a line matcher. */
-function escapeRegExp(needle: string): string {
-  return needle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+/** The line runs `command`, perhaps with operands after it (Move up 2). */
+const isCommand = (line: string, command: string) => {
+  const code = line.trim();
+  return code === command || code.startsWith(`${command} `);
+};
+
+/** Swap the nth line running `command` for a TODO comment. */
+function omitLine(source: string, command: string, occurrence: number, todo: string): string {
+  let seen = 0;
+  const lines = source
+    .split('\n')
+    .map((line) => (isCommand(line, command) && ++seen === occurrence ? `# TODO: ${todo}` : line));
+  if (seen < occurrence)
+    throw new Error(`Starter omission "${command}" #${occurrence} is not in the reference program.`);
+  return lines.join('\n');
 }
 
 export function referencePrograms(level: number): RobotPrograms {
@@ -27,7 +39,7 @@ export function referencePrograms(level: number): RobotPrograms {
   return {
     query: queryReference,
     prep: preparationSource(level, config.prepBatch),
-    floor: floorSource(level, config.floorBatch, config.tables),
+    floor: floorSource(level, config.floorBatch),
   };
 }
 
@@ -81,16 +93,13 @@ export const extensionLessons = extensionSeeds.map(buildExtensionLesson);
 export function buildExtensionLesson(seed: LevelSeed) {
   const level = Number(seed.id.slice(1)),
     config = extensionShiftConfig(level),
-    role = level < ROBOT_UNLOCK_LEVELS.floor ? 'prep' : 'floor',
+    role = seed.robot ?? (level < ROBOT_UNLOCK_LEVELS.floor ? 'prep' : 'floor'),
     programs = referencePrograms(level),
     starter = { ...programs };
-  starter[role] = starter[role].replace(
-    new RegExp(`^${escapeRegExp(seed.omission)}[^\\n]*$`, 'm'),
-    `# TODO: ${seed.omission}`,
-  );
+  starter[role] = omitLine(starter[role], seed.omission, seed.occurrence ?? 1, seed.todo ?? seed.omission);
   if (config.fullHouse) {
     starter.query = lessonById('L03').solution;
-    starter.prep = programs.prep.replace('ADD SUGAR', '# TODO: apply requested sugar');
+    starter.prep = omitLine(programs.prep, 'STORE var1 FROM sugar', 1, 'store the order’s sugar in Var A');
   }
   return {
     note: seed.note,

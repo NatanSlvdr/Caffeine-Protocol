@@ -1,5 +1,5 @@
-import type { ActorSnapshot, Cargo, OrderTicket } from '@/domain';
-import { blockFields, cargoLabel, parseSugarWrite, variableLabels } from '@/domain';
+import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain';
+import { blockFields, cargoLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
 import { Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
 import { OperandIcon } from '../OperandIcon';
@@ -25,7 +25,9 @@ export function RobotHolding({
   paused?: boolean;
   reduced?: boolean;
 }) {
-  const memory = Object.entries(variables ?? {}).filter((entry): entry is [string, number] => entry[1] !== undefined);
+  const memory = Object.entries(variables ?? {}).filter(
+    (entry): entry is [string, VariableValue] => entry[1] !== undefined,
+  );
   const fields = action ? blockFields(action.command) : undefined;
   const thinking =
     !!fields &&
@@ -33,7 +35,8 @@ export function RobotHolding({
       fields.family,
     );
   const visibleAction =
-    fields && (thinking || ['TAKE', 'DEPOSIT', 'ITEM', 'STORE', 'MOVE', 'WAIT'].includes(fields.family))
+    fields &&
+    (thinking || ['TAKE', 'DEPOSIT', 'USE', 'ITEM', 'STORE', 'MOVE', 'MOVE TO', 'WAIT'].includes(fields.family))
       ? action
       : undefined;
   if (!paper && !inventory.length && !visibleAction && !memory.length) return null;
@@ -44,7 +47,7 @@ export function RobotHolding({
       : action && parseSugarWrite(action.command) !== undefined
         ? `Write ${variableLabels(parseSugarWrite(action.command)!)} Sugar`
         : fields
-          ? `${fields.verb} ${fields.value}`.trim()
+          ? variableLabels(`${fields.verb} ${fields.value}`).trim()
           : '';
   const paperLabel = paper
     ? (paper.item ? `${paper.item === 'tea' ? 'Tea' : 'Coffee'} order paper` : 'Blank order paper') +
@@ -126,7 +129,7 @@ export function RobotHolding({
           {memory.map(([variable, value]) => (
             <span key={variable}>
               <OperandIcon value={variable} />
-              {variableLabels(variable)} = {value}
+              {variableLabels(variable)} = {typeof value === 'number' ? value : placeLabel(value)}
             </span>
           ))}
         </div>

@@ -105,18 +105,18 @@ describe('historical save fixtures', () => {
     expect(migrated.robotSolutions['23'].query).toBe(lessons[23].starter);
     expect(migrated.robotDrafts['23'].query).not.toContain('CHARGE ORDER');
     expect(migrated.robotDrafts['23'].query).not.toContain('TICKET');
-    // Brew routines preserved verbatim.
+    // Brew routines keep their shape; retired station verbs become Take, Use and Deposit.
     const brew =
-      'WAIT TICKET\nCALL recipe\nREPEAT\nFUNCTION recipe\nTAKE UP\nGRIND\nFILL WATER\nBREW\nADD SUGAR\nDEPOSIT UP\nRETURN\nEND';
+      'LISTEN\nCALL recipe\nREPEAT\nFUNCTION recipe\nTAKE UP\nUSE UP\nTAKE UP\nUSE UP\nTAKE UP\nDEPOSIT UP\nRETURN\nEND';
     expect(migrated.robotDrafts['23'].prep).toBe(brew);
     expect(migrated.robotSolutions['22'].prep).toBe(brew);
     expect(migrated.robotSolutions['23'].prep).toBe(brew);
     // Porter routines preserved; retired charging branches keep only the
     // non-charging path with comments intact.
-    expect(migrated.robotDrafts['23'].floor).toBe('# my route\nWAIT DRINK\nTAKE DOWN\nTAKE DOWN\nSERVE');
+    expect(migrated.robotDrafts['23'].floor).toBe('# my route\nLISTEN\nTAKE DOWN\nTAKE DOWN\nDEPOSIT UP');
     expect(migrated.robotDrafts['23'].floor).not.toContain('BATTERY');
     expect(migrated.robotDrafts['23'].floor).not.toContain('CHARGE');
-    expect(migrated.robotSolutions['23'].floor).toBe('# porter run\nWAIT DRINK\nTAKE DOWN\nSERVE');
+    expect(migrated.robotSolutions['23'].floor).toBe('# porter run\nLISTEN\nTAKE DOWN\nDEPOSIT UP');
     expect(migrated.robotSolutions['22'].floor).toBe('');
     // Migrated output round-trips as current version.
     expect(parseSave(JSON.stringify(migrated), lessons)).toEqual(migrated);

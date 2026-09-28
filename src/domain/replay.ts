@@ -56,13 +56,24 @@ export function sampleReplay(result: RunResult, time: number) {
         motion.from[1] + (motion.to[1] - motion.from[1]) * t,
       ];
     }
+    // Move to a variable walks a route, so its steps face the way they go.
+    const routed = (event: (typeof history)[number]) =>
+      /^MOVE var/.test(event.command) && (event.from[0] !== event.to[0] || event.from[1] !== event.to[1]);
     const directional = history.findLast(
-      (event) => event.command === 'LISTEN' || commandDirection(event.command) !== undefined,
+      (event) =>
+        (id === 'query' && event.command === 'LISTEN') ||
+        commandDirection(event.command) !== undefined ||
+        routed(event),
     );
-    const direction = directional ? commandDirection(directional.command) : undefined;
-    const vector = direction ? directionVectors[direction] : undefined;
+    const direction = directional && !routed(directional) ? commandDirection(directional.command) : undefined;
+    const vector: readonly [number, number] | undefined =
+      directional && routed(directional)
+        ? [directional.to[0] - directional.from[0], directional.to[1] - directional.from[1]]
+        : direction
+          ? directionVectors[direction]
+          : undefined;
     const facing =
-      directional?.command === 'LISTEN'
+      directional && !vector
         ? -Math.PI / 2
         : vector
           ? Math.atan2(vector[0], vector[1])
@@ -70,7 +81,7 @@ export function sampleReplay(result: RunResult, time: number) {
             ? -Math.PI / 2
             : 0;
     const reach =
-      /^(TAKE|PICKUP|DEPOSIT)( |$)/.test(last.command) && last.end > local
+      /^(TAKE|PICKUP|DEPOSIT|USE)( |$)/.test(last.command) && last.end > local
         ? Math.sin((Math.PI * (local - last.start)) / Math.max(0.001, last.end - last.start))
         : 0;
     // Zero-duration wait records describe an idle state until another instruction starts.
@@ -101,11 +112,11 @@ export function sampleReplay(result: RunResult, time: number) {
   }
   const servedTimes = new Map(
     logs
-      .filter((log) => log.command === 'SERVE' && log.ticketId && log.end <= local)
+      .filter((log) => log.action === 'SERVE' && log.ticketId && log.end <= local)
       .map((log) => [log.ticketId!, log.end]),
   );
   const collected = new Set(
-    logs.filter((log) => log.command === 'COLLECT' && log.end <= local).map((log) => log.ticketId),
+    logs.filter((log) => log.action === 'COLLECT' && log.end <= local).map((log) => log.ticketId),
   );
   // Intake is serial: later arrivals line up behind customers still at the counter.
   const intakeEvents = result.events.filter((event) => event.seed_id === seed?.seed_id);

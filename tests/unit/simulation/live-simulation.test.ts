@@ -88,7 +88,11 @@ describe('live service', () => {
     expect(customer(timing.seated).position).toEqual(tableSeat(event.table - 1, 0));
     expect(customer(timing.seated).seated).toBe(true);
     const claims = result.execution![0].events.filter(
-      (log) => log.command === 'WAIT DRINK' && log.ticketId === event.tickets[0].ticket_id && log.end > log.start,
+      (log) =>
+        log.role === 'floor' &&
+        log.command === 'LISTEN' &&
+        log.ticketId === event.tickets[0].ticket_id &&
+        log.end > log.start,
     );
     expect(claims.length).toBeGreaterThan(0);
     expect(claims.every((log) => log.start >= timing.seated)).toBe(true);
@@ -116,11 +120,9 @@ describe('live service', () => {
     const run = createLiveRun(levels[2], programs(2));
     const frame = run.advance(STREET_APPROACH_SECONDS + levels[2].seeds[0].customers[0].arrival);
     expect(
-      frame.result.execution?.[0].events.some(
-        (e) => e.actor === 'prep' && e.command === 'WAIT TICKET' && e.start === e.end,
-      ),
+      frame.result.execution?.[0].events.some((e) => e.actor === 'prep' && e.command === 'LISTEN' && e.start === e.end),
     ).toBe(true);
-    expect(sampleReplay(frame.result, frame.time).actors.prep?.action?.command).toBe('WAIT TICKET');
+    expect(sampleReplay(frame.result, frame.time).actors.prep?.action?.command).toBe('LISTEN');
   });
   it('reaches a bad instruction after the preceding blocks instead of jumping to failure', () => {
     const run = createLiveRun(levels[2], { query: 'LISTEN\nITEM coffee', prep: '', floor: '' });
