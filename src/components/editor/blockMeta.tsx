@@ -5,7 +5,7 @@ export function category(command: string) {
   const family = blockFields(command).family;
   if (['JUMP', 'POSITION'].includes(family)) return 'jump';
   if (['STORE', 'FUNCTION', 'CALL', 'RETURN'].includes(family)) return 'function';
-  if (['MOVE', 'TAKE', 'DEPOSIT'].includes(family)) return 'motion';
+  if (['MOVE', 'MOVE TO', 'TAKE', 'DEPOSIT', 'USE'].includes(family)) return 'motion';
   if (['IF', 'ELSE', 'FOR', 'REPEAT'].includes(family)) return 'flow';
   if (['HELP', 'ERROR'].includes(family)) return 'help';
   return 'data';

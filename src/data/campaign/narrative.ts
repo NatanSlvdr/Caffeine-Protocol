@@ -176,7 +176,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Brew’s recipe is almost complete, but the finished drink never reaches pickup, so nobody can serve it.',
     hint: 'Finish the recipe at pickup.',
     lessonNote:
-      'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and complete the missing drink deposit at pickup. Pip still serves the room.',
+      'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and finish by depositing the drink up onto pickup. Pip still serves the room.',
     interlude: {
       title: 'A place at the workbench',
       text: 'Niko sets Brew beside the kitchen counter.\nQuery knows the orders. Now teach Brew the recipes, one tile and one ingredient at a time.\nPip will keep serving until you program Porter for the floor.',
@@ -199,7 +199,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective:
       'A coffee order has arrived and Brew has never made one. The drink has to be made at the coffee machine before it can go to pickup.',
     hint: 'Beans, grind, water, brew.',
-    lessonNote: 'Coffee needs beans, grinding, water, then brewing. Every action happens beside its labeled station.',
+    lessonNote:
+      'Coffee needs beans, grinding, water, then brewing. Use up runs the coffee machine: it grinds beans and brews coffee once water is in.',
   },
   {
     level: 18,
@@ -208,7 +209,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective:
       'Tickets now ask for coffee or tea, and the two drinks use different ingredients. Brew must make whichever drink each ticket asks for.',
     hint: 'Read the ticket: coffee or tea?',
-    lessonNote: 'Tea uses leaves, water, and steeping. Branch on the current ticket to choose the recipe.',
+    lessonNote:
+      'Tea uses leaves, water, and steeping. Leaves skip the grinder: branch on the ticket and walk tea straight to the sink.',
   },
   {
     level: 19,
@@ -217,7 +219,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective:
       'Tickets can request sugar, but Brew sends every drink out unsweetened. Each drink must match the sugar amount on its ticket.',
     hint: 'Stop by the sugar before pickup.',
-    lessonNote: 'After brewing, visit sugar and apply the ticket’s requested amount, including zero.',
+    lessonNote:
+      'Orders now ask for sugar. Store the order’s sugar in Var A, then For Var A times, Take up at the sugar station drops in one cube.',
   },
   {
     level: 20,
@@ -256,7 +259,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Finished drinks are waiting at pickup, and each ticket names the table that ordered it. Porter has never delivered one.',
     hint: 'The ticket names the table.',
     lessonNote:
-      'Porter owns floor work now. Wait for Ready drink claims a delivery; Take down collects it from the outside of the kitchen counter.',
+      'Porter owns floor work now. Wait for Orders claims a ready drink; Take down collects it from the outside of the kitchen counter.',
     interlude: {
       title: 'A tray and a little courage',
       text: 'Porter rolls up to the pickup counter.\nBrew has the kitchen. Query has the orders. The room is yours to program.\nEvery delivery begins with one tile.',
@@ -270,7 +273,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Guests sit at several tables and furniture blocks the direct path. Each drink must reach the table on its ticket.',
     hint: 'Mind the furniture.',
     lessonNote:
-      'Check the assigned table, count the route, and Serve beside that table. Furniture blocks movement; customers do not.',
+      'Store the order’s table in Var A, and Move to Var A walks Porter to that table by itself. Then Deposit up onto it.',
   },
   {
     level: 25,
@@ -278,8 +281,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story: 'The first delivery went beautifully. But the next cup is already waiting back at the counter.',
     objective: 'After serving one drink, Porter stays at the table while more drinks wait at pickup.',
     hint: 'Head back after every serve.',
-    lessonNote:
-      'Return to pickup before the next delivery. The same floor plan and tile coordinates remain across every shift.',
+    lessonNote: 'Store here in Var B before leaving pickup. Move to Var B brings Porter back for the next drink.',
   },
   {
     level: 26,
@@ -288,7 +290,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Happy guests leave their empty cups behind. A clean table is the next guest’s first impression, so round them up.',
     objective: 'Guests leave empty cups on their tables. They need to go back to the sink before new guests arrive.',
     hint: 'Empty cups go to the sink.',
-    lessonNote: 'Wait for Dirty cups picks a used cup. Collect it at its table, then Return cups at the sink.',
+    lessonNote: 'Wait for Dirty cups picks a used cup. Take it up from its table, then Deposit down into the sink.',
   },
   {
     level: 27,

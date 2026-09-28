@@ -48,7 +48,7 @@ describe('drag announcements', () => {
 describe('spoken block names', () => {
   it.each([
     ['LISTEN', 'wait for orders'],
-    ['WAIT TICKET', 'wait for order ticket'],
+    ['WAIT DIRTY', 'wait for dirty cups'],
     ['IF coffee IN CUSTOMER SPEECH', 'if coffee in orders'],
     ['IF var1 >= 2', 'if var a >= 2'],
     ['FOR item IN heard orders', 'for item in order'],
@@ -56,8 +56,12 @@ describe('spoken block names', () => {
     ['WRITE var1 sugar', 'write var a sugar'],
     ['ITEM tea', 'write tea'],
     ['DEPOSIT RIGHT', 'deposit right'],
-    ['FILL WATER', 'fill water'],
-    ['RETURN CUPS', 'return cups'],
+    ['TAKE UP', 'take up'],
+    ['USE UP', 'use up'],
+    ['MOVE var1', 'move to var a'],
+    ['FOR var1 TIMES', 'for var a times'],
+    ['STORE var2 FROM here', 'store var b = here'],
+    ['STORE var1 FROM sugar', 'store var a = sugar on order'],
     ['POSITION listen', 'jump destination'],
   ])('says %s as "%s"', (command, spoken) => expect(spokenBlock(command)).toBe(spoken));
 });

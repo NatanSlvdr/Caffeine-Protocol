@@ -1,4 +1,4 @@
-import { BOUNDS } from './geometry';
+import { BOUNDS, TABLE_LAYOUT, tableFront } from './geometry';
 import type { Point } from './geometry';
 import type { RobotRole } from '../types';
 
@@ -35,3 +35,11 @@ export const QUERY_TILES: readonly Point[] = [
 export const MANUAL_INTAKE: Point = STATIONS.orders.floor;
 /** The one opening from the room into the prep aisle is left of the first appliance. */
 export const STAFF_ENTRY: Point = [-2, 4];
+/** A place a robot stored in memory, named after what's there: "Pickup", "Table 3", or its tile. */
+export function placeLabel(place: Point): string {
+  const [x, z] = place;
+  if (x === STATIONS.pickup.floor[0] && z === STATIONS.pickup.floor[1]) return 'Pickup';
+  if (x === STATIONS.returns.floor[0] && z === STATIONS.returns.floor[1]) return 'Sink';
+  const table = TABLE_LAYOUT.findIndex((_, i) => tableFront(i)[0] === x && tableFront(i)[1] === z);
+  return table >= 0 ? `Table ${table + 1}` : `Tile ${x}, ${z}`;
+}

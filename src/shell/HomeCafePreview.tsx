@@ -12,7 +12,7 @@ export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixel
   const reduceMotion = reduced || prefersReducedMotion;
   const duration = result.execution?.[0]?.duration ?? 60;
   const stillTime = result.execution?.[0]?.events.find(
-    (event) => event.actor === 'prep' && /^(BREW|STEEP)$/.test(event.command),
+    (event) => event.actor === 'prep' && (event.action === 'BREW' || event.action === 'STEEP'),
   );
 
   useEffect(() => {

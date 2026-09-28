@@ -308,6 +308,9 @@ const ExtensionSeedSchema = v.strictObject({
   title: v.pipe(v.string(), v.minLength(1)),
   note: v.pipe(v.string(), v.minLength(1)),
   omission: v.pipe(v.string(), v.minLength(1)),
+  occurrence: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
+  todo: v.optional(v.pipe(v.string(), v.minLength(1))),
+  robot: v.optional(v.picklist(['prep', 'floor'])),
   blocks: v.pipe(v.number(), v.integer(), v.minValue(1)),
   instructions: v.pipe(v.number(), v.integer(), v.minValue(1)),
 });

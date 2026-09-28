@@ -12,12 +12,20 @@ import {
   LOOP_VARIABLES,
   LOOP_SELECTORS,
   parseFor,
+  parseMoveTo,
+  parseTimes,
   parseQueryComparison,
+  STORE_SOURCE_LABELS,
   blockFields,
   blockVariants,
   normalizeDirection,
 } from '@/domain';
-import { WORKER_CONDITION_OPERATORS, WORKER_CONDITION_SOURCES, WORKER_CONDITION_VALUES, parseWorkerComparison } from '@/domain/robotConditions';
+import {
+  WORKER_CONDITION_OPERATORS,
+  WORKER_CONDITION_SOURCES,
+  WORKER_CONDITION_VALUES,
+  parseWorkerComparison,
+} from '@/domain/robotConditions';
 import { MAX_ITEM_QUANTITY, MAX_MOVE_COUNT } from '@/domain/constants';
 import { BlockSelect, DirectionSelect } from '../BlockSelect';
 import { BlockIcon } from '../BlockIcon';
@@ -36,10 +44,14 @@ export function membershipOperands(
   const expression = parseConditionExpression(command);
   if (!expression) return null;
   const values = QUERY_CONDITION_VALUES.filter(
-    (value) => expression.conditions.some((condition) => condition.left === value) || options.some((candidate) => parseQueryComparison(candidate)?.left === value),
+    (value) =>
+      expression.conditions.some((condition) => condition.left === value) ||
+      options.some((candidate) => parseQueryComparison(candidate)?.left === value),
   );
   const update = (index: number, key: 'left' | 'operator' | 'right', value: string) => {
-    const conditions = expression.conditions.map((condition, at) => (at === index ? { ...condition, [key]: value } : condition));
+    const conditions = expression.conditions.map((condition, at) =>
+      at === index ? { ...condition, [key]: value } : condition,
+    );
     onChange(formatConditionExpression({ ...expression, conditions }));
   };
   return (
@@ -119,7 +131,9 @@ export function comparisonOperands(
   const vocabulary = membership ? QUERY_CONDITION_VALUES : WORKER_CONDITION_VALUES;
   const parse = membership ? parseQueryComparison : parseWorkerComparison;
   const values = vocabulary.filter(
-    (value) => value === condition.left || options.some((candidate) => candidate === `IF ${value}` || parse(candidate)?.left === value),
+    (value) =>
+      value === condition.left ||
+      options.some((candidate) => candidate === `IF ${value}` || parse(candidate)?.left === value),
   );
   const hasCount =
     options.some((candidate) => candidate === 'IF count' || candidate.startsWith('IF count ')) ||
@@ -128,9 +142,12 @@ export function comparisonOperands(
   const sources = membership
     ? QUERY_CONDITION_SOURCES
     : WORKER_CONDITION_SOURCES.filter(
-        (value) => value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount,
+        (value) =>
+          value === condition.right || value === 'CUSTOMER SPEECH' || value === 'TRUE' || value === 'FALSE' || hasCount,
       );
-  const operators = membership ? QUERY_CONDITION_OPERATORS : [...new Set([condition.operator, ...WORKER_CONDITION_OPERATORS])];
+  const operators = membership
+    ? QUERY_CONDITION_OPERATORS
+    : [...new Set([condition.operator, ...WORKER_CONDITION_OPERATORS])];
   const next = (left: string, operator: string, right: string) => `IF ${left} ${operator} ${right}`;
   return (
     <span className="if-comparison-operands">
@@ -185,6 +202,11 @@ export function Operands({
   const fields = blockFields(command);
   if (fields.family === 'STORE') {
     const stored = parseStore(command) ?? { variable: 'var1', value: 'number' };
+    // Brew and Porter store what their library offers; Query stores numbers.
+    const robotSources = options
+      .map((option) => parseStore(option)?.value)
+      .filter((value) => value && !STORE_VALUES.includes(value));
+    const sources = robotSources.length ? [...new Set(robotSources as string[])] : STORE_VALUES;
     return (
       <span className="assignment-operands">
         <span className="assignment-tile">
@@ -208,7 +230,10 @@ export function Operands({
             label={label + ' source'}
             value={stored.value}
             disabled={disabled}
-            options={STORE_VALUES.map((value) => ({ ...conditionOption(value), label: value === 'number' ? 'Number in item' : (conditionLabels[value] ?? value) }))}
+            options={sources.map((value) => ({
+              ...conditionOption(value),
+              label: STORE_SOURCE_LABELS[value] ?? conditionLabels[value] ?? value,
+            }))}
             onChange={(value) => select('source', `STORE ${stored.variable} FROM ${value}`)}
           />
         </span>
@@ -220,7 +245,8 @@ export function Operands({
       parts = command.split(' ');
     const quantity = sugar ?? (parts.length === 3 ? parts[1] : '1'),
       item = sugar !== undefined ? 'sugar' : parts.at(-1)!;
-    const write = (amount: string, ingredient = item) => (ingredient === 'sugar' ? `WRITE ${amount} sugar` : `ITEM ${amount} ${ingredient}`);
+    const write = (amount: string, ingredient = item) =>
+      ingredient === 'sugar' ? `WRITE ${amount} sugar` : `ITEM ${amount} ${ingredient}`;
     const variables = options.some((option) => parseStore(option)) ? VARIABLES : [];
     return (
       <>
@@ -229,7 +255,11 @@ export function Operands({
             label={label + ' quantity'}
             value={mask('quantity', quantity)}
             disabled={disabled}
-            options={[...Array.from({ length: 20 }, (_, i) => String(i)), ...variables, ...(!/^\d+$/.test(quantity) ? [quantity] : [])]
+            options={[
+              ...Array.from({ length: 20 }, (_, i) => String(i)),
+              ...variables,
+              ...(!/^\d+$/.test(quantity) ? [quantity] : []),
+            ]
               .filter((value, index, values) => values.indexOf(value) === index)
               .map(conditionOption)}
             onChange={(value) => select('quantity', write(value))}
@@ -255,32 +285,54 @@ export function Operands({
           label={label + ' value'}
           value={library ? '' : item === 'sugar' ? 'WRITE 1 sugar' : `ITEM ${item}`}
           disabled={disabled}
-          options={options.filter((option) => /^ITEM (coffee|tea)$/.test(option) || option === 'WRITE 1 sugar').map(operandOption)}
+          options={options
+            .filter((option) => /^ITEM (coffee|tea)$/.test(option) || option === 'WRITE 1 sugar')
+            .map(operandOption)}
           onChange={(value) => {
             const ingredient = value === 'WRITE 1 sugar' ? 'sugar' : value.slice(5);
             const amount = /^\d+$/.test(quantity) && Number(quantity) > 0 ? quantity : '1';
-            select('item', ingredient === 'sugar' ? write(quantity, ingredient) : parts.length === 2 ? value : write(amount, ingredient));
+            select(
+              'item',
+              ingredient === 'sugar'
+                ? write(quantity, ingredient)
+                : parts.length === 2
+                  ? value
+                  : write(amount, ingredient),
+            );
           }}
         />
       </>
     );
   }
-  if (['MOVE', 'TAKE', 'DEPOSIT'].includes(fields.family)) {
+  if (fields.family === 'MOVE TO') {
+    const variable = parseMoveTo(command) ?? 'var1';
+    return (
+      <BlockSelect
+        label={label + ' variable'}
+        value={mask('variable', variable)}
+        disabled={disabled}
+        onChange={(value) => select('variable', `MOVE ${value}`)}
+        options={VARIABLES.map(conditionOption)}
+      />
+    );
+  }
+  if (['MOVE', 'TAKE', 'DEPOSIT', 'USE'].includes(fields.family)) {
     const [, rawDirection, count = '1'] = command.split(' ');
-    const query = options.includes('LISTEN');
-    const defaultDirection =
-      fields.family === 'TAKE'
-        ? options.includes('SERVE')
-          ? 'DOWN'
-          : 'UP'
-        : query || !options.includes('BREW')
-          ? 'RIGHT'
-          : 'UP';
+    // Brew and Porter deposit up onto the counter and tables; Porter takes drinks down from pickup.
+    const porter = options.includes('CALL deliver'),
+      robot = porter || options.includes('USE UP');
+    const defaultDirection = fields.family === 'TAKE' ? (porter ? 'DOWN' : 'UP') : robot ? 'UP' : 'RIGHT';
     const direction = normalizeDirection(rawDirection ?? defaultDirection) ?? defaultDirection;
-    const nextCommand = (value: string, nextCount = count) => (fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`);
+    const nextCommand = (value: string, nextCount = count) =>
+      fields.family === 'MOVE' ? `MOVE ${value} ${nextCount}` : `${fields.family} ${value}`;
     return (
       <>
-        <DirectionSelect label={label + ' direction'} value={mask('direction', direction)} disabled={disabled} onChange={(v) => select('direction', nextCommand(v))} />
+        <DirectionSelect
+          label={label + ' direction'}
+          value={mask('direction', direction)}
+          disabled={disabled}
+          onChange={(v) => select('direction', nextCommand(v))}
+        />
         {fields.family === 'MOVE' && (
           <>
             <input
@@ -304,6 +356,20 @@ export function Operands({
       </>
     );
   }
+  const times = parseTimes(command);
+  if (times)
+    return (
+      <>
+        <BlockSelect
+          label={label + ' variable'}
+          value={mask('variable', times)}
+          disabled={disabled}
+          onChange={(variable) => select('variable', `FOR ${variable} TIMES`)}
+          options={VARIABLES.map(conditionOption)}
+        />
+        <span className="block-verb block-suffix">times</span>
+      </>
+    );
   if (fields.family === 'FOR') {
     const loop = parseFor(command);
     if (!loop) return null;
@@ -329,7 +395,8 @@ export function Operands({
   }
   if (fields.family === 'IF') {
     const membership =
-      options.includes('LISTEN') && membershipOperands(command, options, disabled, label, (value) => select('condition', value), library, inLoop);
+      options.includes('LISTEN') &&
+      membershipOperands(command, options, disabled, label, (value) => select('condition', value), library, inLoop);
     if (membership) return membership;
     const comparison = comparisonOperands(command, options, disabled, label, select, mask);
     if (comparison) return comparison;

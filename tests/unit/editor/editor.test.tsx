@@ -5,6 +5,7 @@ import { Editor } from '../../../src/components/Editor';
 import { Harness, choose, currentSource as source } from '../../helpers/editorHarness';
 import { CodingPaneHeader } from '../../../src/components/CodingPaneHeader';
 import { compileProgram } from '../../../src/domain/program';
+import { compileRobot } from '../../../src/domain/robotProgram';
 import { placeBlock, removeVisualBlock, visualProgram } from '../../../src/domain/visualProgram';
 afterEach(() => {
   vi.restoreAllMocks();
@@ -152,11 +153,12 @@ describe('compact visual code', () => {
     expect(screen.getByLabelText('Block 2 selector').textContent).toBe('order');
     expect(compileProgram(source(), 9).compile_error).toBe('');
   });
-  it('preserves the kitchen comparison operands independently of Query tokens', async () => {
-    render(<Harness role="prep" level={20} initial={'WAIT TICKET\nIF coffee IN CUSTOMER SPEECH\nEND'} />);
-    await choose('Block 2 operator', '!=');
-    expect(source()).toBe('WAIT TICKET\nIF coffee != CUSTOMER SPEECH\nEND');
+  it('edits Brew conditions with Query’s membership operands', async () => {
+    render(<Harness role="prep" level={20} initial={'LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND'} />);
+    await choose('Block 2 operator', 'NOT IN');
+    expect(source()).toBe('LISTEN\nIF coffee NOT IN CUSTOMER SPEECH\nEND');
     expect(screen.getByLabelText('Block 2 source').textContent).toBe('Orders');
+    expect(compileRobot(source(), 'prep', 20).compile_error).toBe('');
   });
   it('adds, edits, switches and removes logical rows within the same IF', async () => {
     render(<Harness level={7} initial={'LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND'} />);
@@ -207,7 +209,7 @@ describe('compact visual code', () => {
   });
   it('supports keyboard choice and Escape without committing', async () => {
     const user = userEvent.setup();
-    render(<Harness role="floor" initial="WAIT DRINK" />);
+    render(<Harness role="floor" initial="LISTEN" />);
     screen.getByLabelText('Block 1 value').focus();
     await user.keyboard('{ArrowDown}{Enter}');
     expect(source()).toBe('WAIT DIRTY');
@@ -217,14 +219,14 @@ describe('compact visual code', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
   it('offers unlocked operands and all eight movement directions', async () => {
-    render(<Harness role="prep" level={4} initial={'LISTEN\nIF tea\nMOVE RIGHT 1\nEND'} />);
-    await userEvent.click(screen.getByLabelText('Block 2 condition'));
-    expect(screen.getAllByRole('option').map((e) => e.textContent)).toEqual(['Coffee', 'Tea', 'sugar']);
+    render(<Harness role="prep" level={20} initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 1\nEND'} />);
+    await userEvent.click(screen.getByLabelText('Block 2 value'));
+    expect(screen.getAllByRole('option').map((e) => e.textContent)).toEqual(['Coffee', 'Tea', 'Sugar']);
     await userEvent.keyboard('{Escape}');
     await userEvent.click(screen.getByLabelText('Block 3 direction'));
     expect(screen.getAllByRole('option')).toHaveLength(8);
     await userEvent.click(screen.getByRole('option', { name: 'up left' }));
-    expect(source()).toBe('LISTEN\nIF tea\n  MOVE UP_LEFT 1\nEND');
+    expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\n  MOVE UP_LEFT 1\nEND');
   });
   it('locks editing during replay', async () => {
     render(<Harness locked />);

@@ -42,7 +42,7 @@ it('shows an in-flight action even before paper is picked up, and supports pause
   expect(screen.getByLabelText('Query memory').textContent).toContain('Var A = 2');
 });
 
-it.each(['BREW', 'GRIND'])('does not animate %s as a robot action', (command) => {
+it.each(['HELP', 'ERROR'])('does not animate %s as a robot action', (command) => {
   const { rerender } = render(
     <RobotHolding name="Query" inventory={[]} action={{ command, start: 0, progress: 0.5 }} />,
   );
@@ -56,19 +56,27 @@ it.each(['BREW', 'GRIND'])('does not animate %s as a robot action', (command) =>
 
 it.each([
   'LISTEN',
-  'WAIT TICKET',
+  'WAIT DIRTY',
   'TAKE UP',
   'DEPOSIT DOWN',
   'ITEM coffee',
   'WRITE 2 sugar',
   'STORE var1 FROM number',
   'MOVE LEFT',
+  'MOVE var1',
+  'USE UP',
   'TICKET',
   'SUBMIT',
   'PICKUP',
 ])('shows %s as a robot action', (command) => {
   render(<RobotHolding name="Query" inventory={[]} action={{ command, start: 0, progress: 0.5 }} />);
   expect(document.querySelector('.robot-action')).toBeTruthy();
+});
+
+it('names a stored place instead of its tile', () => {
+  render(<RobotHolding name="Porter" inventory={[]} variables={{ var1: 3, var2: [6, 3] }} />);
+  expect(screen.getByLabelText('Porter memory').textContent).toContain('Var A = 3');
+  expect(screen.getByLabelText('Porter memory').textContent).toContain('Var B = Pickup');
 });
 
 it('shows action, inventory with sugar cubes, and compact memory in order', () => {

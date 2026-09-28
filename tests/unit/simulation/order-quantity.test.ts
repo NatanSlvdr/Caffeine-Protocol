@@ -38,7 +38,7 @@ describe('quantity on one paper', () => {
     }
     expect(result.first_failure).toBeNull();
     expect(result.passed).toBe(true);
-    const serves = result.execution![0].events.filter((event) => event.command === 'SERVE' && event.end > event.start);
+    const serves = result.execution![0].events.filter((event) => event.action === 'SERVE' && event.end > event.start);
     expect(serves).toHaveLength(2);
     expect(new Set(serves.map((event) => event.ticketId)).size).toBe(2);
     expect(result.tickets).toHaveLength(1);
