@@ -44,3 +44,19 @@ describe('live multi-seed validation', () => {
     expect(frame.result.execution).toHaveLength(3);
   });
 });
+
+describe('early finish', () => {
+  it('ends the service once Query has handled every guest, without waiting for them to leave', () => {
+    const level = levels[2];
+    const live = createLiveRun(level, programs(2));
+    let frame = live.advance(0);
+    while (!frame.done) frame = live.advance(0.5);
+    const [seed] = frame.result.execution!;
+    const lastQuery = Math.max(...seed.events.filter((e) => e.actor === 'query').map((e) => e.end));
+    expect(frame.result.passed).toBe(true);
+    // Playback stops just after Query's last block, while the scoring still ran the whole service.
+    expect(frame.time).toBeLessThan(lastQuery + 1);
+    expect(seed.duration).toBeGreaterThan(frame.time + 5);
+    expect(frame.result.stars).toBeGreaterThan(0);
+  });
+});

@@ -2028,8 +2028,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   gap: 7px;
   padding: 10px 9px;
 }
-.robot-choice-label svg,
-.robot-choice-lock > svg {
+.robot-choice-label svg {
   flex-shrink: 0;
 }
 .locked-robot-zone {
@@ -2048,30 +2047,12 @@ html[data-motion='reduced'] .execution-line-highlight {
   cursor: not-allowed;
   min-width: 0;
 }
-.robot-choice-lock {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  padding: 5px 8px;
-  border-radius: 9px;
-  background: rgb(38 30 24 / 78%);
-  color: #ead8b8;
-  font:
-    500 10px/1.4 Inter,
-    sans-serif;
-  text-align: center;
-  cursor: not-allowed;
-}
 .robot-tabs button:focus-visible {
   outline: 2px solid #b58b52;
   outline-offset: 3px;
 }
 
-/* Keep the compact camera control while sharing the program selector’s lock overlay. */
+/* Keep the compact camera control. */
 .view-controls .robot-choice-label {
   padding: 0;
   gap: 6px;
@@ -2089,10 +2070,6 @@ html[data-motion='reduced'] .execution-line-highlight {
   flex: 1;
   opacity: 1;
 }
-.view-controls .robot-choice-lock {
-  border-radius: 7px;
-}
-
 /* Logical clauses stay on separate rows inside one IF tile. */
 .editor-panel .if-condition-rows {
   display: inline-flex;

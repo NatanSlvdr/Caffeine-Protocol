@@ -145,6 +145,6 @@ describe('campaign handoff data', () => {
     ).toBe(true);
     expect(lessons[2].solution).toContain('MOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1');
     expect(levels[2].block_target).toBeGreaterThanOrEqual(6);
-    expect(levels[2].instruction_target).toBeGreaterThanOrEqual(12);
+    expect(levels[2].instruction_target).toBeGreaterThanOrEqual(6);
   });
 });

@@ -354,6 +354,8 @@ describe('compact visual code', () => {
     fireEvent.pointerDown(tile, { button: 0, buttons: 1, clientX: 60, clientY: 355 });
     // The block's top edge (340 - 70) rests on the Else slot.
     fireEvent.pointerMove(document, { clientX: 60, clientY: 290 });
+    // Else slots open a frame after the pickup.
+    await waitFor(() => expect(document.querySelector('[data-drop-slot="else:2"]')).toBeTruthy());
     fireEvent.pointerMove(document, { clientX: 60, clientY: 285 });
     await waitFor(() =>
       expect(document.querySelector('[data-drop-slot="else:2"] .drop-projection .code-scope .scope-body')).toBeTruthy(),
@@ -478,10 +480,7 @@ describe('minimal coding pane header', () => {
     };
     const { rerender } = render(<CodingPaneHeader {...props} level={14} />);
     expect(screen.getAllByRole('tab')).toHaveLength(3);
-    expect(screen.getAllByText('Locked')).toHaveLength(1);
-    expect(screen.getByRole('tab', { name: 'Brew' }).getAttribute('aria-describedby')).toBe(
-      screen.getByRole('tab', { name: 'Porter' }).getAttribute('aria-describedby'),
-    );
+    expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Brew' }).hasAttribute('disabled')).toBe(true);
     await userEvent.click(screen.getByRole('tab', { name: 'Brew' }));
     expect(props.onRole).not.toHaveBeenCalled();

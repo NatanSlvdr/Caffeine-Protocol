@@ -1,5 +1,4 @@
-import { ChefHat, ConciergeBell, LockKeyhole, ReceiptText } from 'lucide-react';
-import { useId } from 'react';
+import { ChefHat, ConciergeBell, ReceiptText } from 'lucide-react';
 import { splitByUnlock } from '@/domain/robots';
 import type { RobotRole } from '@/domain';
 
@@ -25,7 +24,6 @@ interface RobotListProps {
 }
 
 function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) {
-  const noticeId = useId();
   const { unlocked, locked } = splitByUnlock(level);
   const button = (robot: RobotRole, disabled: boolean) => (
     <button
@@ -34,7 +32,6 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
       role={tabs ? 'tab' : undefined}
       aria-selected={tabs ? !disabled && selected === robot : undefined}
       aria-pressed={tabs ? undefined : !disabled && selected === robot}
-      aria-describedby={disabled ? noticeId : undefined}
       title={tabs ? undefined : labels[robot]}
       disabled={disabled}
       onClick={() => onSelect(robot)}
@@ -48,10 +45,6 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
       {locked.length > 0 && (
         <div className="locked-robot-zone" style={{ flexGrow: locked.length }}>
           <div className="locked-robot-buttons">{locked.map((robot) => button(robot, true))}</div>
-          <div className="robot-choice-lock" id={noticeId}>
-            <LockKeyhole size={12} aria-hidden="true" />
-            <span>Locked</span>
-          </div>
         </div>
       )}
     </>
@@ -70,7 +63,7 @@ export function RobotButtons(props: Omit<RobotOptionsProps, 'tabs'>) {
   return <RobotList {...props} tabs={false} />;
 }
 
-/** Group unavailable robots beneath one shared unlock notice. */
+/** Unavailable robots stay listed, greyed out, after the ones already running. */
 export function RobotOptions({ tabs = false, ...props }: RobotOptionsProps) {
   return tabs ? <RobotTabs {...props} /> : <RobotButtons {...props} />;
 }

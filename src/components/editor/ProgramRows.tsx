@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import type { VisualBlock } from '@/domain';
 import { category } from './blockMeta';
 import { Insertion } from './Insertion';
@@ -35,6 +36,14 @@ export function ProgramRows({
   draggedLine,
   change,
 }: ProgramRowsProps) {
+  // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
+  // an If down before the drag measures the picked block, and the floating copy trails the pointer.
+  const [elseSlots, setElseSlots] = useState(false);
+  useEffect(() => {
+    if (!dragged) return setElseSlots(false);
+    const frame = requestAnimationFrame(() => setElseSlots(true));
+    return () => cancelAnimationFrame(frame);
+  }, [!!dragged]);
   const renderBlocks = (blocks: VisualBlock[], depth = 0): React.ReactNode =>
     blocks.map((block) => (
       <div
@@ -89,7 +98,7 @@ export function ProgramRows({
             </div>
           </div>
         )}
-        {block.command.startsWith('IF ') && !block.alternative?.length && dragged && (
+        {block.command.startsWith('IF ') && !block.alternative?.length && dragged && elseSlots && (
           <Insertion at={block.end} alternative={block.elseLine === undefined} disabled={disabled} hint="Else" />
         )}
         <Insertion at={block.end + 1} disabled={disabled} />

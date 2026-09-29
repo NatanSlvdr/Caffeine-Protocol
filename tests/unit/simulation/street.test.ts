@@ -4,16 +4,26 @@ import { BOUNDS, ENTRANCE, ROOM, STATIONS, tableFront } from '../../../src/domai
 import { compileProgram } from '../../../src/domain/program';
 import { sampleReplay } from '../../../src/domain/replay';
 import { runLevel } from '../../../src/domain/simulation';
-import { customerApproach, customerExit, samplePath, SIDEWALK_X, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS, STREET_BOUNDS } from '../../../src/domain/street';
+import {
+  customerApproach,
+  customerExit,
+  samplePath,
+  SIDEWALK_X,
+  STREET_APPROACH_SECONDS,
+  STREET_EXIT_SECONDS,
+  STREET_BOUNDS,
+} from '../../../src/domain/street';
 
 describe('street customer routes', () => {
   it('matches the café length and places customer spawning beyond the clipped edges', () => {
     expect(STREET_BOUNDS.length).toBe(ROOM[1]);
-    expect(STREET_BOUNDS.minZ).toBe(BOUNDS.minZ - .5);
-    expect(STREET_BOUNDS.maxZ).toBe(BOUNDS.maxZ + .5);
+    expect(STREET_BOUNDS.minZ).toBe(BOUNDS.minZ - 0.5);
+    expect(STREET_BOUNDS.maxZ).toBe(BOUNDS.maxZ + 0.5);
     for (const index of [0, 1]) {
-      const first = customerApproach(index)[0], last = customerExit(tableFront(0), index).at(-1)!;
-      for (const point of [first, last]) expect(point[1] < STREET_BOUNDS.minZ - .5 || point[1] > STREET_BOUNDS.maxZ + .5).toBe(true);
+      const first = customerApproach(index)[0],
+        last = customerExit(tableFront(0), index).at(-1)!;
+      for (const point of [first, last])
+        expect(point[1] < STREET_BOUNDS.minZ - 0.5 || point[1] > STREET_BOUNDS.maxZ + 0.5).toBe(true);
     }
   });
   it('approaches from both sidewalk ends and enters through the doorway', () => {
@@ -33,10 +43,14 @@ describe('street customer routes', () => {
   });
 
   it('samples by distance without jumping at waypoint boundaries', () => {
-    const path = [[-10, 0], [-10, 6], [-8, 6]] as const;
-    expect(samplePath(path, .5)).toEqual([-10, 4]);
-    expect(samplePath(path, .75)).toEqual([-10, 6]);
-    expect(samplePath(path, .875)).toEqual([-9, 6]);
+    const path = [
+      [-10, 0],
+      [-10, 6],
+      [-8, 6],
+    ] as const;
+    expect(samplePath(path, 0.5)).toEqual([-10, 4]);
+    expect(samplePath(path, 0.75)).toEqual([-10, 6]);
+    expect(samplePath(path, 0.875)).toEqual([-9, 6]);
     expect(samplePath(path, -1)).toEqual(path[0]);
     expect(samplePath(path, 2)).toEqual(path.at(-1));
   });
@@ -47,13 +61,15 @@ describe('street customer routes', () => {
     const before = JSON.stringify(result);
     const approach = sampleReplay(result, -STREET_APPROACH_SECONDS);
     expect(approach.seed?.seed_id).toBe(result.execution?.[0].seed_id);
-    expect(approach.customers.find(c => c.id === event.customer.customer_id)?.position).toEqual(customerApproach(0)[0]);
+    expect(approach.customers.find((c) => c.id === event.customer.customer_id)?.position).toEqual(
+      customerApproach(0)[0],
+    );
     const counter = sampleReplay(result, event.timing.created);
-    expect(counter.customers.find(c => c.id === event.customer.customer_id)?.position).toEqual(STATIONS.orders.floor);
-    const exiting = sampleReplay(result, event.timing.left + STREET_EXIT_SECONDS - .01);
-    expect(exiting.customers.find(c => c.id === event.customer.customer_id)?.position[0]).toBe(SIDEWALK_X);
+    expect(counter.customers.find((c) => c.id === event.customer.customer_id)?.position).toEqual(STATIONS.orders.floor);
+    const exiting = sampleReplay(result, event.timing.left + STREET_EXIT_SECONDS - 0.01);
+    expect(exiting.customers.find((c) => c.id === event.customer.customer_id)?.position[0]).toBe(SIDEWALK_X);
     const gone = sampleReplay(result, event.timing.left + STREET_EXIT_SECONDS);
-    expect(gone.customers.some(c => c.id === event.customer.customer_id)).toBe(false);
+    expect(gone.customers.some((c) => c.id === event.customer.customer_id)).toBe(false);
     expect(JSON.stringify(result)).toBe(before);
   });
 });

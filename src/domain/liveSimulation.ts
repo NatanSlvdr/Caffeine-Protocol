@@ -26,7 +26,9 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
   };
   let time = -STREET_APPROACH_SECONDS,
     nextGlobal = 0,
-    done = false;
+    done = false,
+    // The player's robots have finished: the rest of this seed is computed at once instead of played.
+    rushing = false;
   let seedIndex = 0,
     offset = 0,
     blockCountSet = false;
@@ -54,6 +56,9 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
       pump: (now, log) => pumpQuery(now, log, state, deps),
       next: () => state.queryNext,
       done: () => state.index >= deps.events.length,
+      settle: () => {
+        rushing = true;
+      },
       attach: (execution) => {
         const at = result.execution!.findIndex((e) => e.seed_id === seed.id);
         if (at >= 0) result.execution![at] = execution;
@@ -66,9 +71,9 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
   /** Advance only to the requested game time; future instructions stay suspended. */
   function advance(seconds: number) {
     if (done) return snapshot();
-    const target = time + Math.max(0, seconds);
+    let target = time + Math.max(0, seconds);
     if (!service) startSeed(seedIndex);
-    while (!done && nextGlobal <= target) {
+    while (!done && (rushing || nextGlobal <= target)) {
       if (!service) startSeed(seedIndex);
       const tick = service!.next();
       if (!tick.done) {
@@ -80,11 +85,14 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
       if (!tick.value.failure && seedIndex + 1 < level.seeds.length) {
         seedIndex += 1;
         service = undefined;
+        if (rushing) target = Math.max(target, offset);
+        rushing = false;
         continue;
       }
       done = true;
     }
-    time = done ? offset : target;
+    // A service that ends early freezes where the player's robot finished; a failure still shows where it happened.
+    time = done && !(rushing && result.passed) ? offset : target;
     return snapshot();
   }
   function snapshot() {

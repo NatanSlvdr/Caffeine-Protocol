@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { availableCommands, blockFields, blockPrototypes, HIDDEN_LIBRARY_COMMANDS, robotCommands } from '../../../src/domain';
+import {
+  availableCommands,
+  blockFields,
+  blockPrototypes,
+  HIDDEN_LIBRARY_COMMANDS,
+  robotCommands,
+} from '../../../src/domain';
 
 const allCommands = (level: number) => [
   ...availableCommands(level),

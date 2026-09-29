@@ -65,20 +65,12 @@ describe('live workspace lifecycle', () => {
   it('shows locked robot areas and code tabs before their unlock shifts', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
     render(<App />);
-    for (const name of ['Brew’s kitchen', 'Porter’s dining room']) {
-      const button = screen.getByRole('button', { name });
-      expect(button.hasAttribute('disabled')).toBe(true);
-      const notice = document.getElementById(button.getAttribute('aria-describedby')!);
-      expect(notice?.textContent).toBe('Locked');
-      expect(notice?.querySelector('.lucide-lock-keyhole')).toBeTruthy();
-    }
-    for (const name of ['Brew', 'Porter']) {
-      const tab = screen.getByRole('tab', { name });
-      expect(tab.hasAttribute('disabled')).toBe(true);
-      const notice = document.getElementById(tab.getAttribute('aria-describedby')!);
-      expect(notice?.textContent).toBe('Locked');
-      expect(notice?.querySelector('.lucide-lock-keyhole')).toBeTruthy();
-    }
+    for (const name of ['Brew’s kitchen', 'Porter’s dining room'])
+      expect(screen.getByRole('button', { name }).hasAttribute('disabled')).toBe(true);
+    for (const name of ['Brew', 'Porter'])
+      expect(screen.getByRole('tab', { name }).hasAttribute('disabled')).toBe(true);
+    // Greyed out is enough; there is no separate Locked badge.
+    expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Query' }).hasAttribute('disabled')).toBe(false);
   });
   it('awards progress and opens the receipt only after the live service finishes', () => {

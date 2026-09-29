@@ -12,7 +12,11 @@ const intros: Record<number, readonly ScriptLine[]> = {
   1: [
     ['', 'The shutters of the old café roll up for the first time in years.'],
     ['niko:happy', 'We’re open! Well, mostly. The sign still says CLOSED on the other side.'],
-    ['niko', 'No code today. Let’s just watch how an order goes round, from the counter to a clean table.'],
+    ['niko', 'Soon you’ll be writing the code for the robots that help out here. But not today.'],
+    [
+      'niko',
+      'Today we just watch. Press Watch service and follow one order: the counter, the kitchen, then a clean table.',
+    ],
   ],
   2: [
     ['', 'Second morning. The queue is already out the door.'],
@@ -26,8 +30,27 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Late last night, Niko tightened the last screw on the robot from the scrapyard.'],
     ['query', '*bip… bip… BOOP* Hearing online. What is coffee?'],
     ['niko:happy', 'A reason to get out of bed. Also, a drink.'],
-    ['niko', 'Query only does what its code says, one line at a time. Writing that code is your job now.'],
-    ['niko', 'A guest wants a coffee, and the kitchen only works from a written ticket. Have a look at the commands.'],
+    [
+      'niko',
+      'Right, this part is for you. Query does exactly what its code says, one command at a time, from top to bottom. Writing that code is your job.',
+    ],
+    [
+      'niko',
+      'Here’s how a ticket gets made. [LISTEN|Wait for Orders] makes Query listen until a guest orders something.',
+    ],
+    [
+      'niko',
+      '[TAKE UP|Take up] grabs a blank sheet from the paper stack, and [ITEM coffee|Write Coffee] puts the drink on it.',
+    ],
+    [
+      'niko',
+      'Then [MOVE RIGHT 1|Move] walks Query to the kitchen handoff, one tile at a time. [DEPOSIT RIGHT|Deposit] hands the ticket over, and Query walks back to the register.',
+    ],
+    ['query', '*bip* Listen. Paper. Write. Walk. Give. Walk back. Simple.'],
+    [
+      'niko:happy',
+      'Today’s guest just wants a coffee. Press Run service when you’re ready. If it goes wrong, nothing breaks. Except maybe my pride.',
+    ],
   ],
   4: [
     ['niko:happy', 'Big news: tea is on the menu!'],
@@ -38,7 +61,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['query', '*bzzt* Ticklish.'],
     [
       'niko:happy',
-      'There! New command: If. It checks something, like what the customer said. The blocks inside only run when it’s true, and Else covers everything else.',
+      'There! New command: [IF tea IN CUSTOMER SPEECH|If]. It checks something, like what the customer said. The blocks inside only run when it’s true, and [ELSE|Else] covers everything else.',
     ],
   ],
   5: [
@@ -50,7 +73,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['query', '*bip… bop… BOING*'],
     [
       'niko:happy',
-      'Got it! You now have Jump. When it’s read, the code goes straight back to a Position marker, wherever you put it. Everything after the marker runs again.',
+      'Got it! You now have [JUMP listen|Jump]. When it’s read, the code goes straight back to a [POSITION listen|Position] marker, wherever you put it. Everything after the marker runs again.',
     ],
   ],
   6: [
@@ -65,7 +88,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['query', '*whirr* Arm heavier. Arm smarter.'],
     [
       'niko:happy',
-      'Done! Write can add a note to the ticket now, like Write 1 Sugar. A fresh sheet always starts with no sugar.',
+      'Done! Write can add a note to the ticket now, like [WRITE 1 sugar|Write 1 Sugar]. A fresh sheet always starts with no sugar.',
     ],
   ],
   7: [
@@ -89,7 +112,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Clanking from under the counter. Something rolls away.'],
     [
       'niko:happy',
-      'There! New command: For item in order. It goes through an order one drink at a time, and runs the blocks inside it once for every drink.',
+      'There! New command: [FOR item IN heard orders|For item in order]. It goes through an order one drink at a time, and runs the blocks inside it once for every drink.',
     ],
   ],
   10: [
@@ -101,7 +124,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko solders a tiny memory chip into Query’s head. A small puff of smoke. Nobody mentions it.'],
     [
       'niko:happy',
-      'New command: Store. It keeps a value, like the number in an order, in a variable such as Var A. Write can use it after that.',
+      'New command: [STORE var1 FROM number|Store]. It keeps a value, like the number in an order, in a variable such as Var A. Write can use it after that.',
     ],
   ],
   11: [
@@ -113,7 +136,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['query', '*ding!* *ding!* *ding!* *ding!*'],
     [
       'niko:happy',
-      'Once is enough, thanks. New command: Help. Unclear orders contain Ambiguous, and Help calls me over to ask the guest what they meant.',
+      'Once is enough, thanks. New command: [HELP|Help]. Unclear orders contain Ambiguous, and Help calls me over to ask the guest what they meant.',
     ],
   ],
   12: [
@@ -155,7 +178,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko unscrews Brew’s elbow and fits a small adapter. It clicks.'],
     [
       'niko:happy',
-      'New command: Use. Next to a machine, Use runs it. The coffee machine grinds the beans and brews them, once the water is in.',
+      'New command: [USE UP|Use]. Next to a machine, Use runs it. The coffee machine grinds the beans and brews them, once the water is in.',
     ],
   ],
   18: [
@@ -171,7 +194,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko taps something inside Brew. A sugar cube falls out of its ear.'],
     [
       'niko:happy',
-      'Found it! For can repeat a number of times now, like For Var A times. The blocks inside run once per count.',
+      'Found it! For can repeat a number of times now, like [FOR var1 TIMES|For Var A times]. The blocks inside run once per count.',
     ],
   ],
   20: [
@@ -181,7 +204,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['brew', '*whirr* Tickles!'],
     [
       'niko:happy',
-      'Done. New commands: Function and Call. Give a group of steps a name once, then Call that name wherever you need them.',
+      'Done. New commands: [FUNCTION recipe|Function] and [CALL recipe|Call]. Give a group of steps a name once, then Call that name wherever you need them.',
     ],
   ],
   21: [
@@ -219,7 +242,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['porter', '*beep boop* Map! Love map!'],
     [
       'niko:happy',
-      'New command: Move to. Give it a place, like a table stored in Var A, and Porter finds the way there by itself.',
+      'New command: [MOVE var1|Move to]. Give it a place, like a table stored in Var A, and Porter finds the way there by itself.',
     ],
   ],
   25: [
@@ -229,7 +252,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko draws a little X on Porter’s memory chip with a marker. It seems to help.'],
     [
       'niko:happy',
-      'New: Store here. It saves the spot Porter is standing on in a variable, so Move to can bring it back later.',
+      'New: [STORE var1 FROM here|Store here]. It saves the spot Porter is standing on in a variable, so Move to can bring it back later.',
     ],
   ],
   26: [
@@ -240,7 +263,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko bends Porter’s antenna until it points, very slightly, at the dirty mugs.'],
     [
       'niko:happy',
-      'There. Wait for can watch for Dirty cups now: Porter picks a used cup and knows which table it’s on.',
+      'There. [WAIT DIRTY|Wait for Dirty cups] is new: Porter picks a used cup and knows which table it’s on.',
     ],
   ],
   27: [

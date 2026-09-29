@@ -51,7 +51,7 @@
   font-weight: 400;
 }
 
-/* Camera view: one segmented pill, with locked areas tucked behind a single chip. */
+/* Camera view: one segmented pill; locked areas are greyed out. */
 .workspace-main .view-controls {
   display: flex;
   align-items: center;
@@ -105,7 +105,7 @@
   }
 }
 
-/* Locked robots stay visible but quiet; the lock reads as a chip beside them, never over their names. */
+/* Locked robots stay visible but quiet. */
 .workspace-main .locked-robot-zone {
   display: flex;
   align-items: center;
@@ -124,23 +124,6 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
-.workspace-main .robot-choice-lock {
-  position: static;
-  flex-shrink: 0;
-  display: inline-flex;
-  gap: 4px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  background: #ecdfca;
-  color: var(--desk-muted);
-  font:
-    700 9.5px/1.4 ui-monospace,
-    'SF Mono',
-    Menlo,
-    monospace;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
 .workspace-main .view-controls .robot-choice-label {
   padding: 0;
   gap: 6px;
@@ -154,7 +137,7 @@
   font-size: 0;
 }
 
-/* Program tabs: the dark board's version of the camera pill, one recessed track with the open program raised. */
+/* Program tabs: the dark board's version of the camera pill, one recessed rounded track with the open program raised. */
 .workspace-main .robot-tabs {
   position: relative;
   flex-wrap: nowrap;
@@ -166,7 +149,7 @@
   position: absolute;
   inset: 6px 10px;
   border: 1px solid #ffffff0d;
-  border-radius: 12px;
+  border-radius: 999px;
   background: #0000001f;
   pointer-events: none;
 }
@@ -177,7 +160,7 @@
 }
 .workspace-main .robot-tabs button {
   border: 0;
-  border-radius: 8px;
+  border-radius: 999px;
   background: transparent;
 }
 .workspace-main .robot-tabs .robot-choice-label {
@@ -203,11 +186,6 @@
   flex: 1 1 0;
   min-width: 0;
   opacity: 0.4;
-}
-.workspace-main .robot-tabs .robot-choice-lock {
-  margin-right: 3px;
-  background: #ffffff10;
-  color: var(--draft-muted);
 }
 
 /* The scene rests on the desk; the playback strip is the only thing beneath it. */

@@ -2,16 +2,24 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FastForward } from 'lucide-react';
 import { cast } from '@/data/campaign/cast';
 import type { DialogueLine } from '@/domain';
+import { BlockIcon } from '../BlockIcon';
+import { category } from '../editor/blockMeta';
 import { Portrait, portraitUrl } from './Portrait';
 
 const TYPE_MS = 22;
 
-/** `*whirr*` in a script is a sound effect, set apart from the spoken words. */
-function segments(text: string) {
+type Part = { kind: 'text' | 'sfx'; text: string } | { kind: 'block'; text: string; command: string };
+
+/** `*whirr*` in a script is a sound effect; `[LISTEN|Wait for Orders]` shows the command as its block. */
+function segments(text: string): Part[] {
   return text
-    .split(/(\*[^*]+\*)/)
+    .split(/(\*[^*]+\*|\[[A-Z][^\]|]*\|[^\]]+\])/)
     .filter(Boolean)
-    .map((part) => (/^\*[^*]+\*$/.test(part) ? { sfx: true, text: part.slice(1, -1) } : { sfx: false, text: part }));
+    .map((part) => {
+      if (/^\*[^*]+\*$/.test(part)) return { kind: 'sfx', text: part.slice(1, -1) };
+      const block = /^\[([^\]|]+)\|([^\]]+)\]$/.exec(part);
+      return block ? { kind: 'block', command: block[1], text: block[2] } : { kind: 'text', text: part };
+    });
 }
 
 export interface DialogueBoxProps {
@@ -119,8 +127,19 @@ export function DialogueBox({
               {parts.map((part, i) => {
                 const typed = part.text.slice(0, Math.max(left, 0));
                 left -= part.text.length;
+                // A block pops in whole as the typing reaches it.
+                if (part.kind === 'block')
+                  return (
+                    <span
+                      key={i}
+                      className={`command-tile dialogue-block ${category(part.command)}${typed ? '' : ' dialogue-unread'}`}
+                    >
+                      <BlockIcon command={part.command} />
+                      {part.text}
+                    </span>
+                  );
                 return (
-                  <span key={i} className={part.sfx ? 'dialogue-sfx' : undefined}>
+                  <span key={i} className={part.kind === 'sfx' ? 'dialogue-sfx' : undefined}>
                     {typed}
                     <span className="dialogue-unread">{part.text.slice(typed.length)}</span>
                   </span>

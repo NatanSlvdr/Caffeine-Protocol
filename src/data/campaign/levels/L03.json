@@ -2,31 +2,12 @@
   "active_tables": 3,
   "block_target": 8,
   "id": "L03",
-  "instruction_target": 14,
+  "instruction_target": 7,
   "programming_enabled": true,
   "reference_block_count": 6,
   "seeds": [
     {
       "id": "L03_A",
-      "customers": [
-        {
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ],
-          "intent": {},
-          "expected": {
-            "item": "coffee"
-          },
-          "customer_id": "C1",
-          "arrival": 0
-        }
-      ]
-    },
-    {
-      "id": "L03_B",
       "customers": [
         {
           "phrase": "coffee",

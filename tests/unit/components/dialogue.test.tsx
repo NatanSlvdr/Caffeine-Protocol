@@ -74,6 +74,18 @@ describe('DialogueBox', () => {
     expect(document.querySelector('.sr-only')?.textContent).toBe('Query: bip boop Menu doubled.');
   });
 
+  it('shows a named command as its block, popping in when the typing reaches it', () => {
+    render(<DialogueBox lines={[line('niko', 'Use [LISTEN|Wait for Orders] first.')]} onDone={() => {}} />);
+    const block = document.querySelector('.dialogue-block');
+    expect(block?.textContent).toBe('Wait for Orders');
+    expect(block?.classList.contains('dialogue-unread')).toBe(true);
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(block?.classList.contains('dialogue-unread')).toBe(false);
+    expect(document.querySelector('.sr-only')?.textContent).toBe('Niko: Use Wait for Orders first.');
+  });
+
   it('gives every character a portrait, falling back to neutral for a missing mood', () => {
     for (const id of CAST_IDS) expect(portraitUrl(id), id).toBeTruthy();
     expect(portraitUrl('albert', 'worried')).toBe(portraitUrl('albert'));

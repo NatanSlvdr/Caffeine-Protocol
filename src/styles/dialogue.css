@@ -147,6 +147,26 @@
   font-style: italic;
   text-transform: none;
 }
+/* A command named in a line looks like its block in the shop, colours and icon included. */
+.dialogue .dialogue-block {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 1px;
+  padding: 1px 8px 1px 6px;
+  font:
+    700 0.8em/1.5 ui-monospace,
+    monospace;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+  vertical-align: 0.08em;
+  white-space: nowrap;
+  cursor: inherit;
+}
+.dialogue .dialogue-block.command-tile:hover {
+  transform: none;
+}
 .dialogue-controls {
   display: flex;
   align-items: center;
@@ -208,12 +228,13 @@
   outline-offset: 3px;
 }
 
-/* An aside sits over the bottom of the café so the highlighted code stays in view. */
+/* An aside sits over the bottom of the café so the highlighted code stays in view. The café clips
+   its overflow, so the aside stands high enough for its whole shadow to fit above the playback bar. */
 .dialogue-aside {
   position: absolute;
   z-index: 6;
   right: 14px;
-  bottom: 14px;
+  bottom: 26px;
   left: 14px;
   animation: dialogue-rise 0.25s ease-out both;
 }
@@ -233,7 +254,7 @@
   border-radius: 16px;
   box-shadow:
     0 4px 0 var(--dialogue-ink),
-    0 14px 26px #1d151040;
+    0 8px 16px #1d151040;
 }
 .dialogue-aside .dialogue-text {
   font-size: 16px;

@@ -61,6 +61,18 @@ Space advances, and Escape or Skip ends the scene.
   finished service gets a cheer from the robot before the receipt.
 - **The ending** is a closing-time scene before the final receipt.
 
+Writing the scripts (`src/data/campaign/dialogue.ts`):
+
+- Robots talk in short, clipped sentences and are shown in uppercase machine
+  type. `*bip boop*` marks a sound effect, set in italics.
+- `[LISTEN|Wait for Orders]` shows a command as its shop block (colour and icon
+  from the command, text after the bar). Use it when a command is introduced,
+  not in every line.
+- The crew (Niko, Moka, Pip) may speak to the player; customers and robots
+  never do. A new command gets a short scene: someone notices the problem, Niko
+  tinkers with the robot, then shows the player the new block and what it does,
+  never where it goes.
+
 Scripts live in `src/data/campaign/dialogue.ts` (intros and ending) and
 `src/features/workspace/reactions.ts` (failure and success lines). The tone is
 cozy only: no villains, no stakes beyond a busy morning.

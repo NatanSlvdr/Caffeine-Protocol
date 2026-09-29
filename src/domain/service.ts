@@ -125,6 +125,8 @@ export interface LiveService {
   next: () => number;
   done: () => boolean;
   attach: (execution: SeedExecution) => void;
+  /** Called once when every robot the player programs has nothing left to do; the rest can play out off screen. */
+  settle?: () => void;
 }
 /** Execute workers on a deterministic event clock; only completed actions mutate shared queues. */
 export function* streamService(
@@ -864,7 +866,19 @@ export function* streamService(
             ? j.status === 'cleared'
             : ['served', 'dirty', 'cleared'].includes(j.status),
     );
-  let transitions = 0;
+  // Query is done once live.done(); Brew once every drink left its hands; Porter once the whole service is finished.
+  const playerDone = () =>
+    workers
+      .filter((w) => number >= ROBOT_UNLOCK_LEVELS[w.role])
+      .every(
+        (w) =>
+          !w.pending &&
+          !w.move &&
+          !w.inventory.length &&
+          (w.role === 'prep' ? jobs.every((j) => j.status !== 'ticket' && j.status !== 'claimed') : finished()),
+      );
+  let settled = false,
+    transitions = 0;
   while (!failure && now <= SIM_DURATION_SECONDS && transitions++ < MAX_TRANSITIONS) {
     if (live) {
       live.pump(now, log);
@@ -987,6 +1001,10 @@ export function* streamService(
       }
       if (!config.clearing && event.timing.left <= now && tableOwners.get(event.table) === event.customer.customer_id)
         tableOwners.delete(event.table);
+    }
+    if (live?.settle && !settled && level.programming_enabled && live.done() && playerDone()) {
+      settled = true;
+      live.settle();
     }
     if (
       (!live || live.done()) &&

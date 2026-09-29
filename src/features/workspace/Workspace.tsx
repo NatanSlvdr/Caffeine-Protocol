@@ -59,6 +59,9 @@ export function Workspace({
     [textMode, setTextMode] = useState(false),
     [showSolution, setShowSolution] = useState(false);
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
+  // A finished service pulls back to the whole café before the crew cheers and the receipt comes.
+  const [wrapUp, setWrapUp] = useState(false);
+  const focused = zoomToRobot && !observation && !wrapUp;
   // The shift opens on its scene; a finished run answers with the crew's reaction.
   const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
   const live = useLiveRun({
@@ -69,7 +72,8 @@ export function Workspace({
     onDraft: (updated) => update((s) => saveRobotDraft(s, index, updated)),
     onComplete,
     onFinish: (passed) => {
-      setScene(passed ? 'success' : 'failure');
+      if (passed) setWrapUp(true);
+      else setScene('failure');
       onSound(passed);
     },
   });
@@ -91,6 +95,14 @@ export function Workspace({
     run,
   } = live;
 
+  useEffect(() => {
+    if (running) setWrapUp(false);
+  }, [running]);
+  useEffect(() => {
+    if (!wrapUp) return;
+    const timer = setTimeout(() => setScene('success'), save.settings.reduced_motion ? 0 : 900);
+    return () => clearTimeout(timer);
+  }, [wrapUp]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -119,22 +131,18 @@ export function Workspace({
               <ArrowLeft size={14} /> Campaign <span>/</span> Shift {pad2(index + 1)}
             </button>
             <div className="view-controls" role="group" aria-label="Camera view">
-              <button
-                type="button"
-                title="Full café"
-                aria-pressed={!zoomToRobot || observation}
-                onClick={() => setZoomToRobot(false)}
-              >
+              <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>
                 <Store size={16} aria-hidden="true" />
                 Full café
               </button>
               <RobotOptions
                 level={index + 1}
-                selected={zoomToRobot && !observation ? role : undefined}
+                selected={focused ? role : undefined}
                 labels={ROBOT_AREA_LABELS}
                 onSelect={(robot) => {
                   setRole(robot);
                   setZoomToRobot(true);
+                  setWrapUp(false);
                 }}
               />
             </div>
@@ -149,7 +157,7 @@ export function Workspace({
               showLabels={!running && !modal && !observation}
               moving={running && !paused}
               serviceView={running}
-              focusRole={zoomToRobot && !observation ? role : undefined}
+              focusRole={focused ? role : undefined}
               level={index + 1}
             />
             {reaction && (
