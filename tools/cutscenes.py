@@ -22,7 +22,7 @@ FORMATS = ('.png', '.jpg', '.jpeg')
 
 def convert(path: Path) -> Path:
     image = Image.open(path).convert('RGB')
-    # Cover the frame like the game does: crop the long side, never letterbox.
+    # Crop the long side to 16:9, never letterbox: the game frames every still as a 16:9 print.
     still = ImageOps.fit(image, SIZE, Image.LANCZOS)
     target = OUT / path.relative_to(SOURCE).with_suffix('.webp')
     target.parent.mkdir(parents=True, exist_ok=True)

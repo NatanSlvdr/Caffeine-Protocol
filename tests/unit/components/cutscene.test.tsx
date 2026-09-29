@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render } from '@testing-library/react';
 import { Cutscene } from '../../../src/components/dialogue/Cutscene';
 import { CAMPAIGN_LENGTH } from '../../../src/data';
 import {
@@ -84,10 +84,11 @@ describe('Cutscene', () => {
       [...container.querySelectorAll('.cutscene-still')].findIndex((still) => still.matches('.shown'));
     expect(container.querySelectorAll('.cutscene-still').length).toBe(scene.panels.length);
     expect(shown()).toBe(0);
-    // Without art, a still shows its description on a placeholder card.
-    expect(screen.getByText(scene.panels[0].art)).toBeTruthy();
+    expect(container.querySelector('.cutscene-still.under')).toBeNull();
     for (let i = 0; i < scene.panels[0].lines.length; i++) fireEvent.keyDown(window, { key: 'Enter' });
     expect(shown()).toBe(1);
+    // The first photo stays on the pile under the new one.
+    expect(container.querySelector('.cutscene-still')!.matches('.under')).toBe(true);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onDone).toHaveBeenCalledOnce();
   });
