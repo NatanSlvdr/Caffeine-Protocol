@@ -124,7 +124,7 @@ describe('campaign order rail', () => {
     const board = within(screen.getByRole('complementary', { name: 'Selected scene' }));
     expect(board.getByRole('heading', { name: 'The Scrapyard' })).toBeTruthy();
     expect(board.getByText('Shift 03')).toBeTruthy();
-    expect(board.getByText('4')).toBeTruthy();
+    expect(board.getByText('8')).toBeTruthy();
     // Arrows stop at the scene: the shift behind it can't be reached yet.
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Scene: The Scrapyard');
