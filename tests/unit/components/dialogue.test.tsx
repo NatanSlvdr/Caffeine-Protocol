@@ -86,6 +86,16 @@ describe('DialogueBox', () => {
     expect(document.querySelector('.sr-only')?.textContent).toBe('Niko: Use Wait for Orders first.');
   });
 
+  it('labels guests as customers, never as crew', () => {
+    render(<DialogueBox lines={[line('juno', 'Tea, please.'), line('guest', 'Coffee!')]} onDone={() => {}} instant />);
+    expect(document.querySelector('.dialogue-name')?.textContent).toBe('Customer:Juno');
+    expect(document.querySelector('.dialogue-name')?.lastChild?.textContent).toBe('Juno');
+    expect(document.querySelector('.sr-only')?.textContent).toBe('Juno, customer: Tea, please.');
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    expect(document.querySelector('.dialogue-role')).toBeNull();
+    expect(document.querySelector('.dialogue-name')?.textContent).toBe('Customer');
+  });
+
   it('gives every character a portrait, falling back to neutral for a missing mood', () => {
     for (const id of CAST_IDS) expect(portraitUrl(id), id).toBeTruthy();
     expect(portraitUrl('albert', 'worried')).toBe(portraitUrl('albert'));

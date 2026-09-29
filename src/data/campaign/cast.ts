@@ -8,6 +8,20 @@ export interface CastMember {
   about: string;
   /** Robots talk in short uppercase machine type. */
   robot?: boolean;
+  /** Guests are labelled as customers so they never pass for the café's crew. */
+  customer?: boolean;
+}
+
+/** The name over a line, with "Customer" set apart for guests; a plain guest is simply "Customer". */
+export function speakerParts(member: CastMember): { role?: string; name: string } {
+  if (!member.customer) return { name: member.name };
+  return member.name === 'Guest' ? { name: 'Customer' } : { role: 'Customer', name: member.name };
+}
+
+/** The same name as one string, for screen readers: "Juno, customer". */
+export function speakerLabel(member: CastMember): string {
+  const { role, name } = speakerParts(member);
+  return role ? `${name}, ${role.toLowerCase()}` : name;
 }
 
 export const cast: Record<CastId, CastMember> = {
@@ -44,9 +58,24 @@ export const cast: Record<CastId, CastMember> = {
     color: '#d98f8f',
     about: 'The little delivery stand-in. A very young helper, fast, chirpy, easily excited.',
   },
-  albert: { name: 'Mr. Albert', color: '#8a7f6f', about: 'Elderly regular. Always orders “the usual”. It is coffee.' },
-  juno: { name: 'Juno', color: '#6f86b5', about: 'Student with a laptop. Tea, never sugar, mildly exasperated.' },
-  dot: { name: 'Dot', color: '#c77aa0', about: 'Sweet-toothed regular. Counts her sugars exactly.' },
-  rosa: { name: 'Rosa', color: '#d0894f', about: 'Arrives with friends and orders for the whole group.' },
-  guest: { name: 'Guest', color: '#9b8bb4', about: 'Any customer at the counter.' },
+  albert: {
+    name: 'Mr. Albert',
+    color: '#8a7f6f',
+    about: 'Elderly regular. Always orders “the usual”. It is coffee.',
+    customer: true,
+  },
+  juno: {
+    name: 'Juno',
+    color: '#6f86b5',
+    about: 'Student with a laptop. Tea, never sugar, mildly exasperated.',
+    customer: true,
+  },
+  dot: { name: 'Dot', color: '#c77aa0', about: 'Sweet-toothed regular. Counts her sugars exactly.', customer: true },
+  rosa: {
+    name: 'Rosa',
+    color: '#d0894f',
+    about: 'Arrives with friends and orders for the whole group.',
+    customer: true,
+  },
+  guest: { name: 'Guest', color: '#9b8bb4', about: 'Any customer at the counter.', customer: true },
 };

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FastForward } from 'lucide-react';
-import { cast } from '@/data/campaign/cast';
+import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueLine } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
@@ -103,6 +103,7 @@ export function DialogueBox({
 
   if (!current) return null;
   const speaker = current.who ? cast[current.who] : undefined;
+  const label = speaker && speakerParts(speaker);
   let left = shown;
   return (
     <div
@@ -121,7 +122,12 @@ export function DialogueBox({
         {current.who && <Portrait key={current.who} who={current.who} mood={current.mood} />}
         <div className="dialogue-box">
           {kicker && scene && <p className="dialogue-kicker">{kicker}</p>}
-          {speaker && <p className="dialogue-name">{speaker.name}</p>}
+          {label && (
+            <p className="dialogue-name">
+              {label.role && <span className="dialogue-role">{label.role}:</span>}
+              {label.name}
+            </p>
+          )}
           <p className="dialogue-text" aria-live="polite">
             <span aria-hidden="true">
               {parts.map((part, i) => {
@@ -146,7 +152,7 @@ export function DialogueBox({
                 );
               })}
             </span>
-            <span className="sr-only">{speaker ? `${speaker.name}: ${text}` : text}</span>
+            <span className="sr-only">{speaker ? `${speakerLabel(speaker)}: ${text}` : text}</span>
           </p>
           <div className="dialogue-controls">
             <span className="dialogue-count" aria-hidden="true">

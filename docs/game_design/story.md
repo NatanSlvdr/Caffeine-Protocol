@@ -68,6 +68,8 @@ Writing the scripts (`src/data/campaign/dialogue.ts`):
 - `[LISTEN|Wait for Orders]` shows a command as its shop block (colour and icon
   from the command, text after the bar). Use it when a command is introduced,
   not in every line.
+- A customer's name reads "Customer: Juno", with "Customer:" in a lighter
+  weight ("Customer" alone for a plain guest), so guests never pass for the crew.
 - The crew (Niko, Moka, Pip) may speak to the player; customers and robots
   never do. A new command gets a short scene: someone notices the problem, Niko
   tinkers with the robot, then shows the player the new block and what it does,
