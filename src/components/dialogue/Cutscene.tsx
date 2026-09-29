@@ -25,7 +25,7 @@ export interface CutsceneProps {
   reduced?: boolean;
 }
 
-/** A story scene: full-screen stills that change with the dialogue, fading from one to the next. */
+/** A story scene: stills dropped one by one like photos on a dark table as the dialogue moves on. */
 export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = false }: CutsceneProps) {
   const { lines, panels } = useMemo(() => sceneLines(scene), [scene]);
   const [line, setLine] = useState(0);
@@ -45,7 +45,10 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
         {scene.panels.map((panel, index) => {
           const url = stillUrl(scene.id, index);
           return (
-            <figure key={index} className={`cutscene-still${index === shown ? ' shown' : ''}`}>
+            <figure
+              key={index}
+              className={`cutscene-still${index === shown ? ' shown' : index < shown ? ' under' : ''}`}
+            >
               {url ? (
                 <img src={url} alt="" draggable={false} />
               ) : (

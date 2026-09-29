@@ -274,53 +274,92 @@
   font-size: 13px;
 }
 
-/* A cutscene: full-screen stills behind the scene's dialogue. Only the bottom darkens, under the box. */
+/* A cutscene: each still is a photo print dropped onto a dark table, landing on the ones before it. */
 .cutscene {
+  /* Small enough to leave the dialogue box and the speaker's head a clear space below. */
+  --photo-width: min(62vw, calc((100dvh - 330px) * 16 / 9));
+  --photo-border: clamp(6px, 0.8vw, 12px);
   position: fixed;
   z-index: 999;
   inset: 0;
-  background: #1d1510;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 50% 32%, #241b16, #0b0908 72%);
 }
-.cutscene-art,
-.cutscene-still {
+.cutscene-art {
   position: absolute;
   inset: 0;
-  margin: 0;
-  overflow: hidden;
 }
 .cutscene-still {
+  --tilt: -1.8deg;
+  --nudge: -1.2%, 0.6%;
+  position: absolute;
+  top: 5dvh;
+  left: 50%;
+  width: var(--photo-width);
+  margin: 0;
+  padding: var(--photo-border);
+  border-radius: 3px;
+  background: #f4eee3;
+  box-shadow:
+    0 2px 3px #00000080,
+    0 20px 44px #000000b3;
   opacity: 0;
-  transition: opacity 0.7s ease-in-out;
+  /* Held above the table until its turn, a little bigger and more turned. */
+  transform: translate(-50%, 0) translate(var(--nudge)) rotate(calc(var(--tilt) + 5deg)) scale(1.18);
+  transition:
+    opacity 0.25s ease-out,
+    transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1),
+    filter 0.6s ease-out;
 }
-.cutscene-still.shown {
+.cutscene-still:nth-child(5n + 2) {
+  --tilt: 1.4deg;
+  --nudge: 1.4%, -0.4%;
+}
+.cutscene-still:nth-child(5n + 3) {
+  --tilt: -0.7deg;
+  --nudge: -0.4%, 1%;
+}
+.cutscene-still:nth-child(5n + 4) {
+  --tilt: 2.3deg;
+  --nudge: 1.8%, 0.2%;
+}
+.cutscene-still:nth-child(5n + 5) {
+  --tilt: -2.4deg;
+  --nudge: -1.8%, -0.6%;
+}
+.cutscene-still.shown,
+.cutscene-still.under {
   opacity: 1;
+  transform: translate(-50%, 0) translate(var(--nudge)) rotate(var(--tilt));
+}
+/* Earlier photos stay on the pile, darker, their edges peeking out from under the new one. */
+.cutscene-still.under {
+  filter: brightness(0.5);
 }
 .cutscene-still img {
+  display: block;
   width: 100%;
-  height: 100%;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   user-select: none;
 }
-/* The shown still drifts in slowly, like a camera settling on the shot. */
-.cutscene-still.shown img {
-  animation: cutscene-drift 14s ease-out both;
-}
 .cutscene .dialogue-scene {
-  background: linear-gradient(transparent 45%, #1d15108c 100%);
+  background: linear-gradient(transparent 45%, #0b09088c 100%);
   animation: none;
 }
 /* Until its art is in, a still is a card describing the shot. */
 .cutscene-placeholder {
   display: grid;
-  align-content: start;
+  align-content: center;
   justify-items: center;
-  gap: 12px;
-  height: 100%;
-  padding: 16dvh 18vw 0;
+  gap: 10px;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  padding: 4% 10%;
   color: #f3e6cf;
   background: radial-gradient(ellipse at 50% 30%, #6d4a60, #2e2029 70%);
   font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(18px, 2.6dvh, 26px);
+  font-size: clamp(13px, 1.8dvh, 18px);
   font-style: italic;
   line-height: 1.45;
   text-align: center;
@@ -336,15 +375,7 @@
 .cutscene.still .cutscene-still {
   transition: none;
 }
-.cutscene.still .cutscene-still img {
-  animation: none;
-}
 
-@keyframes cutscene-drift {
-  from {
-    transform: scale(1.06);
-  }
-}
 @keyframes dialogue-fade {
   from {
     opacity: 0;
