@@ -30,15 +30,43 @@ before the art is done.
    _“The characters must match the attached reference portraits exactly: face,
    hair, clothes, colours and outline style.”_ Robots share one body, so attach
    `query/neutral.png` as well whenever Brew or Porter appear.
-3. **Attach the place.** Attach the anchor still for the location and add:
+3. **Attach the place.** Attach the anchor still for the location (for the
+   interior anchors themselves, the two 3D captures below) and add:
    _“Same room, same furniture and colours as the attached scene reference.
    New camera angle and lighting as described.”_
 4. **Check a scene in a row.** Put a scene's stills side by side. The light, the
    palette and the outline weight should read as one sequence. Redo any still
    that stands out.
 
-A capture of the 3D café in the game makes a good extra reference for the
-interior. Open a shift, then take a screenshot of the room.
+## 3D café references
+
+Two captures of the café as the game draws it, in
+[`cutscene_references/`](cutscene_references/). They show the real furniture,
+layout and colours. Attach them when you generate the interior anchors
+(`the-keys/02`, `the-scrapyard/01`) and the shopfront (`the-keys/01`), and add:
+_“Match the furniture, layout and colours of the attached top-down game
+capture, drawn at eye level in the style described.”_ They are seen from above,
+so borrow what's in the room, not the camera angle.
+
+**`cafe-overview.png`**: the whole café and its street. The street runs along
+the left, with an asphalt road, a zebra crossing, cars, a pale pavement,
+walnut street lamps and a clay bench against the windows. Inside are rows of
+square tables with clay chairs, the round mural on the back wall, a plant in the
+corner, and the long counter along the front.
+
+![The whole café from above](cutscene_references/cafe-overview.png)
+
+**`cafe-counter.png`**: the counter up close, from the door to the sink. In
+order: the cash register, a stack of tickets, the order screen, the glass
+fridge, the teal shelf of jars, the espresso machine with two cups on top, the
+sugar canister, a terracotta chopping board and the teal sink. Query stands at
+the register, Brew at the machine and Porter by the sink.
+
+![The counter from above](cutscene_references/cafe-counter.png)
+
+To make new captures, run the game with reduced motion and pixel art turned
+off, open the home page and hide the menu ticket. The café behind it keeps the
+cleanest view, with no grid or floor labels.
 
 ## Technical spec (for every image)
 
@@ -82,23 +110,27 @@ Paste the matching block after the style block, before the still's own prompt.
 > walnut frames and clay-coloured sills. A wide sliding glass door onto the
 > street. On the wall, a simple round mural: a sand-coloured circle with a
 > walnut coffee cup and clay-red steam. Walnut (#70503d) counters with sand
-> (#e6d8bf) tops and a charcoal (#393b36) plinth. Round sand tables on a single
-> walnut pedestal, with clay (#aa7965) upholstered chairs. On the counter: a
+> (#e6d8bf) tops and a charcoal (#393b36) plinth, in one long run along the
+> front of the room. Square sand tables with softly rounded corners, each on a
+> single round walnut pedestal, with clay (#aa7965) upholstered chairs on two
+> sides. On the counter: a
 > modern two-group espresso machine with a charcoal body, a brushed-steel front
 > and drip tray, steel group heads with walnut portafilter handles, a round
 > cream pressure gauge, small mint status lights and a row of cups on top (not
 > brass, not copper, not vintage); a charcoal-and-cream cash register with a
 > small green display and a stack of order tickets beside it; a sage sugar
-> canister with a walnut lid; a small ticket tray at the handoff. A glass-front
-> drinks fridge, a tall teal shelf with oak shelves and glass jars of beans, and
-> a terracotta pot with a leafy green plant.
+> canister with a walnut lid; a small ticket tray at the handoff; a terracotta
+> chopping board and a teal sink at the far end. A glass-front drinks fridge, a
+> tall teal shelf with oak shelves and glass jars of beans, and a terracotta pot
+> with a leafy green plant in the corner.
 
 ### Café exterior and street
 
 > A small neighbourhood café shopfront: big windows with walnut frames and
-> clay-coloured sills, a wide sliding glass door, sage-grey walls. A sand
+> clay-coloured sills, a wide sliding glass door, sage-grey walls. A pale sand
 > pavement with a cream kerb, walnut street lamps with warm bulbs, and a
-> clay-red bench. A second storey above the café with a small lit window (a
+> clay-red bench against the shopfront. A quiet asphalt street with a zebra
+> crossing and a small rounded car or two parked along it. A second storey above the café with a small lit window (a
 > flat upstairs). Across the street, a narrow house with a little porch.
 
 ### Back room
