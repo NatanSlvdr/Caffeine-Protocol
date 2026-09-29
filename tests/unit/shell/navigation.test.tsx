@@ -22,9 +22,27 @@ describe('shift entry navigation', () => {
     expect(screen.getByRole('heading', { name: 'Choose a shift' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Selected shift' })).toBeNull();
 
+    // A new café opens on its first scene; the first shift waits behind it.
+    expect(screen.getByRole('complementary', { name: 'Selected scene' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Watch scene' }));
+    await waitFor(() => expect(window.location.hash).toBe('#/scene/the-keys'));
+    expect(screen.getByText('The Keys')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Skip/ }));
+
+    await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
+    expect(screen.getByRole('button', { name: 'Scene: The Keys, seen' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
     await waitFor(() => expect(window.location.hash).toBe('#/shift/1'));
   });
+
+  it.each(['#/shift/1', '#/scene/the-scrapyard', '#/scene/closing-time', '#/scene/nope'])(
+    'keeps %s out of reach on a new café',
+    (hash) => {
+      window.location.hash = hash;
+      render(<App />);
+      expect(screen.getByRole('heading', { name: 'Caffeine Protocol' })).toBeTruthy();
+    },
+  );
 
   it('warns on every screen when the saved café cannot be read, until dismissed', () => {
     localStorage.setItem('caffeine-protocol.v1', '{bad');
@@ -62,7 +80,8 @@ describe('shift entry navigation', () => {
   it('labels the next and locked shifts on the rail', () => {
     window.location.hash = '#/campaign';
     render(<App />);
-    expect(screen.getByRole('button', { name: /^Shift 1: .*, next up$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Scene: The Keys, next up' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Shift 1: .*, locked$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 2: .*, locked$/ })).toBeTruthy();
   });
 

@@ -274,6 +274,77 @@
   font-size: 13px;
 }
 
+/* A cutscene: full-screen stills behind the scene's dialogue. Only the bottom darkens, under the box. */
+.cutscene {
+  position: fixed;
+  z-index: 999;
+  inset: 0;
+  background: #1d1510;
+}
+.cutscene-art,
+.cutscene-still {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  overflow: hidden;
+}
+.cutscene-still {
+  opacity: 0;
+  transition: opacity 0.7s ease-in-out;
+}
+.cutscene-still.shown {
+  opacity: 1;
+}
+.cutscene-still img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  user-select: none;
+}
+/* The shown still drifts in slowly, like a camera settling on the shot. */
+.cutscene-still.shown img {
+  animation: cutscene-drift 14s ease-out both;
+}
+.cutscene .dialogue-scene {
+  background: linear-gradient(transparent 45%, #1d15108c 100%);
+  animation: none;
+}
+/* Until its art is in, a still is a card describing the shot. */
+.cutscene-placeholder {
+  display: grid;
+  align-content: start;
+  justify-items: center;
+  gap: 12px;
+  height: 100%;
+  padding: 16dvh 18vw 0;
+  color: #f3e6cf;
+  background: radial-gradient(ellipse at 50% 30%, #6d4a60, #2e2029 70%);
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(18px, 2.6dvh, 26px);
+  font-style: italic;
+  line-height: 1.45;
+  text-align: center;
+}
+.cutscene-placeholder span {
+  color: #f3e6cf99;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.cutscene.still .cutscene-still {
+  transition: none;
+}
+.cutscene.still .cutscene-still img {
+  animation: none;
+}
+
+@keyframes cutscene-drift {
+  from {
+    transform: scale(1.06);
+  }
+}
 @keyframes dialogue-fade {
   from {
     opacity: 0;

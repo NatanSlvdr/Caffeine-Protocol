@@ -27,8 +27,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['niko', 'Watch the rush with me. There’s a job in there a robot could take off my hands.'],
   ],
   3: [
-    ['', 'Late last night, Niko tightened the last screw on the robot from the scrapyard.'],
-    ['query', '*bip… bip… BOOP* Hearing online. What is coffee?'],
+    ['query', '*bip* Hearing online. What is coffee?'],
     ['niko:happy', 'A reason to get out of bed. Also, a drink.'],
     [
       'niko',
@@ -156,7 +155,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['query', '*bip boop* Badge. Want badge.'],
   ],
   15: [
-    ['', 'Niko rolls a second robot out of the back room. It squeaks.'],
+    ['', 'Brew’s first morning in the kitchen. It squeaks.'],
     ['brew', '*BEEP BEEP!* Hello! Am Brew! Is espresso machine? So shiny. Touch?'],
     ['moka', 'Careful. She bites.'],
     ['niko', 'Brew takes over the kitchen from Moka. Query passes the tickets along, and Pip still serves the room.'],
@@ -218,15 +217,12 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ],
   ],
   22: [
-    ['moka', 'Well. That’s my cue.'],
-    ['niko:worried', 'Moka, you don’t have to…'],
-    ['moka', 'Forty years of espresso. I’ve earned a porch chair.'],
-    ['brew', '*sad beep*'],
-    ['moka', 'Ninety-two degrees, Brew. Always.'],
-    ['moka', 'And you, the one writing its instructions: it only knows what you tell it. Look after my kitchen.'],
+    ['', 'The first morning without Moka. Her apron still hangs by the kitchen door.'],
+    ['brew', '*beep* Kitchen: mine. Temperature: ninety-two.'],
+    ['niko', 'Query and Brew run the counter and the kitchen on their own now. Pip still has the floor.'],
   ],
   23: [
-    ['', 'A third robot rolls up to the pickup counter, balancing a tray.'],
+    ['', 'Porter’s first service. It rolls up to the pickup counter, balancing a tray.'],
     ['porter', '*ding ding!* Hi! Am Porter! Drinks? Everyone? Great!'],
     ['pip', 'Hi, Porter! I’ve done this job all month. It’s the best job. You’ll love it!'],
     [
@@ -284,15 +280,13 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['niko', 'No new command, but Porter can carry two things now. The tray empties in the order you filled it.'],
   ],
   30: [
-    ['pip', 'Porter’s doing great. I think… I think I can retire too.'],
-    ['porter', '*sad beep* Retire? Who teach Porter?'],
-    ['pip', 'Whoever writes your code, silly!'],
+    ['pip', 'Porter’s doing great. Good thing, too: school starts on Monday.'],
+    ['porter', '*sad beep* School? Pip leaving?'],
     ['pip', 'Deliveries, dirty cups and full trays, all at once. You’ve got this!'],
   ],
   31: [
-    ['', 'The three robots line up by the counter. Niko hangs up the apron.'],
-    ['niko', 'Query takes the orders. Brew makes them. Porter brings them out. From today, I’m just the owner.'],
-    ['query', '*bip* Acknowledged.'],
+    ['', 'The first service with nobody behind the counter but the robots.'],
+    ['query', '*bip* Counter: ready.'],
     ['brew', '*BEEP!* Ninety-two degrees!'],
     ['porter', '*ding ding!* All for one!'],
     ['niko', 'All three programs run together now, and each one has something to fix. No new commands, just teamwork.'],
@@ -315,15 +309,3 @@ export function shiftIntro(index: number): DialogueLine[] {
   const written = intros[index + 1];
   return written ? script(written) : [line('niko', narrativeFor(index).story)];
 }
-
-/** Closing-time scene before the final receipt. */
-export const endingScene: DialogueLine[] = script([
-  ['', 'Closing time. The last cup is on its way to the sink.'],
-  ['query', '*bip* Niko drinking coffee. No ticket written.'],
-  ['niko:happy', 'I made it myself. Old habits.'],
-  ['query', 'Not in instruction set.'],
-  ['niko:happy', 'It is now.'],
-  ['moka', 'Ninety-two degrees. Good.'],
-  ['pip', 'Tables are clean!'],
-  ['moka', 'Not bad, for someone who started with one ticket. Same time tomorrow.'],
-]);

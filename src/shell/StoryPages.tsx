@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_LENGTH } from '@/data';
-import { Cafe, DialogueBox } from '@/components';
+import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { endingScene } from '@/data/campaign/dialogue';
+import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 import { ShellBar } from './ShellBar';
@@ -26,6 +26,22 @@ function StoryScene({ level }: { level?: number }) {
   );
 }
 
+/** A story scene between shifts. Finishing or skipping it opens the shift it leads to. */
+export function ScenePage({ scene }: { scene: CutsceneData }) {
+  const { save, finishScene } = useGame();
+  const done = () => {
+    finishScene(scene);
+    go('/campaign');
+  };
+  return (
+    <main className="story-page scene-page">
+      <Cutscene scene={scene} doneLabel="To the counter" reduced={save.settings.reduced_motion} onDone={done} />
+    </main>
+  );
+}
+
+const closing = cutscenes[cutscenes.length - 1];
+
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
   const progress = useProgress();
@@ -36,11 +52,10 @@ export function EndingPage() {
       <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
       <StoryScene />
       {talking ? (
-        <DialogueBox
-          lines={endingScene}
-          kicker="Closing time"
+        <Cutscene
+          scene={closing}
           doneLabel="Read the receipt"
-          instant={save.settings.reduced_motion}
+          reduced={save.settings.reduced_motion}
           onDone={() => setTalking(false)}
         />
       ) : (

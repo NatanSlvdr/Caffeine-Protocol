@@ -248,7 +248,9 @@ html[data-motion='reduced'] .front-page *::after {
   --pass-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
   --pass-serif: Georgia, 'Times New Roman', serif;
   /* Everything on the rail is sized off the viewport height so taller screens get taller tickets. */
-  --pass-row: clamp(26px, calc((100dvh - 540px) / 12), 40px);
+  --pass-scene: #7a4e6c;
+  /* Act I is the longest ticket: twelve shifts and the scene that opens it. */
+  --pass-row: clamp(26px, calc((100dvh - 540px) / 13), 40px);
   --pass-line: clamp(12px, 1.4dvh, 14px);
   display: grid;
   flex: 1;
@@ -627,6 +629,28 @@ html[data-motion='reduced'] .front-page *::after {
 .shift-card.ordering {
   animation: line-call 0.3s ease-in-out 2;
 }
+/* Story scenes sit on the rail between shifts, in prune ink with a clapperboard for a number. */
+.scene-card .scene-icon {
+  display: inline-flex;
+  align-self: center;
+  color: var(--pass-scene);
+}
+.scene-card .shift-name {
+  color: var(--pass-scene);
+  font-style: italic;
+}
+.shift-card.scene-card.complete .shift-mark {
+  color: var(--pass-scene);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.6px;
+}
+.shift-card.scene-card.next .shift-mark {
+  background: var(--pass-scene);
+}
+.campaign-page .ticket:not(.locked) .scene-card:hover:not(:disabled) {
+  background: #f3e6ee;
+}
 
 .ticket-foot {
   display: grid;
@@ -762,6 +786,13 @@ html[data-motion='reduced'] .front-page *::after {
 }
 .board-tag.done {
   color: #a9c7a3;
+}
+.board-clapper {
+  vertical-align: -2px;
+  margin-left: 4px;
+}
+.scene-recipe .board-kicker {
+  color: #e2b8d4;
 }
 .recipe h2 {
   margin-top: 4px;
@@ -1418,6 +1449,7 @@ html[data-motion='reduced'] .modal.settings-window {
 
 /* Story beats: a note taped up by the door, with the café carrying on behind it. */
 .app.interlude .app-body,
+.app.scene .app-body,
 .app.ending .app-body {
   min-width: 0;
   min-height: 100dvh;

@@ -51,12 +51,13 @@ export const cast: Record<CastId, CastMember> = {
   moka: {
     name: 'Moka',
     color: '#71452f',
-    about: 'The old kitchen stand-in. An elderly woman, dry, grumpy veteran of forty years of espresso.',
+    about: 'The old kitchen stand-in. Aunt Lou’s friend, dry, grumpy veteran of forty years of espresso.',
   },
   pip: {
     name: 'Pip',
     color: '#d98f8f',
-    about: 'The little delivery stand-in. A very young helper, fast, chirpy, easily excited.',
+    about:
+      'The little delivery stand-in. A kid from the flat upstairs saving his pocket money. Fast, kind, easily excited.',
   },
   albert: {
     name: 'Mr. Albert',

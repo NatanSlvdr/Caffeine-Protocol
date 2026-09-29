@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
 import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
-import { endingScene, shiftIntro } from '../../../src/data/campaign/dialogue';
+import { shiftIntro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
 import { levels } from '../../../src/data';
 import { failureLines, successLines } from '../../../src/features/workspace/reactions';
@@ -114,7 +114,6 @@ describe('scripts', () => {
       for (const l of intro) expect(l.text.trim(), `shift ${i + 1}`).not.toBe('');
       for (const who of speakers(intro)) expect(CAST_IDS).toContain(who);
     }
-    for (const who of speakers(endingScene)) expect(CAST_IDS).toContain(who);
   });
 
   it('names every cast member', () => {

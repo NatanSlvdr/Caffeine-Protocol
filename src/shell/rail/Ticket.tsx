@@ -1,4 +1,5 @@
-import { LockKeyhole } from 'lucide-react';
+import { Clapperboard, LockKeyhole } from 'lucide-react';
+import { sceneBefore, type Cutscene } from '@/data/campaign/cutscenes';
 import { pad2, starRow } from '@/shared/lib/format';
 import { acts, type Act } from './acts';
 
@@ -14,10 +15,19 @@ interface TicketProps {
   stars: Record<number, number>;
   titles: string[];
   ordering: number | null;
+  /** The shift held back until the scene before it is seen. */
+  gated?: number;
+  selectedScene?: Cutscene;
+  sceneOpen(scene: Cutscene): boolean;
+  sceneSeen(scene: Cutscene): boolean;
   onOpen(): void;
   onSelect(index: number): void;
   onStart(index: number): void;
+  onSelectScene(scene: Cutscene): void;
+  onWatch(scene: Cutscene): void;
 }
+
+type Row = { shift: number } | { scene: Cutscene };
 
 /**
  * One act printed as a kitchen order ticket, unrolled into its full list of shifts. Acts not yet
@@ -33,11 +43,24 @@ export function Ticket({
   stars,
   titles,
   ordering,
+  gated,
+  selectedScene,
+  sceneOpen,
+  sceneSeen,
   onOpen,
   onSelect,
   onStart,
+  onSelectScene,
+  onWatch,
 }: TicketProps) {
   const shifts = Array.from({ length: act.to - act.from }, (_, offset) => act.from + offset);
+  // Each story scene hangs just above the shift it opens; the closing scene ends the last ticket.
+  const closing = number === acts.length - 1 ? sceneBefore(act.to) : undefined;
+  const rows: Row[] = shifts.flatMap((shift) => {
+    const scene = sceneBefore(shift);
+    return scene ? [{ scene }, { shift }] : [{ shift }];
+  });
+  if (closing) rows.push({ scene: closing });
   const served = shifts.filter((shift) => stars[shift] !== undefined).length;
   const earned = shifts.reduce((sum, shift) => sum + (shift < 2 ? 0 : (stars[shift] ?? 0)), 0);
   const rated = shifts.filter((shift) => shift >= 2).length;
@@ -75,15 +98,18 @@ export function Ticket({
         </span>
       )}
       <ol className="ticket-lines" aria-hidden={sealed || undefined}>
-        {shifts.map((shift) => {
-          // A sealed act keeps one empty line per shift, so the ticket hangs as long as it will once open.
+        {rows.map((row) => {
+          const key = 'scene' in row ? row.scene.id : row.shift;
+          // A sealed act keeps one empty line per row, so the ticket hangs as long as it will once open.
           if (sealed)
             return (
-              <li key={shift}>
+              <li key={key}>
                 <div className="shift-card" />
               </li>
             );
-          const locked = shift > unlocked;
+          if ('scene' in row) return <li key={key}>{sceneLine(row.scene)}</li>;
+          const { shift } = row;
+          const locked = shift > unlocked || shift === gated;
           const done = stars[shift] !== undefined;
           const classes = [
             'shift-card',
@@ -159,4 +185,38 @@ export function Ticket({
       </footer>
     </article>
   );
+
+  /** A story scene on the ticket: a clapperboard instead of a number, and watched rather than served. */
+  function sceneLine(scene: Cutscene) {
+    const locked = !sceneOpen(scene);
+    const seen = !locked && sceneSeen(scene);
+    const next = !locked && !seen && scene.before === gated;
+    const classes = [
+      'shift-card scene-card',
+      locked && 'locked',
+      seen && 'complete',
+      next && 'next',
+      selectedScene === scene && 'selected',
+    ];
+    return (
+      <button
+        disabled={locked}
+        className={classes.filter(Boolean).join(' ')}
+        onClick={() => onSelectScene(scene)}
+        onDoubleClick={() => onWatch(scene)}
+        aria-label={`Scene: ${scene.title}${locked ? ', locked' : next ? ', next up' : seen ? ', seen' : ''}`}
+        aria-pressed={!locked && selectedScene === scene}
+        title={scene.title}
+      >
+        <span className="shift-no scene-icon" aria-hidden="true">
+          <Clapperboard size={13} strokeWidth={2.2} />
+        </span>
+        <span className="shift-name">{scene.title}</span>
+        <span className="shift-leader" aria-hidden="true" />
+        <span className="shift-mark" aria-hidden="true">
+          {locked ? <LockKeyhole size={12} strokeWidth={2.4} /> : next ? 'NEXT' : seen ? 'SEEN' : '···'}
+        </span>
+      </button>
+    );
+  }
 }

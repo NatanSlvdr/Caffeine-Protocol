@@ -8,7 +8,8 @@ import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
-import { EndingPage } from '@/shell/StoryPages';
+import { EndingPage, ScenePage } from '@/shell/StoryPages';
+import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { useSound } from '@/hooks/useSound';
@@ -31,16 +32,22 @@ function Shell() {
   // A hand-typed address like #/shift/abc falls back to the home page rather than loading no shift at all.
   const requested = Number(route.split('/')[2] || 1);
   const index = Number.isInteger(requested) ? Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, requested - 1)) : 0;
-  const accessible = Number.isInteger(requested) && index <= save.unlocked;
+  // The next shift waits behind its scene; the address can't skip it.
+  const accessible = Number.isInteger(requested) && index <= save.unlocked && !waitingScene(save, index);
   const page = route.split('/')[1];
+  // The closing scene belongs to the ending page, which shows the receipt after it.
+  const scene = page === 'scene' ? sceneById(route.split('/')[2] ?? '') : undefined;
+  const watchable = !!scene && sceneOpen(save, scene) && scene.before < CAMPAIGN_LENGTH;
   const screen =
     page === 'shift' && accessible
       ? 'workspace'
-      : page === 'campaign' || page === 'settings'
-        ? 'campaign'
-        : page === 'ending' && save.complete
-          ? 'ending'
-          : 'home';
+      : page === 'scene' && watchable
+        ? 'scene'
+        : page === 'campaign' || page === 'settings'
+          ? 'campaign'
+          : page === 'ending' && save.complete
+            ? 'ending'
+            : 'home';
   const shift = useShift(index);
   const playSuccess = useSound('success');
   const playRetry = useSound('retry');
@@ -61,14 +68,17 @@ function Shell() {
             onNext={() => {
               if (index === CAMPAIGN_LENGTH - 1) go('/ending');
               else {
+                // A scene waiting before the next shift plays straight away.
+                const next = waitingScene(save, index + 1);
                 select(index + 1);
-                go('/campaign');
+                go(next ? `/scene/${next.id}` : '/campaign');
               }
             }}
             onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
             onSound={(passed) => (passed ? playSuccess() : playRetry())}
           />
         )}
+        {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
         {screen === 'ending' && <EndingPage />}
       </div>
       <SaveNotice />

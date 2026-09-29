@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, CircleHelp, Play } from 'lucide-react';
+import { CircleHelp, Clapperboard, Play } from 'lucide-react';
 import { playSound } from '@/audio';
 import { levels, titleFor } from '@/data';
+import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
@@ -17,6 +18,16 @@ const ORDER_UP_MS = 650;
 
 const titles = levels.map((_, index) => titleFor(index));
 
+/** Every line of the rail in order: each scene just above the shift it opens, the closing scene last. */
+type Entry = { shift: number } | { scene: Cutscene };
+const entries: Entry[] = [
+  ...levels.flatMap((_, shift): Entry[] => {
+    const scene = sceneBefore(shift);
+    return scene ? [{ scene }, { shift }] : [{ shift }];
+  }),
+  ...cutscenes.filter((scene) => scene.before >= levels.length).map((scene) => ({ scene })),
+];
+
 /**
  * The campaign as Niko's kitchen rail. Each act hangs there as an order ticket, one line per shift,
  * and the selected shift is chalked up beside it as today’s special.
@@ -29,6 +40,9 @@ export function CampaignPage() {
   const rail = useRef<HTMLDivElement>(null);
   const orderTimer = useRef<number | undefined>(undefined);
   const [ordering, setOrdering] = useState<number | null>(null);
+  // A scene waiting before the selected shift is what the rail opens on.
+  const [scene, setScene] = useState<Cutscene | undefined>(() => waitingScene(save, save.selected));
+  const gated = waitingScene(save, save.unlocked)?.before;
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -39,13 +53,20 @@ export function CampaignPage() {
   };
 
   const selected = save.selected;
-  const current = actIndexFor(selected);
+  const current = actIndexFor(scene ? Math.min(scene.before, levels.length - 1) : selected);
   const level = levels[selected];
   const shift = narrativeFor(selected);
   const observation = !level.programming_enabled;
   const upNext = !isComplete(selected) && selected === save.unlocked;
-  const previous = selected > 0 ? selected - 1 : undefined;
-  const next = selected < Math.min(save.unlocked, levels.length - 1) ? selected + 1 : undefined;
+  const opens = (entry: Entry) =>
+    'scene' in entry ? sceneOpen(save, entry.scene) : entry.shift <= save.unlocked && entry.shift !== gated;
+  const here = entries.findIndex((entry) =>
+    'scene' in entry ? entry.scene === scene : !scene && entry.shift === selected,
+  );
+  const neighbour = (step: -1 | 1) => {
+    const entry = entries[here + step];
+    return entry && opens(entry) ? entry : undefined;
+  };
 
   useEffect(() => () => window.clearTimeout(orderTimer.current), []);
 
@@ -60,9 +81,25 @@ export function CampaignPage() {
 
   const turnTo = (index: number | undefined) => {
     if (ordering !== null) return;
-    if (index === undefined || index === selected || index < 0 || index > save.unlocked || index >= levels.length)
-      return;
-    select(index);
+    if (index === undefined || index < 0 || index > save.unlocked || index === gated || index >= levels.length) return;
+    setScene(undefined);
+    if (index !== selected) select(index);
+  };
+
+  const turnToScene = (target: Cutscene) => {
+    if (ordering === null && sceneOpen(save, target)) setScene(target);
+  };
+
+  const turnToEntry = (entry: Entry | undefined) => {
+    if (!entry) return;
+    if ('scene' in entry) turnToScene(entry.scene);
+    else turnTo(entry.shift);
+  };
+
+  /** Scenes play at once: there is no order to call. The closing scene plays with the final receipt. */
+  const watch = (target: Cutscene) => {
+    if (ordering !== null || !sceneOpen(save, target)) return;
+    go(target.before >= levels.length ? '/ending' : `/scene/${target.id}`);
   };
 
   /** Clicking an act's header lands on its next unserved shift. */
@@ -76,12 +113,14 @@ export function CampaignPage() {
         break;
       }
     }
-    turnTo(focus);
+    const waiting = focus === gated ? sceneBefore(focus) : undefined;
+    if (waiting) turnToScene(waiting);
+    else turnTo(focus);
   };
 
   /** Call the order, then clock in. With reduced motion, go straight in. */
   const start = (index: number) => {
-    if (ordering !== null || index > save.unlocked) return;
+    if (ordering !== null || index > save.unlocked || index === gated) return;
     if (reducedMotion) {
       launch(index);
       return;
@@ -93,8 +132,8 @@ export function CampaignPage() {
   };
 
   // Arrow keys move down the order unless focus is in a text field.
-  const keys = useRef((direction: -1 | 1) => turnTo(direction === 1 ? next : previous));
-  keys.current = (direction) => turnTo(direction === 1 ? next : previous);
+  const keys = useRef((direction: -1 | 1) => turnToEntry(neighbour(direction)));
+  keys.current = (direction) => turnToEntry(neighbour(direction));
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
@@ -118,17 +157,6 @@ export function CampaignPage() {
   return (
     <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
       <ShellBar label="Campaign" back="Caffeine Protocol" onBack={() => go('/')}>
-        {save.complete && (
-          <Button
-            className="shell-link"
-            variant="text-link"
-            aria-label="Revisit closing time"
-            title="Revisit closing time"
-            onClick={() => go('/ending')}
-          >
-            <BookOpen size={15} /> <span>Revisit closing time</span>
-          </Button>
-        )}
         <button className="shell-icon" aria-label="How to play" title="How to play" onClick={openGuide}>
           <CircleHelp size={18} />
         </button>
@@ -152,100 +180,155 @@ export function CampaignPage() {
                 number={actIndex}
                 state={stateOf(actIndex)}
                 current={actIndex === current}
-                selected={selected}
+                selected={scene ? -1 : selected}
                 unlocked={save.unlocked}
                 stars={save.stars}
                 titles={titles}
                 ordering={ordering}
+                gated={gated}
+                selectedScene={scene}
+                sceneOpen={(target) => sceneOpen(save, target)}
+                sceneSeen={(target) => sceneSeen(save, target)}
                 onOpen={() => openAct(actIndex)}
                 onSelect={turnTo}
                 onStart={start}
+                onSelectScene={turnToScene}
+                onWatch={watch}
               />
             ))}
           </nav>
         </div>
       </div>
 
-      <aside className="recipe" aria-label="Selected shift" aria-live="polite" aria-atomic="true">
-        <div className="board">
-          <div className="board-chalk" key={selected}>
-            <p className="board-kicker">
-              <span>
-                Today’s special <span className="board-no">No. {pad2(selected + 1)}</span>
-              </span>
-              {(upNext || isComplete(selected)) && (
-                <span className={`board-tag ${isComplete(selected) ? 'done' : 'next'}`}>
-                  {isComplete(selected) ? 'Served' : 'Up next'}
+      {scene ? (
+        <SceneBoard scene={scene} seen={sceneSeen(save, scene)} onWatch={() => watch(scene)} />
+      ) : (
+        <aside className="recipe" aria-label="Selected shift" aria-live="polite" aria-atomic="true">
+          <div className="board">
+            <div className="board-chalk" key={selected}>
+              <p className="board-kicker">
+                <span>
+                  Today’s special <span className="board-no">No. {pad2(selected + 1)}</span>
                 </span>
-              )}
-            </p>
-            <h2>{titleFor(selected)}</h2>
-            <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
-              <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
-            </svg>
-            <dl className="board-menu">
-              <div>
-                <dt>Tables</dt>
-                <dd>{level.active_tables}</dd>
-              </div>
-              {observation ? (
+                {(upNext || isComplete(selected)) && (
+                  <span className={`board-tag ${isComplete(selected) ? 'done' : 'next'}`}>
+                    {isComplete(selected) ? 'Served' : 'Up next'}
+                  </span>
+                )}
+              </p>
+              <h2>{titleFor(selected)}</h2>
+              <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
+                <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
+              </svg>
+              <dl className="board-menu">
                 <div>
-                  <dt>Service</dt>
-                  <dd>Watch only</dd>
+                  <dt>Tables</dt>
+                  <dd>{level.active_tables}</dd>
                 </div>
-              ) : (
-                <>
+                {observation ? (
                   <div>
-                    <dt>★★</dt>
-                    <dd>≤ {level.block_target} blocks</dd>
+                    <dt>Service</dt>
+                    <dd>Watch only</dd>
                   </div>
-                  <div>
-                    <dt>★★★</dt>
-                    <dd>≤ {level.instruction_target} steps</dd>
-                  </div>
-                </>
-              )}
-            </dl>
-            <p className="board-story">{shift.story}</p>
-            <p className="board-note">
-              <strong>Chef’s note</strong> {shift.hint}
-            </p>
-            <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
-              <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />
-              <path d="M24 42h68v16c0 14-15 22-34 22s-34-8-34-22z" />
-              <path d="M92 47c12 0 14 8 12 13-2 6-8 8-13 7" />
-              <path d="M14 86c10 5 78 5 90 0" />
-            </svg>
-            <p className="board-foot">
-              {observation ? (
-                <span className="board-scene">{isComplete(selected) ? 'Watched' : 'Sit back and watch'}</span>
-              ) : (
-                <span className="board-stars" role="img" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
-                  {starRow(save.stars[selected] ?? 0)}
-                </span>
-              )}
-            </p>
+                ) : (
+                  <>
+                    <div>
+                      <dt>★★</dt>
+                      <dd>≤ {level.block_target} blocks</dd>
+                    </div>
+                    <div>
+                      <dt>★★★</dt>
+                      <dd>≤ {level.instruction_target} steps</dd>
+                    </div>
+                  </>
+                )}
+              </dl>
+              <p className="board-story">{shift.story}</p>
+              <p className="board-note">
+                <strong>Chef’s note</strong> {shift.hint}
+              </p>
+              <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
+                <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />
+                <path d="M24 42h68v16c0 14-15 22-34 22s-34-8-34-22z" />
+                <path d="M92 47c12 0 14 8 12 13-2 6-8 8-13 7" />
+                <path d="M14 86c10 5 78 5 90 0" />
+              </svg>
+              <p className="board-foot">
+                {observation ? (
+                  <span className="board-scene">{isComplete(selected) ? 'Watched' : 'Sit back and watch'}</span>
+                ) : (
+                  <span className="board-stars" role="img" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
+                    {starRow(save.stars[selected] ?? 0)}
+                  </span>
+                )}
+              </p>
+            </div>
+            <div className="board-launch">
+              <Button
+                className="recipe-start"
+                variant="primary"
+                onClick={() => start(selected)}
+                disabled={ordering !== null}
+              >
+                <Play size={17} fill="currentColor" /> {ordering !== null ? 'Order up…' : 'Start shift'}
+              </Button>
+              <p className="board-hint" aria-hidden="true">
+                <kbd>←</kbd> <kbd>→</kbd> browse · double-click to start
+              </p>
+            </div>
+            {ordering !== null && (
+              <span className="board-order-up" aria-hidden="true">
+                Order up!
+              </span>
+            )}
           </div>
-          <div className="board-launch">
-            <Button
-              className="recipe-start"
-              variant="primary"
-              onClick={() => start(selected)}
-              disabled={ordering !== null}
-            >
-              <Play size={17} fill="currentColor" /> {ordering !== null ? 'Order up…' : 'Start shift'}
-            </Button>
-            <p className="board-hint" aria-hidden="true">
-              <kbd>←</kbd> <kbd>→</kbd> browse · double-click to start
-            </p>
-          </div>
-          {ordering !== null && (
-            <span className="board-order-up" aria-hidden="true">
-              Order up!
-            </span>
-          )}
-        </div>
-      </aside>
+        </aside>
+      )}
     </main>
+  );
+}
+
+/** A scene chalked up on the specials board in place of a shift: what it shows, and a button to watch it. */
+function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; onWatch(): void }) {
+  const closing = scene.before >= levels.length;
+  return (
+    <aside className="recipe scene-recipe" aria-label="Selected scene" aria-live="polite" aria-atomic="true">
+      <div className="board">
+        <div className="board-chalk" key={scene.id}>
+          <p className="board-kicker">
+            <span>
+              Cutscene <Clapperboard className="board-clapper" size={14} aria-hidden="true" />
+            </span>
+            <span className={`board-tag ${seen ? 'done' : 'next'}`}>{seen ? 'Seen' : 'New'}</span>
+          </p>
+          <h2>{scene.title}</h2>
+          <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
+            <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
+          </svg>
+          <dl className="board-menu">
+            <div>
+              <dt>Shots</dt>
+              <dd>{scene.panels.length}</dd>
+            </div>
+            <div>
+              <dt>{closing ? 'After' : 'Before'}</dt>
+              <dd>{closing ? 'The last shift' : `Shift ${pad2(scene.before + 1)}`}</dd>
+            </div>
+          </dl>
+          <p className="board-story">{scene.logline}</p>
+          <p className="board-note">
+            <strong>Chef’s note</strong> Esc skips the scene.
+          </p>
+        </div>
+        <div className="board-launch">
+          <Button className="recipe-start" variant="primary" onClick={onWatch}>
+            <Clapperboard size={17} /> {seen ? 'Watch again' : 'Watch scene'}
+          </Button>
+          <p className="board-hint" aria-hidden="true">
+            <kbd>←</kbd> <kbd>→</kbd> browse · double-click to watch
+          </p>
+        </div>
+      </div>
+    </aside>
   );
 }

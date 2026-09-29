@@ -33,6 +33,8 @@ export interface DialogueBoxProps {
   doneLabel?: string;
   /** Print each line whole instead of typing it out. */
   instant?: boolean;
+  /** Called with the new line's index each time the scene moves on. */
+  onLine?: (index: number) => void;
 }
 
 /** Characters talk one line at a time: click, Enter or Space advances, Escape skips the rest. */
@@ -43,6 +45,7 @@ export function DialogueBox({
   kicker,
   doneLabel = 'Continue',
   instant = false,
+  onLine,
 }: DialogueBoxProps) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
@@ -73,8 +76,9 @@ export function DialogueBox({
     if (typing) setTyped(text.length);
     else if (last) onDone();
     else {
-      setIndex((i) => i + 1);
+      setIndex(index + 1);
       setTyped(0);
+      onLine?.(index + 1);
     }
   };
 

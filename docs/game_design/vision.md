@@ -2,8 +2,8 @@
 
 ## Game Identity
 
-Caffeine Protocol is a cozy puzzle-comedy game about restoring an abandoned
-retro-future cafe and gradually programming a robot staff until service runs by
+Caffeine Protocol is a cozy puzzle-comedy game about restoring a small, cozy
+neighbourhood cafe and gradually programming a robot staff until service runs by
 itself.
 
 The player character is Niko. The first repaired robot is Query, the

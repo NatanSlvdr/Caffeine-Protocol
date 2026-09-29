@@ -4,6 +4,7 @@ import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
 import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
 import { shiftIntro } from '@/data/campaign/dialogue';
+import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
 import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, playSound, startAudio } from '@/audio';
@@ -21,6 +22,8 @@ interface GameStore {
   update: Update;
   launch: (index: number) => void;
   select: (index: number) => void;
+  /** Marks a scene seen (or skipped) and selects the shift it opens. */
+  finishScene: (scene: Cutscene) => void;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   completeShift: (index: number, starsCount: number, querySource: string, programs: RobotPrograms) => void;
   resetCafe: () => void;
@@ -72,11 +75,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
       go,
       update: setSave,
       launch: (index: number) => {
-        if (index > save.unlocked) return;
+        if (index > save.unlocked || waitingScene(save, index)) return;
         setSave((s) => ({ ...s, selected: index }));
         go(`/shift/${index + 1}`);
       },
       select: (index: number) => setSave((s) => ({ ...s, selected: index })),
+      finishScene: (scene: Cutscene) =>
+        setSave((s) =>
+          scene.before < levels.length
+            ? { ...s, selected: scene.before, story: { ...s.story, [scene.before]: true } }
+            : s,
+        ),
       updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) =>
         setSave((s) => ({ ...s, settings: { ...s.settings, [key]: value } })),
       completeShift: (index, starsCount, querySource, programs) => {
