@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { newSave } from '../../../src/features/campaign/save/persistence';
-import { finishShift, seedSave, useWorkedExample } from '../helpers';
+import { finishShift, seedSave, skipIntro, useWorkedExample } from '../helpers';
 
 test.describe.configure({ timeout: 240_000 });
 
@@ -13,6 +13,7 @@ for (const { shift, level, robot } of [
     page.on('pageerror', (e) => errors.push(e.message));
     await seedSave(page, { ...newSave(), unlocked: level - 1, selected: level - 1 });
     await page.goto(`/#/shift/${shift}`);
+    await skipIntro(page);
     await expect(page.getByRole('button', { name: 'Run service' })).toBeVisible();
     await useWorkedExample(page);
     await finishShift(page);

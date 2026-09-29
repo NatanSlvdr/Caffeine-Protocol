@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { indentSource, ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotPrograms, type RobotRole } from '@/domain';
@@ -17,6 +17,7 @@ export interface HelpModalProps {
   showSolution: boolean;
   onToggleSolution: () => void;
   onUseExample: (source: string) => void;
+  onReplayIntro: () => void;
   onClose: () => void;
 }
 
@@ -33,6 +34,7 @@ export function HelpModal({
   showSolution,
   onToggleSolution,
   onUseExample,
+  onReplayIntro,
   onClose,
 }: HelpModalProps) {
   const example = lesson.robotSolution?.[role] ?? lesson.solution;
@@ -45,6 +47,9 @@ export function HelpModal({
     >
       <div className="lesson-note">{lesson.note}</div>
       <p>{brief.story}</p>
+      <button className="settings-chip help-replay-intro" disabled={running} onClick={onReplayIntro}>
+        <MessageCircle size={14} aria-hidden="true" /> Replay the intro
+      </button>
       <p>
         <strong>Your goal:</strong> {brief.objective}
       </p>

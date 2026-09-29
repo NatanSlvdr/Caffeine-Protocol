@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { newSave } from '../../../src/features/campaign/save/persistence';
-import { fit, ready, seedSave } from '../helpers';
+import { fit, ready, seedSave, skipIntro } from '../helpers';
 
 for (const width of [1280, 1100])
   test(`framing and working controls at ${width} × 720`, async ({ page }) => {
     await page.setViewportSize({ width, height: 720 });
-    await seedSave(page, { ...newSave(), unlocked: 13, selected: 13, story: { 13: true } });
+    await seedSave(page, { ...newSave(), unlocked: 13, selected: 13 });
     await ready(page);
     await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
     await page.getByRole('button', { name: 'Start shift', exact: true }).click();
+    await skipIntro(page);
     await fit(page, '.editor-panel');
     await fit(page, '.scene-space');
     await fit(page, '.run-button');

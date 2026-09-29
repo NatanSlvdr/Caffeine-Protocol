@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
-import { stories } from '@/data/campaign/narrative';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { Workspace } from '@/features/workspace/Workspace';
@@ -9,7 +8,7 @@ import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
-import { EndingPage, InterludePage } from '@/shell/StoryPages';
+import { EndingPage } from '@/shell/StoryPages';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { useSound } from '@/hooks/useSound';
@@ -39,11 +38,9 @@ function Shell() {
       ? 'workspace'
       : page === 'campaign' || page === 'settings'
         ? 'campaign'
-        : page === 'interlude' && accessible && stories[index]
-          ? 'interlude'
-          : page === 'ending' && save.complete
-            ? 'ending'
-            : 'home';
+        : page === 'ending' && save.complete
+          ? 'ending'
+          : 'home';
   const shift = useShift(index);
   const playSuccess = useSound('success');
   const playRetry = useSound('retry');
@@ -72,7 +69,6 @@ function Shell() {
             onSound={(passed) => (passed ? playSuccess() : playRetry())}
           />
         )}
-        {screen === 'interlude' && <InterludePage index={index} />}
         {screen === 'ending' && <EndingPage />}
       </div>
       <SaveNotice />

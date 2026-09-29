@@ -12,7 +12,6 @@ export interface ProgramRowsProps {
   source: string;
   activeLine: number;
   visibleFailureLine: number;
-  failureMessage?: string;
   onDismissFailure?: () => void;
   inLoop: (line: number) => boolean;
   dragged: string;
@@ -30,7 +29,6 @@ export function ProgramRows({
   source,
   activeLine,
   visibleFailureLine,
-  failureMessage,
   onDismissFailure,
   inLoop,
   dragged,
@@ -41,7 +39,8 @@ export function ProgramRows({
     blocks.map((block) => (
       <div
         className={
-          (block.children ? 'code-scope ' + category(block.command) : 'code-statement') + (draggedLine === block.line ? ' drag-source' : '')
+          (block.children ? 'code-scope ' + category(block.command) : 'code-statement') +
+          (draggedLine === block.line ? ' drag-source' : '')
         }
         key={block.line}
       >
@@ -54,7 +53,6 @@ export function ProgramRows({
           locked={disabled}
           active={activeLine === block.line}
           failure={visibleFailureLine === block.line}
-          failureMessage={failureMessage}
           onDismissFailure={onDismissFailure}
           onChange={(c) => {
             const lines = source.split('\n');
@@ -64,7 +62,11 @@ export function ProgramRows({
         />
         {block.children && (
           <div className="scope-body">
-            <Insertion at={block.line + 1} disabled={disabled} hint={block.children.length ? '' : 'Drop a block here'} />
+            <Insertion
+              at={block.line + 1}
+              disabled={disabled}
+              hint={block.children.length ? '' : 'Drop a block here'}
+            />
             {renderBlocks(block.children, depth + 1)}
           </div>
         )}
@@ -78,7 +80,6 @@ export function ProgramRows({
               locked={disabled}
               active={activeLine === block.elseLine}
               failure={visibleFailureLine === block.elseLine}
-              failureMessage={failureMessage}
               onDismissFailure={onDismissFailure}
               onChange={() => {}}
             />

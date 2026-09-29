@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES } from '@/domain';
-import type { LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
-import { Cafe, CodingPaneHeader, Editor, RobotOptions } from '@/components';
+import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
+import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { incomingRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
@@ -13,6 +13,7 @@ import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { ResetModal } from './modals/ResetModal';
 import { ReceiptModal } from './modals/ReceiptModal';
+import { failureLines, successLines } from './reactions';
 
 export interface ShiftBrief {
   story: string;
@@ -23,6 +24,8 @@ export interface WorkspaceShift {
   level: LevelDefinition;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
+  /** The café scene that opens the shift. */
+  intro: DialogueLine[];
   title: string;
 }
 
@@ -50,12 +53,14 @@ export function Workspace({
   onComplete,
   onSound,
 }: WorkspaceProps) {
-  const { level, lesson, brief } = shift;
+  const { level, lesson, brief, intro } = shift;
   const observation = index < 2;
   const [modal, setModal] = useState(''),
     [textMode, setTextMode] = useState(false),
     [showSolution, setShowSolution] = useState(false);
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
+  // The shift opens on its scene; a finished run answers with the crew's reaction.
+  const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
   const live = useLiveRun({
     index,
     level,
@@ -64,7 +69,7 @@ export function Workspace({
     onDraft: (updated) => update((s) => saveRobotDraft(s, index, updated)),
     onComplete,
     onFinish: (passed) => {
-      if (passed) setModal('receipt');
+      setScene(passed ? 'success' : 'failure');
       onSound(passed);
     },
   });
@@ -84,13 +89,12 @@ export function Workspace({
     instructionProgress,
     change,
     run,
-    stop,
   } = live;
 
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-        if (modal) return;
+        if (modal || scene === 'intro') return;
         e.preventDefault();
         run();
       }
@@ -100,6 +104,12 @@ export function Workspace({
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
   });
+  const reaction =
+    scene === 'failure' && running && result && !result.passed
+      ? failureLines(result, role)
+      : scene === 'success' && result?.passed
+        ? successLines(result, role, index)
+        : undefined;
   return (
     <main className="workspace-main">
       <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
@@ -142,6 +152,19 @@ export function Workspace({
               focusRole={zoomToRobot && !observation ? role : undefined}
               level={index + 1}
             />
+            {reaction && (
+              <DialogueBox
+                key={`${scene}-${result?.first_failure?.reason}`}
+                variant="aside"
+                lines={reaction}
+                instant={save.settings.reduced_motion}
+                doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
+                onDone={() => {
+                  if (scene === 'success') setModal('receipt');
+                  setScene('');
+                }}
+              />
+            )}
           </div>
           <PlaybackToolbar
             running={running}
@@ -180,12 +203,19 @@ export function Workspace({
             instructionProgress={instructionProgress}
             stepSeconds={BLOCK_SECONDS / speed}
             failureLine={failureLine}
-            failureMessage={failureLine >= 0 ? result?.first_failure?.reason : undefined}
-            onEdit={stop}
             textMode={textMode}
           />
         </section>
       </div>
+      {scene === 'intro' && (
+        <DialogueBox
+          lines={intro}
+          kicker={`Shift ${pad2(index + 1)} · ${shift.title}`}
+          doneLabel="Start the shift"
+          instant={save.settings.reduced_motion}
+          onDone={() => setScene('')}
+        />
+      )}
       {modal === 'help' && (
         <HelpModal
           index={index}
@@ -201,6 +231,10 @@ export function Workspace({
           onUseExample={(example) => {
             change(example);
             setModal('');
+          }}
+          onReplayIntro={() => {
+            setModal('');
+            setScene('intro');
           }}
           onClose={() => setModal('')}
         />

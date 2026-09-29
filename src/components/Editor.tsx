@@ -23,7 +23,6 @@ import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
 import { ExecutionCursor } from './ExecutionCursor';
-import { InstructionError } from './FailureFeedback';
 
 export function Editor({
   role = 'query',
@@ -35,8 +34,6 @@ export function Editor({
   activeLine = -1,
   instructionProgress = 0,
   failureLine = -1,
-  failureMessage,
-  onEdit,
   textMode,
   onDismissFailure,
   stepSeconds = 1.5,
@@ -52,14 +49,11 @@ export function Editor({
   failureLine?: number;
   textMode: boolean;
   stepSeconds?: number;
-  failureMessage?: string;
-  onEdit?: () => void;
   onDismissFailure?: () => void;
 }) {
   const root = useRef<HTMLDivElement>(null),
     codeArea = useRef<HTMLDivElement>(null),
-    pointer = useRef<{ x: number; y: number } | null>(null),
-    failedText = useRef<HTMLDivElement>(null);
+    pointer = useRef<{ x: number; y: number } | null>(null);
   const dragScope = useRef<DraggedScope | undefined>(undefined),
     lastSlot = useRef<string | undefined>(undefined);
   const options = robotCommands(role, level),
@@ -106,7 +100,6 @@ export function Editor({
   );
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
   const lines = source.split('\n');
-  const textFailure = textMode && !!failureMessage && failureLine >= 0 && failureLine < lines.length;
 
   return (
     <DndContext
@@ -139,19 +132,12 @@ export function Editor({
           </div>
         </section>
         <div className="editor-body" role="group" aria-label="Code zone" ref={codeArea}>
-          {failureMessage && (textMode ? !textFailure : !rows.length) && (
-            <InstructionError message={failureMessage} onEdit={locked ? onEdit : undefined} />
-          )}
           {observation ? null : textMode ? (
             <div className="code-text">
               {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
               <div className="code-text-lines" aria-hidden="true">
                 {lines.map((line, i) => (
-                  <div
-                    key={i}
-                    ref={i === failureLine ? failedText : undefined}
-                    className={i === failureLine ? 'failed' : i === markerLine ? 'active' : undefined}
-                  >
+                  <div key={i} className={i === failureLine ? 'failed' : i === markerLine ? 'active' : undefined}>
                     {line || ' '}
                   </div>
                 ))}
@@ -165,7 +151,6 @@ export function Editor({
                 readOnly={locked}
                 className="code-input"
               />
-              {textFailure && <InstructionError message={failureMessage} anchor={failedText} />}
             </div>
           ) : (
             <ProgramSurface root={root}>
@@ -184,7 +169,6 @@ export function Editor({
                 source={source}
                 activeLine={activeLine}
                 visibleFailureLine={visibleFailureLine}
-                failureMessage={failureMessage}
                 onDismissFailure={onDismissFailure}
                 inLoop={inLoop}
                 dragged={dragged}

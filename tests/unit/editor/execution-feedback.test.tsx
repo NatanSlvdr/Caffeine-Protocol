@@ -103,31 +103,22 @@ describe('clear execution feedback', () => {
     rerender(<Editor {...editor} activeLine={99} />);
     expect(screen.queryByRole('img', { name: 'Current instruction' })).toBeNull();
   });
-  it('marks the full failing block and places the warning outside the code pane', () => {
-    render(<Editor {...editor} failureLine={2} failureMessage="Careful, an error here." />);
+  it('marks the full failing block', () => {
+    render(<Editor {...editor} failureLine={2} />);
     expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');
     expect(document.querySelector('.block.failure')?.parentElement?.querySelector('.line-number')?.textContent).toBe(
       '03',
     );
-    const error = screen.getByRole('alert');
-    expect(error.parentElement).toBe(document.body);
-    expect(error.textContent).toContain('Careful, an error here.');
+    // The explanation now comes from the café dialogue, not a callout in the editor.
+    expect(screen.queryByRole('alert')).toBeNull();
   });
-  it('keeps compile errors visible in empty code and text mode', () => {
-    const { rerender } = render(<Editor {...editor} source="" failureLine={0} failureMessage="Add an instruction." />);
-    expect(screen.getByRole('alert').textContent).toContain('Add an instruction.');
-    rerender(<Editor {...editor} textMode failureLine={1} failureMessage="Invalid instruction." />);
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    // Text mode marks the failing line itself and points the warning at it from outside the pane.
+  it('marks the failing line in text mode', () => {
+    render(<Editor {...editor} textMode failureLine={1} />);
     expect(document.querySelector('.code-text-lines > .failed')?.textContent).toBe(editor.source.split('\n')[1]);
-    expect(screen.getByRole('alert').parentElement).toBe(document.body);
   });
-  it('anchors errors on hidden delimiters to a visible nearby block', () => {
-    render(
-      <Editor {...editor} source={'LISTEN\nIF tea\nTICKET\nEND'} failureLine={3} failureMessage="Check this branch." />,
-    );
+  it('marks a visible nearby block for failures on hidden delimiters', () => {
+    render(<Editor {...editor} source={'LISTEN\nIF tea\nTICKET\nEND'} failureLine={3} />);
     expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('2');
-    expect(screen.getByRole('alert')).toBeTruthy();
   });
   it('uses the same type class for leading verbs and trailing words', () => {
     render(<Editor {...editor} source={'ITEM coffee\nMOVE RIGHT 1'} />);

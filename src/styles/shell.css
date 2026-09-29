@@ -871,12 +871,6 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: clamp(24px, 3.6dvh, 38px);
   letter-spacing: 4px;
 }
-.board-scene {
-  font-family: var(--pass-mono);
-  font-size: 11px;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-}
 .board .board-order-up {
   position: absolute;
   top: 45%;

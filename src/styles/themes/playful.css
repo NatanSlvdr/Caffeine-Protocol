@@ -1569,24 +1569,6 @@ html[data-motion='reduced'] .direction-menu.direction-closing {
   background: #ffd8d1;
   animation: error-line-pulse 1s ease-in-out infinite;
 }
-.line-error-callout {
-  position: fixed;
-  z-index: 1100;
-  transform: translate(-100%, -50%);
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  pointer-events: none;
-  color: #b72126;
-  font:
-    700 13px/1.4 Inter,
-    sans-serif;
-  background: #ffe0df;
-  border: 1px solid #e9a3a0;
-  box-shadow: 0 2px 8px #84202018;
-  padding: 7px 10px;
-  border-radius: 6px;
-}
 @keyframes error-line-pulse {
   0%,
   100% {
@@ -2631,11 +2613,4 @@ html[data-motion='reduced'] .drop-projection {
     animation: none !important;
     transition: none !important;
   }
-}
-.error-note {
-  background: #ffe0df;
-  border: 1px solid #e9a3a0;
-  color: #b72126;
-  border-radius: 6px;
-  padding: 7px 10px;
 }

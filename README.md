@@ -21,7 +21,7 @@ Open the URL printed by Vite. The production build is fully static and supports 
 4. Use the café toolbar to stop, pause, and change playback speed. From shift 15, program Brew's kitchen routines; from shift 23, Porter's floor routines.
 5. **Help** explains the lesson and provides a worked example. **Options** contains the workspace pixel-art shader, text-editor toggle, and routine reset; sound, display, save import/export, and progress-reset controls live in **Settings**.
 
-One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, programs, story interludes, and settings are stored in the browser. Save files can be exported and imported from **Settings**.
+One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, programs, and settings are stored in the browser. Save files can be exported and imported from **Settings**.
 
 ## Campaign and scope
 

@@ -10,7 +10,7 @@ export { CodingPaneHeader } from './CodingPaneHeader';
 export { CustomerSpeech } from './CustomerSpeech';
 export { Editor } from './Editor';
 export { ExecutionCursor } from './ExecutionCursor';
-export { InstructionError } from './FailureFeedback';
+export { DialogueBox } from './dialogue/DialogueBox';
 export { Modal } from '@/shared/ui/Modal';
 export { ModelThumbnail } from './thumbnails/ModelThumbnail';
 export type { ThumbnailModel } from './thumbnails/ModelThumbnail';

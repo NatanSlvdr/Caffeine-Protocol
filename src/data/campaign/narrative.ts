@@ -1,4 +1,4 @@
-/** One narrative row per shift: title, story beat, goal, short hint, lesson note, and optional interlude. */
+/** One narrative row per shift: title, story beat, goal, short hint, and lesson note. Scenes live in dialogue.ts. */
 export interface ShiftNarrative {
   level: number;
   title: string;
@@ -7,7 +7,6 @@ export interface ShiftNarrative {
   /** A few words for the Chef's note on the shift picker: a nudge, not the full goal. */
   hint: string;
   lessonNote: string;
-  interlude?: { title: string; text: string };
 }
 export const campaignNarrative: ShiftNarrative[] = [
   {
@@ -40,10 +39,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'Take paper, write it, hand it over.',
     lessonNote:
       'Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.',
-    interlude: {
-      title: 'A voice at the counter',
-      text: "Niko tightens the last screw. The scrapyard robot's display blinks.\n\nQUERY: Hearing module online. What is a coffee?\nNIKO: Let's begin with one customer, one ticket. Moka will handle the brewing, and Pip will serve the drinks.",
-    },
   },
   {
     level: 4,
@@ -95,10 +90,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'Different words, same order.',
     lessonNote:
       'Different wording still yields the same recognized words. Reuse the same checks; no new blocks are needed.',
-    interlude: {
-      title: 'The regulars',
-      text: "QUERY: 'One tea' and 'tea please' have different lengths.\nNIKO: But the same recognized tokens. Test the concepts you hear.\n\nQuery opens a fresh page in the service manual.",
-    },
   },
   {
     level: 9,
@@ -120,10 +111,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'Count the sugars exactly.',
     lessonNote:
       'If Number IN item checks for a count. Store Var A = Number in item, then Write Var A Sugar writes the exact amount, including zero. Keep the sugar and negation checks for orders without numbers.',
-    interlude: {
-      title: 'Two is not yes',
-      text: "CUSTOMER: Two sugars, please.\nQUERY: Sugar: yes.\nNIKO: You're not wrong. You're just not precise enough.\n\nA number variable should help.",
-    },
   },
   {
     level: 11,
@@ -163,10 +150,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'One last shift for the badge.',
     lessonNote:
       'Certification covers all recognized concepts, clarification, numbers, and multiple orders. Take, write, move, deposit, and return for every sheet.',
-    interlude: {
-      title: 'The counter is yours',
-      text: "Niko pins a new badge beside the till.\n\nNIKO: One last service. Every order we've learned, all together.\nQUERY: I have retained my instructions.\n\nBehind them, the espresso machine is already busy.",
-    },
   },
   {
     level: 15,
@@ -177,10 +160,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'Finish the recipe at pickup.',
     lessonNote:
       'Brew claims tickets from Query at the shared order counter. Read the supplied recipe and finish by depositing the drink up onto pickup. Pip still serves the room.',
-    interlude: {
-      title: 'A place at the workbench',
-      text: 'Niko sets Brew beside the kitchen counter.\nQuery knows the orders. Now teach Brew the recipes, one tile and one ingredient at a time.\nPip will keep serving until you program Porter for the floor.',
-    },
   },
   {
     level: 16,
@@ -260,10 +239,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'The ticket names the table.',
     lessonNote:
       'Porter owns floor work now. Wait for Orders claims a ready drink; Take down collects it from the outside of the kitchen counter.',
-    interlude: {
-      title: 'A tray and a little courage',
-      text: 'Porter rolls up to the pickup counter.\nBrew has the kitchen. Query has the orders. The room is yours to program.\nEvery delivery begins with one tile.',
-    },
   },
   {
     level: 24,
@@ -338,10 +313,6 @@ export const campaignNarrative: ShiftNarrative[] = [
     hint: 'All three robots, one service.',
     lessonNote:
       'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
-    interlude: {
-      title: 'Three routines, one café',
-      text: 'The three robots are ready. Niko hangs up the service apron.\nOrders, recipes, and deliveries now depend on your programs working together.',
-    },
   },
   {
     level: 32,
@@ -360,10 +331,3 @@ export function narrativeFor(index: number): ShiftNarrative {
   if (!found) throw new Error(`Unknown shift index: ${index}`);
   return found;
 }
-
-/** Interludes keyed by zero-based shift index (story beats shown between shifts). */
-export const stories: Record<number, { title: string; text: string }> = Object.fromEntries(
-  campaignNarrative
-    .filter((n): n is ShiftNarrative & { interlude: { title: string; text: string } } => n.interlude !== undefined)
-    .map((n) => [n.level - 1, n.interlude]),
-);

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { BookOpen, CircleHelp, Play } from 'lucide-react';
 import { playSound } from '@/audio';
 import { levels, titleFor } from '@/data';
-import { narrativeFor, stories } from '@/data/campaign/narrative';
+import { narrativeFor } from '@/data/campaign/narrative';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
 import { go, openGuide } from '@/shared/lib/navigation';
@@ -224,7 +224,6 @@ export function CampaignPage() {
                   {starRow(save.stars[selected] ?? 0)}
                 </span>
               )}
-              {stories[selected] && <span className="board-scene">Story scene first</span>}
             </p>
           </div>
           <div className="board-launch">

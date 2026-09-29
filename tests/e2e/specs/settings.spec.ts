@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { titleFor } from '../../../src/data';
 import { newSave, SAVE_KEY } from '../../../src/features/campaign/save/persistence';
-import { ready, seedSave } from '../helpers';
+import { ready, seedSave, skipIntro } from '../helpers';
 
 test('settings persist, text mode is lossless, and import/export confirms', async ({ page }) => {
-  const seed = { ...newSave(), unlocked: 13, selected: 7, story: { 7: true } };
+  const seed = { ...newSave(), unlocked: 13, selected: 7 };
   await seedSave(page, seed);
   await ready(page);
   await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
   await page.getByRole('button', { name: 'Start shift', exact: true }).click();
+  await skipIntro(page);
   // Text mode round-trips comments and whitespace exactly.
   await page.getByRole('button', { name: 'Options', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Text editor' }).check();

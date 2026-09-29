@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { levels, titleFor } from '../../../src/data';
-import { narrativeFor, stories } from '../../../src/data/campaign/narrative';
+import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { CampaignPage } from '../../../src/shell/CampaignPage';
 import { GameProvider } from '../../../src/state/GameStore';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
@@ -53,9 +53,8 @@ describe('campaign order rail', () => {
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(within(screen.getByRole('complementary')).getByText(narrativeFor(2).hint)).toBeTruthy();
-    expect(stories[2]).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
-    await waitFor(() => expect(window.location.hash).toBe('#/interlude/3'));
+    await waitFor(() => expect(window.location.hash).toBe('#/shift/3'));
   });
 
   it('leaves arrows to editable fields and modified shortcuts', () => {
@@ -91,7 +90,7 @@ describe('campaign order rail', () => {
     expect(screen.getByRole('button', { name: /Act I · Query/ }).getAttribute('aria-current')).toBe('step');
     expect(document.querySelector('.campaign-page.still')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
-    expect(window.location.hash).toBe('#/interlude/3');
+    expect(window.location.hash).toBe('#/shift/3');
   });
 
   it('stops at the finale and preserves access to the ending', () => {

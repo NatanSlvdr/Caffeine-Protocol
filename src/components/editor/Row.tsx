@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { blockFields, parseStore, spokenBlock, type VisualBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
-import { InstructionError } from '../FailureFeedback';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
 
@@ -13,7 +12,6 @@ export function Row({
   locked,
   active,
   failure,
-  failureMessage,
   onDismissFailure,
   options,
   onChange,
@@ -28,7 +26,6 @@ export function Row({
   options: string[];
   onChange: (c: string) => void;
   inLoop?: boolean;
-  failureMessage?: string;
   onDismissFailure?: () => void;
 }) {
   const { line: id, command } = block;
@@ -96,7 +93,6 @@ export function Row({
           </>
         )}
       </div>
-      {failure && failureMessage && <InstructionError message={failureMessage} anchor={rowRef} />}
     </div>
   );
 }

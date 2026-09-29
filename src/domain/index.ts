@@ -7,6 +7,7 @@ export * from './constants';
 export * from './counters';
 export * from './directions';
 export * from './dragPlacement';
+export * from './dialogue';
 export * from './drinks';
 export * from './layout';
 export * from './liveSimulation';

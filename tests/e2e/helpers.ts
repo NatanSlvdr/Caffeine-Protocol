@@ -42,11 +42,23 @@ export async function setSpeed(page: Page, value: string) {
   }, value);
 }
 
-/** Run the current shift at top speed and wait for the service receipt. */
+/** Skip the shift's opening scene in the café. */
+export async function skipIntro(page: Page) {
+  const intro = page.getByRole('dialog', { name: /^Shift \d+ · / });
+  await intro.getByRole('button', { name: 'Skip' }).click();
+  await expect(intro).toBeHidden();
+}
+
+/** Run the current shift at top speed, hear the crew out, and wait for the service receipt. */
 export async function finishShift(page: Page) {
   await setSpeed(page, '12');
   await page.getByRole('button', { name: /Watch service|Run service/ }).click();
-  await expect(page.getByRole('dialog', { name: 'Service complete' })).toBeVisible({ timeout: 120_000 });
+  const done = page.getByRole('button', { name: 'See the receipt' });
+  const next = page.getByRole('dialog', { name: 'Dialogue' }).getByRole('button', { name: 'Next' });
+  await expect(done.or(next)).toBeVisible({ timeout: 120_000 });
+  while (!(await done.isVisible())) await next.click();
+  await done.click();
+  await expect(page.getByRole('dialog', { name: 'Service complete' })).toBeVisible();
 }
 
 /** Reveal the worked example in Help and insert it into the editor. */

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 
 test.describe.configure({ timeout: 180000 });
 import { newSave } from '../../../src/features/campaign/save/persistence';
-import { finishShift, fit, ready, seedSave } from '../helpers';
+import { finishShift, fit, ready, seedSave, skipIntro } from '../helpers';
 
 test('observation opens the café, watches service, and issues a receipt', async ({ page }) => {
   const errors: string[] = [];
@@ -16,6 +16,7 @@ test('observation opens the café, watches service, and issues a receipt', async
     page.getByRole('button', { name: 'Act I, locked until Prologue is served', exact: true }),
   ).toBeDisabled();
   await page.getByRole('button', { name: 'Start shift', exact: true }).click();
+  await skipIntro(page);
   await expect(page.getByRole('button', { name: 'Watch service' })).toBeVisible();
   await fit(page, '.scene-space');
   await fit(page, '.run-button');

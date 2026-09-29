@@ -45,9 +45,49 @@ TODO future act: the pricing machine stops working later, forcing the player to
 program how totals are calculated from tickets and how Query gives the total
 back to customers.
 
-## Interludes
+## Dialogue
 
-Story should be delivered through short interludes between levels. Interludes
-can show Niko repairing Query, Query misunderstanding a cafe phrase, or the next
-service problem becoming visible. They should be brief enough that replaying a
-level stays fast.
+Story is told in visual-novel dialogue: a portrait beside a speech box, one
+line at a time. Lines type out (instantly under reduced motion), click, Enter or
+Space advances, and Escape or Skip ends the scene.
+
+- **Shift intros** play in the café every time a shift opens, so replaying a
+  shift always starts the same way. Skip gets straight to the code, and Help →
+  "Replay the intro" plays it again. The old between-level interludes are folded
+  into these intros.
+- **Reactions** replace the failure panel. When a run fails, the guest who got
+  the wrong order, or the robot that got stuck, reacts first, then Niko names
+  the problem and gives a hint while the failing block stays highlighted. A
+  finished service gets a cheer from the robot before the receipt.
+- **The ending** is a closing-time scene before the final receipt.
+
+Scripts live in `src/data/campaign/dialogue.ts` (intros and ending) and
+`src/features/workspace/reactions.ts` (failure and success lines). The tone is
+cozy only: no villains, no stakes beyond a busy morning.
+
+### Cast
+
+| Id       | Name       | Who                                                                        |
+| -------- | ---------- | -------------------------------------------------------------------------- |
+| `niko`   | Niko       | The new owner, a young man. Warm, a little tired, loves a pun.             |
+| `query`  | Query      | Counter robot. Literal-minded, precise, speaks in short reports.           |
+| `brew`   | Brew       | Kitchen robot. Eager perfectionist, loves the grinder.                     |
+| `porter` | Porter     | Floor robot. Cheerful and chatty, occasionally clumsy.                     |
+| `moka`   | Moka       | Elderly woman, the old kitchen stand-in. Dry, grumpy, retires in shift 22. |
+| `pip`    | Pip        | Very young delivery stand-in. Fast, chirpy, easily excited.                |
+| `albert` | Mr. Albert | Elderly regular. Always orders “the usual”. It is coffee.                  |
+| `juno`   | Juno       | Student with a laptop. Tea, never sugar.                                   |
+| `dot`    | Dot        | Sweet-toothed regular. Counts her sugars exactly.                          |
+| `rosa`   | Rosa       | Arrives with friends and orders for the whole group.                       |
+| `guest`  | Guest      | Any customer at the counter.                                               |
+
+### Portraits
+
+Drop PNGs at `src/assets/portraits/<id>/<mood>.png`; they are picked up,
+bundled and precached automatically. Moods are `neutral`, `happy`, `worried`
+and `surprised`. Only `neutral` is needed; a missing mood falls back to it, and
+a character with no art shows a coloured initial card instead.
+
+Suggested framing: transparent background, bust from the chest up, about
+3:4 (for example 600 × 800), facing right toward the speech box, with the
+bottom edge cut flat.

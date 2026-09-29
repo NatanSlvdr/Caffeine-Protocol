@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
-import { narrativeFor, stories } from '@/data/campaign/narrative';
+import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
+import { shiftIntro } from '@/data/campaign/dialogue';
 import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
-import type { ProgressSave, RobotPrograms, Settings } from '@/domain';
+import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, playSound, startAudio } from '@/audio';
 import { go } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
@@ -73,7 +74,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       launch: (index: number) => {
         if (index > save.unlocked) return;
         setSave((s) => ({ ...s, selected: index }));
-        go(stories[index] && !save.story[index] ? `/interlude/${index + 1}` : `/shift/${index + 1}`);
+        go(`/shift/${index + 1}`);
       },
       select: (index: number) => setSave((s) => ({ ...s, selected: index })),
       updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) =>
@@ -106,19 +107,19 @@ export function useGame(): GameStore {
   return store;
 }
 
-/** Everything a shift screen needs: level, lesson, brief, interlude, and title. */
+/** Everything a shift screen needs: level, lesson, brief, intro scene, and title. */
 export function useShift(index: number): {
   level: (typeof levels)[number];
   lesson: (typeof lessons)[number];
   brief: ShiftNarrative;
-  story?: { title: string; text: string };
+  intro: DialogueLine[];
   title: string;
 } {
   return {
     level: levels[index],
     lesson: lessons[index],
     brief: narrativeFor(index),
-    story: stories[index],
+    intro: shiftIntro(index),
     title: titleFor(index),
   };
 }
