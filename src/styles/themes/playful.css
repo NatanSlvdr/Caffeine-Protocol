@@ -1335,6 +1335,11 @@ input[type='checkbox']:checked {
 .editor-panel .code-row .block:active {
   cursor: grabbing;
 }
+/* Blocks shift under the pointer while something is carried, so the grabbing hand can't depend on what it hovers. */
+body:has(.visual-program.is-dragging),
+body:has(.visual-program.is-dragging) * {
+  cursor: grabbing !important;
+}
 .editor-panel .code-row .block[aria-disabled='true'] {
   cursor: default;
 }
@@ -1766,11 +1771,17 @@ html[data-motion='reduced'] .execution-line-highlight {
 .editor-panel .visual-program .code-row .block:is([data-jump], [data-target]) {
   width: 84px;
 }
+/* An empty branch's "Drop a block here" takes exactly one instruction's room. While a block hovers it, the
+   slot collapses as before and the block's preview takes its place. */
 .editor-panel .visual-program .code-insertion.with-hint {
   max-width: 100%;
   min-width: 0;
   white-space: normal;
   height: auto;
+}
+.editor-panel .visual-program .code-insertion.with-hint:not(.drop-target) {
+  min-height: 32px;
+  margin-bottom: 5px;
 }
 .editor-panel .code-input {
   min-width: 0;
