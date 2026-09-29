@@ -52,7 +52,7 @@ const kinds: FailureKind[] = [
   {
     match: /Finish brewing/,
     by: 'robot',
-    react: () => 'Wait, wait! The drink isn’t ready yet!',
+    react: () => '*beep beep* Wait! Drink not ready!',
     hint: 'Finish the recipe before adding sugar or sending the drink out.',
   },
   {
@@ -76,21 +76,21 @@ const kinds: FailureKind[] = [
   {
     match: /full|Deposit a drink before/,
     by: 'robot',
-    react: () => 'My hands are full. I cannot hold anything else.',
+    react: () => '*bzzt* Hands full. Cannot hold more.',
     hint: 'Put something down before picking up more.',
   },
   {
     match: /Instruction limit/,
     by: 'robot',
-    react: () => 'I have been going round and round for a very long time.',
+    react: () => '*whirrrrrr* Round and round. Very dizzy.',
     hint: 'Something loops forever. Make sure every loop waits for, or reaches, its next job.',
   },
 ];
 
 const stuck: Record<RobotRole, string> = {
-  query: 'Instruction unclear. I have stopped.',
-  prep: 'Oh no. I don’t know what to do next!',
-  floor: 'Uh-oh. I’m stuck!',
+  query: 'Instruction unclear. *bzzt* Stopped.',
+  prep: '*sad beep* Not know what next!',
+  floor: '*bonk* Stuck!',
 };
 
 /** A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. */
@@ -109,9 +109,9 @@ export function failureLines(result: RunResult, fallbackRole: RobotRole): Dialog
 }
 
 const cheers: Record<RobotRole, string[]> = {
-  query: ['Every order understood. I am… pleased?', 'Tickets filed. Zero errors. Is this what satisfaction is?'],
-  prep: ['Every cup perfect! Ninety-two degrees!', 'Did you smell that? That’s the smell of a perfect service!'],
-  floor: ['Every guest served, every table happy!', 'Not a single spill! Well. Not a big one.'],
+  query: ['*bip boop* Every order understood. Feeling: pleased?', '*bip* Zero errors. Is this… satisfaction?'],
+  prep: ['*BEEP!* Every cup perfect! Ninety-two degrees!', '*sniff sniff* Smell that? Perfect service!'],
+  floor: ['*ding ding!* Every guest served!', 'Zero spills! *bip* …Zero big spills.'],
 };
 
 /** The crew's reaction to a finished service, before the receipt. */

@@ -22,26 +22,23 @@
   animation: dialogue-fade 0.3s ease-out both;
 }
 .dialogue-stage {
+  --portrait-height: clamp(220px, 42dvh, 460px);
   position: relative;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: end;
   width: min(1040px, 100%);
   margin: 0 auto;
 }
-.dialogue-stage.narration {
-  grid-template-columns: minmax(0, 1fr);
-}
 
-/* Portraits stand behind the box's left edge, like a character stepping into frame. */
+/* The speaker stands behind the box's top-left corner, which hides the cut-off bottom of the bust. */
 .portrait {
-  position: relative;
+  position: absolute;
   z-index: 0;
+  bottom: calc(100% - var(--portrait-height) * 0.3);
+  left: clamp(0px, 2vw, 24px);
   display: grid;
   place-items: end center;
-  height: clamp(220px, 42dvh, 460px);
+  height: var(--portrait-height);
   aspect-ratio: 3 / 4;
-  margin-right: calc(clamp(220px, 42dvh, 460px) * -0.18);
+  pointer-events: none;
   animation: dialogue-step-in 0.28s cubic-bezier(0.3, 1.3, 0.5, 1) both;
 }
 .portrait img {
@@ -51,6 +48,8 @@
   object-position: bottom;
   filter: drop-shadow(0 12px 18px #1d151040);
   user-select: none;
+  /* Shoulders that run off the canvas fade out instead of ending in a hard vertical edge. */
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
 }
 .portrait-card {
   display: grid;
@@ -135,6 +134,19 @@
   font-style: italic;
   font-weight: 400;
 }
+/* Robots talk in short uppercase machine type; sound effects keep their own case. */
+.robot-voice .dialogue-text {
+  font-family: var(--dialogue-mono);
+  font-size: clamp(16px, 2.1dvh, 19px);
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+.dialogue-sfx {
+  color: var(--dialogue-muted);
+  font-style: italic;
+  text-transform: none;
+}
 .dialogue-controls {
   display: flex;
   align-items: center;
@@ -208,10 +220,7 @@
 .dialogue-aside .dialogue-stage {
   width: min(760px, 100%);
   cursor: pointer;
-}
-.dialogue-aside .portrait {
-  height: clamp(120px, 20dvh, 180px);
-  margin-right: calc(clamp(120px, 20dvh, 180px) * -0.16);
+  --portrait-height: clamp(130px, 22dvh, 200px);
 }
 .dialogue-aside .portrait-card {
   border-width: 3px;
@@ -228,6 +237,9 @@
 }
 .dialogue-aside .dialogue-text {
   font-size: 16px;
+}
+.dialogue-aside .robot-voice .dialogue-text {
+  font-size: 15px;
 }
 .dialogue-aside button.dialogue-next {
   height: 34px;

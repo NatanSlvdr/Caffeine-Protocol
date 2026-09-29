@@ -2,9 +2,17 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, FastForward } from 'lucide-react';
 import { cast } from '@/data/campaign/cast';
 import type { DialogueLine } from '@/domain';
-import { Portrait } from './Portrait';
+import { Portrait, portraitUrl } from './Portrait';
 
 const TYPE_MS = 22;
+
+/** `*whirr*` in a script is a sound effect, set apart from the spoken words. */
+function segments(text: string) {
+  return text
+    .split(/(\*[^*]+\*)/)
+    .filter(Boolean)
+    .map((part) => (/^\*[^*]+\*$/.test(part) ? { sfx: true, text: part.slice(1, -1) } : { sfx: false, text: part }));
+}
 
 export interface DialogueBoxProps {
   lines: DialogueLine[];
@@ -32,11 +40,20 @@ export function DialogueBox({
   const [typed, setTyped] = useState(0);
   const next = useRef<HTMLButtonElement>(null);
   const current = lines[Math.min(index, lines.length - 1)];
-  const text = current?.text ?? '';
+  const parts = segments(current?.text ?? '');
+  const text = parts.map((part) => part.text).join('');
   const shown = instant ? text.length : Math.min(typed, text.length);
   const typing = shown < text.length;
   const last = index >= lines.length - 1;
   const scene = variant === 'scene';
+
+  // Fetch every portrait up front so a new speaker or mood never pops in half-loaded.
+  useEffect(() => {
+    for (const { who, mood } of lines) {
+      const url = who && portraitUrl(who, mood);
+      if (url) new Image().src = url;
+    }
+  }, [lines]);
 
   useEffect(() => {
     if (!typing) return;
@@ -78,6 +95,7 @@ export function DialogueBox({
 
   if (!current) return null;
   const speaker = current.who ? cast[current.who] : undefined;
+  let left = shown;
   return (
     <div
       className={`dialogue dialogue-${variant}`}
@@ -87,7 +105,7 @@ export function DialogueBox({
       onClick={scene ? advance : undefined}
     >
       <div
-        className={`dialogue-stage${speaker ? '' : ' narration'}`}
+        className={`dialogue-stage${speaker ? (speaker.robot ? ' robot-voice' : '') : ' narration'}`}
         ref={box}
         style={speaker ? { ['--speaker' as string]: speaker.color } : undefined}
         onClick={scene ? undefined : advance}
@@ -98,8 +116,16 @@ export function DialogueBox({
           {speaker && <p className="dialogue-name">{speaker.name}</p>}
           <p className="dialogue-text" aria-live="polite">
             <span aria-hidden="true">
-              {text.slice(0, shown)}
-              <span className="dialogue-unread">{text.slice(shown)}</span>
+              {parts.map((part, i) => {
+                const typed = part.text.slice(0, Math.max(left, 0));
+                left -= part.text.length;
+                return (
+                  <span key={i} className={part.sfx ? 'dialogue-sfx' : undefined}>
+                    {typed}
+                    <span className="dialogue-unread">{part.text.slice(typed.length)}</span>
+                  </span>
+                );
+              })}
             </span>
             <span className="sr-only">{speaker ? `${speaker.name}: ${text}` : text}</span>
           </p>

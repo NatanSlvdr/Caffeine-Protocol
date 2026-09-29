@@ -83,8 +83,11 @@ cozy only: no villains, no stakes beyond a busy morning.
 
 ### Portraits
 
-Drop PNGs at `src/assets/portraits/<id>/<mood>.png`; they are picked up,
-bundled and precached automatically. Moods are `neutral`, `happy`, `worried`
+Put the full-size PNGs in `assets/portraits/<id>/<mood>.png`, then run
+`python3 tools/portraits.py` (needs Pillow). It lines each bust up with the
+bottom edge and writes a 768 × 1024 WebP to
+`src/assets/portraits/<id>/<mood>.webp`, which is picked up, bundled and
+precached automatically. Moods are `neutral`, `happy`, `worried`
 and `surprised`. Only `neutral` is needed; a missing mood falls back to it, and
 a character with no art shows a coloured initial card instead.
 

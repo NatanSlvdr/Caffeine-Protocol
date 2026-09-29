@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
+import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
 import { endingScene, shiftIntro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
@@ -66,9 +67,18 @@ describe('DialogueBox', () => {
     expect(onDone).toHaveBeenCalledOnce();
   });
 
-  it('shows a coloured initial card until a portrait exists', () => {
+  it('sets robots in machine type and sound effects apart', () => {
+    render(<DialogueBox lines={[line('query', '*bip boop* Menu doubled.')]} onDone={() => {}} instant />);
+    expect(document.querySelector('.dialogue-stage')?.classList.contains('robot-voice')).toBe(true);
+    expect(document.querySelector('.dialogue-sfx')?.textContent).toBe('bip boop');
+    expect(document.querySelector('.sr-only')?.textContent).toBe('Query: bip boop Menu doubled.');
+  });
+
+  it('gives every character a portrait, falling back to neutral for a missing mood', () => {
+    for (const id of CAST_IDS) expect(portraitUrl(id), id).toBeTruthy();
+    expect(portraitUrl('albert', 'worried')).toBe(portraitUrl('albert'));
     render(<DialogueBox lines={[line('albert', 'The usual.')]} onDone={() => {}} instant />);
-    expect(document.querySelector('.portrait-card')?.textContent).toBe('A');
+    expect(document.querySelector('.portrait img')?.getAttribute('src')).toBe(portraitUrl('albert'));
   });
 });
 
@@ -112,7 +122,7 @@ describe('reactions', () => {
     expect(robot.who).toBe('brew');
     const [floor] = failureLines(failure('Finish brewing before sugar.', { role: 'floor' }), 'query');
     expect(floor.who).toBe('porter');
-    expect(floor.text).toContain('isn’t ready');
+    expect(floor.text).toContain('not ready');
   });
 
   it('cheers a finished service before the receipt', () => {

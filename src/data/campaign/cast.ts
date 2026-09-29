@@ -2,10 +2,12 @@ import type { CastId } from '../../domain/dialogue';
 
 export interface CastMember {
   name: string;
-  /** Placeholder card colour until the character's portrait PNGs exist. */
+  /** Placeholder card colour until the character's portraits exist. */
   color: string;
   /** One line for whoever draws the portrait. */
   about: string;
+  /** Robots talk in short uppercase machine type. */
+  robot?: boolean;
 }
 
 export const cast: Record<CastId, CastMember> = {
@@ -14,13 +16,24 @@ export const cast: Record<CastId, CastMember> = {
     color: '#b96847',
     about: 'The new owner. A young man, warm, a little tired, always has a pun ready.',
   },
-  query: { name: 'Query', color: '#80a889', about: 'Counter robot. Literal-minded, precise, speaks in short reports.' },
+  query: {
+    name: 'Query',
+    color: '#80a889',
+    about: 'Counter robot. Literal-minded, precise, speaks in short reports.',
+    robot: true,
+  },
   brew: {
     name: 'Brew',
     color: '#7d9eae',
     about: 'Kitchen robot. Eager perfectionist, a bit squeaky, loves the grinder.',
+    robot: true,
   },
-  porter: { name: 'Porter', color: '#d4ac6b', about: 'Floor robot. Cheerful and chatty, occasionally clumsy.' },
+  porter: {
+    name: 'Porter',
+    color: '#d4ac6b',
+    about: 'Floor robot. Cheerful and chatty, occasionally clumsy.',
+    robot: true,
+  },
   moka: {
     name: 'Moka',
     color: '#71452f',

@@ -1,14 +1,14 @@
 import { cast } from '@/data/campaign/cast';
 import type { CastId, Mood } from '@/domain';
 
-/** Drop a PNG at src/assets/portraits/<character>/<mood>.png and it is picked up, bundled and precached. */
-const files = import.meta.glob<string>('../../assets/portraits/*/*.png', {
+/** `python3 tools/portraits.py` writes src/assets/portraits/<character>/<mood>.webp; each one is picked up, bundled and precached. */
+const files = import.meta.glob<string>('../../assets/portraits/*/*.webp', {
   eager: true,
   query: '?url',
   import: 'default',
 });
 const portraits: Record<string, string> = Object.fromEntries(
-  Object.entries(files).map(([path, url]) => [path.split('/portraits/')[1].replace(/\.png$/, ''), url]),
+  Object.entries(files).map(([path, url]) => [path.split('/portraits/')[1].replace(/\.webp$/, ''), url]),
 );
 
 /** A missing mood falls back to the character's neutral portrait. */

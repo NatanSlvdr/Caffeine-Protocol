@@ -2,7 +2,8 @@
 
 Prompts for the 21 dialogue portraits: a `neutral` for each of the 11
 characters, plus the 10 other moods the scripts actually use. Save each image
-as `src/assets/portraits/<id>/<mood>.png`, for example `src/assets/portraits/niko/happy.png`.
+as `assets/portraits/<id>/<mood>.png`, for example `assets/portraits/niko/happy.png`,
+then run `python3 tools/portraits.py` to make the WebPs the game loads.
 
 ## Workflow for a consistent set
 
@@ -216,7 +217,7 @@ Character-specific touches (only the moods in the checklist):
 ## File checklist
 
 ```
-src/assets/portraits/
+assets/portraits/
   niko/    neutral.png happy.png worried.png surprised.png
   query/   neutral.png
   brew/    neutral.png
