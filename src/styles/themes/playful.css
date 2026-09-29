@@ -1336,8 +1336,8 @@ input[type='checkbox']:checked {
   cursor: grabbing;
 }
 /* Blocks shift under the pointer while something is carried, so the grabbing hand can't depend on what it hovers. */
-body:has(.visual-program.is-dragging),
-body:has(.visual-program.is-dragging) * {
+.block-dragging,
+.block-dragging * {
   cursor: grabbing !important;
 }
 .editor-panel .code-row .block[aria-disabled='true'] {
@@ -1508,6 +1508,8 @@ body:has(.visual-program.is-dragging) * {
   padding: 0;
   margin: 0;
   border: 0;
+  /* Collapsed to nothing, the hint's glow would otherwise linger as a dot above the preview. */
+  box-shadow: none;
 }
 .editor-panel .code-insertion.drop-target:not(.else-option):after {
   display: none;

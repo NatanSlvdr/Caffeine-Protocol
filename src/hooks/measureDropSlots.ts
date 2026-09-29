@@ -10,7 +10,9 @@ export function measureDropSlots(containers: Iterable<DroppableContainer>, root:
     const node = container.node.current,
       data = container.data.current;
     if (!node || typeof data?.at !== 'number') return [];
-    const rect = node.getBoundingClientRect();
+    // An Else slot is aimed at through its empty branch, where the block lands, not through its Else row;
+    // otherwise the end of the If body, just above, wins while the block hovers the Else.
+    const rect = ((data.alternative && node.querySelector('.scope-body > *')) || node).getBoundingClientRect();
     return [
       {
         id: String(container.id),

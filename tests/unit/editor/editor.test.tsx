@@ -335,6 +335,9 @@ describe('compact visual code', () => {
         });
       const slot = this.dataset.dropSlot;
       const line = Number(slot?.split(':')[1] ?? this.dataset.line ?? 0);
+      // The Else slot is measured by its empty branch, indented under the Else row.
+      const elseBranch = this.parentElement?.closest('[data-drop-slot="else:2"] .scope-body');
+      if (elseBranch) return DOMRect.fromRect({ x: 88, y: 300, width: 200, height: 38 });
       return DOMRect.fromRect({
         x: 48,
         y: slot === 'else:2' ? 270 : 100 + line * 80,
@@ -352,11 +355,11 @@ describe('compact visual code', () => {
     render(<Harness initial={initial} />);
     const tile = screen.getByLabelText('Drag block 3 (if coffee in orders) and its group');
     fireEvent.pointerDown(tile, { button: 0, buttons: 1, clientX: 60, clientY: 355 });
-    // The block's top edge (340 - 70) rests on the Else slot.
+    // The block's top-left corner rests on the Else branch (88, 300).
     fireEvent.pointerMove(document, { clientX: 60, clientY: 290 });
     // Else slots open a frame after the pickup.
     await waitFor(() => expect(document.querySelector('[data-drop-slot="else:2"]')).toBeTruthy());
-    fireEvent.pointerMove(document, { clientX: 60, clientY: 285 });
+    fireEvent.pointerMove(document, { clientX: 100, clientY: 315 });
     await waitFor(() =>
       expect(document.querySelector('[data-drop-slot="else:2"] .drop-projection .code-scope .scope-body')).toBeTruthy(),
     );

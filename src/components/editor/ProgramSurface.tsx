@@ -1,9 +1,15 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { useDndContext } from '@dnd-kit/core';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 /** Hide the original group only while a landing slot displays its full-size preview. */
-export function ProgramSurface({ root, children }: { root: React.RefObject<HTMLDivElement | null>; children: React.ReactNode }) {
+export function ProgramSurface({
+  root,
+  children,
+}: {
+  root: React.RefObject<HTMLDivElement | null>;
+  children: React.ReactNode;
+}) {
   const { active, over } = useDndContext();
   const previous = useRef(new Map<HTMLElement, { left: number; top: number }>());
   const wasDragging = useRef(false);
@@ -18,7 +24,10 @@ export function ProgramSurface({ root, children }: { root: React.RefObject<HTMLD
       if (row.closest('.drop-projection,.drag-source')) continue;
       const old = previous.current.get(row);
       const transform = getComputedStyle(row).transform;
-      const matrix = transform.match(/^matrix\(([^)]+)\)$/)?.[1].split(',').map(Number);
+      const matrix = transform
+        .match(/^matrix\(([^)]+)\)$/)?.[1]
+        .split(',')
+        .map(Number);
       const rect = row.getBoundingClientRect();
       const offsetX = matrix?.[4] ?? 0,
         offsetY = matrix?.[5] ?? 0;
@@ -40,8 +49,16 @@ export function ProgramSurface({ root, children }: { root: React.RefObject<HTMLD
     previous.current = next;
     wasDragging.current = !!active;
   });
+  // One class on the page keeps the grabbing hand while blocks shift under the pointer.
+  useEffect(() => {
+    document.documentElement.classList.toggle('block-dragging', !!active);
+    return () => document.documentElement.classList.remove('block-dragging');
+  }, [!!active]);
   return (
-    <div className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')} ref={root}>
+    <div
+      className={'block-list visual-program' + (active ? ' is-dragging' : '') + (over ? ' has-drop-preview' : '')}
+      ref={root}
+    >
       {children}
     </div>
   );
