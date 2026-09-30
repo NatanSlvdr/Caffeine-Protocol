@@ -222,7 +222,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     title: 'Espresso Yourself',
     story: 'The busiest day yet. Niko sits down with a coffee and trusts the whole team with the room.',
     objective:
-      'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, deliveries, and clearing. Every guest must be served and every table cleared.',
+      'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, drinks to go, only four cups, customers in a rush, and closing time. Every guest must be served, every table cleared, and every robot stopped.',
     hint: 'Everything, all at once.',
     lessonNote:
       'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
