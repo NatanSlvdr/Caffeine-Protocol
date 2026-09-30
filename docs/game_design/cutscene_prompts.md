@@ -215,7 +215,7 @@ Aunt Lou leaves Niko her café, and an old friend comes with it.
 > curiously. The upstairs flat's door is visible beside the café entrance.
 > Cheerful and bright.
 
-## 2 · The Scrapyard (`the-scrapyard`, before shift 3)
+## 2 · The Scrapyard (`the-scrapyard`, before shift 2)
 
 Too many tickets for one pair of hands. Somewhere in the scrapyard, help is
 waiting.
@@ -256,7 +256,7 @@ waiting.
 > two-shot, with Query's head left of centre in the upper half and Niko's face
 > right. A tender, magical moment.
 
-## 3 · A Second Pair of Hands (`a-second-pair-of-hands`, before shift 15)
+## 3 · A Second Pair of Hands (`a-second-pair-of-hands`, before shift 9)
 
 Query earns its badge, and the kitchen drowns in tickets.
 
@@ -294,7 +294,7 @@ Query earns its badge, and the kitchen drowns in tickets.
 > with her arms crossed, suspicious. Two of the three charging docks now glow
 > mint. Medium-wide shot.
 
-## 4 · Ninety-Two Degrees (`ninety-two-degrees`, before shift 22)
+## 4 · Ninety-Two Degrees (`ninety-two-degrees`, before shift 13)
 
 Moka's last morning in the kitchen.
 
@@ -330,7 +330,7 @@ Moka's last morning in the kitchen.
 > inside. Wide shot, with Moka left of centre in the upper half and the café
 > window on the right. Warm, content, a little funny.
 
-## 5 · The Floor Robot (`the-floor-robot`, before shift 23)
+## 5 · The Floor Robot (`the-floor-robot`, before shift 14)
 
 Pip can't be everywhere, and school starts soon.
 
@@ -365,7 +365,7 @@ Pip can't be everywhere, and school starts soon.
 > Pip watch from the workbench, delighted. Wide shot, with the three robots in
 > a row in the upper two thirds. Warm and triumphant.
 
-## 6 · Back to School (`back-to-school`, before shift 31)
+## 6 · Back to School (`back-to-school`, before shift 17)
 
 Pip's first day of school, and Niko's first day as just the owner.
 

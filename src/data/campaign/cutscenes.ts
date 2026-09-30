@@ -1,6 +1,7 @@
 import { line } from '../../domain/dialogue';
 import type { DialogueLine, Speaker } from '../../domain/dialogue';
 import type { ProgressSave } from '../../domain/types';
+import { UNLOCKS } from '../../domain/unlocks';
 
 /** One still of a cutscene and the lines spoken over it. */
 export interface CutscenePanel {
@@ -69,7 +70,7 @@ export const cutscenes: Cutscene[] = [
     id: 'the-scrapyard',
     title: 'The Scrapyard',
     logline: 'Too many tickets for one pair of hands. Somewhere in the scrapyard, help is waiting.',
-    before: 1,
+    before: UNLOCKS.query - 1,
     panels: [
       panel('After the rush. Niko slumps on the counter under a mountain of handwritten tickets while Moka sweeps.', [
         ['niko:worried', 'Eighty-three tickets. My hand is cramping in shapes I didn’t know existed.'],
@@ -100,7 +101,7 @@ export const cutscenes: Cutscene[] = [
     id: 'a-second-pair-of-hands',
     title: 'A Second Pair of Hands',
     logline: 'Query earns its badge, and the kitchen drowns in tickets.',
-    before: 8,
+    before: UNLOCKS.prep - 1,
     panels: [
       panel('An “Employee of the Month” photo on the wall. Query wears its badge; Mr. Albert applauds.', [
         ['niko:happy', 'Employee of the Month. First month. Only employee. Still counts.'],
@@ -151,7 +152,7 @@ export const cutscenes: Cutscene[] = [
     id: 'the-floor-robot',
     title: 'The Floor Robot',
     logline: 'Pip can’t be everywhere, and school starts soon.',
-    before: 13,
+    before: UNLOCKS.floor - 1,
     panels: [
       panel('A packed café floor. Pip runs with too many trays while Rosa’s group waves.', [
         ['pip', 'Table four! Table two! Table… which one was four?!'],
@@ -174,7 +175,7 @@ export const cutscenes: Cutscene[] = [
     id: 'back-to-school',
     title: 'Back to School',
     logline: 'Pip’s first day of school, and Niko’s first day as just the owner.',
-    before: 16,
+    before: UNLOCKS.toGo - 1,
     panels: [
       panel('Morning. Pip stands at the door with a school bag; the three robots line up to say goodbye.', [
         ['pip', 'First day of school. Don’t let anyone touch my tray.'],

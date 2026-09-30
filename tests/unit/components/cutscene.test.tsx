@@ -24,6 +24,13 @@ describe('cutscene scripts', () => {
     expect(new Set(cutscenes.map((scene) => scene.id)).size).toBe(cutscenes.length);
   });
 
+  it('introduces each robot, and the whole crew, on the shift where they arrive', () => {
+    expect(sceneBefore(UNLOCKS.query - 1)?.id).toBe('the-scrapyard');
+    expect(sceneBefore(UNLOCKS.prep - 1)?.id).toBe('a-second-pair-of-hands');
+    expect(sceneBefore(UNLOCKS.floor - 1)?.id).toBe('the-floor-robot');
+    expect(sceneBefore(UNLOCKS.toGo - 1)?.id).toBe('back-to-school');
+  });
+
   it('gives every still art notes and lines spoken only by known cast', () => {
     for (const scene of cutscenes) {
       expect(scene.id).toMatch(/^[a-z0-9-]+$/);
