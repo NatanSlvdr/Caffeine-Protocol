@@ -1,6 +1,6 @@
 # ADR 001: 32 shifts from split campaign sources
 
-- Status: accepted
+- Status: superseded in part by [005](005-21-shifts.md): the split sources stay, the 32-shift order doesn't
 - Date: 2026-09-18
 
 ## Context

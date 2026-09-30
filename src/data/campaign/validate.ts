@@ -2,7 +2,7 @@
 //
 // Both the runtime loaders (campaign/load, extension) and build tooling
 // (tools/validate-data.mjs) validate through this module, so Act I shifts
-// (L01-L14) and generated extension shifts (L15-L32) satisfy the same rules.
+// (L01-L08) and generated extension shifts (L09-L21) satisfy the same rules.
 //
 // NOTE: relative imports below use explicit `.ts` extensions so plain Node
 // (which type-strips `.ts` files for tools/validate-data.mjs) can load this
@@ -13,7 +13,7 @@ import { LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
 import { ROBOT_UNLOCK_LEVELS } from '../../domain/robots.ts';
 import type { Customer, LevelDefinition, ServiceConfig, ValidationSeed } from '../../domain/types.ts';
-import { extensionShiftConfig } from './extension-config.ts';
+import { extensionShiftConfig, shiftId } from './extension-config.ts';
 
 /** Number of playable tables backing `active_tables` bounds. */
 export const MAX_TABLES = TABLE_LAYOUT.length;
@@ -317,7 +317,7 @@ const ExtensionSeedSchema = v.strictObject({
 
 export type ExtensionSeedLike = v.InferOutput<typeof ExtensionSeedSchema>;
 
-/** Structural validation for one extension seed row (L15+). */
+/** Structural validation for one extension seed row (L09+). */
 export function validateExtensionSeedData(data: unknown): string[] {
   const parsed = v.safeParse(ExtensionSeedSchema, data);
   if (!parsed.success) return formatIssues(parsed.issues, 'extensionSeed');
@@ -439,7 +439,7 @@ export interface BuiltExtensionInputs {
 export function collectBuiltExtensionErrors(inputs: BuiltExtensionInputs): string[] {
   const errors: string[] = [];
   const { levelNumber, level, lesson, seed } = inputs;
-  const expectedId = `L${levelNumber}`;
+  const expectedId = shiftId(levelNumber);
   if (seed.id !== expectedId) errors.push(`${seed.id}: extension seed id must equal ${expectedId}`);
   if (level.id !== expectedId) errors.push(`extension level ${level.id} must equal ${expectedId}`);
   const suffix = level.title.replace(/^Level \d+: /, '');

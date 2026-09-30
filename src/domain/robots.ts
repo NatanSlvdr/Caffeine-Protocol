@@ -1,4 +1,5 @@
 import type { RobotRole } from './types';
+import { UNLOCKS } from './unlocks.ts';
 
 /** Every programmable robot, in unlock order. Key registries by id, never by index. */
 export const ROBOT_ROLES: readonly RobotRole[] = ['query', 'prep', 'floor'];
@@ -14,7 +15,11 @@ export const ROBOT_AREA_LABELS: Record<RobotRole, string> = {
 };
 
 /** 1-based campaign level at which each robot becomes programmable. */
-export const ROBOT_UNLOCK_LEVELS: Record<RobotRole, number> = { query: 3, prep: 15, floor: 23 };
+export const ROBOT_UNLOCK_LEVELS: Record<RobotRole, number> = {
+  query: UNLOCKS.query,
+  prep: UNLOCKS.prep,
+  floor: UNLOCKS.floor,
+};
 
 export const robotUnlocked = (role: RobotRole, level: number): boolean => level >= ROBOT_UNLOCK_LEVELS[role];
 

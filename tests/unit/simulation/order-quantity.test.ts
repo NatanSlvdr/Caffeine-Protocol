@@ -4,17 +4,21 @@ import { compileProgram, executeCustomerEvent, migrateQuerySource } from '../../
 import { runLevel, validate } from '../../../src/domain/simulation';
 import { createLiveRun } from '../../../src/domain/liveSimulation';
 import { sampleReplay } from '../../../src/domain/replay';
+import { UNLOCKS } from '../../../src/domain/unlocks';
+
+/** The For item in order shift, zero-based. */
+const FOR_EACH = UNLOCKS.forEach - 1;
 
 const customer = {
-  ...levels[8].seeds[0].customers[0],
+  ...levels[FOR_EACH].seeds[0].customers[0],
   heard_orders: [{ tokens: ['coffee'] }, { tokens: ['coffee'] }],
   expected: { tickets: [{ item: 'coffee' as const }, { item: 'coffee' as const }] },
 };
-const level = { ...levels[8], seeds: [{ id: 'quantity', customers: [customer] }] };
+const level = { ...levels[FOR_EACH], seeds: [{ id: 'quantity', customers: [customer] }] };
 const source = 'LISTEN\nTAKE UP\nITEM 2 coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
 describe('quantity on one paper', () => {
   it('validates two cups on one ticket and charges for both', () => {
-    const result = executeCustomerEvent(compileProgram(source, 9), customer, 'quantity');
+    const result = executeCustomerEvent(compileProgram(source, UNLOCKS.forEach), customer, 'quantity');
     expect(validate(customer, result)).toBe('');
     expect(result.tickets).toHaveLength(1);
     expect(result.tickets[0].quantity).toBe(2);
@@ -28,7 +32,7 @@ describe('quantity on one paper', () => {
     ).toContain('ticket count');
   });
   it.each(['offline', 'live'])('prepares and serves every cup in %s service', (mode) => {
-    let result = runLevel(level, compileProgram(source, 9));
+    let result = runLevel(level, compileProgram(source, UNLOCKS.forEach));
     if (mode === 'live') {
       const run = createLiveRun(level, { query: source, prep: '', floor: '' });
       let frame = run.snapshot();
@@ -50,11 +54,13 @@ describe('quantity on one paper', () => {
 });
 describe('condition source scope', () => {
   it('allows speech everywhere and item only inside FOR', () => {
-    expect(compileProgram('LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND', 4).compile_error).toBe('');
-    expect(compileProgram('LISTEN\nIF coffee IN item\nEND', 14).compile_error).toContain(
+    expect(compileProgram('LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND', UNLOCKS.choices).compile_error).toBe('');
+    expect(compileProgram('LISTEN\nIF coffee IN item\nEND', UNLOCKS.help).compile_error).toContain(
       'only inside For item in order',
     );
-    expect(compileProgram('LISTEN\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND', 9).compile_error).toBe('');
+    expect(
+      compileProgram('LISTEN\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND', UNLOCKS.forEach).compile_error,
+    ).toBe('');
   });
   it('migrates implicit item conditions without changing scoped item tests', () => {
     const old = 'LISTEN\nIF ambiguous IN item\nHELP\nEND\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND';

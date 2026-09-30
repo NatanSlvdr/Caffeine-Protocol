@@ -16,7 +16,7 @@ import saveV2 from '../../fixtures/save-v2.json';
 describe('historical save fixtures', () => {
   it('uses a stable storage namespace, not a schema version', () => {
     // SAVE_KEY suffix is the localStorage namespace. Schema version lives
-    // inside the JSON payload (version 1/2/3) and migrates via parseSave.
+    // inside the JSON payload (version 1/2/3/4) and migrates via parseSave.
     // Renaming the key would orphan existing saves; bumping the schema must
     // not rename it.
     expect(SAVE_KEY).toBe('caffeine-protocol.v1');
@@ -35,10 +35,11 @@ describe('historical save fixtures', () => {
     expect(text).toContain('SUGAR true');
 
     const migrated = parseSave(text, lessons);
-    expect(migrated.version).toBe(3);
-    // Progress preserved (mid-Act I, not the completed-Act I bump).
-    expect(migrated.selected).toBe(8);
-    expect(migrated.unlocked).toBe(9);
+    expect(migrated.version).toBe(4);
+    // Progress preserved (mid-Act I, not the completed-Act I bump), moved onto the 21-shift
+    // campaign: the old tenth shift is the new seventh, and the eighth-shift selection the new sixth.
+    expect(migrated.selected).toBe(5);
+    expect(migrated.unlocked).toBe(6);
     expect(migrated.complete).toBe(false);
     // Settings preserved; pre-display-option saves default pixel_art on.
     expect(migrated.settings).toEqual({
@@ -57,8 +58,9 @@ describe('historical save fixtures', () => {
     expect(migrated.story).toEqual({});
     expect(migrated.robotSolutions).toEqual({});
     // Every surviving draft resets to its lesson starter, not a
-    // char-for-char migration of the old syntax.
-    for (const shift of ['5', '8', '9']) {
+    // char-for-char migration of the old syntax. The old sixth shift was merged away.
+    expect(Object.keys(migrated.robotDrafts)).toEqual(['5', '6']);
+    for (const shift of ['5', '6']) {
       expect(migrated.robotDrafts[shift].query).toBe(lessons[Number(shift)].starter);
       expect(migrated.robotDrafts[shift].prep).toBe('');
       expect(migrated.robotDrafts[shift].floor).toBe('');
@@ -77,10 +79,10 @@ describe('historical save fixtures', () => {
     expect(text).toContain('BATTERY');
 
     const migrated = parseSave(text, lessons);
-    expect(migrated.version).toBe(3);
-    // Progress preserved in later acts.
-    expect(migrated.selected).toBe(23);
-    expect(migrated.unlocked).toBe(23);
+    expect(migrated.version).toBe(4);
+    // Progress preserved in later acts: the old 24th shift is now Porter's first.
+    expect(migrated.selected).toBe(13);
+    expect(migrated.unlocked).toBe(13);
     expect(migrated.complete).toBe(false);
     // Settings preserved exactly (v2 already had pixel_art).
     expect(migrated.settings).toEqual({
@@ -94,30 +96,28 @@ describe('historical save fixtures', () => {
     // Flat Query maps retire even when they contain retired payment lines.
     expect(migrated.drafts).toEqual({});
     expect(migrated.solutions).toEqual({});
-    // Only later-act scores/story survive the v3 token-puzzle cut.
-    expect(migrated.stars).toEqual({ 22: 2, 23: 2 });
-    expect(migrated.story).toEqual({ 23: true });
+    // Only later-act scores survive the token-puzzle cut, and only for shifts that still play
+    // the same way; the old story beats were never scenes.
+    expect(migrated.stars).toEqual({ 13: 2 });
+    expect(migrated.story).toEqual({});
     // Act I robot solution retires; later Query programs reset to starters.
-    expect(migrated.robotSolutions).not.toHaveProperty('13');
+    expect(Object.keys(migrated.robotDrafts)).toEqual(['13']);
+    expect(Object.keys(migrated.robotSolutions)).toEqual(['13']);
     expect(migrated.robotDrafts['13'].query).toBe(lessons[13].starter);
-    expect(migrated.robotDrafts['23'].query).toBe(lessons[23].starter);
-    expect(migrated.robotSolutions['22'].query).toBe(lessons[22].starter);
-    expect(migrated.robotSolutions['23'].query).toBe(lessons[23].starter);
-    expect(migrated.robotDrafts['23'].query).not.toContain('CHARGE ORDER');
-    expect(migrated.robotDrafts['23'].query).not.toContain('TICKET');
+    expect(migrated.robotSolutions['13'].query).toBe(lessons[13].starter);
+    expect(migrated.robotDrafts['13'].query).not.toContain('CHARGE ORDER');
+    expect(migrated.robotDrafts['13'].query).not.toContain('TICKET');
     // Brew routines keep their shape; retired station verbs become Take, Use and Deposit.
     const brew =
       'LISTEN\nCALL recipe\nREPEAT\nFUNCTION recipe\nTAKE UP\nUSE UP\nTAKE UP\nUSE UP\nTAKE UP\nDEPOSIT UP\nRETURN\nEND';
-    expect(migrated.robotDrafts['23'].prep).toBe(brew);
-    expect(migrated.robotSolutions['22'].prep).toBe(brew);
-    expect(migrated.robotSolutions['23'].prep).toBe(brew);
+    expect(migrated.robotDrafts['13'].prep).toBe(brew);
+    expect(migrated.robotSolutions['13'].prep).toBe(brew);
     // Porter routines preserved; retired charging branches keep only the
     // non-charging path with comments intact.
-    expect(migrated.robotDrafts['23'].floor).toBe('# my route\nLISTEN\nTAKE DOWN\nTAKE DOWN\nDEPOSIT UP');
-    expect(migrated.robotDrafts['23'].floor).not.toContain('BATTERY');
-    expect(migrated.robotDrafts['23'].floor).not.toContain('CHARGE');
-    expect(migrated.robotSolutions['23'].floor).toBe('# porter run\nLISTEN\nTAKE DOWN\nDEPOSIT UP');
-    expect(migrated.robotSolutions['22'].floor).toBe('');
+    expect(migrated.robotDrafts['13'].floor).toBe('# my route\nLISTEN\nTAKE DOWN\nTAKE DOWN\nDEPOSIT UP');
+    expect(migrated.robotDrafts['13'].floor).not.toContain('BATTERY');
+    expect(migrated.robotDrafts['13'].floor).not.toContain('CHARGE');
+    expect(migrated.robotSolutions['13'].floor).toBe('# porter run\nLISTEN\nTAKE DOWN\nDEPOSIT UP');
     // Migrated output round-trips as current version.
     expect(parseSave(JSON.stringify(migrated), lessons)).toEqual(migrated);
   });

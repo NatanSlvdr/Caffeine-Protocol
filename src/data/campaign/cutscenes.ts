@@ -69,7 +69,7 @@ export const cutscenes: Cutscene[] = [
     id: 'the-scrapyard',
     title: 'The Scrapyard',
     logline: 'Too many tickets for one pair of hands. Somewhere in the scrapyard, help is waiting.',
-    before: 2,
+    before: 1,
     panels: [
       panel('After the rush. Niko slumps on the counter under a mountain of handwritten tickets while Moka sweeps.', [
         ['niko:worried', 'Eighty-three tickets. My hand is cramping in shapes I didn’t know existed.'],
@@ -100,7 +100,7 @@ export const cutscenes: Cutscene[] = [
     id: 'a-second-pair-of-hands',
     title: 'A Second Pair of Hands',
     logline: 'Query earns its badge, and the kitchen drowns in tickets.',
-    before: 14,
+    before: 8,
     panels: [
       panel('An “Employee of the Month” photo on the wall. Query wears its badge; Mr. Albert applauds.', [
         ['niko:happy', 'Employee of the Month. First month. Only employee. Still counts.'],
@@ -128,7 +128,7 @@ export const cutscenes: Cutscene[] = [
     id: 'ninety-two-degrees',
     title: 'Ninety-Two Degrees',
     logline: 'Moka’s last morning in the kitchen.',
-    before: 21,
+    before: 12,
     panels: [
       panel('Dawn. Moka, alone in the kitchen, polishes the espresso machine one last time.', [
         ['', 'Early morning. Moka came in before everyone, to polish the machine one last time.'],
@@ -151,7 +151,7 @@ export const cutscenes: Cutscene[] = [
     id: 'the-floor-robot',
     title: 'The Floor Robot',
     logline: 'Pip can’t be everywhere, and school starts soon.',
-    before: 22,
+    before: 13,
     panels: [
       panel('A packed café floor. Pip runs with too many trays while Rosa’s group waves.', [
         ['pip', 'Table four! Table two! Table… which one was four?!'],
@@ -174,7 +174,7 @@ export const cutscenes: Cutscene[] = [
     id: 'back-to-school',
     title: 'Back to School',
     logline: 'Pip’s first day of school, and Niko’s first day as just the owner.',
-    before: 30,
+    before: 16,
     panels: [
       panel('Morning. Pip stands at the door with a school bag; the three robots line up to say goodbye.', [
         ['pip', 'First day of school. Don’t let anyone touch my tray.'],
@@ -194,7 +194,7 @@ export const cutscenes: Cutscene[] = [
     id: 'closing-time',
     title: 'Closing Time',
     logline: 'The café runs itself. Everyone comes by at the end of the day.',
-    before: 32,
+    before: 21,
     panels: [
       panel('Sunset. A full café: the regulars at their tables, the three robots at work.', [
         ['', 'Closing time. The last cup is on its way to the sink.'],

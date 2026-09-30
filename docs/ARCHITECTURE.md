@@ -36,6 +36,7 @@ Enforced by `eslint.config.mjs` (`boundaries/dependencies`, `import/no-cycle`,
 | Blocks | `domain/blockRegistry.ts` (+ `blockFields.ts`) |
 | Drink recipes | `domain/drinks.ts` (`RECIPE_RULES`), prices in `domain/pricing.ts` |
 | Robot meta | `domain/robots.ts` (names, areas, unlocks, `robotForLevel`, `splitByUnlock`) |
+| Unlock shifts | `domain/unlocks.ts` (`UNLOCKS`: the shift where each robot and each part of the language arrives) |
 | Conditions | `program/conditions.ts` (query) vs `robotConditions.ts` (worker) |
 | Tickets | `domain/tickets.ts` (units, paper, sugar) |
 | Scoring | `domain/scoring.ts` (blocks, stars, satisfaction, tables) |
@@ -64,13 +65,19 @@ No `as` casts in loaders — campaign files are `safeParse`d with valibot.
 ## Saves
 
 `features/campaign/save/`: `settings` (key, defaults, `newSave`), `validate`
-(structural guards), `migration` (`parseSave`, legacy v1/v2 migration),
+(structural guards), `migration` (`parseSave`, legacy v1–v3 migration),
 `progression` (drafts, completion), `io` (storage). Versions:
 
 - **v1** — Act I flat drafts/solutions. Migrated: Query programs reset to
   starters, unlocks preserved past shift 14.
 - **v2** — per-robot drafts. Migrated like v1 for Query; kitchen/floor kept.
-- **v3** — current. `robotDrafts`/`robotSolutions` per shift and role.
+- **v3** — `robotDrafts`/`robotSolutions` per shift and role, indexed against
+  the 32-shift campaign.
+- **v4** — current. Same shape as v3, indexed against the 21-shift campaign.
+  v1–v3 saves move over through `LEGACY_COUNTERPARTS`: a new shift keeps the
+  stars and programs of the old shift that played the same way, and play
+  resumes at the first new shift whose counterpart wasn't served. Act IV has no
+  counterparts, so a finished 32-shift save resumes at its first shift.
 
 `complete` is a sticky historical flag (the then-final shift was finished), never
 a length check: imports require earned stars for the unlocked shift instead of
@@ -79,7 +86,7 @@ unlocks exactly the next appended shift on import.
 
 `SAVE_KEY` (`caffeine-protocol.v1`) is a stable storage namespace, not a schema
 version: the `v1` suffix names the localStorage slot, while the schema version
-lives inside the payload (`version: 1 | 2 | 3`). Schema bumps migrate via
+lives inside the payload (`version: 1 | 2 | 3 | 4`). Schema bumps migrate via
 `parseSave` and must never rename the key, or existing saves become orphans.
 Historical `tests/fixtures/save-v1.json` + `save-v2.json` (pinned by
 `save-fixtures.test.ts`) prove compat with real serialized history.
@@ -89,12 +96,13 @@ so validation stays testable without the campaign bundle.
 
 ## Where to add things
 
-- **Shift L33**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one
+- **Shift L22**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one
   `ShiftNarrative` row in `data/campaign/narrative.ts`. No code edits.
   Regenerate docs with `npm run docs:gen`, then check `npm run validate:data`.
 - **Extension constraints**: shift mechanics live only in
   `data/campaign/extension-config.json` (stages merged by `extensionShiftConfig`).
-  No `level >= N` thresholds or `level === <final>` gates anywhere else; future
+  Language and robot unlocks read their shift from `domain/unlocks.ts`; there
+  are no other `level >= N` thresholds or `level === <final>` gates, and future
   shifts inherit the latest stage. `tools/docs-gen.mjs` reads the same JSON for
   table counts and never asserts a seed count; `tools/validate-data.mjs`
   requires every extension seed to have a narrative row. Locked-robot stand-ins

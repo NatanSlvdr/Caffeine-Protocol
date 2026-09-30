@@ -1,10 +1,11 @@
 import type { ProgressSave, RobotPrograms } from '@/domain/types';
+import { UNLOCKS } from '@/domain/unlocks';
 import { cleanFloor, cleanQuery } from './migration';
 import type { LessonCatalog } from './migration';
 
 export function incomingProgram(save: ProgressSave, index: number, lessons: LessonCatalog): string {
   return cleanQuery(
-    index <= 2
+    index < UNLOCKS.query
       ? lessons[index].starter
       : (save.solutions[index - 1] ?? save.drafts[index - 1] ?? lessons[index].starter),
   );
@@ -32,8 +33,8 @@ export function incomingRobotPrograms(save: ProgressSave, index: number, lessons
   const previous = save.robotSolutions[index - 1] ?? save.robotDrafts[index - 1];
   return {
     query: cleanQuery(save.drafts[index] ?? previous?.query ?? incomingProgram(save, index, lessons)),
-    prep: index === 14 ? defaults.prep : (previous?.prep ?? defaults.prep),
-    floor: cleanFloor(index === 22 ? defaults.floor : (previous?.floor ?? defaults.floor)),
+    prep: index === UNLOCKS.prep - 1 ? defaults.prep : (previous?.prep ?? defaults.prep),
+    floor: cleanFloor(index === UNLOCKS.floor - 1 ? defaults.floor : (previous?.floor ?? defaults.floor)),
   };
 }
 export function saveRobotDraft(save: ProgressSave, index: number, programs: RobotPrograms): ProgressSave {

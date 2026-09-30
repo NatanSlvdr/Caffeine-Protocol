@@ -8,14 +8,14 @@ import { STREET_APPROACH_SECONDS, customerApproach, DRINK_SECONDS, SIT_SECONDS }
 
 describe('live service', () => {
   it('lines up simultaneous arrivals and reveals each order only when intake starts', () => {
-    const level = structuredClone(levels[4]);
+    const level = structuredClone(levels[3]);
     const customer = level.seeds[0].customers[0];
     level.seeds[0].customers = Array.from({ length: 3 }, (_, index) => ({
       ...structuredClone(customer),
       customer_id: `queue-${index}`,
       arrival: 0,
     }));
-    const run = createLiveRun(level, programs(4));
+    const run = createLiveRun(level, programs(3));
     let frame = run.advance(STREET_APPROACH_SECONDS);
     const waiting = sampleReplay(frame.result, frame.time).customers;
     expect(waiting.map((customer) => customer.position)).toEqual([STATIONS.orders.floor, [-8, 5], [-9, 5]]);
@@ -30,11 +30,11 @@ describe('live service', () => {
   });
 
   it('does no execution on creation and advances only as time passes', () => {
-    const run = createLiveRun(levels[2], programs(2));
+    const run = createLiveRun(levels[1], programs(1));
     expect(run.snapshot().result.execution).toEqual([]);
     expect(run.snapshot().result.tickets).toEqual([]);
     expect(run.snapshot().result.stars).toBe(0);
-    const first = run.advance(STREET_APPROACH_SECONDS + levels[2].seeds[0].customers[0].arrival);
+    const first = run.advance(STREET_APPROACH_SECONDS + levels[1].seeds[0].customers[0].arrival);
     expect(first.done).toBe(false);
     expect(first.result.events[0].trace.map((t) => t.command)).toEqual(['LISTEN']);
     expect(first.result.tickets).toEqual([]);
@@ -42,7 +42,7 @@ describe('live service', () => {
     expect(run.advance(0.5).result.events[0].trace).toHaveLength(2);
   });
   it('settles a program that cannot compile by the time the doors open', () => {
-    const opening = createLiveRun(levels[2], { ...programs(2), query: 'LISTEN\nWAIT ORDERS' }).advance(
+    const opening = createLiveRun(levels[1], { ...programs(1), query: 'LISTEN\nWAIT ORDERS' }).advance(
       STREET_APPROACH_SECONDS,
     );
     expect(opening.done).toBe(true);
@@ -50,7 +50,7 @@ describe('live service', () => {
     expect(opening.result.first_failure?.error_line).toBe(1);
   });
   it('renders the full street approach before executing any instructions', () => {
-    const run = createLiveRun(levels[2], programs(2));
+    const run = createLiveRun(levels[1], programs(1));
     const start = run.advance(0);
     expect(start.time).toBe(-STREET_APPROACH_SECONDS);
     expect(start.result.events[0].trace).toEqual([]);
@@ -64,7 +64,7 @@ describe('live service', () => {
     expect(next.result.events[0].trace).toEqual([]);
   });
   it('records paper pickup, writing and deposit without changing earlier snapshots', () => {
-    const run = createLiveRun(levels[2], programs(2));
+    const run = createLiveRun(levels[1], programs(1));
     const { result } = finish(run);
     const events = result.execution![0].events.filter((event) => event.actor === 'query');
     const take = events.find((event) => event.command === 'TAKE UP')!;
@@ -78,7 +78,7 @@ describe('live service', () => {
     expect(sampleReplay(result, deposit.end + 0.01).actors.query?.heldPaper).toBeUndefined();
   });
   it('waits for seating, keeps customers in their chairs while drinking, and stands before leaving', () => {
-    const { result } = finish(createLiveRun(levels[2], programs(2)));
+    const { result } = finish(createLiveRun(levels[1], programs(1)));
     const event = result.events[0],
       timing = event.timing;
     const customer = (time: number) =>
@@ -104,7 +104,7 @@ describe('live service', () => {
     expect(customer(timing.left + SIT_SECONDS + 0.1).walking).toBe(true);
   });
   it('turns Query toward paper pickup and movement and only walks during movement', () => {
-    const { result } = finish(createLiveRun(levels[2], programs(2)));
+    const { result } = finish(createLiveRun(levels[1], programs(1)));
     const logs = result.execution![0].events.filter((event) => event.actor === 'query');
     const take = logs.find((event) => event.command === 'TAKE UP')!;
     const move = logs.find((event) => event.command === 'MOVE RIGHT 1')!;
@@ -117,16 +117,16 @@ describe('live service', () => {
     expect(atMove.walking).toBe(true);
   });
   it('records a zero-duration wait while an automatic worker is idle', () => {
-    const run = createLiveRun(levels[2], programs(2));
-    const frame = run.advance(STREET_APPROACH_SECONDS + levels[2].seeds[0].customers[0].arrival);
+    const run = createLiveRun(levels[1], programs(1));
+    const frame = run.advance(STREET_APPROACH_SECONDS + levels[1].seeds[0].customers[0].arrival);
     expect(
       frame.result.execution?.[0].events.some((e) => e.actor === 'prep' && e.command === 'LISTEN' && e.start === e.end),
     ).toBe(true);
     expect(sampleReplay(frame.result, frame.time).actors.prep?.action?.command).toBe('LISTEN');
   });
   it('reaches a bad instruction after the preceding blocks instead of jumping to failure', () => {
-    const run = createLiveRun(levels[2], { query: 'LISTEN\nITEM coffee', prep: '', floor: '' });
-    const first = run.advance(STREET_APPROACH_SECONDS + levels[2].seeds[0].customers[0].arrival);
+    const run = createLiveRun(levels[1], { query: 'LISTEN\nITEM coffee', prep: '', floor: '' });
+    const first = run.advance(STREET_APPROACH_SECONDS + levels[1].seeds[0].customers[0].arrival);
     expect(first.result.first_failure).toBeNull();
     expect(run.advance(1.5).done).toBe(false);
     const failed = run.advance(1.5);
@@ -141,13 +141,13 @@ describe('live service', () => {
   });
   it('rejects a wrong drink at deposit after letting the robot write and carry its paper', () => {
     const level = {
-      ...levels[3],
+      ...levels[2],
       seeds: [
         {
           id: 'wrong-drink',
           customers: [
             {
-              ...levels[3].seeds[0].customers[0],
+              ...levels[2].seeds[0].customers[0],
               arrival: 0,
               heard_orders: [{ tokens: ['tea'] }],
               intent: { drink: 'tea' as const },
@@ -179,17 +179,17 @@ describe('live service', () => {
     expect(Number.isFinite(failed.result.average_satisfaction)).toBe(true);
   });
   it('uses every required scenario and produces the same outcome regardless of playback speed', () => {
-    const slow = createLiveRun(levels[4], programs(4)),
-      fast = createLiveRun(levels[4], programs(4));
+    const slow = createLiveRun(levels[3], programs(3)),
+      fast = createLiveRun(levels[3], programs(3));
     const a = finish(slow);
     let b = fast.snapshot();
     while (!b.done) b = fast.advance(12);
     expect(a.result.passed).toBe(true);
     expect(b.result).toEqual(a.result);
-    expect(a.result.required_seeds).toBe(levels[4].seeds.length);
-    expect(a.result.passed_seeds).toBe(levels[4].seeds.length);
-    expect(a.result.events).toHaveLength(levels[4].seeds.reduce((n, s) => n + s.customers.length, 0));
-    expect(a.result.execution).toHaveLength(levels[4].seeds.length);
+    expect(a.result.required_seeds).toBe(levels[3].seeds.length);
+    expect(a.result.passed_seeds).toBe(levels[3].seeds.length);
+    expect(a.result.events).toHaveLength(levels[3].seeds.reduce((n, s) => n + s.customers.length, 0));
+    expect(a.result.execution).toHaveLength(levels[3].seeds.length);
   });
   for (const [index, level] of levels.entries())
     it(`completes ${level.id} live with its reference program`, () => {
@@ -200,7 +200,7 @@ describe('live service', () => {
       expect(Number.isFinite(frame.result.average_satisfaction)).toBe(true);
     });
   it('runs the automatic kitchen and floor concurrently and animates pending movement', () => {
-    const run = createLiveRun(levels[4], programs(4));
+    const run = createLiveRun(levels[3], programs(3));
     const result = finish(run).result;
     const log = result.execution![0].events;
     expect(
@@ -218,12 +218,12 @@ it.each([
   [3, 'many'],
 ] as const)('rejects %i cups at handoff without revealing the expected count', (quantity, kind) => {
   const customer = {
-    ...levels[3].seeds[0].customers[0],
+    ...levels[2].seeds[0].customers[0],
     arrival: 0,
     heard_orders: [{ tokens: ['coffee'] }, { tokens: ['coffee'] }],
     expected: { tickets: [{ item: 'coffee' as const }, { item: 'coffee' as const }] },
   };
-  const level = { ...levels[3], seeds: [{ id: 'counts', customers: [customer] }] };
+  const level = { ...levels[2], seeds: [{ id: 'counts', customers: [customer] }] };
   const result = finish(
     createLiveRun(level, {
       query: `LISTEN\nTAKE UP\nITEM ${quantity} coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1`,
@@ -237,12 +237,12 @@ it.each([
 });
 it('shows Store in progress and publishes memory only after the action completes', () => {
   const customer = {
-    ...levels[9].seeds[0].customers[0],
+    ...levels[6].seeds[0].customers[0],
     arrival: 0,
     heard_orders: [{ tokens: ['coffee', 'number'], number: 2 }],
     expected: { item: 'coffee' as const, sugar_count: 2 },
   };
-  const level = { ...levels[9], seeds: [{ id: 'memory', customers: [customer] }] };
+  const level = { ...levels[6], seeds: [{ id: 'memory', customers: [customer] }] };
   const run = createLiveRun(level, {
     query:
       'LISTEN\nTAKE UP\nITEM coffee\nSTORE var1 FROM number\nWRITE var1 sugar\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1',
@@ -262,9 +262,9 @@ it('shows Store in progress and publishes memory only after the action completes
 });
 
 it('keeps waiting visible before a delayed arrival and replaces it with the next action', () => {
-  const level = structuredClone(levels[2]);
+  const level = structuredClone(levels[1]);
   level.seeds[0].customers[0].arrival = 10;
-  const run = createLiveRun(level, programs(2));
+  const run = createLiveRun(level, programs(1));
   const initial = run.snapshot();
   expect(sampleReplay(initial.result, initial.time).actors.query?.action?.command).toBe('LISTEN');
   const waiting = run.advance(STREET_APPROACH_SECONDS + 5);

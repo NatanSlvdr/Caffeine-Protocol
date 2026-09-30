@@ -6,6 +6,7 @@ import { validate } from '../../../src/domain/simulation';
 import { execCustomer as exec } from '../../helpers/query';
 import { coffeeFixture as coffee, teaFixture as tea, requestFixture as request } from '../../helpers/customers';
 import { runCampaignLevel as run } from '../../helpers/run';
+import { UNLOCKS } from '../../../src/domain/unlocks';
 
 describe('token interpreter and physical order handling', () => {
   it('membership tests use only the selected binding and arbitrary token strings', () => {
@@ -43,7 +44,7 @@ describe('token interpreter and physical order handling', () => {
       'coffee IN CUSTOMER SPEECH OR OR tea IN CUSTOMER SPEECH',
       'coffee IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH',
     ])
-      expect(compileProgram(`LISTEN\nIF ${condition}\nEND`, 4).compile_error).toContain('locked');
+      expect(compileProgram(`LISTEN\nIF ${condition}\nEND`, UNLOCKS.choices).compile_error).toContain('locked');
   });
   it('does not read solved intent or expected output to choose a drink', () => {
     const customer = {
@@ -51,12 +52,12 @@ describe('token interpreter and physical order handling', () => {
       intent: { drink: 'tea' as const, with_sugar: true },
       expected: { item: 'tea' as const },
     };
-    const result = exec(lessons[3].solution, customer, 4);
+    const result = exec(lessons[2].solution, customer, UNLOCKS.choices);
     expect(result.tickets[0].item).toBe('coffee');
     expect(result.tickets[0].source_intent).toEqual({});
   });
   it('resumes at the next customer without stale tokens', () => {
-    const p = compileProgram(lessons[4].solution, 5),
+    const p = compileProgram(lessons[3].solution, UNLOCKS.loop),
       a = executeCustomerEvent(p, coffee, 'a'),
       b = executeCustomerEvent(p, tea, 'b', a.state);
     expect(b.error).toBe('');
@@ -66,25 +67,33 @@ describe('token interpreter and physical order handling', () => {
     const customer = request([{ tokens: ['coffee'] }, { tokens: ['tea'] }], {
       tickets: [{ item: 'coffee' }, { item: 'tea' }],
     });
-    const result = exec(lessons[8].solution, customer);
+    const result = exec(lessons[UNLOCKS.forEach - 1].solution, customer);
     expect(validate(customer, result)).toBe('');
     expect(result.tickets.map((t) => t.item)).toEqual(['coffee', 'tea']);
     for (const command of ['TAKE UP', 'DEPOSIT RIGHT'])
       expect(result.trace.filter((t) => t.command === command)).toHaveLength(2);
     expect(new Set(result.tickets.map((t) => t.ticket_id)).size).toBe(2);
   });
+  const sugarShift = UNLOCKS.sugar - 1,
+    negationCheck = 'IF negation IN CUSTOMER SPEECH\n    WRITE 0 sugar\n  ELSE\n    WRITE 1 sugar\n  END';
   it('plain drinks reject unconditional sugar after modifiers are introduced', () => {
-    const source = lessons[5].solution.replace('IF sugar IN CUSTOMER SPEECH\n  WRITE 1 sugar\nEND', 'WRITE 1 sugar');
-    expect(run(5, source).first_failure?.reason).toContain('sugar');
+    const source = lessons[sugarShift].solution.replace(
+      `IF sugar IN CUSTOMER SPEECH\n  ${negationCheck}\nEND`,
+      'WRITE 1 sugar',
+    );
+    expect(source).not.toBe(lessons[sugarShift].solution);
+    expect(run(sugarShift, source).first_failure?.reason).toContain('sugar');
   });
   it('rejects a sugar-only check on a negated request', () => {
     const customer = request([{ tokens: ['coffee', 'sugar', 'negation'] }], { item: 'coffee', with_sugar: false });
-    expect(validate(customer, exec(lessons[5].solution, customer))).toContain('sugar');
-    expect(validate(customer, exec(lessons[6].solution, customer))).toBe('');
+    const sugarOnly = lessons[sugarShift].solution.replace(negationCheck, 'WRITE 1 sugar');
+    expect(sugarOnly).not.toBe(lessons[sugarShift].solution);
+    expect(validate(customer, exec(sugarOnly, customer))).toContain('sugar');
+    expect(validate(customer, exec(lessons[sugarShift].solution, customer))).toBe('');
   });
   it.each([0, 1, 2])('copies explicitly read numeric metadata including %i', (number) => {
     const customer = request([{ tokens: ['tea', 'sugar', 'number'], number }], { item: 'tea', sugar_count: number });
-    const result = exec(lessons[9].solution, customer);
+    const result = exec(lessons[UNLOCKS.numbers - 1].solution, customer);
     expect(validate(customer, result)).toBe('');
   });
   it('does not retain a number from the previous loop item', () => {
@@ -98,14 +107,14 @@ describe('token interpreter and physical order handling', () => {
       ...request([{ tokens: ['ambiguous'] }], { ask_help: true, tickets: [{ item: 'tea' }, { item: 'coffee' }] }),
       clarification_heard_orders: [{ tokens: ['tea'] }, { tokens: ['coffee'] }],
     };
-    expect(exec(lessons[9].solution, customer).error).toContain('This order is unclear');
-    const result = exec(lessons[10].solution, customer);
+    expect(exec(lessons[UNLOCKS.help - 2].solution, customer).error).toContain('This order is unclear');
+    const result = exec(lessons[UNLOCKS.help - 1].solution, customer);
     expect(validate(customer, result)).toBe('');
     expect(result.tickets.map((t) => t.item)).toEqual(['tea', 'coffee']);
   });
   it('defers unresolved speech without guessing and resumes service', () => {
     const customer = request([{ tokens: ['ambiguous'] }], { ask_help: true });
-    const p = compileProgram(lessons[13].solution);
+    const p = compileProgram(lessons[UNLOCKS.help - 1].solution);
     const result = executeCustomerEvent(p, customer, 'a');
     expect(validate(customer, result)).toBe('');
     expect(result.tickets).toEqual([]);
@@ -128,7 +137,7 @@ describe('token interpreter and physical order handling', () => {
   });
   it('bounds large loops at exactly 1024 executed instructions', () => {
     const customer = request(Array.from({ length: 400 }, () => ({ tokens: ['coffee'] })));
-    const result = exec(lessons[8].solution, customer);
+    const result = exec(lessons[UNLOCKS.forEach - 1].solution, customer);
     expect(result.error).toContain('limit');
     expect(result.executed_instructions).toBe(QUERY_INSTRUCTION_LIMIT);
   });
@@ -171,9 +180,9 @@ describe('token interpreter and physical order handling', () => {
       'Deposit this item’s paper',
     ));
   it('fails on first customer mismatch and highlights the item source', () => {
-    const r = run(3, lessons[2].solution);
+    const r = run(2, lessons[1].solution);
     expect(r.events).toHaveLength(2);
-    expect(r.first_failure?.seed_id).toBe('L04_B');
+    expect(r.first_failure?.seed_id).toBe('L03_B');
     expect(r.first_failure?.error_line).toBe(2);
   });
 });

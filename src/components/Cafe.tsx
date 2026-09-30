@@ -1,3 +1,4 @@
+import { UNLOCKS } from '@/domain';
 import type { RobotRole, RunResult } from '@/domain';
 import { PixelArtEffect } from './cafe/PixelArtEffect';
 import { SceneCanvas } from './three/SceneCanvas';
@@ -10,7 +11,7 @@ export function Cafe({
   reduced = false,
   pixelArt = true,
   moving = false,
-  level = 32,
+  level = UNLOCKS.floor,
   showLabels = false,
   serviceView = false,
   focusRole,

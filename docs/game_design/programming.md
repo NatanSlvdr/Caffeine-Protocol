@@ -40,7 +40,7 @@ IF and FOR insert matching END delimiters; dragging or deleting a scope carries 
 
 The existing 128-block Query limit, 1,024-instruction customer limit, and 10,000-instruction seed limit remain. Correctness precedes scoring. Block and instruction targets are calibrated to attainable reference solutions, including Query's additional explicit token logic in later acts.
 
-The live game and offline validation drain the same interpreter. Run, Pause, Step, and Stop & edit preserve the existing physical simulation and service pipeline. Tests exercise branches, loops, explicit modifier logic, HELP, number scope, editor operands, save migration, and all 32 reference programs.
+The live game and offline validation drain the same interpreter. Run, Pause, Step, and Stop & edit preserve the existing physical simulation and service pipeline. Tests exercise branches, loops, explicit modifier logic, HELP, number scope, editor operands, save migration, and all 21 reference programs.
 
 ## Save migration
 

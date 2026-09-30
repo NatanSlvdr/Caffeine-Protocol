@@ -2,7 +2,7 @@
 
 ## Campaign
 
-The campaign is a separate screen with all 14 shifts, lock states, completion and stars. Selecting a shift shows its lesson and launch button. Launching fades through a short title transition into the level. Returning after completion selects the next shift. Reduced motion shortens transitions.
+The campaign is a separate screen with every shift, lock states, completion and stars. Selecting a shift shows its lesson and launch button. Launching fades through a short title transition into the level. Returning after completion selects the next shift. Reduced motion shortens transitions.
 
 ## Level Workspace
 

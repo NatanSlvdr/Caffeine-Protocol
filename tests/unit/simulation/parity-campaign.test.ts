@@ -3,9 +3,13 @@ import { levels, lessons } from '../../../src/data';
 import { availableCommands, compileProgram } from '../../../src/domain/program';
 import { buildReplayTimeline } from '../../../src/domain/simulation';
 import { runCampaignLevel as run } from '../../helpers/run';
+import { UNLOCKS } from '../../../src/domain/unlocks';
+
+/** The prologue and Act I, before Brew arrives. */
+const ACT_I = levels.slice(0, UNLOCKS.prep - 1);
 
 describe('redesigned Act I campaign', () => {
-  for (const [i, level] of levels.slice(0, 14).entries()) {
+  for (const [i, level] of ACT_I.entries()) {
     it(`${level.id}: reference passes every authored seed with valid source traces`, () => {
       const actual = run(i);
       expect(actual.first_failure).toBeNull();
@@ -13,20 +17,16 @@ describe('redesigned Act I campaign', () => {
       expect(actual.passed_seeds).toBe(level.seeds.length);
       for (const event of actual.events)
         for (const step of event.trace) expect(lessons[i].solution.split('\n')[step.line].trim()).toBe(step.command);
-      if (i >= 2) expect(actual.stars).toBe(3);
+      if (i + 1 >= UNLOCKS.query) expect(actual.stars).toBe(3);
       expect(buildReplayTimeline(actual).every((t) => t.end >= t.start)).toBe(true);
     });
-    if ([2, 3, 4, 5, 6, 8, 9, 10].includes(i))
+    if (i + 1 >= UNLOCKS.query)
       it(`${level.id}: incoming routine fails the new mechanic`, () =>
         expect(run(i, lessons[i].starter).passed).toBe(false));
   }
-  it('manual rush builds a measurable backlog', () => {
-    const r = run(1);
-    expect(r.events.at(-1)!.satisfaction).toBeLessThan(r.events[0].satisfaction);
-  });
   it('repeated runs are deterministic without input mutation', () => {
     const before = JSON.stringify(levels);
-    expect(run(13)).toEqual(run(13));
+    expect(run(ACT_I.length - 1)).toEqual(run(ACT_I.length - 1));
     expect(JSON.stringify(levels)).toBe(before);
   });
   it.each([
@@ -38,21 +38,18 @@ describe('redesigned Act I campaign', () => {
     ['coffee, but no sugar please', ['coffee', 'sugar', 'negation'], undefined],
     ['tea with 2 sugars', ['tea', 'sugar', 'number'], 2],
   ])('authors recognized tokens for %s', (phrase, tokens, number) => {
-    const customer = levels
-      .slice(0, 14)
-      .flatMap((l) => l.seeds.flatMap((s) => s.customers))
-      .find((c) => c.phrase === phrase)!;
+    const customer = ACT_I.flatMap((l) => l.seeds.flatMap((s) => s.customers)).find((c) => c.phrase === phrase)!;
     expect(customer.heard_orders).toEqual([{ tokens, ...(number === undefined ? {} : { number }) }]);
   });
   it('unlocks only the intended syntax at each milestone', () => {
-    expect(availableCommands(5)).not.toContain('SUGAR true');
-    expect(availableCommands(6)).toContain('IF sugar IN CUSTOMER SPEECH');
-    expect(availableCommands(6)).not.toContain('IF negation IN CUSTOMER SPEECH');
-    expect(availableCommands(7)).toContain('IF negation IN CUSTOMER SPEECH');
-    expect(availableCommands(8)).toEqual(availableCommands(7));
-    expect(availableCommands(9)).toContain('FOR item IN heard orders');
-    expect(availableCommands(10)).not.toContain('HELP');
-    expect(availableCommands(11)).toContain('HELP');
+    expect(availableCommands(UNLOCKS.sugar - 1)).not.toContain('IF sugar IN CUSTOMER SPEECH');
+    expect(availableCommands(UNLOCKS.sugar - 1)).not.toContain('WRITE 1 sugar');
+    expect(availableCommands(UNLOCKS.sugar)).toContain('IF sugar IN CUSTOMER SPEECH');
+    expect(availableCommands(UNLOCKS.sugar)).toContain('IF negation IN CUSTOMER SPEECH');
+    expect(availableCommands(UNLOCKS.forEach - 1)).not.toContain('FOR item IN heard orders');
+    expect(availableCommands(UNLOCKS.forEach)).toContain('FOR item IN heard orders');
+    expect(availableCommands(UNLOCKS.help - 1)).not.toContain('HELP');
+    expect(availableCommands(UNLOCKS.help)).toContain('HELP');
     for (const command of [
       'EACH',
       'ITEM heard',

@@ -60,10 +60,13 @@ function programmableLevel(id = 'L03'): Record<string, unknown> {
   };
 }
 
+/** Shifts authored as JSON files: the prologue and Act I. */
+const ACT_FILES = (manifestData as { order: string[] }).order.length;
+
 describe('unified campaign validation', () => {
   it('accepts the shipped Act I and extension campaign without errors', () => {
-    const actLevels = levels.slice(0, 14);
-    const actLessons = lessons.slice(0, 14);
+    const actLevels = levels.slice(0, ACT_FILES);
+    const actLessons = lessons.slice(0, ACT_FILES);
     for (const level of actLevels) expect(validateLevelData(level)).toEqual([]);
     for (const lesson of actLessons) expect(validateLessonData(lesson)).toEqual([]);
     expect(validateManifestData(manifestData)).toEqual([]);
@@ -232,11 +235,11 @@ describe('unified campaign validation', () => {
     expect(validateManifestData({ version: 1, order: ['L01', 'L01'] }).length).toBeGreaterThan(0);
     expect(validateManifestData({ version: 0, order: ['L01'] }).length).toBeGreaterThan(0);
     expect(
-      validateExtensionSeedData({ id: 'L15', title: 'T', note: 'N', omission: '', blocks: 55, instructions: 241 })
+      validateExtensionSeedData({ id: 'L09', title: 'T', note: 'N', omission: '', blocks: 55, instructions: 241 })
         .length,
     ).toBeGreaterThan(0);
     expect(
-      validateExtensionSeedData({ id: 'L15', title: 'T', note: 'N', omission: 'TAKE', blocks: 0, instructions: 241 })
+      validateExtensionSeedData({ id: 'L09', title: 'T', note: 'N', omission: 'TAKE', blocks: 0, instructions: 241 })
         .length,
     ).toBeGreaterThan(0);
     expect(collectNarrativeErrors([]).length).toBeGreaterThan(0);
@@ -249,8 +252,8 @@ describe('unified campaign validation', () => {
   });
 
   it('rejects id correspondence breaks across lessons, levels, and narrative', () => {
-    const actLevels = levels.slice(0, 14);
-    const actLessons = lessons.slice(0, 14);
+    const actLevels = levels.slice(0, ACT_FILES);
+    const actLessons = lessons.slice(0, ACT_FILES);
     const base = {
       manifestOrder: (manifestData as { order: string[] }).order,
       actLevels,
@@ -269,22 +272,22 @@ describe('unified campaign validation', () => {
   });
 
   it('rejects generated extension customers that break seed invariants', () => {
-    const generated = extensionSeed(15, 0);
-    expect(collectSeedErrors(generated, 'L15')).toEqual([]);
-    expect(collectSeedErrors(generated, 'L16').length).toBeGreaterThan(0);
+    const generated = extensionSeed(9, 0);
+    expect(collectSeedErrors(generated, 'L09')).toEqual([]);
+    expect(collectSeedErrors(generated, 'L10').length).toBeGreaterThan(0);
     const shuffled = {
       ...generated,
       customers: [...generated.customers].reverse().map((c, i) => ({ ...c, customer_id: `C${i + 1}` })),
     };
-    expect(collectSeedErrors(shuffled, 'L15').length).toBeGreaterThan(0);
+    expect(collectSeedErrors(shuffled, 'L09').length).toBeGreaterThan(0);
   });
 
   it('rejects built extension shifts that drift from their seed row', () => {
-    const index = extensionSeeds.findIndex((seed) => seed.id === 'L21');
+    const index = extensionSeeds.findIndex((seed) => seed.id === 'L13');
     const seed = extensionSeeds[index];
     const level = extensionLevels[index];
     const lesson = extensionLessons[index];
-    const levelNumber = 21;
+    const levelNumber = 13;
     expect(collectBuiltExtensionErrors({ levelNumber, level, lesson, seed })).toEqual([]);
     expect(
       collectBuiltExtensionErrors({
@@ -297,13 +300,13 @@ describe('unified campaign validation', () => {
     expect(
       collectBuiltExtensionErrors({
         levelNumber,
-        level: { ...level, service: extensionServiceForLevel(15) },
+        level: { ...level, service: extensionServiceForLevel(9) },
         lesson,
         seed,
       }).length,
     ).toBeGreaterThan(0);
     expect(
-      collectBuiltExtensionErrors({ levelNumber, level: { ...level, act: extensionAct(25) }, lesson, seed }).length,
+      collectBuiltExtensionErrors({ levelNumber, level: { ...level, act: extensionAct(15) }, lesson, seed }).length,
     ).toBeGreaterThan(0);
     expect(
       collectBuiltExtensionErrors({ levelNumber, level: { ...level, block_target: seed.blocks + 1 }, lesson, seed })

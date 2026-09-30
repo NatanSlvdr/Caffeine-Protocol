@@ -24,22 +24,34 @@ Query is the first robot Niko repairs. Query can hear customers clearly, but it
 needs programming before it can translate human requests into the structured
 tickets used by the rest of the cafe.
 
-Act I teaches Query through increasingly demanding order-intake puzzles:
+Act I teaches Query through seven short order-intake puzzles:
 
-- listen for a customer;
-- create a ticket;
-- distinguish menu items;
-- wait for repeated arrivals;
-- create multiple tickets from one customer speech event;
-- preserve modifiers;
-- share ticket logic across varied customer language;
-- ask for help on ambiguous speech;
-- handle sugar counts;
-- pass larger randomized validation batches.
+- listen for a customer and write a ticket;
+- tell coffee from tea;
+- keep serving the queue;
+- sugar, and “without sugar”;
+- one ticket per drink when a customer orders several;
+- exact sugar counts;
+- ask Niko for help on unclear orders (“the usual”).
 
 By the end of Act I, Query can operate the counter without Niko intervening.
 The next bottleneck becomes drink preparation, setting up the preparation robot
 for Act II.
+
+## Acts II–IV
+
+- **Act II, Brew (five shifts).** The kitchen robot learns the coffee machine,
+  tea, sugar cubes, a recipe function, and carrying two cups. Moka retires
+  before the last one.
+- **Act III, Porter (three shifts).** The floor robot learns to read the table
+  off the order, clear dirty cups, and carry two drinks. Pip leaves for school
+  after the last one.
+- **Act IV, the whole crew (five shifts).** Nobody is left to cover for the
+  robots, and each shift brings an odd day that one robot can't handle alone:
+  take-away orders, only four cups, customers in a hurry, and closing time.
+  The last shift is the busiest day of all.
+
+The shift-by-shift table is in [docs/campaign/README.md](../campaign/README.md).
 
 ## Pricing Machine
 
@@ -96,7 +108,7 @@ cozy only: no villains, no stakes beyond a busy morning.
 | `query`  | Query      | Counter robot. Literal-minded, precise, speaks in short reports.                         |
 | `brew`   | Brew       | Kitchen robot. Eager perfectionist, loves the grinder.                                   |
 | `porter` | Porter     | Floor robot. Cheerful and chatty, occasionally clumsy.                                   |
-| `moka`   | Moka       | Lou's friend of forty years, the old kitchen stand-in. Dry, grumpy, retires in shift 22. |
+| `moka`   | Moka       | Lou's friend of forty years, the old kitchen stand-in. Dry, grumpy, retires in shift 13. |
 | `pip`    | Pip        | Kid from the flat upstairs, the delivery stand-in. Fast, kind, easily excited.           |
 | `albert` | Mr. Albert | Elderly regular. Always orders “the usual”. It is coffee.                                |
 | `juno`   | Juno       | Student with a laptop. Tea, never sugar.                                                 |
@@ -113,19 +125,19 @@ the next one.
 | Scene                  | Plays before | Stills | What happens                                          |
 | ---------------------- | ------------ | ------ | ----------------------------------------------------- |
 | The Keys               | Shift 1      | 5      | Niko opens Lou's café; Moka walks in; Pip signs on.   |
-| The Scrapyard          | Shift 3      | 4      | Too many tickets; Niko rebuilds Query.                |
-| A Second Pair of Hands | Shift 15     | 4      | Query's badge; the kitchen floods; Brew is found.     |
-| Ninety-Two Degrees     | Shift 22     | 4      | Moka's last morning; she hands Brew her tamper.       |
-| The Floor Robot        | Shift 23     | 4      | Pip is swamped and school is coming; Porter is found. |
-| Back to School         | Shift 31     | 3      | Pip leaves for school; Niko becomes just the owner.   |
+| The Scrapyard          | Shift 2      | 4      | Too many tickets; Niko rebuilds Query.                |
+| A Second Pair of Hands | Shift 9      | 4      | Query's badge; the kitchen floods; Brew is found.     |
+| Ninety-Two Degrees     | Shift 13     | 4      | Moka's last morning; she hands Brew her tamper.       |
+| The Floor Robot        | Shift 14     | 4      | Pip is swamped and school is coming; Porter is found. |
+| Back to School         | Shift 17     | 3      | Pip leaves for school; Niko becomes just the owner.   |
 | Closing Time           | The receipt  | 4      | The café runs itself; everyone comes by.              |
 
 Scenes appear on the campaign rail as rows of their own, just above the shift
 they open, with a prune clapperboard instead of a number. The next shift stays
 locked until its scene has been watched or skipped; after that the scene can be
 rewatched at any time. Seen scenes are stored in the save's `story` map, under
-the index of the shift they open. Closing Time is the last row of the Finale
-and opens with the ending.
+the index of the shift they open. Closing Time is the last row of Act IV and
+opens with the ending.
 
 Stills go in `assets/cutscenes/<scene>/<nn>.png`, numbered from `01`. Run
 `python3 tools/cutscenes.py` (needs Pillow) to crop them to 16:9 and write

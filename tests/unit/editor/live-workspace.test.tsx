@@ -42,8 +42,8 @@ function savedStars() {
 }
 describe('live workspace lifecycle', () => {
   it('focuses the scene on the robot selected for editing', () => {
-    seedLocalStorage({ ...makeSave(), unlocked: 22, selected: 22 });
-    window.location.hash = '/shift/23';
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
+    window.location.hash = '/shift/14';
     render(<App />);
     expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('floor');
     fireEvent.click(screen.getByRole('tab', { name: 'Query' }));

@@ -15,7 +15,7 @@ import {
 } from './campaign/validate';
 
 /** Query reference solution for extension shifts (the Act I finale). */
-const queryReference = lessonById('L14').solution;
+const queryReference = lessonById('L08').solution;
 
 /** The line runs `command`, perhaps with operands after it (Move up 2). */
 const isCommand = (line: string, command: string) => {
@@ -60,7 +60,7 @@ export function referenceBlockCount(level: number): number {
 }
 export const extensionLevels: LevelDefinition[] = extensionSeeds.map(buildExtensionLevel);
 
-/** Derive a playable shift from one seed: no code edits needed for L33 and beyond. */
+/** Derive a playable shift from one seed: no code edits needed for L22 and beyond. */
 export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
   const level = Number(seed.id.slice(1)),
     config = extensionShiftConfig(level);
@@ -98,7 +98,7 @@ export function buildExtensionLesson(seed: LevelSeed) {
     starter = { ...programs };
   starter[role] = omitLine(starter[role], seed.omission, seed.occurrence ?? 1, seed.todo ?? seed.omission);
   if (config.fullHouse) {
-    starter.query = lessonById('L03').solution;
+    starter.query = lessonById('L02').solution;
     starter.prep = omitLine(programs.prep, 'STORE var1 FROM sugar', 1, 'store the order’s sugar in Var A');
   }
   return {

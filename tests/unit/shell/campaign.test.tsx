@@ -43,18 +43,18 @@ describe('campaign order rail', () => {
   });
 
   it('turns only through unlocked shifts and launches the selected story', async () => {
-    openCampaign(makeSave({ unlocked: 2, selected: 1, stars: { 0: 0, 1: 0 } }));
+    openCampaign(makeSave({ unlocked: 2, selected: 0, stars: { 0: 0, 1: 3 } }));
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(selectedShift().getAttribute('aria-label')).toBe('Scene: The Scrapyard, seen');
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.click(screen.getByRole('button', { name: /^Shift 4:/ }));
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
     fireEvent.keyDown(window, { key: 'ArrowLeft' });
-    fireEvent.keyDown(window, { key: 'ArrowLeft' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
-    fireEvent.keyDown(window, { key: 'ArrowRight' });
     fireEvent.keyDown(window, { key: 'ArrowRight' });
     expect(within(screen.getByRole('complementary')).getByText(narrativeFor(2).hint)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
@@ -62,14 +62,14 @@ describe('campaign order rail', () => {
   });
 
   it('leaves arrows to editable fields and modified shortcuts', () => {
-    openCampaign(makeSave({ unlocked: 2, selected: 1 }));
+    openCampaign(makeSave({ unlocked: 2, selected: 0 }));
     const field = document.createElement('div');
     field.setAttribute('contenteditable', '');
     document.body.append(field);
     try {
       fireEvent.keyDown(field, { key: 'ArrowRight' });
       fireEvent.keyDown(window, { key: 'ArrowRight', ctrlKey: true });
-      expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
+      expect(selectedShift().getAttribute('aria-label')).toContain('Shift 1:');
       fireEvent.keyDown(window, { key: 'ArrowRight' });
       expect(selectedShift().getAttribute('aria-label')).toContain('Scene: The Scrapyard');
     } finally {
@@ -78,7 +78,7 @@ describe('campaign order rail', () => {
   });
 
   it('centres the current act on the rail and launches at once under reduced motion', () => {
-    const save = makeSave({ unlocked: 2, selected: 1, stars: { 0: 0, 1: 0 } });
+    const save = makeSave({ unlocked: 2, selected: 0, stars: { 0: 0, 1: 0 } });
     openCampaign({ ...save, settings: { ...save.settings, reduced_motion: true } });
     const rail = document.querySelector<HTMLElement>('.pass')!;
     const scrollTo = vi.fn();
@@ -103,7 +103,7 @@ describe('campaign order rail', () => {
         unlocked: levels.length - 1,
         selected: levels.length - 1,
         complete: true,
-        stars: Object.fromEntries(levels.map((_, index) => [index, index < 2 ? 0 : 3])),
+        stars: Object.fromEntries(levels.map((_, index) => [index, index < 1 ? 0 : 3])),
       }),
     );
     expect(selectedShift().getAttribute('aria-label')).toContain(`Shift ${levels.length}:`);
@@ -117,13 +117,13 @@ describe('campaign order rail', () => {
   });
 
   it('holds the next shift behind its scene until the scene is watched', () => {
-    openCampaign(makeSave({ unlocked: 2, selected: 2, stars: { 0: 0, 1: 0 }, story: { 0: true } }));
+    openCampaign(makeSave({ unlocked: 1, selected: 1, stars: { 0: 0 }, story: { 0: true } }));
     expect(selectedShift().getAttribute('aria-label')).toBe('Scene: The Scrapyard, next up');
-    expect(screen.getByRole('button', { name: /^Shift 3: .*, locked$/ }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('button', { name: /^Shift 2: .*, locked$/ }).hasAttribute('disabled')).toBe(true);
     expect(screen.getByRole('button', { name: 'Scene: The Keys, seen' })).toBeTruthy();
     const board = within(screen.getByRole('complementary', { name: 'Selected scene' }));
     expect(board.getByRole('heading', { name: 'The Scrapyard' })).toBeTruthy();
-    expect(board.getByText('Shift 03')).toBeTruthy();
+    expect(board.getByText('Shift 02')).toBeTruthy();
     expect(board.getByText('4')).toBeTruthy();
     // Arrows stop at the scene: the shift behind it can't be reached yet.
     fireEvent.keyDown(window, { key: 'ArrowRight' });
@@ -133,17 +133,17 @@ describe('campaign order rail', () => {
   });
 
   it('unrolls every reached act and lands on its next unfinished part', () => {
-    openCampaign(makeSave({ unlocked: 5, selected: 1, stars: { 0: 0, 1: 0, 2: 3, 3: 2 } }));
+    openCampaign(makeSave({ unlocked: 4, selected: 0, stars: { 0: 0, 1: 3, 2: 2 } }));
     expect(screen.getByRole('button', { name: /^Shift 1:/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 3:/ })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /Act I · Query/ }));
-    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 5:');
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 4:');
     expect(screen.getByRole('button', { name: 'Act II, locked until Act I is served' }).hasAttribute('disabled')).toBe(
       true,
     );
     expect(screen.getAllByText('Opens soon').length).toBe(3);
     expect(screen.queryByText('Brew')).toBeNull();
-    expect(screen.queryByRole('button', { name: /^Shift 15/ })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Shift 9:/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Prologue · Niko/ }));
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 1:');
     const recipe = within(screen.getByRole('complementary', { name: 'Selected shift' }));

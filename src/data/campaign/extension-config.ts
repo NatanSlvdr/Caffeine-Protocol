@@ -1,6 +1,7 @@
 /** Extension shift mechanics: one merged config per shift, derived from extension-config.json. */
 import * as v from 'valibot';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
+import { UNLOCKS } from '../../domain/unlocks.ts';
 import mechanicsData from './extension-config.json' with { type: 'json' };
 
 /** Every mechanic that used to hide in level-number thresholds, named in one place. */
@@ -17,13 +18,13 @@ export interface ExtensionShiftConfig {
   tables: number;
   /** Items the shift requires carrying together (batch-lesson demos only). */
   minLoad: number;
-  /** Alternating coffee/tea orders (L18+). */
+  /** Alternating coffee/tea orders (L10+). */
   tea: boolean;
-  /** Cycled sugar counts including zero (L19+). */
+  /** Cycled sugar counts including zero (L11+). */
   sugar: boolean;
-  /** All-hands service (L31+): reset query starter, sugar TODO on prep. */
+  /** All-hands service (L17+): every robot runs the player's program. */
   fullHouse: boolean;
-  /** Grouped orders plus clarification guests (L32+). */
+  /** Grouped orders plus clarification guests (L21). */
   finale: boolean;
 }
 
@@ -43,12 +44,12 @@ const MechanicsSchema = v.looseObject({ stages: v.array(StageSchema), minLoadLev
 const mechanics = v.parse(MechanicsSchema, mechanicsData);
 const minLoadLevels = new Set(mechanics.minLoadLevels);
 
-/** The L15 stage must set every field; later stages only override what changes. */
+/** The first stage must set every field; later stages only override what changes. */
 function baseConfig(): ExtensionShiftConfig {
   const first = mechanics.stages[0];
   if (
     !first ||
-    first.from !== 15 ||
+    first.from !== UNLOCKS.prep ||
     first.customers === undefined ||
     first.arrivalGap === undefined ||
     first.prepBatch === undefined ||
@@ -59,7 +60,7 @@ function baseConfig(): ExtensionShiftConfig {
     first.fullHouse === undefined ||
     first.finale === undefined
   )
-    throw new Error('extension-config.json must open with a complete L15 stage');
+    throw new Error(`extension-config.json must open with a complete L${UNLOCKS.prep} stage`);
   return {
     customers: first.customers,
     arrivalGap: first.arrivalGap,
@@ -79,9 +80,12 @@ const BASE = baseConfig();
 if (Math.max(...mechanics.stages.map((stage) => stage.tables ?? 0)) !== TABLE_LAYOUT.length)
   throw new Error('extension-config.json full-house tables must match TABLE_LAYOUT');
 
+/** The id of a 1-based shift, like L09. */
+export const shiftId = (level: number) => `L${String(level).padStart(2, '0')}`;
+
 /** Merge every stage up to `level`; future shifts inherit the latest stage with no code edits. */
 export function extensionShiftConfig(level: number): ExtensionShiftConfig {
-  if (!Number.isInteger(level) || level < 15) throw new Error(`Unknown extension shift: L${level}`);
+  if (!Number.isInteger(level) || level < UNLOCKS.prep) throw new Error(`Unknown extension shift: L${level}`);
   const merged: ExtensionShiftConfig = { ...BASE };
   for (const { from, ...override } of mechanics.stages.slice(1)) {
     if (level < from) break;

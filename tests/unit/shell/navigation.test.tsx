@@ -53,12 +53,12 @@ describe('shift entry navigation', () => {
   });
 
   it('counts only rated shifts, so stars never total past the maximum', () => {
-    const stars = Object.fromEntries(Array.from({ length: 32 }, (_, i) => [i, 3]));
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
     const settings = { volume: 0.5, music: 0, effects: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
     const save = {
-      version: 3,
-      selected: 31,
-      unlocked: 31,
+      version: 4,
+      selected: 20,
+      unlocked: 20,
       complete: true,
       drafts: {},
       solutions: {},
@@ -71,7 +71,7 @@ describe('shift entry navigation', () => {
     );
     window.location.hash = '#/campaign';
     render(<App />);
-    expect(screen.getByRole('img', { name: '90 of 90 stars' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: '60 of 60 stars' })).toBeTruthy();
     // Each shift says how it went, since the marks beside its name are visual only.
     expect(screen.getByRole('button', { name: /^Shift 1: .*, served$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 3: .*, 3 of 3 stars$/ })).toBeTruthy();
@@ -82,7 +82,7 @@ describe('shift entry navigation', () => {
     render(<App />);
     expect(screen.getByRole('button', { name: 'Scene: The Keys, next up' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 1: .*, locked$/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Shift 2: .*, locked$/ })).toBeTruthy();
+    expect(screen.queryByRole('button', { name: /^Shift 2:/ })).toBeNull();
   });
 
   it.each(['#/shift/abc', '#/shift/1.5', '#/interlude/x'])('falls back to the home page for %s', (hash) => {

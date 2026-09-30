@@ -5,10 +5,13 @@ import { compileProgram } from '../../src/domain/program';
 import { runLevel } from '../../src/domain/simulation';
 import type { createLiveRun } from '../../src/domain/liveSimulation';
 import type { LevelDefinition, RobotPrograms } from '../../src/domain/types';
+import { UNLOCKS } from '../../src/domain/unlocks';
 
-/** Reference programs for a zero-based shift index: campaign solutions below L15, generated above. */
+/** Reference programs for a zero-based shift index: campaign solutions before Brew, generated after. */
 export function referenceProgramsFor(index: number): RobotPrograms {
-  return index >= 14 ? referencePrograms(index + 1) : { query: lessons[index].solution, prep: '', floor: '' };
+  return index + 1 >= UNLOCKS.prep
+    ? referencePrograms(index + 1)
+    : { query: lessons[index].solution, prep: '', floor: '' };
 }
 
 /** Drive a live run to completion. */
@@ -19,8 +22,12 @@ export function finishLiveRun(run: ReturnType<typeof createLiveRun>) {
   return frame;
 }
 
-/** Run a single-seed service shift with program overrides (defaults to the L32 reference). */
-export function runServiceShift(overrides: Partial<RobotPrograms>, shift = 32, patch: Partial<LevelDefinition> = {}) {
+/** Run a single-seed service shift with program overrides (defaults to the final shift's reference). */
+export function runServiceShift(
+  overrides: Partial<RobotPrograms>,
+  shift = levels.length,
+  patch: Partial<LevelDefinition> = {},
+) {
   const level = { ...levels[shift - 1], seeds: [levels[shift - 1].seeds[0]], ...patch };
   const programs = { ...referencePrograms(shift), ...overrides };
   return runLevel(level, compileProgram(programs.query), programs);

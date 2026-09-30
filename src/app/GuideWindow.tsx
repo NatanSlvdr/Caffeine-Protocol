@@ -1,5 +1,6 @@
 import { Bot, Map, Puzzle, Star } from 'lucide-react';
 import { Modal } from '@/components';
+import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
 
 /** How to play, printed on the same slip of order paper as the house settings. */
@@ -18,8 +19,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Bot size={16} /> The crew
           </h3>
           <p>
-            {CAMPAIGN_LENGTH} shifts, three robots. Query takes orders from shift 3, Brew runs the kitchen from shift
-            15, and Porter works the floor from shift 23.
+            {CAMPAIGN_LENGTH} shifts, three robots. Query takes orders from shift {UNLOCKS.query}, Brew runs the kitchen
+            from shift {UNLOCKS.prep}, and Porter works the floor from shift {UNLOCKS.floor}.
           </p>
           <p>Until you program those roles, Moka brews and Pip serves on their own.</p>
         </section>

@@ -1,169 +1,32 @@
 {
-  "active_tables": 4,
-  "block_target": 0,
+  "active_tables": 3,
+  "block_target": 8,
   "id": "L02",
-  "instruction_target": 0,
-  "programming_enabled": false,
-  "reference_block_count": 0,
+  "instruction_target": 7,
+  "programming_enabled": true,
+  "reference_block_count": 6,
   "seeds": [
     {
+      "id": "L02_A",
       "customers": [
         {
-          "arrival": 0,
-          "clarification": "",
-          "clarification_intent": {},
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
           "customer_id": "C1",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 5,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C2",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 10,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C3",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 15,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C4",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 20,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C5",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 25,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C6",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 30,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C7",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 35,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C8",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
+          "arrival": 0
         }
-      ],
-      "id": "L02_A"
+      ]
     }
   ],
-  "summary": "Watch the morning rush, then help Query take over the counter.",
-  "title": "Level 2: The Morning Grind"
+  "summary": "Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.",
+  "title": "Level 2: Hello, World Roast",
+  "act": 1
 }

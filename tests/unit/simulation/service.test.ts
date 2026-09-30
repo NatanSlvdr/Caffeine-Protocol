@@ -9,6 +9,10 @@ import { isWalkable, samePoint, STARTS, STATIONS } from '../../../src/domain/lay
 import { movementSource } from '../../../src/domain/defaultPrograms';
 import { runServiceShift as service } from '../../helpers/run';
 import type { ReplayEvent } from '../../../src/domain/types';
+import { UNLOCKS } from '../../../src/domain/unlocks';
+
+/** The first shift with all three robots and every table. */
+const FULL_HOUSE = 17;
 
 /** Small seeded services expose errors without relying on rendered graphics. */
 function physical(source: string, role: 'prep' | 'floor' = 'prep') {
@@ -45,11 +49,12 @@ function physical(source: string, role: 'prep' | 'floor' = 'prep') {
     table: 1,
     satisfaction: 100,
   };
-  const level = { ...levels[31], service: { ...levels[31].service!, prepCapacity: 1, floorCapacity: 1, minLoad: 0 } };
+  const final = levels.at(-1)!;
+  const level = { ...final, service: { ...final.service!, prepCapacity: 1, floorCapacity: 1, minLoad: 0 } };
   return simulateService(level, [event], {
-    ...referencePrograms(32),
-    prep: referencePrograms(20).prep,
-    floor: referencePrograms(27).floor,
+    ...referencePrograms(levels.length),
+    prep: referencePrograms(UNLOCKS.functions).prep,
+    floor: referencePrograms(UNLOCKS.floor + 1).floor,
     [role]: source,
   });
 }
@@ -61,7 +66,7 @@ describe('movement language and execution', () => {
     expect(compileRobot('LISTEN\nMOVE UP 1', 'query').compile_error).toBe('');
     expect(compileRobot('BREW', 'floor').compile_error).not.toBe('');
     expect(compileRobot('CHARGE', 'prep').compile_error).not.toBe('');
-    expect(compileRobot('CHARGE', 'floor', 23).compile_error).not.toBe('');
+    expect(compileRobot('CHARGE', 'floor', UNLOCKS.floor).compile_error).not.toBe('');
   });
   it('stops before furniture and continues with the next command', () => {
     const r = physical('MOVE LEFT 19\nMOVE RIGHT 1');
@@ -82,7 +87,7 @@ describe('movement language and execution', () => {
     expect(log.every((e) => isWalkable(e.to, 'prep'))).toBe(true);
   });
   it('records one-second cardinal tile edges without customer collisions', () => {
-    const r = service({}, 31);
+    const r = service({}, FULL_HOUSE);
     for (const seed of r.execution ?? [])
       for (const e of seed.events.filter((e) => e.actor === 'prep' || e.actor === 'floor')) {
         if (!samePoint(e.from, e.to)) {
@@ -107,7 +112,7 @@ describe('recipes, handoffs, and capacities', () => {
   it('claims tickets at the shared order counter, separately from drink pickup', () => {
     const atPickup = [...movementSource(STARTS.prep, STATIONS.pickup.prep, 'prep'), 'LISTEN'].join('\n');
     expect(physical(atPickup).failure?.reason).toContain('order handoff');
-    const result = service({}, 20);
+    const result = service({}, UNLOCKS.functions);
     expect(result.first_failure).toBeNull();
     const seed = result.execution![0];
     const claim = seed.events.find((e) => e.role === 'prep' && e.command === 'LISTEN')!;
@@ -134,13 +139,13 @@ describe('recipes, handoffs, and capacities', () => {
   });
   it('validates sugar on deposited drinks', () => {
     // Skipping the sugar loop deposits a drink that still needs its cubes.
-    const prep = referencePrograms(32).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
+    const prep = referencePrograms(levels.length).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
     const r = service({ prep });
     expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
     expect(r.first_failure?.role).toBe('prep');
   });
   it('rejects claiming beyond capacity', () => {
-    expect(service({ prep: 'LISTEN\nLISTEN' }, 15).first_failure?.reason).toBe(
+    expect(service({ prep: 'LISTEN\nLISTEN' }, UNLOCKS.prep).first_failure?.reason).toBe(
       'Brew’s hands are full. Deposit a drink before waiting for another ticket.',
     );
   });
@@ -153,7 +158,7 @@ describe('recipes, handoffs, and capacities', () => {
     );
   });
   it('supports grouped tickets and preserves carried item identity', () => {
-    const r = service({}, 32);
+    const r = service({});
     expect(r.first_failure).toBeNull();
     for (const e of r.events) expect(e.tickets.every((t) => t.status === 'served')).toBe(true);
     const logs = r.execution?.flatMap((s) => s.events) ?? [];
@@ -169,14 +174,14 @@ describe('recipes, handoffs, and capacities', () => {
   });
   it('clears only collected cups at the return station', () => {
     expect(physical('DEPOSIT DOWN', 'floor').failure?.reason).toBe('Porter isn’t holding anything to deposit.');
-    const r = service({}, 30);
+    const r = service({}, FULL_HOUSE - 1);
     expect(r.events.every((e) => e.timing.cleaned > e.timing.served)).toBe(true);
   });
 });
 
 describe('concurrency and replay', () => {
   it('runs the kitchen and floor concurrently while queues wait independently', () => {
-    const r = service({}, 31),
+    const r = service({}, FULL_HOUSE),
       log = r.execution![0].events;
     expect(
       log.some(
@@ -188,32 +193,32 @@ describe('concurrency and replay', () => {
     ).toBe(true);
   });
   it('has one Niko with no overlapping duties and no fallback after unlock', () => {
-    for (const shift of [2, 14, 15, 23]) {
+    for (const shift of [UNLOCKS.query, UNLOCKS.prep - 1, UNLOCKS.prep, UNLOCKS.floor]) {
       const r =
-        shift < 15
+        shift < UNLOCKS.prep
           ? runLevel(levels[shift - 1], compileProgram(lessons[shift - 1].solution, shift))
           : service({}, shift);
       for (const seed of r.execution ?? []) {
         const log = seed.events.filter((e) => e.actor === 'niko' && e.end > e.start);
         for (let i = 1; i < log.length; i++) expect(log[i].start).toBeGreaterThanOrEqual(log[i - 1].end);
-        if (shift >= 15) expect(log.every((e) => e.role === 'floor')).toBe(true);
-        if (shift >= 23) expect(log).toHaveLength(0);
+        if (shift >= UNLOCKS.prep) expect(log.every((e) => e.role === 'floor')).toBe(true);
+        if (shift >= UNLOCKS.floor) expect(log).toHaveLength(0);
       }
     }
   });
   it('samples smooth movement from the execution log', () => {
-    const r = service({}, 31),
+    const r = service({}, FULL_HOUSE),
       seed = r.execution![0],
       edge = seed.events.find((e) => e.actor === 'floor' && !samePoint(e.from, e.to))!;
     const sample = sampleReplay(r, seed.start + (edge.start + edge.end) / 2);
     expect(sample.actors.floor?.position).toEqual([(edge.from[0] + edge.to[0]) / 2, (edge.from[1] + edge.to[1]) / 2]);
   });
   it('returns the identical log on repeated runs without mutating campaign data', () => {
-    const before = JSON.stringify(levels[30]);
-    const a = service({}, 31),
-      b = service({}, 31);
+    const before = JSON.stringify(levels[FULL_HOUSE - 1]);
+    const a = service({}, FULL_HOUSE),
+      b = service({}, FULL_HOUSE);
     expect(JSON.stringify(a)).toBe(JSON.stringify(b));
-    expect(JSON.stringify(levels[30])).toBe(before);
+    expect(JSON.stringify(levels[FULL_HOUSE - 1])).toBe(before);
   });
   it('reports a blocked queue instead of hanging and identifies the robot and line', () => {
     const r = service({ prep: 'LISTEN\nMOVE LEFT 19' });
@@ -221,7 +226,7 @@ describe('concurrency and replay', () => {
     expect(r.first_failure?.role).toBeDefined();
   });
   it('freezes replay at the failure clock', () => {
-    const r = service({ floor: 'DEPOSIT UP' }, 31);
+    const r = service({ floor: 'DEPOSIT UP' }, FULL_HOUSE);
     expect(r.first_failure?.role).toBe('floor');
     expect(r.execution![0].events.every((e) => e.start <= r.first_failure!.event_time)).toBe(true);
   });

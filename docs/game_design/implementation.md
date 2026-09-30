@@ -1,6 +1,6 @@
 # September 2026 implementation notes
 
-The sections below describe an earlier prototype. The current TypeScript Query implementation is documented in [programming.md](programming.md), [orders.md](orders.md), and the Level 3–14 documents. Those documents supersede the former Act I EACH, semantic-copy, and function progression. The current game has 32 shifts; kitchen/floor behavior is preserved by the Query redesign.
+The sections below describe an earlier prototype. The current TypeScript Query implementation is documented in [programming.md](programming.md), [orders.md](orders.md), and the Level 3–14 documents. Those documents supersede the former Act I EACH, semantic-copy, and function progression. The current game has 21 shifts; kitchen/floor behavior is preserved by the Query redesign.
 
 ## Source of truth and completed scope
 
@@ -38,4 +38,4 @@ The portrait café has a dedicated order till, a brick kitchen partition, a staf
 
 ## Verification
 
-The current tests live in `tests/` and run with `npm test`. They cover all 32 reference solutions, the live interpreter, movement and handoffs, token membership, negation, numbers, multiple paper tickets, clarification, editor operands, and versioned saves. `npm run build` checks TypeScript and builds the production bundle. Browser testing is performed only when explicitly requested.
+The current tests live in `tests/` and run with `npm test`. They cover all 21 reference solutions, the live interpreter, movement and handoffs, token membership, negation, numbers, multiple paper tickets, clarification, editor operands, and versioned saves. `npm run build` checks TypeScript and builds the production bundle. Browser testing is performed only when explicitly requested.

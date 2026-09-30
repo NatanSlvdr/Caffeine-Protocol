@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES } from '@/domain';
+import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS } from '@/domain';
 import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { incomingRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -54,7 +54,7 @@ export function Workspace({
   onSound,
 }: WorkspaceProps) {
   const { level, lesson, brief, intro } = shift;
-  const observation = index < 2;
+  const observation = index + 1 < UNLOCKS.query;
   const [modal, setModal] = useState(''),
     [textMode, setTextMode] = useState(false),
     [showSolution, setShowSolution] = useState(false);

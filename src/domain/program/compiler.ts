@@ -2,7 +2,8 @@
 import type { Program } from '../types';
 import { DIRECTIONS } from '../directions';
 import { DEPOSIT_RE, MOVE_RE, TAKE_RE } from '../commands';
-import { QUERY_MAX_BLOCKS } from '../constants';
+import { QUERY_MAX_BLOCKS, ROBOT_STAND_IN_LEVEL } from '../constants';
+import { UNLOCKS } from '../unlocks';
 import { isOpening } from '../scope';
 import { QUERY_CONDITION_SOURCES, QUERY_CONDITION_VALUES, parseConditionExpression } from './conditions';
 import { legacyQueryAction } from './migration';
@@ -10,7 +11,14 @@ import { ROBOT_STORE_VALUES, VARIABLES, parseStore, parseSugarWrite } from './va
 
 const writePattern = /^ITEM ([1-9]|1[0-9]) (coffee|tea)$/;
 
-const tokenUnlocks: Record<string, number> = { coffee: 4, tea: 4, sugar: 6, negation: 7, number: 10, ambiguous: 11 };
+const tokenUnlocks: Record<string, number> = {
+  coffee: UNLOCKS.choices,
+  tea: UNLOCKS.choices,
+  sugar: UNLOCKS.sugar,
+  negation: UNLOCKS.sugar,
+  number: UNLOCKS.numbers,
+  ambiguous: UNLOCKS.help,
+};
 function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);
   return (
@@ -25,13 +33,13 @@ function comparisonUnlocked(command: string, level: number) {
 
 export function availableCommands(level: number): string[] {
   const c = ['LISTEN', 'TAKE UP', 'ITEM coffee', 'MOVE RIGHT 1', 'DEPOSIT RIGHT'];
-  if (level >= 3)
+  if (level >= UNLOCKS.query)
     c.push(
       ...DIRECTIONS.filter((direction) => direction !== 'UP').map((direction) => `TAKE ${direction}`),
       ...DIRECTIONS.filter((direction) => direction !== 'RIGHT').map((direction) => `DEPOSIT ${direction}`),
       ...DIRECTIONS.filter((direction) => direction !== 'RIGHT').map((direction) => `MOVE ${direction} 1`),
     );
-  if (level >= 4)
+  if (level >= UNLOCKS.choices)
     c.push(
       ...QUERY_CONDITION_VALUES.filter((token) => level >= tokenUnlocks[token]).map(
         (token) => `IF ${token} IN CUSTOMER SPEECH`,
@@ -40,15 +48,15 @@ export function availableCommands(level: number): string[] {
       'END',
       'ITEM tea',
     );
-  if (level >= 5) c.push('POSITION listen', 'JUMP listen', 'REPEAT');
-  if (level >= 6) c.push('WRITE 1 sugar', 'WRITE 0 sugar');
-  if (level >= 9) c.push('FOR item IN heard orders');
-  if (level >= 10) c.push('STORE var1 FROM number', 'WRITE var1 sugar');
-  if (level >= 11) c.push('HELP', 'ERROR');
+  if (level >= UNLOCKS.loop) c.push('POSITION listen', 'JUMP listen', 'REPEAT');
+  if (level >= UNLOCKS.sugar) c.push('WRITE 1 sugar', 'WRITE 0 sugar');
+  if (level >= UNLOCKS.forEach) c.push('FOR item IN heard orders');
+  if (level >= UNLOCKS.numbers) c.push('STORE var1 FROM number', 'WRITE var1 sugar');
+  if (level >= UNLOCKS.help) c.push('HELP', 'ERROR');
   return c;
 }
 /** Compile the finite instruction language; player text is never evaluated as JavaScript. */
-export function compileProgram(source: string, level = 14): Program {
+export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Program {
   const p: Program = {
     source,
     instructions: [],
@@ -74,22 +82,22 @@ export function compileProgram(source: string, level = 14): Program {
     const sugar = parseSugarWrite(c);
     const stored = parseStore(c);
     const dataInstruction =
-      (level >= 10 &&
+      (level >= UNLOCKS.numbers &&
         !!stored &&
         VARIABLES.some((variable) => variable === stored.variable) &&
         !(ROBOT_STORE_VALUES as readonly string[]).includes(stored.value)) ||
-      (level >= 6 &&
+      (level >= UNLOCKS.sugar &&
         sugar !== undefined &&
-        (/^\d+$/.test(sugar) || (level >= 10 && VARIABLES.some((variable) => variable === sugar)))) ||
-      (level >= 6 && /^SUGAR (true|false)$/.test(c)) ||
-      (level >= 10 && ['READ number', 'SUGAR number'].includes(c));
+        (/^\d+$/.test(sugar) || (level >= UNLOCKS.numbers && VARIABLES.some((variable) => variable === sugar)))) ||
+      (level >= UNLOCKS.sugar && /^SUGAR (true|false)$/.test(c)) ||
+      (level >= UNLOCKS.numbers && ['READ number', 'SUGAR number'].includes(c));
     if (
       !dataInstruction &&
       !allowed.includes(c) &&
       !legacyQueryAction(c) &&
-      !(level >= 5 && /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)) &&
-      !(level >= 3 && (TAKE_RE.test(c) || DEPOSIT_RE.test(c) || MOVE_RE.test(c))) &&
-      !(level >= 3 && writePattern.test(c) && (level >= 4 || c.endsWith('coffee'))) &&
+      !(level >= UNLOCKS.loop && /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)) &&
+      !(level >= UNLOCKS.query && (TAKE_RE.test(c) || DEPOSIT_RE.test(c) || MOVE_RE.test(c))) &&
+      !(level >= UNLOCKS.query && writePattern.test(c) && (level >= UNLOCKS.choices || c.endsWith('coffee'))) &&
       !comparisonUnlocked(c, level)
     )
       return fail('Unknown or locked instruction: ' + c);

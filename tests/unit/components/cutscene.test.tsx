@@ -12,6 +12,7 @@ import {
 } from '../../../src/data/campaign/cutscenes';
 import { CAST_IDS } from '../../../src/domain/dialogue';
 import { makeSave } from '../../helpers/saves';
+import { UNLOCKS } from '../../../src/domain/unlocks';
 
 describe('cutscene scripts', () => {
   it('plays in campaign order, one per shift, ending after the last shift', () => {
@@ -49,7 +50,7 @@ describe('cutscene scripts', () => {
 
 describe('cutscene progress', () => {
   const keys = sceneBefore(0)!;
-  const scrapyard = sceneBefore(2)!;
+  const scrapyard = sceneBefore(UNLOCKS.query - 1)!;
   const closing = cutscenes.at(-1)!;
 
   it('holds only the next unplayed shift behind an unseen scene', () => {
@@ -58,15 +59,15 @@ describe('cutscene progress', () => {
     expect(waitingScene(fresh, 1)).toBeUndefined();
     expect(waitingScene({ ...fresh, story: { 0: true } }, 0)).toBeUndefined();
     // An older save that already played past a scene keeps its shifts.
-    const older = makeSave({ story: {}, unlocked: 3, stars: { 0: 0, 1: 0, 2: 3 } });
-    expect(waitingScene(older, 2)).toBeUndefined();
-    expect(waitingScene({ ...older, unlocked: 2, stars: { 0: 0, 1: 0 } }, 2)).toBe(scrapyard);
+    const older = makeSave({ story: {}, unlocked: 2, stars: { 0: 0, 1: 3 } });
+    expect(waitingScene(older, 1)).toBeUndefined();
+    expect(waitingScene({ ...older, unlocked: 1, stars: { 0: 0 } }, 1)).toBe(scrapyard);
   });
 
   it('opens scenes with the shift they lead to, and the last one with the ending', () => {
     const save = makeSave({ story: {}, unlocked: 2 });
     expect(sceneOpen(save, scrapyard)).toBe(true);
-    expect(sceneOpen(save, sceneBefore(14)!)).toBe(false);
+    expect(sceneOpen(save, sceneBefore(UNLOCKS.prep - 1)!)).toBe(false);
     expect(sceneOpen(save, closing)).toBe(false);
     expect(sceneSeen(save, scrapyard)).toBe(false);
     const done = makeSave({ story: {}, unlocked: CAMPAIGN_LENGTH - 1, complete: true });

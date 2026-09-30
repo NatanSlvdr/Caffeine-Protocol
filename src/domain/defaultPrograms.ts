@@ -2,6 +2,7 @@ import { gridRoute, STARTS, STATIONS } from './layout';
 import type { Point } from './layout';
 import type { RobotRole } from './types';
 import { MAX_MOVE_COUNT } from './constants';
+import { UNLOCKS } from './unlocks';
 /** Build readable reference MOVE counts from a route; player execution never calls this helper. */
 export function movementSource(from: Point, to: Point, role?: RobotRole) {
   const path = gridRoute(from, to, role),
@@ -20,7 +21,7 @@ export function preparationSource(level: number, batch = 1) {
   const move = (a: Point, b: Point) => movementSource(a, b, 'prep');
   // Take up reaches the station above Brew: storage, then the sink's water, then sugar; Use up runs the coffee machine.
   const sugar =
-    level >= 19
+    level >= UNLOCKS.prepSugar
       ? [
           ...move(at.brewer.prep, at.sugar.prep),
           'STORE var1 FROM sugar',
@@ -49,7 +50,7 @@ export function preparationSource(level: number, batch = 1) {
   ];
   const waits = Array.from({ length: batch }, () => 'LISTEN');
   return (
-    level >= 20
+    level >= UNLOCKS.functions
       ? [
           ...waits,
           ...Array.from({ length: batch }, () => 'CALL recipe'),
@@ -80,12 +81,12 @@ export function floorSource(level: number, batch = 1) {
     'STORE var2 FROM here',
     ...Array.from({ length: batch }, () => ['LISTEN', 'TAKE DOWN']).flat(),
     ...Array.from({ length: batch }, () => ['CALL deliver']).flat(),
-    ...(level >= 23 ? Array.from({ length: batch }, () => ['CALL clear']).flat() : []),
+    ...(level >= UNLOCKS.floor ? Array.from({ length: batch }, () => ['CALL clear']).flat() : []),
     'REPEAT',
     'FUNCTION deliver',
     ...serve,
     'RETURN',
     'END',
-    ...(level >= 23 ? ['FUNCTION clear', ...clear, 'RETURN', 'END'] : []),
+    ...(level >= UNLOCKS.floor ? ['FUNCTION clear', ...clear, 'RETURN', 'END'] : []),
   ].join('\n');
 }

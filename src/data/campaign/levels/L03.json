@@ -1,10 +1,10 @@
 {
-  "active_tables": 3,
-  "block_target": 8,
+  "active_tables": 4,
+  "block_target": 12,
   "id": "L03",
-  "instruction_target": 7,
+  "instruction_target": 27,
   "programming_enabled": true,
-  "reference_block_count": 6,
+  "reference_block_count": 10,
   "seeds": [
     {
       "id": "L03_A",
@@ -24,9 +24,47 @@
           "arrival": 0
         }
       ]
+    },
+    {
+      "id": "L03_B",
+      "customers": [
+        {
+          "phrase": "tea",
+          "heard_orders": [
+            {
+              "tokens": ["tea"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
+    },
+    {
+      "id": "L03_C",
+      "customers": [
+        {
+          "phrase": "tea please",
+          "heard_orders": [
+            {
+              "tokens": ["tea"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "tea"
+          },
+          "customer_id": "C1",
+          "arrival": 0
+        }
+      ]
     }
   ],
-  "summary": "Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.",
-  "title": "Level 3: Hello, World Roast",
+  "summary": "Conditions check what the customer said. Use If Tea IN Orders to test it, then Write Tea or Write Coffee. No loop is needed yet.",
+  "title": "Level 3: Coffee or Tea?",
   "act": 1
 }

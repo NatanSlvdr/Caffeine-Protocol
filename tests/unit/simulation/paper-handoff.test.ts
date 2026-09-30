@@ -6,13 +6,14 @@ import { compileRobot } from '../../../src/domain/robotProgram';
 import { referencePrograms } from '../../../src/data/extension';
 import { runLevel } from '../../../src/domain/simulation';
 import { newSave, parseSave } from '../../../src/features/campaign/save/persistence';
+import { UNLOCKS } from '../../../src/domain/unlocks';
 
-const customer = levels[2].seeds[0].customers[0];
+const customer = levels[1].seeds[0].customers[0];
 
 describe('paper order handoff', () => {
   it('takes paper, moves to the handoff, and deposits it', () => {
     const source = 'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
-    const execution = executeCustomerEvent(compileProgram(source, 3), customer, 'paper');
+    const execution = executeCustomerEvent(compileProgram(source, UNLOCKS.query), customer, 'paper');
 
     expect(execution.error).toBe('');
     expect(execution.trace.map((step) => step.command)).toEqual(source.split('\n'));
@@ -23,7 +24,10 @@ describe('paper order handoff', () => {
   it('accepts all direction chips but enforces the physical handoff directions', () => {
     for (const direction of DIRECTIONS) {
       const pickup = executeCustomerEvent(
-        compileProgram(`LISTEN\nTAKE ${direction}\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1`, 3),
+        compileProgram(
+          `LISTEN\nTAKE ${direction}\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1`,
+          UNLOCKS.query,
+        ),
         customer,
         'pickup',
       );
@@ -31,7 +35,7 @@ describe('paper order handoff', () => {
       else expect(pickup.error).toContain('No paper in that direction');
 
       const deposit = executeCustomerEvent(
-        compileProgram(`LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT ${direction}\nMOVE LEFT 1`, 3),
+        compileProgram(`LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT ${direction}\nMOVE LEFT 1`, UNLOCKS.query),
         customer,
         'deposit',
       );
@@ -72,7 +76,7 @@ describe('paper order handoff', () => {
 
   it('requires moving within reach of the handoff counter', () => {
     const result = executeCustomerEvent(
-      compileProgram('LISTEN\nTAKE UP\nITEM coffee\nDEPOSIT RIGHT', 3),
+      compileProgram('LISTEN\nTAKE UP\nITEM coffee\nDEPOSIT RIGHT', UNLOCKS.query),
       customer,
       'paper',
     );
@@ -84,7 +88,7 @@ describe('paper order handoff', () => {
   it('uses the current tile when taking diagonally and stops movement at obstacles', () => {
     const source =
       'LISTEN\nMOVE RIGHT 19\nMOVE RIGHT 1\nMOVE UP 1\nTAKE UP_LEFT\nITEM coffee\nDEPOSIT RIGHT\nMOVE LEFT 1';
-    const result = executeCustomerEvent(compileProgram(source, 3), customer, 'paper');
+    const result = executeCustomerEvent(compileProgram(source, UNLOCKS.query), customer, 'paper');
     expect(result.error).toBe('');
     expect(result.state.counter).toBe(0);
     expect(result.tickets[0].item).toBe('coffee');
@@ -92,11 +96,11 @@ describe('paper order handoff', () => {
 
   it('must return to the register to hear the next customer', () => {
     const source = 'POSITION listen\nLISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nJUMP listen';
-    const program = compileProgram(source, 5);
+    const program = compileProgram(source, UNLOCKS.loop);
     const first = executeCustomerEvent(program, customer, 'first');
     expect(first.error).toContain('register');
     expect(executeCustomerEvent(program, customer, 'second', first.state).error).toContain('register');
-    const returning = compileProgram(source.replace('JUMP listen', 'MOVE LEFT 1\nJUMP listen'), 5);
+    const returning = compileProgram(source.replace('JUMP listen', 'MOVE LEFT 1\nJUMP listen'), UNLOCKS.loop);
     const served = executeCustomerEvent(returning, customer, 'first');
     expect(executeCustomerEvent(returning, customer, 'second', served.state).error).toBe('');
   });
@@ -104,20 +108,20 @@ describe('paper order handoff', () => {
 
 describe('directional worker handoffs', () => {
   it('uses upward prep deposit and downward floor pickup defaults', () => {
-    const prep = referencePrograms(15).prep;
-    const floor = referencePrograms(23).floor;
+    const prep = referencePrograms(UNLOCKS.prep).prep;
+    const floor = referencePrograms(UNLOCKS.floor).floor;
     expect(prep).toContain('DEPOSIT UP');
     expect(floor).toContain('TAKE DOWN');
 
-    const wrongPrep = runLevel(levels[14], compileProgram(referencePrograms(15).query), {
-      ...referencePrograms(15),
+    const wrongPrep = runLevel(levels[UNLOCKS.prep - 1], compileProgram(referencePrograms(UNLOCKS.prep).query), {
+      ...referencePrograms(UNLOCKS.prep),
       prep: prep.replace('DEPOSIT UP', 'DEPOSIT RIGHT'),
     });
     expect(wrongPrep.first_failure?.role).toBe('prep');
     expect(wrongPrep.first_failure?.reason).toBe('The pickup counter is above Brew: use Deposit up.');
 
-    const wrongFloor = runLevel(levels[22], compileProgram(referencePrograms(23).query), {
-      ...referencePrograms(23),
+    const wrongFloor = runLevel(levels[UNLOCKS.floor - 1], compileProgram(referencePrograms(UNLOCKS.floor).query), {
+      ...referencePrograms(UNLOCKS.floor),
       floor: floor.replace('TAKE DOWN', 'TAKE LEFT'),
     });
     expect(wrongFloor.first_failure?.role).toBe('floor');
@@ -125,9 +129,9 @@ describe('directional worker handoffs', () => {
   });
 
   it('executes diagonal MOVE directions for floor robots', () => {
-    expect(compileRobot('MOVE UP_LEFT 1', 'floor', 23).compile_error).toBe('');
-    const programs = { ...referencePrograms(23), floor: 'MOVE UP_LEFT 1\nMOVE DOWN_RIGHT 1\nLISTEN' };
-    const result = runLevel(levels[22], compileProgram(programs.query), programs);
+    expect(compileRobot('MOVE UP_LEFT 1', 'floor', UNLOCKS.floor).compile_error).toBe('');
+    const programs = { ...referencePrograms(UNLOCKS.floor), floor: 'MOVE UP_LEFT 1\nMOVE DOWN_RIGHT 1\nLISTEN' };
+    const result = runLevel(levels[UNLOCKS.floor - 1], compileProgram(programs.query), programs);
     const edge = result.execution?.[0].events.find(
       (event) => event.actor === 'floor' && event.command === 'MOVE UP_LEFT 1' && event.from[0] !== event.to[0],
     );
@@ -140,11 +144,11 @@ describe('campaign handoff data', () => {
   it('ships canonical Query lessons with movement included in their targets', () => {
     expect(
       lessons
-        .slice(0, 14)
+        .slice(0, UNLOCKS.prep - 1)
         .every((lesson) => !lesson.solution.includes('TICKET') && !lesson.solution.includes('SUBMIT')),
     ).toBe(true);
-    expect(lessons[2].solution).toContain('MOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1');
-    expect(levels[2].block_target).toBeGreaterThanOrEqual(6);
-    expect(levels[2].instruction_target).toBeGreaterThanOrEqual(6);
+    expect(lessons[1].solution).toContain('MOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1');
+    expect(levels[1].block_target).toBeGreaterThanOrEqual(6);
+    expect(levels[1].instruction_target).toBeGreaterThanOrEqual(6);
   });
 });

@@ -10,13 +10,12 @@ import {
 import { comparisonUnlocked, parseWorkerComparison } from './robotConditions';
 import { DIRECTIONS } from './directions';
 import { DEPOSIT_RE, MOVE_RE, TAKE_RE, USE_RE, parseMoveTo } from './commands';
-import { QUERY_PROGRAM_LEVEL_CAP, ROBOT_STAND_IN_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
-import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from './robots';
+import { ROBOT_STAND_IN_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
+import { ROBOT_DISPLAY_NAMES } from './robots';
+import { UNLOCKS } from './unlocks';
 
 /** What a kitchen or floor robot can read on its current order. */
 export const ROBOT_CONDITION_VALUES = ['coffee', 'tea', 'sugar'] as const;
-/** Orders carry sugar counts from this shift on, so Brew learns to store and count them. */
-const SUGAR_LEVEL = 19;
 
 /**
  * Query's language, shared by every robot: wait for orders, move, take, deposit, branch, jump and repeat.
@@ -44,8 +43,8 @@ function prepCommands(level: number): string[] {
     ...sharedCommands('UP', 'UP'),
     'USE UP',
     ...DIRECTIONS.filter((direction) => direction !== 'UP').map((direction) => `USE ${direction}`),
-    ...(level >= SUGAR_LEVEL ? ['STORE var1 FROM sugar', 'FOR var1 TIMES'] : []),
-    ...(level >= 20 ? ['FUNCTION recipe', 'CALL recipe', 'RETURN'] : []),
+    ...(level >= UNLOCKS.prepSugar ? ['STORE var1 FROM sugar', 'FOR var1 TIMES'] : []),
+    ...(level >= UNLOCKS.functions ? ['FUNCTION recipe', 'CALL recipe', 'RETURN'] : []),
   ];
 }
 /** Porter reads each order's table into memory and walks there by itself; it also clears dirty cups. */
@@ -60,7 +59,7 @@ function floorCommands(level: number): string[] {
     'FUNCTION clear',
     'CALL clear',
     'RETURN',
-    ...(level >= ROBOT_UNLOCK_LEVELS.floor ? ['WAIT DIRTY'] : []),
+    ...(level >= UNLOCKS.floor ? ['WAIT DIRTY'] : []),
   ];
 }
 /** Where each robot's Store can read from. */
@@ -75,9 +74,9 @@ function memoryInstruction(command: string, role: Exclude<RobotRole, 'query'>, l
     return (
       (VARIABLES as readonly string[]).includes(stored.variable) &&
       ROBOT_STORE_SOURCES[role].includes(stored.value) &&
-      (role === 'floor' || level >= SUGAR_LEVEL)
+      (role === 'floor' || level >= UNLOCKS.prepSugar)
     );
-  if (parseTimes(command)) return role === 'prep' && level >= SUGAR_LEVEL;
+  if (parseTimes(command)) return role === 'prep' && level >= UNLOCKS.prepSugar;
   return (role === 'floor' && !!parseMoveTo(command)) || (role === 'prep' && USE_RE.test(command));
 }
 /** Order conditions read like Query's, against the order a robot is working on. */
@@ -88,11 +87,11 @@ const robotCondition = (command: string) =>
   ) ?? false;
 /** Commands are role-gated; numbered MOVE operands are edited separately in the block editor. */
 export function robotCommands(role: RobotRole, level: number): string[] {
-  if (role === 'query') return availableCommands(Math.min(level, QUERY_PROGRAM_LEVEL_CAP));
+  if (role === 'query') return availableCommands(level);
   return role === 'prep' ? prepCommands(level) : floorCommands(level);
 }
 export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAND_IN_LEVEL): Program {
-  if (role === 'query') return compileProgram(source, Math.min(level, QUERY_PROGRAM_LEVEL_CAP));
+  if (role === 'query') return compileProgram(source, level);
   const p: Program = {
     source,
     instructions: [],

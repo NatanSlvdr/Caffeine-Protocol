@@ -28,4 +28,5 @@ export * from './simulation';
 export * from './street';
 export * from './tickets';
 export * from './types';
+export * from './unlocks';
 export * from './visualProgram';

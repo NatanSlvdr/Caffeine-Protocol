@@ -6,6 +6,7 @@ import {
   streamCustomerEvent,
 } from '../../../src/domain/program';
 import type { Customer } from '../../../src/domain/types';
+import { UNLOCKS } from '../../../src/domain/unlocks';
 
 const customer: Customer = {
   customer_id: 'C1',
@@ -17,7 +18,8 @@ const customer: Customer = {
 };
 const source =
   'LISTEN\nTAKE UP\nITEM 2 coffee\nSTORE var2 FROM number\nWRITE var2 sugar\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
-const execute = (code = source, guest = customer) => executeCustomerEvent(compileProgram(code, 10), guest, 'paper');
+const execute = (code = source, guest = customer) =>
+  executeCustomerEvent(compileProgram(code, UNLOCKS.numbers), guest, 'paper');
 
 describe('stored values and paper writes', () => {
   it.each([0, 1, 2])('writes %i sugar on the same paper without changing its drink quantity', (number) => {
@@ -75,11 +77,11 @@ describe('stored values and paper writes', () => {
     expect(migrateQuerySource(next)).toBe(next);
   });
   it('unlocks fixed sugar writes before named variables', () => {
-    expect(compileProgram('LISTEN\nWRITE 1 sugar', 5).compile_error).toContain('locked');
-    expect(compileProgram('LISTEN\nWRITE 1 sugar', 6).compile_error).toBe('');
-    expect(compileProgram('LISTEN\nSTORE var2 FROM number', 9).compile_error).toContain('locked');
-    expect(compileProgram('LISTEN\nWRITE var2 sugar', 9).compile_error).toContain('locked');
-    expect(compileProgram('LISTEN\nSTORE var2 FROM number\nWRITE var2 sugar', 10).compile_error).toBe('');
+    expect(compileProgram('LISTEN\nWRITE 1 sugar', UNLOCKS.sugar - 1).compile_error).toContain('locked');
+    expect(compileProgram('LISTEN\nWRITE 1 sugar', UNLOCKS.sugar).compile_error).toBe('');
+    expect(compileProgram('LISTEN\nSTORE var2 FROM number', UNLOCKS.numbers - 1).compile_error).toContain('locked');
+    expect(compileProgram('LISTEN\nWRITE var2 sugar', UNLOCKS.numbers - 1).compile_error).toContain('locked');
+    expect(compileProgram('LISTEN\nSTORE var2 FROM number\nWRITE var2 sugar', UNLOCKS.numbers).compile_error).toBe('');
   });
 });
 
@@ -87,8 +89,8 @@ it('assigns constants and copies values between fixed slots', () => {
   const result = execute(source.replace('STORE var2 FROM number', 'STORE var1 FROM 3\nSTORE var2 FROM var1'));
   expect(result.error).toBe('');
   expect(result.tickets[0].sugar_count).toBe(3);
-  expect(compileProgram('LISTEN\nSTORE custom FROM number', 10).compile_error).toContain('locked');
-  expect(compileProgram('LISTEN\nWRITE custom sugar', 10).compile_error).toContain('locked');
+  expect(compileProgram('LISTEN\nSTORE custom FROM number', UNLOCKS.numbers).compile_error).toContain('locked');
+  expect(compileProgram('LISTEN\nWRITE custom sugar', UNLOCKS.numbers).compile_error).toContain('locked');
 });
 it('maps old names to fixed slots without colliding with existing variables', () => {
   expect(migrateQuerySource('LISTEN\nSTORE var1 FROM 1\nSTORE sugars FROM number\nWRITE sugars sugar')).toBe(

@@ -40,8 +40,26 @@ const cleanQueryMap = (programs: Record<string, string>) =>
 
 export { cleanFloor, cleanQuery };
 
-function validateProgress(v: Record<string, unknown>, lessons: LessonCatalog): void {
-  const index = (value: unknown): value is number => isShiftIndex(value, lessons.length);
+/** v1–v3 saves were written against the 32-shift campaign; v4 against the 21-shift one. */
+const LEGACY_SHIFTS = 32;
+/**
+ * For each shift of the 21-shift campaign, the 32-shift shift that played the same way, if any.
+ * A legacy save keeps stars and programs only for these, and has served a new shift once it
+ * served its counterpart. Act IV is new, so it has none.
+ */
+// prettier-ignore
+const LEGACY_COUNTERPARTS: readonly (number | undefined)[] = [
+  0, // Prologue
+  2, 3, 4, 6, 8, 9, 10, // Act I, Query
+  16, 17, 18, 19, 20, // Act II, Brew
+  23, 25, 28, // Act III, Porter
+  undefined, undefined, undefined, undefined, undefined, // Act IV
+];
+/** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
+const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
+
+function validateProgress(v: Record<string, unknown>, shifts: number): void {
+  const index = (value: unknown): value is number => isShiftIndex(value, shifts);
   if (!index(v.selected) || !index(v.unlocked) || v.selected > v.unlocked || typeof v.complete !== 'boolean')
     throw new Error('Invalid campaign progress.');
   if (v.version === 1 && v.unlocked > 13) throw new Error('Invalid campaign progress.');
@@ -56,8 +74,8 @@ function validateProgress(v: Record<string, unknown>, lessons: LessonCatalog): v
   }
 }
 
-function validateMaps(v: Record<string, unknown>, lessons: LessonCatalog): void {
-  const index = (value: unknown): value is number => isShiftIndex(value, lessons.length);
+function validateMaps(v: Record<string, unknown>, shifts: number): void {
+  const index = (value: unknown): value is number => isShiftIndex(value, shifts);
   for (const key of ['drafts', 'solutions', 'stars', 'story']) {
     const entries = v[key];
     if (!isRecord(entries)) throw new Error(`Missing ${key} data.`);
@@ -94,15 +112,11 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
   };
 }
 
-function validateRobotMaps(
-  v: Record<string, unknown>,
-  lessons: LessonCatalog,
-): { robotDrafts: Record<string, RobotPrograms>; robotSolutions: Record<string, RobotPrograms> } {
-  const index = (value: unknown): value is number => isShiftIndex(value, lessons.length);
-  const robotMaps: { robotDrafts: Record<string, RobotPrograms>; robotSolutions: Record<string, RobotPrograms> } = {
-    robotDrafts: {},
-    robotSolutions: {},
-  };
+type RobotMaps = { robotDrafts: Record<string, RobotPrograms>; robotSolutions: Record<string, RobotPrograms> };
+
+function validateRobotMaps(v: Record<string, unknown>, shifts: number): RobotMaps {
+  const index = (value: unknown): value is number => isShiftIndex(value, shifts);
+  const robotMaps: RobotMaps = { robotDrafts: {}, robotSolutions: {} };
   if (v.version === 1)
     for (const [flat, mapped] of [
       ['drafts', 'robotDrafts'],
@@ -130,18 +144,16 @@ function validateRobotMaps(
   return robotMaps;
 }
 
-function migrateLegacyVersion(
-  v: Record<string, unknown>,
-  robotMaps: { robotDrafts: Record<string, RobotPrograms>; robotSolutions: Record<string, RobotPrograms> },
-  lessons: LessonCatalog,
-): void {
-  // Semantic-copy programs cannot be translated into the new token puzzles.
-  // Preserve unlocks and other robots, but retire Query drafts, scores and story beats.
-  if (v.version === 3) return;
+/**
+ * Semantic-copy Query programs (v1, v2) can't be translated into the token puzzles.
+ * Keep unlocks and the other robots, but retire their Query code, Act I scores and story beats.
+ */
+function retireSemanticQuery(v: Record<string, unknown>, robotMaps: RobotMaps): void {
+  if (v.version !== 1 && v.version !== 2) return;
   for (const key of ['robotDrafts', 'robotSolutions'] as const) {
     for (const [shift, programs] of Object.entries(robotMaps[key])) {
       if (key === 'robotSolutions' && Number(shift) < 14) delete robotMaps[key][shift];
-      else programs.query = lessons[Number(shift)].starter;
+      else programs.query = '';
     }
   }
   const keepLater = (entries: Record<string, unknown>) =>
@@ -152,24 +164,63 @@ function migrateLegacyVersion(
   v.story = keepLater(v.story as Record<string, unknown>);
 }
 
+/** Move a 32-shift save onto the 21-shift campaign: shifts that played the same keep their work. */
+function migrateLegacyShifts(v: Record<string, unknown>, robotMaps: RobotMaps, lessons: LessonCatalog): void {
+  const carry = <T>(entries: Record<string, T>) =>
+    Object.fromEntries(
+      LEGACY_COUNTERPARTS.flatMap((old, shift) =>
+        old !== undefined && Object.hasOwn(entries, String(old)) ? [[String(shift), entries[String(old)]]] : [],
+      ),
+    );
+  const semantic = v.version === 1 || v.version === 2;
+  for (const key of ['robotDrafts', 'robotSolutions'] as const) {
+    robotMaps[key] = carry(robotMaps[key]);
+    if (semantic)
+      for (const [shift, programs] of Object.entries(robotMaps[key])) programs.query = lessons[Number(shift)].starter;
+  }
+  v.drafts = carry(v.drafts as Record<string, string>);
+  v.solutions = carry(v.solutions as Record<string, string>);
+  v.stars = carry(v.stars as Record<string, number>);
+  v.story = Object.fromEntries(
+    Object.entries(v.story as Record<string, boolean>).flatMap(([old, seen]) =>
+      old in LEGACY_SCENES ? [[String(LEGACY_SCENES[old]), seen]] : [],
+    ),
+  );
+  // Served every shift whose counterpart was served; the first one left is where play resumes.
+  const served = (old: number | undefined) =>
+    old !== undefined && (old < (v.unlocked as number) || (v.complete as boolean));
+  let unlocked = LEGACY_COUNTERPARTS.findIndex((old) => !served(old));
+  if (unlocked < 0) unlocked = lessons.length - 1;
+  v.unlocked = Math.min(unlocked, lessons.length - 1);
+  const selected = LEGACY_COUNTERPARTS.indexOf(v.selected as number);
+  v.selected = selected >= 0 && selected <= unlocked ? selected : unlocked;
+  // The new Act IV was never played, so nobody has finished this campaign yet.
+  v.complete = false;
+}
+
 /** Validate an entire import before replacing anything in the active save. */
 export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   if (text.length > 2_000_000) throw new Error('This save is too large. Choose a Caffeine Protocol JSON export.');
   const v: unknown = JSON.parse(text);
-  if (!isRecord(v) || (v.version !== 1 && v.version !== 2 && v.version !== 3))
+  if (!isRecord(v) || (v.version !== 1 && v.version !== 2 && v.version !== 3 && v.version !== 4))
     throw new Error('Unsupported save version. Your current café has been kept.');
-  validateProgress(v, lessons);
-  validateMaps(v, lessons);
+  const legacy = v.version !== 4,
+    shifts = legacy ? LEGACY_SHIFTS : lessons.length;
+  validateProgress(v, shifts);
+  validateMaps(v, shifts);
   const settings = validateSettingsMap(v);
-  const robotMaps = validateRobotMaps(v, lessons);
-  migrateLegacyVersion(v, robotMaps, lessons);
-  const storedComplete = v.version !== 1 && (v.complete as boolean);
-  let unlocked = (v.version === 1 && v.complete ? 14 : v.unlocked) as number;
+  const robotMaps = validateRobotMaps(v, shifts);
+  // A finished v1 save had served all of Act I, which ended at the 14th shift.
+  if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
+  retireSemanticQuery(v, robotMaps);
+  if (legacy) migrateLegacyShifts(v, robotMaps, lessons);
+  const storedComplete = v.complete as boolean;
+  let unlocked = v.unlocked as number;
   // A save completed against a shorter catalog unlocks the next appended shift.
   // It is no longer complete until the player finishes that shift.
   if (storedComplete && unlocked < lessons.length - 1) unlocked += 1;
   return {
-    version: 3,
+    version: 4,
     ...robotMaps,
     selected: v.selected as number,
     unlocked,

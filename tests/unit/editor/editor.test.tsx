@@ -6,6 +6,7 @@ import { Harness, choose, currentSource as source } from '../../helpers/editorHa
 import { CodingPaneHeader } from '../../../src/components/CodingPaneHeader';
 import { compileProgram } from '../../../src/domain/program';
 import { compileRobot } from '../../../src/domain/robotProgram';
+import { UNLOCKS } from '../../../src/domain/unlocks';
 import { placeBlock, removeVisualBlock, visualProgram } from '../../../src/domain/visualProgram';
 afterEach(() => {
   vi.restoreAllMocks();
@@ -481,13 +482,13 @@ describe('minimal coding pane header', () => {
       role: 'query' as const,
       onRole: vi.fn(),
     };
-    const { rerender } = render(<CodingPaneHeader {...props} level={14} />);
+    const { rerender } = render(<CodingPaneHeader {...props} level={UNLOCKS.prep - 1} />);
     expect(screen.getAllByRole('tab')).toHaveLength(3);
     expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Brew' }).hasAttribute('disabled')).toBe(true);
     await userEvent.click(screen.getByRole('tab', { name: 'Brew' }));
     expect(props.onRole).not.toHaveBeenCalled();
-    rerender(<CodingPaneHeader {...props} level={15} />);
+    rerender(<CodingPaneHeader {...props} level={UNLOCKS.prep} />);
     expect(screen.getAllByRole('tab')).toHaveLength(3);
     expect(screen.getByRole('tab', { name: 'Porter' }).hasAttribute('disabled')).toBe(true);
     await userEvent.click(screen.getAllByRole('tab')[1]);

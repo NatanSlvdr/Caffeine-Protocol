@@ -1,5 +1,5 @@
 import type { SpeechIntent } from './types';
-import { WORKER_COMPARISON_LEVEL, WORKER_COUNT_COMPARISON_LEVEL } from './constants';
+import { UNLOCKS } from './unlocks';
 
 /** Kitchen/floor ticket comparisons retained independently of Query speech tokens. */
 export const WORKER_CONDITION_OPERATORS = ['IN', '=', '!='] as const;
@@ -32,9 +32,7 @@ const comparisonUsesCount = (condition: WorkerComparisonCondition) =>
   condition.left === 'count' || condition.right === 'SUGAR COUNT' || ['0', '1', '2'].includes(condition.right);
 export function comparisonUnlocked(command: string, level: number) {
   const condition = parseWorkerComparison(command);
-  return (
-    !!condition && level >= (comparisonUsesCount(condition) ? WORKER_COUNT_COMPARISON_LEVEL : WORKER_COMPARISON_LEVEL)
-  );
+  return !!condition && level >= (comparisonUsesCount(condition) ? UNLOCKS.numbers : UNLOCKS.choices);
 }
 /** Raw ticket field selected by the condition's left operand. */
 function resolveLeft(condition: WorkerComparisonCondition, order: SpeechIntent, intent: SpeechIntent): unknown {

@@ -4,6 +4,7 @@ import type { Point } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { directionVectors } from './directions';
 import { commandDirection } from './commands';
+import { robotUnlocked } from './robots';
 import {
   customerApproach,
   customerExit,
@@ -28,10 +29,10 @@ export function sampleReplay(result: RunResult, time: number) {
   const local = time - (seed?.start ?? 0),
     level = Number(result.level_id.slice(1));
   const actors: Partial<Record<ActorId, ActorSnapshot>> = {};
-  if (level >= 3) actors.query = { position: STARTS.query, inventory: [], role: 'query' };
+  if (robotUnlocked('query', level)) actors.query = { position: STARTS.query, inventory: [], role: 'query' };
   actors.prep = { position: STARTS.prep, inventory: [], role: 'prep' };
   actors.floor = { position: STARTS.floor, inventory: [], role: 'floor' };
-  if (level < 3) actors.niko = { position: STARTS.query, inventory: [], role: 'query' };
+  if (!robotUnlocked('query', level)) actors.niko = { position: STARTS.query, inventory: [], role: 'query' };
   const logs = [...(seed?.events ?? [])].sort((a, b) => a.start - b.start || a.end - b.end);
   for (const id of ['query', 'prep', 'floor', 'niko'] as const) {
     const history = logs.filter((e) => e.actor === id && e.start <= local);

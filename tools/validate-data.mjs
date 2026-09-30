@@ -18,6 +18,8 @@ import {
 import { extensionSeeds } from '../src/data/campaign/extension-seeds.ts';
 import { campaignNarrative } from '../src/data/campaign/narrative.ts';
 import { extensionSeed } from '../src/data/campaign/generators/extensionCustomers.ts';
+import { shiftId } from '../src/data/campaign/extension-config.ts';
+import { UNLOCKS } from '../src/domain/unlocks.ts';
 
 const root = new URL('../src/data/campaign/', import.meta.url);
 const readJson = (url) => JSON.parse(readFileSync(url, 'utf8'));
@@ -91,12 +93,12 @@ for (const seed of extensionSeeds) {
   if (!Number.isInteger(act) || act < 2 || act > 4) failures.push(`extension ${seed.id}: derived act ${act} invalid`);
   for (let s = 0; s < 3; s++) {
     const generated = extensionSeed(levelNumber, s);
-    const expectedSeedId = `L${levelNumber}_${'ABC'[s]}`;
+    const expectedSeedId = `${shiftId(levelNumber)}_${'ABC'[s]}`;
     if (generated.id !== expectedSeedId)
       failures.push(`extension ${seed.id}: generated seed ${generated.id} must equal ${expectedSeedId}`);
     if (seedIds.has(generated.id)) failures.push(`campaign: duplicate seed id ${generated.id}`);
     seedIds.add(generated.id);
-    for (const error of collectSeedErrors(generated, `L${levelNumber}`))
+    for (const error of collectSeedErrors(generated, shiftId(levelNumber)))
       failures.push(`extension ${seed.id}: ${error}`);
   }
 }
@@ -138,7 +140,7 @@ try {
   failures.push('docs/campaign/README.md is stale (run npm run docs:gen)');
 }
 
-// Extension mechanics are data-driven: the config must exist and open at L15
+// Extension mechanics are data-driven: the config must exist and open at Brew's first shift
 // so future shifts inherit coverage (seed/narrative pairing is enforced by
 // validateCampaign above via the shared validators).
 let mechanics = null;
@@ -147,8 +149,8 @@ try {
 } catch {
   failures.push('unreadable extension-config.json');
 }
-if (mechanics && (!Array.isArray(mechanics.stages) || mechanics.stages[0]?.from !== 15))
-  failures.push('extension-config.json needs stages opening at L15');
+if (mechanics && (!Array.isArray(mechanics.stages) || mechanics.stages[0]?.from !== UNLOCKS.prep))
+  failures.push(`extension-config.json needs stages opening at L${String(UNLOCKS.prep).padStart(2, '0')}`);
 
 if (failures.length) {
   console.error('validate:data failed:');

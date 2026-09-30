@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
+import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -15,7 +16,7 @@ function StoryScene({ level }: { level?: number }) {
     <div className="story-scene" aria-hidden="true">
       <Cafe
         level={level}
-        evening={level === undefined || level > 11}
+        evening={level === undefined || level > UNLOCKS.help}
         reduced={save.settings.reduced_motion}
         pixelArt={save.settings.pixel_art}
         showStatusBubbles={false}

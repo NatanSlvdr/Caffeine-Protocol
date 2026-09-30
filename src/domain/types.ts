@@ -228,7 +228,7 @@ export interface ServiceConfig {
   minLoad?: number;
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
-  version: 3;
+  version: 4;
   robotDrafts: Record<string, RobotPrograms>;
   robotSolutions: Record<string, RobotPrograms>;
 }

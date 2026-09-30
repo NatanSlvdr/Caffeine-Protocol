@@ -4,11 +4,11 @@ import { compileProgram } from '../../../src/domain/program';
 import { runLevel } from '../../../src/domain/simulation';
 import { sampleReplay } from '../../../src/domain/replay';
 
-const base = runLevel(levels[2], compileProgram(lessons[2].solution, 3));
+const base = runLevel(levels[1], compileProgram(lessons[1].solution, 2));
 describe('Query paper handoff', () => {
   it('checks out automatically without a payment block after depositing paper', () => {
     const source = 'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';
-    const result = runLevel(levels[2], compileProgram(source, 3));
+    const result = runLevel(levels[1], compileProgram(source, 2));
     expect(result.passed).toBe(true);
     expect(result.events.every((e) => e.payment?.amount === 3)).toBe(true);
     expect(result.events.flatMap((e) => e.trace).some((e) => e.command === 'CHARGE ORDER')).toBe(false);
