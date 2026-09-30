@@ -18,6 +18,9 @@ const tokenUnlocks: Record<string, number> = {
   negation: UNLOCKS.sugar,
   number: UNLOCKS.numbers,
   ambiguous: UNLOCKS.help,
+  togo: UNLOCKS.toGo,
+  rush: UNLOCKS.rush,
+  closed: UNLOCKS.closing,
 };
 function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);
@@ -53,6 +56,9 @@ export function availableCommands(level: number): string[] {
   if (level >= UNLOCKS.forEach) c.push('FOR item IN heard orders');
   if (level >= UNLOCKS.numbers) c.push('STORE var1 FROM number', 'WRITE var1 sugar');
   if (level >= UNLOCKS.help) c.push('HELP', 'ERROR');
+  if (level >= UNLOCKS.toGo) c.push('WRITE togo');
+  if (level >= UNLOCKS.rush) c.push('WRITE rush');
+  if (level >= UNLOCKS.closing) c.push('STOP');
   return c;
 }
 /** Compile the finite instruction language; player text is never evaluated as JavaScript. */

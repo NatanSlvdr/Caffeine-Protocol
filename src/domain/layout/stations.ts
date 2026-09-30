@@ -17,8 +17,11 @@ export const STATIONS = {
   water: { cell: [7, 4], prep: [7, 5], label: 'SINK' },
   brewer: { cell: [2, 4], prep: [2, 5], label: 'COFFEE MACHINE' },
   sugar: { cell: [4, 4], prep: [4, 5], label: 'SUGAR' },
+  lids: { cell: [5, 4], prep: [5, 5], label: 'LIDS' },
   pickup: { cell: [6, 4], prep: [6, 5], floor: [6, 3], label: 'DRINK PICKUP' },
   returns: { cell: [7, 4], prep: [7, 5], floor: [7, 3], label: 'SINK' },
+  /** Porter leaves take-away drinks on the counter corner by the door; their customers wait beside it. */
+  togo: { cell: [-6, 4], floor: [-6, 3], customer: [-7, 4], label: 'TO-GO SHELF' },
 } as const;
 export type StationId = keyof typeof STATIONS;
 export const STARTS: Record<RobotRole, Point> = {
@@ -40,6 +43,7 @@ export function placeLabel(place: Point): string {
   const [x, z] = place;
   if (x === STATIONS.pickup.floor[0] && z === STATIONS.pickup.floor[1]) return 'Pickup';
   if (x === STATIONS.returns.floor[0] && z === STATIONS.returns.floor[1]) return 'Sink';
+  if (x === STATIONS.togo.floor[0] && z === STATIONS.togo.floor[1]) return 'To-go shelf';
   const table = TABLE_LAYOUT.findIndex((_, i) => tableFront(i)[0] === x && tableFront(i)[1] === z);
   return table >= 0 ? `Table ${table + 1}` : `Tile ${x}, ${z}`;
 }

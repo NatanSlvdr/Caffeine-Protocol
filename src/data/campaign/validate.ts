@@ -23,7 +23,7 @@ export const SEED_ID_RE = /^L\d+_[A-Z]$/;
 export const CUSTOMER_ID_RE = /^C\d+$/;
 
 /** Closed concept vocabulary shared with schema.ts for semantic checks. */
-const TOKENS = new Set(['ambiguous', 'coffee', 'negation', 'number', 'sugar', 'tea']);
+const TOKENS = new Set(['ambiguous', 'closed', 'coffee', 'negation', 'number', 'rush', 'sugar', 'tea', 'togo']);
 
 /** Expected table count from the same config used to build extension shifts. */
 export function extensionActiveTables(levelNumber: number): number {
@@ -39,6 +39,8 @@ export function extensionServiceForLevel(levelNumber: number): ServiceConfig {
     clearing: true,
     objective: 'serve',
     minLoad: config.minLoad,
+    ...(config.cups ? { cups: config.cups } : {}),
+    ...(config.closing ? { closing: true } : {}),
   };
 }
 
@@ -307,7 +309,7 @@ const ExtensionSeedSchema = v.strictObject({
   id: v.pipe(v.string(), v.regex(/^L\d+$/)),
   title: v.pipe(v.string(), v.minLength(1)),
   note: v.pipe(v.string(), v.minLength(1)),
-  omission: v.pipe(v.string(), v.minLength(1)),
+  omission: v.optional(v.pipe(v.string(), v.minLength(1))),
   occurrence: v.optional(v.pipe(v.number(), v.integer(), v.minValue(1))),
   todo: v.optional(v.pipe(v.string(), v.minLength(1))),
   robot: v.optional(v.picklist(['prep', 'floor'])),
@@ -480,6 +482,10 @@ export function collectBuiltExtensionErrors(inputs: BuiltExtensionInputs): strin
     if (service.objective !== 'serve') errors.push(`${seed.id}: extension objective must be serve`);
     if ((service.minLoad ?? 0) !== expectedService.minLoad)
       errors.push(`${seed.id}: minLoad ${service.minLoad} differs from derived ${expectedService.minLoad}`);
+    if ((service.cups ?? 0) !== (expectedService.cups ?? 0))
+      errors.push(`${seed.id}: cups ${service.cups} differs from derived ${expectedService.cups}`);
+    if (!!service.closing !== !!expectedService.closing)
+      errors.push(`${seed.id}: closing ${service.closing} differs from derived ${expectedService.closing}`);
   }
   return errors;
 }

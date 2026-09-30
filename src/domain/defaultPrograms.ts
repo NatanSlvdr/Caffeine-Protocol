@@ -16,21 +16,37 @@ export function movementSource(from: Point, to: Point, role?: RobotRole) {
   });
   return moves.map((m) => `MOVE ${m.direction} ${m.count}`);
 }
-export function preparationSource(level: number, batch = 1) {
+/** The odd rules of an Act IV shift that change what the robots have to do. */
+export interface ShiftRules {
+  /** Take-away orders: a lid, then the to-go shelf. */
+  toGo?: boolean;
+  /** Only a few cups: wash the used ones. */
+  cups?: boolean;
+  /** Rush orders: make and serve them before waiting for more. */
+  rush?: boolean;
+  /** Closing time: Stop once Wait for Orders reports Closed. */
+  closing?: boolean;
+}
+const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
+export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {
   const at = STATIONS;
   const move = (a: Point, b: Point) => movementSource(a, b, 'prep');
-  // Take up reaches the station above Brew: storage, then the sink's water, then sugar; Use up runs the coffee machine.
-  const sugar =
-    level >= UNLOCKS.prepSugar
-      ? [
-          ...move(at.brewer.prep, at.sugar.prep),
-          'STORE var1 FROM sugar',
-          'FOR var1 TIMES',
-          'TAKE UP',
-          'END',
-          ...move(at.sugar.prep, at.pickup.prep),
-        ]
-      : move(at.brewer.prep, at.pickup.prep);
+  // Take up reaches the station above Brew: storage, then the sink's water, then sugar and lids; Use up runs the
+  // coffee machine, and at the sink washes the used cups.
+  const sweetened = level >= UNLOCKS.prepSugar;
+  const sugar = sweetened
+    ? [...move(at.brewer.prep, at.sugar.prep), 'STORE var1 FROM sugar', 'FOR var1 TIMES', 'TAKE UP', 'END']
+    : [];
+  const afterSugar = sweetened ? at.sugar.prep : at.brewer.prep;
+  const lid = rules.toGo
+    ? [
+        ...move(afterSugar, at.lids.prep),
+        'IF togo IN CUSTOMER SPEECH',
+        'TAKE UP',
+        'END',
+        ...move(at.lids.prep, at.pickup.prep),
+      ]
+    : move(afterSugar, at.pickup.prep);
   const recipe = [
     ...move(STARTS.prep, at.ingredients.prep),
     'TAKE UP',
@@ -45,13 +61,26 @@ export function preparationSource(level: number, batch = 1) {
     ...move(at.water.prep, at.brewer.prep),
     'USE UP',
     ...sugar,
+    ...lid,
     'DEPOSIT UP',
-    ...move(at.pickup.prep, STARTS.prep),
+    ...(rules.cups
+      ? [...move(at.pickup.prep, at.water.prep), 'USE UP', ...move(at.water.prep, STARTS.prep)]
+      : move(at.pickup.prep, STARTS.prep)),
   ];
-  const waits = Array.from({ length: batch }, () => 'LISTEN');
+  const functions = level >= UNLOCKS.functions;
+  const call = functions ? ['CALL recipe'] : recipe;
+  // Each claim may find the café closed: make what's already claimed, then stop.
+  const waits = Array.from({ length: batch }, (_, i) => [
+    'LISTEN',
+    ...(rules.closing ? STOP_WHEN_CLOSED(Array.from({ length: i }, () => call).flat()) : []),
+    // A rush order is made straight away, before waiting for another ticket.
+    ...(rules.rush && i + 1 < batch ? ['IF rush IN CUSTOMER SPEECH', ...call, 'JUMP listen', 'END'] : []),
+  ]).flat();
+  const top = rules.rush && batch > 1 ? ['POSITION listen'] : [];
   return (
-    level >= UNLOCKS.functions
+    functions
       ? [
+          ...top,
           ...waits,
           ...Array.from({ length: batch }, () => 'CALL recipe'),
           'REPEAT',
@@ -60,10 +89,10 @@ export function preparationSource(level: number, batch = 1) {
           'RETURN',
           'END',
         ]
-      : [...waits, ...recipe, 'REPEAT']
+      : [...top, ...waits, ...recipe, 'REPEAT']
   ).join('\n');
 }
-export function floorSource(level: number, batch = 1) {
+export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
   // Porter keeps its starting place in Var B, reads each order's table into Var A and walks there by itself.
   const serve = ['STORE var1 FROM table', 'MOVE var1', 'DEPOSIT UP', 'MOVE var2'];
   // The sink sits below the tile right of Porter's start.
@@ -77,16 +106,46 @@ export function floorSource(level: number, batch = 1) {
     'DEPOSIT DOWN',
     ...movementSource(STATIONS.returns.floor, STARTS.floor, 'floor'),
   ];
+  const clearing = level >= UNLOCKS.floor;
+  if (rules.toGo || rules.cups || rules.rush || rules.closing) {
+    // One drink at a time: rush orders never wait on the tray, and every table cup is cleared as it's served.
+    if (batch !== 1) throw new Error('Porter handles the odd rules one drink at a time.');
+    const toGo = rules.toGo
+      ? [
+          'IF togo IN CUSTOMER SPEECH',
+          ...movementSource(STARTS.floor, STATIONS.togo.floor, 'floor'),
+          'DEPOSIT DOWN',
+          'MOVE var2',
+          'ELSE',
+        ]
+      : [];
+    return [
+      'STORE var2 FROM here',
+      'LISTEN',
+      ...(rules.closing ? STOP_WHEN_CLOSED() : []),
+      'TAKE DOWN',
+      ...toGo,
+      'CALL deliver',
+      ...(clearing ? ['CALL clear'] : []),
+      ...(rules.toGo ? ['END'] : []),
+      'REPEAT',
+      'FUNCTION deliver',
+      ...serve,
+      'RETURN',
+      'END',
+      ...(clearing ? ['FUNCTION clear', ...clear, 'RETURN', 'END'] : []),
+    ].join('\n');
+  }
   return [
     'STORE var2 FROM here',
     ...Array.from({ length: batch }, () => ['LISTEN', 'TAKE DOWN']).flat(),
     ...Array.from({ length: batch }, () => ['CALL deliver']).flat(),
-    ...(level >= UNLOCKS.floor ? Array.from({ length: batch }, () => ['CALL clear']).flat() : []),
+    ...(clearing ? Array.from({ length: batch }, () => ['CALL clear']).flat() : []),
     'REPEAT',
     'FUNCTION deliver',
     ...serve,
     'RETURN',
     'END',
-    ...(level >= UNLOCKS.floor ? ['FUNCTION clear', ...clear, 'RETURN', 'END'] : []),
+    ...(clearing ? ['FUNCTION clear', ...clear, 'RETURN', 'END'] : []),
   ].join('\n');
 }

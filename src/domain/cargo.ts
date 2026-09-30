@@ -15,7 +15,7 @@ export function cargoLabel(cargo: Cargo): string {
     case 'water':
       return cargo.item === 'tea' ? 'Tea leaves + water' : 'Ground coffee + water';
     case 'brewed':
-      return drink + (cargo.sugar ? ` · ${cargo.sugar} sugar` : ' · No sugar');
+      return drink + (cargo.sugar ? ` · ${cargo.sugar} sugar` : ' · No sugar') + (cargo.lid ? ' · Lid on' : '');
     case 'dirty':
       return 'Dirty cup';
   }

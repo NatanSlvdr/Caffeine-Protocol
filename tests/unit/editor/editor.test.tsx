@@ -26,7 +26,13 @@ describe('compact visual code', () => {
       screen.getByLabelText('Library Take direction').querySelectorAll('.direction-mini-grid > span'),
     ).toHaveLength(9);
     await userEvent.click(screen.getByLabelText('Library Write value'));
-    expect(screen.getAllByRole('option').map((e) => e.textContent)).toEqual(['Coffee', 'Tea', 'Sugar']);
+    expect(screen.getAllByRole('option').map((e) => e.textContent)).toEqual([
+      'Coffee',
+      'Tea',
+      'Sugar',
+      'To go',
+      'Rush',
+    ]);
   });
   it('ignores shop selections and keeps its operands unselected', async () => {
     render(<Harness />);
@@ -220,7 +226,13 @@ describe('compact visual code', () => {
     expect(screen.queryByRole('listbox')).toBeNull();
   });
   it('offers unlocked operands and all eight movement directions', async () => {
-    render(<Harness role="prep" level={20} initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 1\nEND'} />);
+    render(
+      <Harness
+        role="prep"
+        level={UNLOCKS.functions}
+        initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 1\nEND'}
+      />,
+    );
     await userEvent.click(screen.getByLabelText('Block 2 value'));
     expect(screen.getAllByRole('option').map((e) => e.textContent)).toEqual(['Coffee', 'Tea', 'Sugar']);
     await userEvent.keyboard('{Escape}');

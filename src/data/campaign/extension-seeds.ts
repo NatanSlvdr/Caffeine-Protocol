@@ -3,8 +3,9 @@ export interface LevelSeed {
   id: string;
   title: string;
   note: string;
-  /** The reference line blanked in the starter, in the robots' shared language. */
-  omission: string;
+  /** The reference line blanked in the starter, in the robots' shared language. Act IV shifts have none: they
+   * start from the previous shift's programs, which the new rule breaks. */
+  omission?: string;
   /** Which matching line to blank when the command repeats, counting from 1. */
   occurrence?: number;
   /** What the starter's TODO comment asks for, when the command alone would not say. */
@@ -89,50 +90,36 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L17',
     title: 'To Go',
-    note: 'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
-    robot: 'prep',
-    omission: 'STORE var1 FROM sugar',
-    todo: 'store the order’s sugar in Var A',
-    blocks: 87,
-    instructions: 2231,
+    note: 'Some customers order to go. Query writes To go on their ticket: If To go IN item, then Write To go. Brew puts a lid on those drinks: Take up at the lids, between the sugar and pickup. Porter leaves them on the to-go shelf by the door: walk there and Deposit down. They go in paper cups, so there’s nothing to clear.',
+    blocks: 94,
+    instructions: 2367,
   },
   {
     id: 'L18',
     title: 'Four Cups',
-    note: 'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
-    robot: 'prep',
-    omission: 'STORE var1 FROM sugar',
-    todo: 'store the order’s sugar in Var A',
-    blocks: 87,
-    instructions: 2231,
+    note: 'There are only four café cups. Taking beans or leaves at storage uses a clean cup, and Porter drops the used ones in the sink. Use up at the sink washes them. When no clean cup is left, Brew waits at the sink until a used one comes back.',
+    blocks: 83,
+    instructions: 2370,
   },
   {
     id: 'L19',
     title: 'In a Hurry',
-    note: 'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
-    robot: 'prep',
-    omission: 'STORE var1 FROM sugar',
-    todo: 'store the order’s sugar in Var A',
-    blocks: 87,
-    instructions: 2231,
+    note: 'Customers in a rush say so: Query writes Rush on their ticket. Rush orders jump the queue, and whoever holds one handles it first. Brew can’t wait for another ticket while it holds a rush order, and Porter can’t wait or pick up another drink while it carries one.',
+    blocks: 84,
+    instructions: 2357,
   },
   {
     id: 'L20',
     title: 'Last Orders',
-    note: 'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
-    robot: 'prep',
-    omission: 'STORE var1 FROM sugar',
-    todo: 'store the order’s sugar in Var A',
-    blocks: 87,
-    instructions: 2231,
+    note: 'After the last customer, Wait for Orders reports Closed instead of waiting. Check If Closed IN Orders, and Stop. Every robot has to stop, after finishing whatever it’s holding. A robot that keeps waiting keeps the café open.',
+    blocks: 90,
+    instructions: 2650,
   },
   {
     id: 'L21',
     title: 'Espresso Yourself',
-    note: 'The final service combines groups, clarification, both recipes, sugar, two-item trays, and clearing.',
-    omission: 'DEPOSIT UP',
-    todo: 'serve: deposit up onto the table',
-    blocks: 87,
-    instructions: 2947,
+    note: 'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
+    blocks: 108,
+    instructions: 3347,
   },
 ];

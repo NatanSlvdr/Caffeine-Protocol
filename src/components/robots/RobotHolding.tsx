@@ -4,6 +4,7 @@ import { Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
 import { OperandIcon } from '../OperandIcon';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
+import { OrderMarks } from '../OrderIcons';
 import { AutoHeight } from '@/shared/ui/AutoHeight';
 import { HoldingIcon } from './HoldingIcon';
 
@@ -57,7 +58,9 @@ export function RobotHolding({
           ? paper.with_sugar
             ? ' · With sugar'
             : ' · No sugar'
-          : '')
+          : '') +
+      (paper.to_go ? ' · To go' : '') +
+      (paper.rush ? ' · Rush' : '')
     : '';
   return (
     <AutoHeight
@@ -104,10 +107,11 @@ export function RobotHolding({
                   {paper.sugar_count}
                 </span>
               )}
+              <OrderMarks toGo={paper.to_go} rush={paper.rush} />
             </li>
           )}
           {inventory.map((cargo) => {
-            const label = cargoLabel(cargo) + (cargo.table > 0 ? ` · Table ${cargo.table}` : '');
+            const label = cargoLabel(cargo) + (cargo.table > 0 ? ` · Table ${cargo.table}` : ' · To go');
             return (
               <li key={`${cargo.ticketId}:${cargo.stage}:${cargo.sugar}`} title={label} aria-label={label}>
                 <span className="holding-item-icon">
@@ -119,6 +123,7 @@ export function RobotHolding({
                     {cargo.sugar}
                   </span>
                 )}
+                {cargo.lid && <OrderMarks toGo lid />}
               </li>
             );
           })}

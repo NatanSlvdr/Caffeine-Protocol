@@ -1,15 +1,6 @@
 import { Box, SoftBox, Appliance, TicketTray, CAFE_COLORS } from '../CafeModels';
 import { CafeFloor } from '../CafeFloor';
-import {
-  ENTRANCE,
-  FURNITURE,
-  ROOM,
-  STARTS,
-  STATIONS,
-  TABLE_LAYOUT,
-  tableSeat,
-  type StationId,
-} from '@/domain';
+import { ENTRANCE, FURNITURE, ROOM, STARTS, STATIONS, TABLE_LAYOUT, tableSeat, type StationId } from '@/domain';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate } from './Furniture';
 
 /** Floor zones, furniture, and station positions share the simulation's tile model. */
@@ -17,7 +8,7 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
   return (
     <group>
       <Box at={[-0.55, -0.42, -0.55]} size={[16.1, 0.7, ROOM[1] + 0.1]} color={CAFE_COLORS.walnut} />
-        <CafeFloor showGrid={showLabels} />
+      <CafeFloor showGrid={showLabels} />
       <Box at={[-0.6, 1.3, -6.6]} size={[16.2, 2.7, 0.2]} color={CAFE_COLORS.wall} />
       <CafeMural />
       <Box at={[-8.6, 1.3, -1.6]} size={[0.2, 2.7, 10.2]} color={CAFE_COLORS.wall} />
@@ -76,8 +67,10 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
           <FloorLabel at={STATIONS.ingredients.prep} label="STORAGE" />
           <FloorLabel at={STATIONS.grinder.prep} label="COFFEE MACHINE" />
           <FloorLabel at={STATIONS.sugar.prep} label="SUGAR" />
+          <FloorLabel at={STATIONS.lids.prep} label="LIDS" />
           <FloorLabel at={STATIONS.pickup.floor} label="DRINK PICKUP" />
           <FloorLabel at={STATIONS.returns.floor} label="SINK" />
+          <FloorLabel at={STATIONS.togo.floor} label="TO-GO SHELF" />
           <FloorLabel at={ENTRANCE} label="ENTER" />
         </>
       )}
@@ -91,4 +84,3 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
     </group>
   );
 }
-

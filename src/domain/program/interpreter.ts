@@ -3,10 +3,10 @@ import { orderTotal } from '../pricing';
 import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, HeardOrder } from '../types';
 import { samePoint, STARTS, STATIONS } from '../layout';
 import { interactionTarget, isOrderDeposit, isPaperPickup, moveQuery, queryPosition } from '../queryMovement';
-import { createTicket } from '../tickets';
+import { CLOSING_TICKET_ERROR, createTicket } from '../tickets';
 import { QUERY_INSTRUCTION_LIMIT } from '../constants';
 import { evaluateConditionExpression, parseConditionExpression } from './conditions';
-import { collectionSelectors, parseFor, parseStore, parseSugarWrite } from './vars';
+import { collectionSelectors, parseFor, parseMarkWrite, parseStore, parseSugarWrite } from './vars';
 
 /** Resume at the next speech event, returning a new state without mutating inputs. */
 export function* streamCustomerEvent(
@@ -147,6 +147,10 @@ export function* streamCustomerEvent(
       if (!Number.isInteger(amount) || amount < 0) return fail('Sugar must be a non-negative whole number.');
       ticket.sugar_count = amount;
       ticket.with_sugar = amount > 0;
+    } else if (parseMarkWrite(c)) {
+      if (!ticket) return fail('Take the order paper before writing on it.');
+      if (parseMarkWrite(c) === 'togo') ticket.to_go = true;
+      else ticket.rush = true;
     } else if (c.startsWith('ITEM ')) {
       if (!ticket) return fail('Take the order paper before writing its item.');
       const parts = c.split(' ');
@@ -224,6 +228,7 @@ export function* streamCustomerEvent(
           if (ambiguous()) return fail('This order is unclear. Use Help before taking paper.');
           if (!bindings.item) return fail('There’s no order to write down.');
           if (ticket) return fail('Deposit the current paper before taking another.');
+          if (customer.expected.closing) return fail(CLOSING_TICKET_ERROR);
           {
             const target = interactionTarget(queryPosition(out.state.counter), c.slice(5));
             if (!target || !samePoint(target, [STARTS.query[0], STARTS.query[1] - 1]))
@@ -267,7 +272,9 @@ export function* streamCustomerEvent(
               if (
                 (request.item !== undefined && ticket.item !== request.item) ||
                 (request.with_sugar !== undefined && ticket.with_sugar !== request.with_sugar) ||
-                (request.sugar_count !== undefined && ticket.sugar_count !== request.sugar_count)
+                (request.sugar_count !== undefined && ticket.sugar_count !== request.sugar_count) ||
+                (request.to_go ?? false) !== (ticket.to_go ?? false) ||
+                (request.rush ?? false) !== (ticket.rush ?? false)
               )
                 return fail('The submitted order does not match the customer’s request.');
             }
@@ -277,6 +284,10 @@ export function* streamCustomerEvent(
           break;
         case 'REPEAT':
           out.state.pc = 0;
+          return finish();
+        case 'STOP':
+          if (ticket) return fail('Deposit the current paper before stopping.');
+          out.state = { ...out.state, pc: 0, stopped: true };
           return finish();
       }
     out.heldPaper = ticket;

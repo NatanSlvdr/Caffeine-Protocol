@@ -19,6 +19,7 @@ export function Character({
   facing = 0,
   drinking = false,
   tea = false,
+  paper = false,
   reach = 0,
 }: {
   at: Point;
@@ -33,6 +34,8 @@ export function Character({
   facing?: number;
   drinking?: boolean;
   tea?: boolean;
+  /** The drink is take-away, in a paper cup with a lid. */
+  paper?: boolean;
   reach?: number;
 }) {
   const ref = useRef<Group>(null),
@@ -94,7 +97,7 @@ export function Character({
             ))}
             {drinking && (
               <group position={[0.22, 1.26 + sip * 0.27, 0.43 - sip * 0.19]} rotation-x={-sip * 0.3} scale={0.72}>
-                <Cup tea={tea} />
+                <Cup tea={tea} paper={paper} lid={paper} />
               </group>
             )}
           </>
@@ -108,4 +111,3 @@ export function Character({
     </group>
   );
 }
-

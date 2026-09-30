@@ -1,4 +1,4 @@
-import { ticketUnits, belongsToPaper, ticketSugar } from './tickets';
+import { ticketUnits, belongsToPaper, ticketSugar, customerToGo } from './tickets';
 import { seatingDuration, DRINK_SECONDS, STREET_EXIT_SECONDS } from './street';
 import {
   BLOCK_SECONDS,
@@ -54,6 +54,10 @@ type Job = {
   created: number;
   status: 'ticket' | 'claimed' | 'ready' | 'reserved' | 'carried' | 'served' | 'dirty' | 'cleared';
   dirtyAt: number;
+  /** Take-away: a lid, then the to-go shelf instead of a table. */
+  toGo: boolean;
+  /** The customer is in a rush: the order jumps the queue. */
+  rush: boolean;
 };
 type Worker = {
   role: 'prep' | 'floor';
@@ -70,6 +74,8 @@ type Worker = {
   count: number;
   maxLoad: number;
   done: boolean;
+  /** Wait for Orders found the café closed: nothing more will come. */
+  closed?: boolean;
   pending?: { end: number; apply: () => void };
   move?: {
     started: number;
@@ -108,13 +114,15 @@ function handAction(role: 'prep' | 'floor', position: Point, command: string): H
   const at = (cell: Point) => samePoint(target, cell);
   const table = TABLE_LAYOUT.findIndex((t) => at([t.x, t.z])) + 1;
   if (role === 'prep') {
-    if (use) return at(STATIONS.brewer.cell) ? { verb: 'USE' } : undefined;
+    if (use) return at(STATIONS.brewer.cell) ? { verb: 'USE' } : at(STATIONS.water.cell) ? { verb: 'WASH' } : undefined;
     if (!take) return at(STATIONS.pickup.cell) ? { verb: 'DEPOSIT' } : undefined;
     if (at(STATIONS.ingredients.cell)) return { verb: 'TAKE' };
     if (at(STATIONS.water.cell)) return { verb: 'FILL WATER' };
+    if (at(STATIONS.lids.cell)) return { verb: 'LID' };
     return at(STATIONS.sugar.cell) ? { verb: 'ADD SUGAR' } : undefined;
   }
   if (take) return at(STATIONS.pickup.cell) ? { verb: 'PICKUP' } : table ? { verb: 'COLLECT', table } : undefined;
+  if (at(STATIONS.togo.cell)) return { verb: 'HAND OVER' };
   return table ? { verb: 'SERVE', table } : at(STATIONS.returns.cell) ? { verb: 'RETURN CUPS' } : undefined;
 }
 const sugarCount = (n: number) => `${n} sugar cube${n === 1 ? '' : 's'}`;
@@ -177,7 +185,8 @@ export function* streamService(
         Math.max(intakeFree, event.customer.arrival) +
         (level.programming_enabled ? Math.max(0.1, event.trace.length * 0.1) : 9);
       intakeFree = created;
-      event.table = event.tickets.length ? tableForShift(index, level.active_tables) : 0;
+      event.table =
+        event.tickets.length && !customerToGo(event.customer) ? tableForShift(index, level.active_tables) : 0;
       event.timing = {
         arrival: event.customer.arrival,
         created,
@@ -209,7 +218,7 @@ export function* streamService(
       );
       for (const [ticketIndex, ticket] of (event.passed ? event.tickets : []).entries()) {
         const handoff = submitted[ticketIndex]?.end ?? created;
-        ticket.table_id = `T${String(event.table).padStart(2, '0')}`;
+        ticket.table_id = event.table ? `T${String(event.table).padStart(2, '0')}` : null;
         ticket.status = 'created';
         ticket.created_at = handoff;
         for (const unit of ticketUnits(ticket))
@@ -222,12 +231,22 @@ export function* streamService(
             created: level.programming_enabled ? handoff : Infinity,
             status: 'ticket',
             dirtyAt: Infinity,
+            toGo: !!ticket.to_go,
+            rush: !!ticket.rush,
           });
       }
     }
   let queryFailure = events.find((e) => !e.passed);
   live?.attach({ seed_id: seed, start, duration: Infinity, events: log });
-  const fail = (w: Worker, reason: string, line = w.program.source_lines[w.pc] ?? -1) => {
+  const fail = (w: Worker, message: string, line = w.program.source_lines[w.pc] ?? -1) => {
+    // After closing, a robot that still acts as if more work were coming only needed to finish up and stop.
+    const name = ROBOT_DISPLAY_NAMES[w.role];
+    const reason =
+      w.closed && !w.job && message.startsWith('Wait for')
+        ? w.inventory.length
+          ? `The café is closed, so nothing more is coming: after Wait for Orders, check If Closed IN Orders, finish the ${w.inventory[0].item} ${name} holds, and Stop.`
+          : `The café is closed and ${name} has nothing left to do: after Wait for Orders, check If Closed IN Orders and Stop.`
+        : message;
     failure = {
       role: w.role,
       line,
@@ -249,10 +268,20 @@ export function* streamService(
       error: reason,
     });
   };
+  const jobOf = (cargo: Cargo | undefined) => jobs.find((j) => j.ticketId === cargo?.ticketId);
+  /** Orders from customers in a rush come first. */
+  const rushFirst = (cups: Cargo[]) => cups.find((cup) => cup.stage !== 'dirty' && jobOf(cup)?.rush) ?? cups[0];
+  /**
+   * The cup a robot is working on. Porter serves its tray in order, rush drinks first. Brew finishes
+   * the cup it started before the next one it claimed: mid-recipe, then brewed, then claimed.
+   */
   const currentCargo = (w: Worker) =>
-    w.role === 'prep' ? (w.inventory.find((c) => c.stage !== 'brewed') ?? w.inventory[0]) : w.inventory[0];
-  const currentJob = (w: Worker) =>
-    w.role === 'floor' && w.job ? w.job : jobs.find((j) => j.ticketId === currentCargo(w)?.ticketId);
+    w.role === 'floor'
+      ? rushFirst(w.inventory)
+      : (rushFirst(w.inventory.filter((c) => c.stage !== 'claimed' && c.stage !== 'brewed')) ??
+        rushFirst(w.inventory.filter((c) => c.stage === 'brewed')) ??
+        rushFirst(w.inventory));
+  const currentJob = (w: Worker) => (w.role === 'floor' && w.job ? w.job : jobOf(currentCargo(w)));
   const memory = (w: Worker) => (Object.keys(w.vars).length ? { variables: { ...w.vars } } : {});
   const moveNext = (w: Worker, move = w.move!): Point =>
     move.path?.[move.completed] ?? [w.position[0] + move.direction[0], w.position[1] + move.direction[1]];
@@ -366,9 +395,11 @@ export function* streamService(
               ? [STATIONS.ingredients.prep, STATIONS.ingredients.cell, 'the storage counter']
               : cargo?.stage === 'ground' || cargo?.stage === 'leaves'
                 ? [STATIONS.water.prep, STATIONS.water.cell, 'the sink']
-                : w.inventory.some((item) => item.stage === 'brewed')
-                  ? [STATIONS.sugar.prep, STATIONS.sugar.cell, 'the sugar station']
-                  : undefined
+                : cargo?.stage === 'brewed' && jobOf(cargo)?.toGo && !cargo.lid && cargo.sugar === jobOf(cargo)?.sugar
+                  ? [STATIONS.lids.prep, STATIONS.lids.cell, 'the lids']
+                  : w.inventory.some((item) => item.stage === 'brewed')
+                    ? [STATIONS.sugar.prep, STATIONS.sugar.cell, 'the sugar station']
+                    : undefined
         : take
           ? w.job && w.job.dirtyAt !== Infinity
             ? [tableFront(w.job.table - 1), tableCell(w.job.table), `table ${w.job.table}`]
@@ -377,9 +408,11 @@ export function* streamService(
               : undefined
           : cargo?.stage === 'dirty'
             ? [STATIONS.returns.floor, STATIONS.returns.cell, 'the sink']
-            : cargo
-              ? [tableFront(cargo.table - 1), tableCell(cargo.table), `table ${cargo.table}`]
-              : undefined;
+            : cargo && jobOf(cargo)?.toGo
+              ? [STATIONS.togo.floor, STATIONS.togo.cell, 'the to-go shelf']
+              : cargo
+                ? [tableFront(cargo.table - 1), tableCell(cargo.table), `table ${cargo.table}`]
+                : undefined;
     if (!goal)
       return take || w.inventory.length
         ? `There’s nothing for ${ROBOT_DISPLAY_NAMES[w.role]} to ${verb.toLowerCase()} there yet.`
@@ -395,15 +428,19 @@ export function* streamService(
   const storedValue = (w: Worker, source: string): VariableValue | undefined => {
     if (source === 'here') return [w.position[0], w.position[1]];
     if (source === 'table') return currentJob(w)?.table;
-    const cup = w.inventory.find((item) => item.stage === 'brewed') ?? currentCargo(w);
-    return jobs.find((j) => j.ticketId === cup?.ticketId)?.sugar;
+    const cup = rushFirst(w.inventory.filter((item) => item.stage === 'brewed')) ?? currentCargo(w);
+    return jobOf(cup)?.sugar;
   };
   const capacity = (w: Worker) => (w.role === 'prep' ? config.prepCapacity : config.floorCapacity);
   const condition = (w: Worker, c: string) => {
     const job = currentJob(w);
     const expression = parseConditionExpression(`IF ${c}`);
     if (expression) {
-      const tokens = job ? [job.item, ...(job.sugar > 0 ? ['sugar'] : [])] : [];
+      const tokens = [
+        ...(job ? [job.item, ...(job.sugar > 0 ? ['sugar'] : []), ...(job.toGo ? ['togo'] : [])] : []),
+        ...(job?.rush ? ['rush'] : []),
+        ...(w.closed ? ['closed'] : []),
+      ];
       return evaluateConditionExpression(expression, { 'CUSTOMER SPEECH': { tokens } });
     }
     // Saved programs may still hold the older ticket comparisons, like IF count = 2.
@@ -414,16 +451,35 @@ export function* streamService(
     }
     return c.startsWith('TABLE ') ? job?.table === Number(c.slice(6)) : false;
   };
+  // Take-away drinks go to the shelf, so they don't wait for a seated customer.
   const canClaimDrink = (j: Job) =>
-    j.status === 'ready' && j.event.timing.seated <= now && tableOwners.get(j.table) === j.event.customer.customer_id;
-  /** Wait for Orders brings Brew its next ticket and Porter its next ready drink. */
+    j.status === 'ready' &&
+    (j.toGo || (j.event.timing.seated <= now && tableOwners.get(j.table) === j.event.customer.customer_id));
+  /** Wait for Orders brings Brew its next ticket and Porter its next ready drink; rush orders jump the queue. */
   const isWait = (c: string) => c === 'LISTEN' || c === 'WAIT DIRTY';
+  const firstOf = (ready: (j: Job) => boolean) => jobs.find((j) => j.rush && ready(j)) ?? jobs.find(ready);
   const nextWork = (w: Worker, c: string) =>
     c === 'LISTEN' && w.role === 'prep'
-      ? jobs.find((j) => j.status === 'ticket' && j.created <= now)
+      ? firstOf((j) => j.status === 'ticket' && j.created <= now)
       : c === 'LISTEN'
-        ? jobs.find(canClaimDrink)
+        ? firstOf(canClaimDrink)
         : jobs.find((j) => j.status === 'dirty' && j.dirtyAt <= now);
+  /** Every customer has ordered, so no new ticket will ever reach the kitchen. */
+  const allOrdered = () => (!live || live.done()) && events.every((event) => event.timing.created <= now);
+  /** At closing time a wait with nothing left to come reports Closed instead of waiting forever. */
+  const closedFor = (w: Worker, c: string) =>
+    !!config.closing &&
+    allOrdered() &&
+    !jobs.some((j) =>
+      w.role === 'prep'
+        ? j.status === 'ticket'
+        : c === 'LISTEN'
+          ? ['ticket', 'claimed', 'ready'].includes(j.status)
+          : j.status !== 'cleared',
+    );
+  /** Clean cups on the shelf, and used ones in the sink waiting for Brew to wash them. */
+  let cleanCups = config.cups || Infinity,
+    sinkCups = 0;
   const markWaiting = (w: Worker, line: number, command: string) => {
     if (!live) return;
     const previous = log.at(-1);
@@ -462,7 +518,30 @@ export function* streamService(
       w.done = true;
       return true;
     }
+    const name = ROBOT_DISPLAY_NAMES[w.role];
+    // A rush order goes first: no waiting for more work while holding one.
+    const rushed = w.inventory.find((cup) => cup.stage !== 'dirty' && jobOf(cup)?.rush);
+    if (rushed && isWait(c)) {
+      fail(
+        w,
+        w.role === 'prep'
+          ? `This ${rushed.item} is for someone in a rush: make it before waiting for another ticket.`
+          : `This ${rushed.item} is for someone in a rush: serve it before anything else.`,
+      );
+      return false;
+    }
     if (isWait(c) && !nextWork(w, c)) {
+      if (closedFor(w, c) && w.closed) {
+        fail(w, `The café is closed: Stop ${name} instead of waiting for more ${c === 'LISTEN' ? 'orders' : 'cups'}.`);
+        return false;
+      }
+      if (!closedFor(w, c)) {
+        markWaiting(w, line, c);
+        return false;
+      }
+    }
+    // With every clean cup in use, washing waits at the sink for the next used one.
+    if (config.cups && !cleanCups && !sinkCups && !w.move && handAction(w.role, w.position, c)?.verb === 'WASH') {
       markWaiting(w, line, c);
       return false;
     }
@@ -571,8 +650,34 @@ export function* streamService(
       }
       return true;
     };
+    // Closing time: the wait reports Closed and the program carries on, so it can Stop.
+    if (isWait(c) && !nextWork(w, c))
+      return control(() => {
+        w.closed = true;
+        w.pc++;
+      });
+    if (c === 'STOP') {
+      if (w.inventory.length) {
+        fail(w, `${name} is still holding a ${w.inventory[0].item}: finish it before stopping.`);
+        return false;
+      }
+      if (!w.closed) {
+        fail(
+          w,
+          `It isn’t closing time yet: ${name} still has work coming. Stop only after Wait for Orders reports Closed.`,
+        );
+        return false;
+      }
+      return control(() => {
+        w.done = true;
+      });
+    }
     const stored = parseStore(c);
     if (stored) {
+      if (stored.value === 'table' && currentJob(w)?.toGo) {
+        fail(w, `This ${currentJob(w)!.item} is to go: it has no table. Take it to the to-go shelf by the door.`);
+        return false;
+      }
       const value = storedValue(w, stored.value);
       if (value === undefined) {
         fail(w, `Wait for an order before storing its ${stored.value}.`);
@@ -674,8 +779,7 @@ export function* streamService(
       fail(w, handMiss(w, c));
       return false;
     }
-    const cargo = currentCargo(w),
-      job = currentJob(w);
+    const cargo = currentCargo(w);
     // The coffee machine picks its step from the cup Brew hands it.
     const a = hand.verb === 'USE' && cargo ? (machineStep(cargo) ?? 'USE') : hand.verb;
     let apply: () => void = () => {},
@@ -700,9 +804,13 @@ export function* streamService(
       apply = () => {
         w.job = next;
         next.status = 'reserved';
-        if (c === 'LISTEN') tableOwners.set(next.table, next.event.customer.customer_id);
+        if (c === 'LISTEN' && !next.toGo) tableOwners.set(next.table, next.event.customer.customer_id);
       };
     } else if (a === 'PICKUP') {
+      if (rushed) {
+        fail(w, `This ${rushed.item} is for someone in a rush: serve it before anything else.`);
+        return false;
+      }
       if (!w.job || w.job.status !== 'reserved' || w.job.dirtyAt !== Infinity) {
         fail(w, 'Wait for a ready drink before taking one.');
         return false;
@@ -723,33 +831,51 @@ export function* streamService(
         });
         w.job = undefined;
       };
-    } else if (a === 'SERVE') {
-      if (!cargo || cargo.stage !== 'brewed' || !job) {
+    } else if (a === 'SERVE' || a === 'HAND OVER') {
+      const served = jobOf(cargo);
+      if (!cargo || cargo.stage !== 'brewed' || !served) {
         fail(w, 'Carry a ready drink before serving.');
         return false;
       }
-      if (hand.table !== cargo.table) {
+      if (served.toGo !== (a === 'HAND OVER')) {
+        fail(
+          w,
+          served.toGo
+            ? `This ${cargo.item} is to go: take it to the to-go shelf by the door, and Deposit down onto it.`
+            : `This ${cargo.item} is for table ${cargo.table}, not the to-go shelf.`,
+        );
+        return false;
+      }
+      if (a === 'SERVE' && hand.table !== cargo.table) {
         fail(w, `This drink is for table ${cargo.table}, not table ${hand.table}.`);
         return false;
       }
-      if (job.event.timing.seated > now) {
+      if (a === 'SERVE' && served.event.timing.seated > now) {
         markWaiting(w, line, c);
         return false;
       }
+      const paper = served.event.tickets.find((t) => belongsToPaper(served.ticketId, t))!;
+      const group = jobs.filter((j) => j.event === served.event);
       apply = () => {
-        w.inventory.shift();
-        job.status = 'served';
-        job.dirtyAt = now + DRINK_SECONDS;
-        job.event.timing.served = now;
-        const paper = job.event.tickets.find((t) => belongsToPaper(job.ticketId, t))!;
+        w.inventory.splice(w.inventory.indexOf(cargo), 1);
+        served.event.timing.served = now;
+        if (a === 'HAND OVER') {
+          // The customer takes it straight away, in a paper cup: there's nothing to clear.
+          served.status = 'cleared';
+          if (jobs.filter((j) => belongsToPaper(j.ticketId, paper)).every((j) => j.status === 'cleared'))
+            paper.status = 'served';
+          if (group.every((j) => j.status === 'cleared')) served.event.timing.left = served.event.timing.cleaned = now;
+          return;
+        }
+        served.status = 'served';
+        served.dirtyAt = now + DRINK_SECONDS;
         if (jobs.filter((j) => belongsToPaper(j.ticketId, paper)).every((j) => Number.isFinite(j.dirtyAt)))
           paper.status = 'served';
-        const group = jobs.filter((j) => j.event === job.event);
         if (
-          group.length === job.event.tickets.reduce((sum, t) => sum + (t.quantity ?? 1), 0) &&
-          job.event.tickets.every((ticket) => ticket.status === 'served')
+          group.length === served.event.tickets.reduce((sum, t) => sum + (t.quantity ?? 1), 0) &&
+          served.event.tickets.every((ticket) => ticket.status === 'served')
         )
-          job.event.timing.left = Math.max(...group.map((served) => served.dirtyAt));
+          served.event.timing.left = Math.max(...group.map((drink) => drink.dirtyAt));
       };
     } else if (a === 'COLLECT') {
       if (!w.job || w.job.dirtyAt > now) {
@@ -771,38 +897,80 @@ export function* streamService(
         w.job = undefined;
       };
     } else if (a === 'RETURN CUPS') {
-      if (!cargo || cargo.stage !== 'dirty' || !job) {
+      const cup = w.inventory.find((item) => item.stage === 'dirty'),
+        cupJob = jobOf(cup);
+      if (!cup || !cupJob) {
         fail(w, 'Carry a used cup before returning it.');
         return false;
       }
       apply = () => {
-        w.inventory.shift();
-        job.status = 'cleared';
-        job.event.timing.cleaned = now;
-        if (jobs.filter((j) => j.event === job.event).every((j) => j.status === 'cleared'))
-          tableOwners.delete(job.table);
+        w.inventory.splice(w.inventory.indexOf(cup), 1);
+        cupJob.status = 'cleared';
+        cupJob.event.timing.cleaned = now;
+        if (config.cups) sinkCups++;
+        if (jobs.filter((j) => j.event === cupJob.event).every((j) => j.status === 'cleared'))
+          tableOwners.delete(cupJob.table);
+      };
+    } else if (a === 'WASH') {
+      // Washing clears the whole sink; with clean cups left and an empty sink it's a quick look.
+      seconds = sinkCups ? 2 : 1;
+      apply = () => {
+        cleanCups += sinkCups;
+        sinkCups = 0;
       };
     } else {
-      if (!cargo || !job) {
+      // Beans or leaves start the next claimed cup, rush orders first, once nothing is mid-recipe.
+      const cup =
+        a === 'TAKE'
+          ? (rushFirst(w.inventory.filter((item) => item.stage !== 'claimed' && item.stage !== 'brewed')) ??
+            rushFirst(w.inventory.filter((item) => item.stage === 'claimed')))
+          : cargo;
+      const cupJob = jobOf(cup);
+      if (!cup || !cupJob) {
         fail(w, 'Wait for an order ticket before preparing a drink.');
         return false;
       }
       if (a === 'USE') {
-        fail(w, machineStepError(cargo));
+        fail(w, machineStepError(cup));
         return false;
       }
-      const recipeCommand = a === 'TAKE' ? (job.item === 'coffee' ? 'TAKE BEANS' : 'TAKE LEAVES') : a;
+      const recipeCommand = a === 'TAKE' ? (cupJob.item === 'coffee' ? 'TAKE BEANS' : 'TAKE LEAVES') : a;
       const rule = RECIPE_RULES[recipeCommand];
-      // Once brewed, sugar and deposit operate on the oldest finished drink.
-      const finished = w.inventory.find((item) => item.stage === 'brewed');
-      if (a === 'ADD SUGAR' || a === 'DEPOSIT') {
+      // Once brewed, sugar, the lid and the deposit work on the finished drink, rush orders first.
+      const finished = rushFirst(w.inventory.filter((item) => item.stage === 'brewed'));
+      if (a === 'ADD SUGAR' || a === 'DEPOSIT' || a === 'LID') {
         const ready = finished,
-          readyJob = jobs.find((j) => j.ticketId === ready?.ticketId);
+          readyJob = jobOf(ready);
         if (!ready || !readyJob) {
-          fail(w, 'Finish brewing before taking sugar or depositing.');
+          fail(
+            w,
+            a === 'LID'
+              ? 'Finish brewing before putting a lid on.'
+              : 'Finish brewing before taking sugar or depositing.',
+          );
           return false;
         }
-        if (a === 'ADD SUGAR') {
+        if (a === 'LID') {
+          if (!readyJob.toGo) {
+            fail(w, `This ${ready.item} is staying in: it doesn’t need a lid.`);
+            return false;
+          }
+          if (ready.lid) {
+            fail(w, `This ${ready.item} already has its lid.`);
+            return false;
+          }
+          if (ready.sugar !== readyJob.sugar) {
+            fail(w, `Put the sugar in before the lid: this ${ready.item} takes ${sugarCount(readyJob.sugar)}.`);
+            return false;
+          }
+          apply = () => {
+            ready.lid = true;
+          };
+        } else if (a === 'ADD SUGAR') {
+          if (ready.lid) {
+            fail(w, `This ${ready.item} already has its lid on: sugar goes in before the lid.`);
+            return false;
+          }
           // Each Take up at the sugar station drops in one cube.
           if (ready.sugar >= readyJob.sugar) {
             fail(
@@ -821,6 +989,10 @@ export function* streamService(
             fail(w, `This ${ready.item} takes ${sugarCount(readyJob.sugar)}, but it has ${ready.sugar}.`);
             return false;
           }
+          if (readyJob.toGo && !ready.lid) {
+            fail(w, `This ${ready.item} is to go: put a lid on it first. The lids are between the sugar and pickup.`);
+            return false;
+          }
           apply = () => {
             w.inventory.splice(w.inventory.indexOf(ready), 1);
             readyJob.status = 'ready';
@@ -829,13 +1001,23 @@ export function* streamService(
         }
       } else if (rule) {
         // Take and Use reached their station already.
-        if (!rule.previous.includes(cargo.stage) || (rule.item && rule.item !== cargo.item)) {
-          fail(w, recipeStepError(recipeCommand, cargo));
+        if (!rule.previous.includes(cup.stage) || (rule.item && rule.item !== cup.item)) {
+          fail(w, recipeStepError(recipeCommand, cup));
+          return false;
+        }
+        // Café cups are counted; take-away drinks go in paper cups.
+        const cafeCup = a === 'TAKE' && !cupJob.toGo && !!config.cups;
+        if (cafeCup && !cleanCups) {
+          fail(
+            w,
+            `There are no clean cups left: all ${config.cups} are in use. Wash the used ones first: Use up at the sink.`,
+          );
           return false;
         }
         seconds = rule.duration ?? 1;
         apply = () => {
-          cargo.stage = rule.stage;
+          cup.stage = rule.stage;
+          if (cafeCup) cleanCups--;
         };
       } else {
         fail(w, `Unsupported action: ${c}`);
@@ -896,6 +1078,8 @@ export function* streamService(
               created: ticket.created_at,
               status: 'ticket',
               dirtyAt: Infinity,
+              toGo: !!ticket.to_go,
+              rush: !!ticket.rush,
             });
         }
     }
@@ -989,7 +1173,10 @@ export function* streamService(
     for (const job of jobs) if (job.status === 'served' && job.dirtyAt <= now) job.status = 'dirty';
     // Reserve a table as the customer chooses it; delivery waits for the seated timestamp.
     for (const [index, event] of events.entries()) {
-      if (
+      // Take-away customers wait by the to-go shelf as soon as they've ordered.
+      if (event.timing.created <= now && event.tickets.length && !event.table && event.timing.seated === Infinity)
+        event.timing.seating = event.timing.seated = event.timing.created;
+      else if (
         event.timing.created <= now &&
         event.tickets.length &&
         event.timing.seated === Infinity &&
@@ -1011,6 +1198,8 @@ export function* streamService(
       finished() &&
       workers.every((w) => !w.pending) &&
       workers.every((w) => !w.move) &&
+      // At closing time the service ends once every robot the player programs has stopped.
+      (!config.closing || workers.filter((w) => number >= ROBOT_UNLOCK_LEVELS[w.role]).every((w) => w.done)) &&
       now >= intakeFree &&
       (config.objective !== 'serve' ||
         events.every((event) => !event.tickets.length || now >= event.timing.left + STREET_EXIT_SECONDS))
@@ -1049,11 +1238,27 @@ export function* streamService(
       ...jobs.filter((j) => j.status === 'served' && j.dirtyAt > now).map((j) => j.dirtyAt),
     ].filter((t) => Number.isFinite(t) && t > now);
     if (!future.length) {
-      if (!finished())
+      const washer = workers.find(
+        (w) => w.role === 'prep' && handAction('prep', w.position, w.program.instructions[w.pc] ?? '')?.verb === 'WASH',
+      );
+      if (washer && config.cups && !cleanCups && !sinkCups)
+        fail(
+          washer,
+          `Brew is waiting at the sink for a used cup, but none are coming back: all ${config.cups} cups are out. Porter has to bring them back.`,
+        );
+      else if (!finished())
         fail(
           workers.find((w) => !w.done) ?? workers[0],
           'Unfinished work: no worker can advance. Check event waits, routes, and repeat instructions.',
         );
+      else if (config.closing) {
+        const open = workers.find((w) => number >= ROBOT_UNLOCK_LEVELS[w.role] && !w.done);
+        if (open)
+          fail(
+            open,
+            `${ROBOT_DISPLAY_NAMES[open.role]} is keeping the café open: Stop it once Wait for Orders reports Closed.`,
+          );
+      }
       break;
     }
     const next = Math.min(...future);

@@ -112,6 +112,10 @@ describe('extension seeds', () => {
       sugar: false,
       fullHouse: false,
       finale: false,
+      toGo: false,
+      cups: 0,
+      rush: false,
+      closing: false,
     });
     expect(extensionShiftConfig(12)).toMatchObject({ customers: 2, tea: true, sugar: true, prepBatch: 1 });
     expect(extensionShiftConfig(13)).toMatchObject({ customers: 4, prepBatch: 2, minLoad: 2 });
@@ -124,7 +128,18 @@ describe('extension seeds', () => {
       fullHouse: true,
       finale: false,
     });
-    expect(extensionShiftConfig(21)).toMatchObject({ finale: true, fullHouse: true });
+    expect(extensionShiftConfig(17)).toMatchObject({ toGo: true, cups: 0, rush: false, closing: false });
+    expect(extensionShiftConfig(18)).toMatchObject({ toGo: false, cups: 4, rush: false, closing: false });
+    expect(extensionShiftConfig(19)).toMatchObject({ toGo: false, cups: 0, rush: true, closing: false });
+    expect(extensionShiftConfig(20)).toMatchObject({ toGo: false, cups: 0, rush: false, closing: true });
+    expect(extensionShiftConfig(21)).toMatchObject({
+      finale: true,
+      fullHouse: true,
+      toGo: true,
+      cups: 4,
+      rush: true,
+      closing: true,
+    });
     expect(extensionShiftConfig(22)).toEqual(extensionShiftConfig(21));
     expect(extensionSeed(16, 0).customers[1].arrival).toBe(10);
     expect(extensionSeed(17, 0).customers[1].arrival).toBe(4);
@@ -144,6 +159,8 @@ describe('extension seeds', () => {
       clearing: true,
       objective: 'serve',
       minLoad: 0,
+      cups: 4,
+      closing: true,
     });
     expect(level.act).toBe(4);
     const lesson = buildExtensionLesson(seed22);
@@ -184,7 +201,8 @@ describe('extension seeds', () => {
     expect(compileProgram(programs.query).compile_error).toBe('');
     expect(compileRobot(programs.prep, 'prep', 22).compile_error).toBe('');
     expect(compileRobot(programs.floor, 'floor', 22).compile_error).toBe('');
-    expect(programs.prep.split('\n').filter((line) => line === 'LISTEN')).toHaveLength(2);
+    // Act IV references make and serve one drink at a time.
+    expect(programs.prep.split('\n').filter((line) => line === 'LISTEN')).toHaveLength(1);
     expect(programs.floor).toContain('MOVE var1');
 
     // Sim: the reference clears every synthetic seed.

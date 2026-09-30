@@ -1,5 +1,5 @@
 {
-  "comment": "Single source of truth for extension shift mechanics (L09+). Stages merge in order: each stage overrides the fields it sets, so a future L22 needs no code edits — it inherits the latest stage. tools/docs-gen.mjs and tools/validate-data.mjs read this file directly.",
+  "comment": "Single source of truth for extension shift mechanics (L09+). Stages merge in order: each stage overrides the fields it sets, so a future L22 needs no code edits \u2014 it inherits the latest stage. Act IV shifts each switch on one odd rule (toGo, cups, rush, closing); the finale switches on all of them. tools/docs-gen.mjs and tools/validate-data.mjs read this file directly.",
   "stages": [
     {
       "from": 9,
@@ -11,15 +11,66 @@
       "tea": false,
       "sugar": false,
       "fullHouse": false,
-      "finale": false
+      "finale": false,
+      "toGo": false,
+      "cups": 0,
+      "rush": false,
+      "closing": false
     },
-    { "from": 10, "tea": true },
-    { "from": 11, "sugar": true },
-    { "from": 13, "customers": 4, "prepBatch": 2 },
-    { "from": 14, "tables": 2 },
-    { "from": 16, "customers": 8, "floorBatch": 2, "tables": 4 },
-    { "from": 17, "customers": 12, "arrivalGap": 4, "tables": 16, "fullHouse": true },
-    { "from": 21, "finale": true }
+    {
+      "from": 10,
+      "tea": true
+    },
+    {
+      "from": 11,
+      "sugar": true
+    },
+    {
+      "from": 13,
+      "customers": 4,
+      "prepBatch": 2
+    },
+    {
+      "from": 14,
+      "tables": 2
+    },
+    {
+      "from": 16,
+      "customers": 8,
+      "floorBatch": 2,
+      "tables": 4
+    },
+    {
+      "from": 17,
+      "customers": 12,
+      "arrivalGap": 4,
+      "tables": 16,
+      "fullHouse": true,
+      "toGo": true
+    },
+    {
+      "from": 18,
+      "toGo": false,
+      "cups": 4
+    },
+    {
+      "from": 19,
+      "cups": 0,
+      "rush": true
+    },
+    {
+      "from": 20,
+      "rush": false,
+      "closing": true
+    },
+    {
+      "from": 21,
+      "toGo": true,
+      "cups": 4,
+      "rush": true,
+      "closing": true,
+      "finale": true
+    }
   ],
   "minLoadLevels": [13, 16]
 }

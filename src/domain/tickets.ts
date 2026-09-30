@@ -32,6 +32,26 @@ export function createTicket(customer: Customer, id: string, intent: SpeechInten
   };
 }
 
+/** Why a ticket written at closing time is wrong. */
+export const CLOSING_TICKET_ERROR = 'It’s closing time: there’s nobody left to write a ticket for.';
+
+/** At closing time Query hears one last call, after the last guest: it must stop without writing a ticket. */
+export function closingCall(arrival: number): Customer {
+  return {
+    customer_id: 'CLOSING',
+    arrival,
+    phrase: 'Closing time!',
+    heard_orders: [{ tokens: ['closed'] }],
+    intent: {},
+    expected: { closing: true },
+  };
+}
+
+/** A customer who takes their order away: they wait by the to-go shelf instead of taking a table. */
+export function customerToGo(customer: Customer): boolean {
+  return !!(customer.expected.to_go || customer.expected.tickets?.some((ticket) => ticket.to_go));
+}
+
 /** Effective sugar amount for a submitted ticket: explicit count, else the binary modifier. */
 export function ticketSugar(ticket: Pick<OrderTicket, 'sugar_count' | 'with_sugar'>): number {
   return ticket.sugar_count ?? (ticket.with_sugar ? 1 : 0);

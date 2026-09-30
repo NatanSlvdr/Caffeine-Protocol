@@ -1,7 +1,17 @@
 import * as v from 'valibot';
 
 /** Authored concept tokens recognized in customer speech; closed by design. */
-export const TokenSchema = v.picklist(['ambiguous', 'coffee', 'negation', 'number', 'sugar', 'tea']);
+export const TokenSchema = v.picklist([
+  'ambiguous',
+  'closed',
+  'coffee',
+  'negation',
+  'number',
+  'rush',
+  'sugar',
+  'tea',
+  'togo',
+]);
 
 /** Non-negative integer counts (arrivals, sugar amounts, capacities, targets). */
 const NonNegativeInt = v.pipe(v.number(), v.integer(), v.minValue(0));
@@ -22,6 +32,8 @@ const TicketLikeSchema = v.strictObject({
   drink: v.optional(v.picklist(['coffee', 'tea'])),
   with_sugar: v.optional(v.boolean()),
   sugar_count: v.optional(NonNegativeInt),
+  to_go: v.optional(v.boolean()),
+  rush: v.optional(v.boolean()),
   item: v.optional(v.picklist(['coffee', 'tea'])),
   ask_help: v.optional(v.boolean()),
 });
@@ -31,6 +43,8 @@ const SpeechIntentSchema = v.strictObject({
   drink: v.optional(v.picklist(['coffee', 'tea'])),
   with_sugar: v.optional(v.boolean()),
   sugar_count: v.optional(NonNegativeInt),
+  to_go: v.optional(v.boolean()),
+  rush: v.optional(v.boolean()),
   orders: v.optional(v.array(TicketLikeSchema)),
 });
 
@@ -38,6 +52,8 @@ const ExpectedTicketSchema = v.strictObject({
   item: v.optional(v.picklist(['coffee', 'tea'])),
   with_sugar: v.optional(v.boolean()),
   sugar_count: v.optional(NonNegativeInt),
+  to_go: v.optional(v.boolean()),
+  rush: v.optional(v.boolean()),
   tickets: v.optional(v.pipe(v.array(TicketLikeSchema), v.minLength(1))),
   ask_help: v.optional(v.boolean()),
 });
@@ -65,6 +81,8 @@ export const ServiceConfigSchema = v.strictObject({
   clearing: v.boolean(),
   objective: v.picklist(['serve', 'prepare', 'pickup']),
   minLoad: v.optional(NonNegativeInt),
+  cups: v.optional(NonNegativeInt),
+  closing: v.optional(v.boolean()),
 });
 
 export const LevelSchema = v.strictObject({

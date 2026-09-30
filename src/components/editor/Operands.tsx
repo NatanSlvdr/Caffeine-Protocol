@@ -3,6 +3,7 @@ import {
   STORE_VALUES,
   parseStore,
   parseSugarWrite,
+  parseMarkWrite,
   CONDITION_CONNECTORS,
   formatConditionExpression,
   parseConditionExpression,
@@ -242,6 +243,7 @@ export function Operands({
   }
   if (fields.family === 'ITEM') {
     const sugar = parseSugarWrite(command),
+      mark = parseMarkWrite(command),
       parts = command.split(' ');
     const quantity = sugar ?? (parts.length === 3 ? parts[1] : '1'),
       item = sugar !== undefined ? 'sugar' : parts.at(-1)!;
@@ -250,7 +252,7 @@ export function Operands({
     const variables = options.some((option) => parseStore(option)) ? VARIABLES : [];
     return (
       <>
-        {item === 'sugar' ? (
+        {mark ? null : item === 'sugar' ? (
           <BlockSelect
             label={label + ' quantity'}
             value={mask('quantity', quantity)}
@@ -283,12 +285,19 @@ export function Operands({
         )}
         <BlockSelect
           label={label + ' value'}
-          value={library ? '' : item === 'sugar' ? 'WRITE 1 sugar' : `ITEM ${item}`}
+          value={library ? '' : mark ? command : item === 'sugar' ? 'WRITE 1 sugar' : `ITEM ${item}`}
           disabled={disabled}
           options={options
-            .filter((option) => /^ITEM (coffee|tea)$/.test(option) || option === 'WRITE 1 sugar')
+            .filter(
+              (option) => /^ITEM (coffee|tea)$/.test(option) || option === 'WRITE 1 sugar' || parseMarkWrite(option),
+            )
             .map(operandOption)}
           onChange={(value) => {
+            // A mark says one thing, with no amount to carry over.
+            if (parseMarkWrite(value) || mark) {
+              select('item', value);
+              return;
+            }
             const ingredient = value === 'WRITE 1 sugar' ? 'sugar' : value.slice(5);
             const amount = /^\d+$/.test(quantity) && Number(quantity) > 0 ? quantity : '1';
             select(

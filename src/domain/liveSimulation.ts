@@ -1,7 +1,7 @@
 import { streamService } from './service';
 import { STREET_APPROACH_SECONDS } from './street';
 import { countProgramBlocks } from './scoring';
-import { createLivePumpState, pumpQuery } from './live/pump';
+import { createLivePumpState, pumpQuery, queryFinished } from './live/pump';
 import { finishLiveRun } from './live/finish';
 import { initializeLiveRun } from './live/initialize';
 import type { LevelDefinition, RobotPrograms, RunResult } from './types';
@@ -55,7 +55,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms) {
     service = streamService(level, init.events, programs, offset, {
       pump: (now, log) => pumpQuery(now, log, state, deps),
       next: () => state.queryNext,
-      done: () => state.index >= deps.events.length,
+      done: () => queryFinished(state, deps),
       settle: () => {
         rushing = true;
       },

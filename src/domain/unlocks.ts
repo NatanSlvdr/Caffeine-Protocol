@@ -26,4 +26,12 @@ export const UNLOCKS = {
   functions: 12,
   /** Porter runs the dining room. */
   floor: 14,
+  /** Take-away orders: the to-go mark, lids and the to-go shelf. */
+  toGo: 17,
+  /** Only four cups: Brew washes used cups at the sink. */
+  cups: 18,
+  /** Customers in a rush: the rush mark, and rush orders jump the queue. */
+  rush: 19,
+  /** Closing time: Wait for Orders reports Closed, and every robot has to Stop. */
+  closing: 20,
 } as const;

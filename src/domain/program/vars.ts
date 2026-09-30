@@ -33,6 +33,13 @@ export function parseStore(command: string) {
 export function parseTimes(command: string) {
   return /^FOR (var[1-4]) TIMES$/.exec(command)?.[1];
 }
+/** Marks Query can write on the held paper, from the shift each arrives. */
+export const PAPER_MARKS = ['togo', 'rush'] as const;
+/** The mark a Write block puts on the paper, like Write To go. */
+export function parseMarkWrite(command: string) {
+  return (PAPER_MARKS as readonly string[]).find((mark) => command === `WRITE ${mark}`) as
+    (typeof PAPER_MARKS)[number] | undefined;
+}
 /** Sugar writes share the held paper with drink writes. */
 export function parseSugarWrite(command: string) {
   return /^WRITE (0|[1-9]|1[0-9]|[a-z][a-z0-9_]*) sugar$/.exec(command)?.[1];

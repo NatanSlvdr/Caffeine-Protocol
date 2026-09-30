@@ -26,6 +26,14 @@ export interface ExtensionShiftConfig {
   fullHouse: boolean;
   /** Grouped orders plus clarification guests (L21). */
   finale: boolean;
+  /** Some customers take their order away (Act IV). */
+  toGo: boolean;
+  /** Cups in the café; 0 means there are always clean ones (Act IV). */
+  cups: number;
+  /** Some customers are in a rush (Act IV). */
+  rush: boolean;
+  /** Wait for Orders reports Closed after the last customer, and every robot has to Stop (Act IV). */
+  closing: boolean;
 }
 
 const StageSchema = v.looseObject({
@@ -39,6 +47,10 @@ const StageSchema = v.looseObject({
   sugar: v.optional(v.boolean()),
   fullHouse: v.optional(v.boolean()),
   finale: v.optional(v.boolean()),
+  toGo: v.optional(v.boolean()),
+  cups: v.optional(v.number()),
+  rush: v.optional(v.boolean()),
+  closing: v.optional(v.boolean()),
 });
 const MechanicsSchema = v.looseObject({ stages: v.array(StageSchema), minLoadLevels: v.array(v.number()) });
 const mechanics = v.parse(MechanicsSchema, mechanicsData);
@@ -58,7 +70,11 @@ function baseConfig(): ExtensionShiftConfig {
     first.tea === undefined ||
     first.sugar === undefined ||
     first.fullHouse === undefined ||
-    first.finale === undefined
+    first.finale === undefined ||
+    first.toGo === undefined ||
+    first.cups === undefined ||
+    first.rush === undefined ||
+    first.closing === undefined
   )
     throw new Error(`extension-config.json must open with a complete L${UNLOCKS.prep} stage`);
   return {
@@ -72,6 +88,10 @@ function baseConfig(): ExtensionShiftConfig {
     sugar: first.sugar,
     fullHouse: first.fullHouse,
     finale: first.finale,
+    toGo: first.toGo,
+    cups: first.cups,
+    rush: first.rush,
+    closing: first.closing,
   };
 }
 const BASE = baseConfig();
@@ -98,6 +118,10 @@ export function extensionShiftConfig(level: number): ExtensionShiftConfig {
     if (override.sugar !== undefined) merged.sugar = override.sugar;
     if (override.fullHouse !== undefined) merged.fullHouse = override.fullHouse;
     if (override.finale !== undefined) merged.finale = override.finale;
+    if (override.toGo !== undefined) merged.toGo = override.toGo;
+    if (override.cups !== undefined) merged.cups = override.cups;
+    if (override.rush !== undefined) merged.rush = override.rush;
+    if (override.closing !== undefined) merged.closing = override.closing;
   }
   merged.minLoad = minLoadLevels.has(level) ? 2 : 0;
   return merged;

@@ -8,9 +8,9 @@ that robot owns the role and there is no human fallback for failed robot logic.
 
 Act I ownership:
 
-- Order intake: scripted human in Levels 1-2, Query from Level 3 onward.
+- Order intake: scripted human in Level 1, Query from Level 2 onward.
 - Drink preparation: scripted human/system for all Act I levels.
-- Serving: Niko in Levels 1–2; a scripted floor helper from Level 3 onward.
+- Serving: Niko in Level 1; a scripted floor helper from Level 2 onward.
 - Cleaning: scripted human/system for all Act I levels.
 
 The floor helper reuses the supplied robot sprite. Niko deposits drinks inside the pickup counter and the helper collects them outside. This visual role separation does not add floor-robot programming, charging or route-planning puzzles to Act I.
@@ -77,6 +77,30 @@ Customer-facing relay:
 - Future mechanic, not Act I scope.
 - Because only Query understands customer intent, the floor robot may later
   relay customer-facing questions or total requests to Query for interpretation.
+
+## Act IV: The Whole Crew
+
+From shift 17 nobody covers for the robots, and each shift adds one odd rule
+that the Act III programs can't handle. Rules only ever add work: handling a
+rule that isn't active is harmless, so programs carry forward.
+
+- **To Go (17).** Take-away customers say "to go". Query writes To go on the
+  ticket. Brew takes a lid at the lids, after the sugar. Porter leaves the cup
+  on the to-go shelf by the door (Deposit down) instead of a table, and there's
+  no cup to clear: take-away goes in paper cups.
+- **Four Cups (18).** Taking beans or leaves uses one of four café cups. Porter
+  drops used cups in the sink, and Use at the sink washes them. With no clean
+  cup left, Brew waits at the sink for the next used one, so a Porter that
+  never clears stalls the kitchen.
+- **In a Hurry (19).** Query writes Rush for customers in a rush. Rush tickets
+  jump the queue at the handoff and at pickup. A robot holding a rush order
+  can't wait for more work, so the batching learned in Acts II and III has to
+  make an exception.
+- **Last Orders (20).** After the last guest, Wait for Orders reports Closed
+  instead of waiting. Every robot must finish what it holds and Stop; a robot
+  that waits again, or acts as if more work were coming, fails. Query hears the
+  closing call too.
+- **Espresso Yourself (21).** All four rules, with groups and "the usual".
 
 ## Godot Implementation Notes
 

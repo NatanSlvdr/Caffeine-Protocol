@@ -4,12 +4,16 @@ export interface SpeechIntent {
   drink?: Drink;
   with_sugar?: boolean;
   sugar_count?: number;
+  to_go?: boolean;
+  rush?: boolean;
   orders?: SpeechIntent[];
 }
 export interface ExpectedTicket {
   item?: Drink;
   with_sugar?: boolean;
   sugar_count?: number;
+  to_go?: boolean;
+  rush?: boolean;
 }
 /** Authored concepts available to Query; expected ticket fields stay separate. */
 export interface HeardOrder {
@@ -25,7 +29,8 @@ export interface Customer {
   clarification?: string;
   intent: SpeechIntent;
   clarification_intent?: SpeechIntent;
-  expected: ExpectedTicket & { tickets?: ExpectedTicket[]; ask_help?: boolean };
+  /** `closing` marks the closing-time call after the last guest: Query must stop without writing a ticket. */
+  expected: ExpectedTicket & { tickets?: ExpectedTicket[]; ask_help?: boolean; closing?: boolean };
 }
 export interface ValidationSeed {
   id: string;
@@ -72,6 +77,10 @@ export interface OrderTicket {
   item: string;
   with_sugar: boolean | null;
   sugar_count: number | null;
+  /** Written by Query for take-away orders: a lid, and the to-go shelf instead of a table. */
+  to_go?: boolean;
+  /** Written by Query for customers in a rush: the order jumps the queue. */
+  rush?: boolean;
   status: string;
   created_at: number;
   due_at: number;
@@ -180,6 +189,8 @@ export interface Cargo {
   item: Drink;
   stage: 'claimed' | 'beans' | 'ground' | 'leaves' | 'water' | 'brewed' | 'dirty';
   sugar: number;
+  /** A take-away cup has its lid on. */
+  lid?: boolean;
 }
 /** A number, or for Porter a place on the floor it stored with Store from here. */
 export type VariableValue = number | readonly [number, number];
@@ -226,6 +237,10 @@ export interface ServiceConfig {
   clearing: boolean;
   objective: 'serve' | 'prepare' | 'pickup';
   minLoad?: number;
+  /** Cups in the whole café; 0 or missing means there are always clean ones. */
+  cups?: number;
+  /** At closing time Wait for Orders reports Closed, and every robot has to Stop. */
+  closing?: boolean;
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;

@@ -13,7 +13,7 @@ import type {
   RunFailure,
   RunResult,
 } from '../types';
-import { createTicket } from '../tickets';
+import { closingCall, createTicket } from '../tickets';
 import { executeCustomerEvent } from '../program';
 import { validate } from './validate';
 
@@ -125,6 +125,32 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
           reason,
         };
         result.first_failure = failure;
+        result.passed = false;
+        break outer;
+      }
+    }
+    if (level.service?.closing && level.programming_enabled) {
+      const call = closingCall(seed.customers.at(-1)?.arrival ?? 0);
+      const actual = executeCustomerEvent(program, call, `${seed.id}_CLOSING`, state);
+      result.executed_instructions += actual.executed_instructions;
+      const reason = validate(call, actual);
+      if (reason) {
+        // The closing call has no guest of its own: the service stops with the last guest's, as it does live.
+        const last = result.events.at(-1)!;
+        last.passed = false;
+        last.reason = reason;
+        last.failure_line = actual.error_line ?? actual.trace.at(-1)?.line ?? -1;
+        result.first_failure = {
+          seed_id: seed.id,
+          error_line: actual.error_line ?? actual.trace.at(-1)?.line ?? -1,
+          customer_id: call.customer_id,
+          event_time: call.arrival,
+          phrase: call.phrase,
+          intent: call.intent,
+          expected: call.expected,
+          actual: actual.tickets,
+          reason,
+        };
         result.passed = false;
         break outer;
       }

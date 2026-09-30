@@ -1,5 +1,5 @@
 import { streamCustomerEvent } from '../program';
-import { createTicket } from '../tickets';
+import { closingCall, createTicket } from '../tickets';
 import { STARTS } from '../layout';
 import { moveQuery } from '../queryMovement';
 import { orderTotal } from '../pricing';
@@ -24,6 +24,10 @@ export interface LivePumpState {
   position: Point;
   pending: ExecutionEvent | undefined;
   queryNext: number;
+  /** The closing-time call after the last guest, while Query is handling it. */
+  closing?: ReplayEvent;
+  /** Query stopped at closing time. */
+  closed: boolean;
 }
 
 export interface LivePumpDeps {
@@ -43,8 +47,17 @@ export function createLivePumpState(queryNext: number): LivePumpState {
     position: STARTS.query,
     pending: undefined,
     queryNext,
+    closed: false,
   };
 }
+
+/** A closing shift keeps Query busy after the last guest, until it stops. */
+const closingDue = (state: LivePumpState, deps: LivePumpDeps) =>
+  !!deps.level.service?.closing && deps.level.programming_enabled && !state.closed;
+
+/** Query has handled every guest, and at closing time has stopped. */
+export const queryFinished = (state: LivePumpState, deps: LivePumpDeps) =>
+  state.index >= deps.events.length && !closingDue(state, deps);
 
 function markWaiting(now: number, log: ExecutionEvent[], state: LivePumpState, deps: LivePumpDeps): void {
   if (deps.listenLine < 0) return;
@@ -75,11 +88,24 @@ function markWaiting(now: number, log: ExecutionEvent[], state: LivePumpState, d
 export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpState, deps: LivePumpDeps): void {
   // A zero-duration LISTEN event keeps the cursor on the real waiting
   // instruction between customers, without masking a block currently being read.
-  if (now + 1e-8 < state.queryNext || state.index >= deps.events.length) {
+  if (now + 1e-8 < state.queryNext || queryFinished(state, deps)) {
     if (!state.pending && !state.interpreter) markWaiting(now, log, state, deps);
     return;
   }
-  const event = deps.events[state.index];
+  const closing = state.index >= deps.events.length;
+  if (closing)
+    state.closing ??= {
+      seed_id: deps.seedId,
+      customer: closingCall(now),
+      tickets: [],
+      trace: [],
+      asked_help: false,
+      passed: true,
+      table: 0,
+      satisfaction: 100,
+      timing: { arrival: now, created: Infinity, seated: 0, ready: 0, served: 0, left: 0, cleaned: 0 },
+    };
+  const event = closing ? state.closing! : deps.events[state.index];
   const id = `${deps.seedId}_T${String(state.index + 1).padStart(2, '0')}`;
   let step: IteratorResult<CustomerExecution, CustomerExecution>;
   if (!deps.level.programming_enabled) {
@@ -145,9 +171,17 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
         ? 'Instruction limit reached (10,000 per robot).'
         : validate(event.customer, actual);
     if (reason) {
-      event.passed = false;
-      event.reason = reason;
-      event.failure_line = actual.error_line ?? deps.program.error_line;
+      // The closing call has no guest of its own: the last guest's service stops with it.
+      const failed = closing ? deps.events.at(-1)! : event;
+      failed.passed = false;
+      failed.reason = reason;
+      failed.failure_line = actual.error_line ?? actual.trace.at(-1)?.line ?? deps.program.error_line;
+      state.queryNext = Infinity;
+      return;
+    }
+    if (closing) {
+      state.closed = true;
+      state.interpreter = undefined;
       state.queryNext = Infinity;
       return;
     }
@@ -157,8 +191,13 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
     }
     state.index++;
     state.interpreter = undefined;
+    // After the last guest, a closing shift goes straight on to the closing-time call.
     state.queryNext =
-      state.index < deps.events.length ? Math.max(now + 0.001, deps.events[state.index].customer.arrival) : Infinity;
+      state.index < deps.events.length
+        ? Math.max(now + 0.001, deps.events[state.index].customer.arrival)
+        : closingDue(state, deps)
+          ? now + 0.001
+          : Infinity;
   } else {
     const instruction = actual.trace.at(-1)!;
     const to = instruction.command.startsWith('MOVE ')

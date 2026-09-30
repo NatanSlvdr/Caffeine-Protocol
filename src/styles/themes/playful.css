@@ -2124,6 +2124,23 @@ html[data-motion='reduced'] .execution-line-highlight {
 .customer-speech .order-icons {
   gap: 5px;
 }
+/* Take-away and rush orders carry a small tag on the paper, the cup and the customer's bubble. */
+.order-mark {
+  padding: 1px 4px;
+  border-radius: 999px;
+  background: var(--sage);
+  color: var(--ink);
+  font:
+    700 9px/1.2 Inter,
+    sans-serif;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.order-mark.rush {
+  background: var(--orange);
+  color: var(--cream);
+}
 .customer-speech .order-icons li {
   display: flex;
   align-items: center;

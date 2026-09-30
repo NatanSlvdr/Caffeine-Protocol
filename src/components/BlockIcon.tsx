@@ -13,6 +13,7 @@ import {
   MapPin,
   Navigation,
   Plus,
+  OctagonX,
   ReceiptText,
   Repeat2,
   Settings2,
@@ -46,6 +47,7 @@ const icons = {
   USE: Coffee,
   HELP: CircleHelp,
   ERROR: CircleHelp,
+  STOP: OctagonX,
 };
 
 /** Jump destinations get a dedicated connector glyph instead of a family icon. */

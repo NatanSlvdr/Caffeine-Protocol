@@ -1,4 +1,4 @@
-import { parseStore, parseTimes, variableLabels } from './program/vars';
+import { parseMarkWrite, parseStore, parseTimes, variableLabels } from './program/vars';
 import { parseMoveTo } from './commands';
 
 /** Presentation-only family classification; operands serialize to the finite instruction language. */
@@ -22,8 +22,13 @@ export function familyFor(command: string): string {
   return command;
 }
 
+/** The words a paper mark shows on its Write block. */
+export const MARK_LABELS: Record<string, string> = { togo: 'To go', rush: 'Rush' };
+
 /** Presentation-only verb/value labels for one serialized command. */
 export function labelFor(command: string): { verb: string; value: string } {
+  const mark = parseMarkWrite(command);
+  if (mark) return { verb: 'Write', value: MARK_LABELS[mark] };
   if (command.startsWith('WRITE ')) return { verb: 'Write', value: 'Sugar' };
   if (command.startsWith('STORE ')) return { verb: 'Store', value: command.split(' ')[1] };
   if (command.startsWith('POSITION ')) return { verb: '', value: '' };
@@ -72,11 +77,14 @@ export function spokenBlock(command: string): string {
   const store = parseStore(command);
   const { verb, value } = labelFor(command);
   // Directions and sugar counts sit in the tile's fields, so the command itself says them best.
+  const mark = parseMarkWrite(command);
   const text = store
     ? `store ${store.variable} = ${STORE_SOURCE_LABELS[store.value] ?? store.value}`
-    : /^(TAKE|DEPOSIT|WRITE|USE) /.test(command)
-      ? command
-      : `${verb} ${value}`;
+    : mark
+      ? `write ${MARK_LABELS[mark]}`
+      : /^(TAKE|DEPOSIT|WRITE|USE) /.test(command)
+        ? command
+        : `${verb} ${value}`;
   return variableLabels(text.toLowerCase().replace('heard orders', 'order').replace('customer speech', 'orders'))
     .toLowerCase()
     .trim();

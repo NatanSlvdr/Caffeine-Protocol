@@ -9,6 +9,7 @@ import { isWalkable, samePoint, STARTS, STATIONS } from '../../../src/domain/lay
 import { movementSource } from '../../../src/domain/defaultPrograms';
 import { runServiceShift as service } from '../../helpers/run';
 import type { ReplayEvent } from '../../../src/domain/types';
+import { belongsToPaper } from '../../../src/domain/tickets';
 import { UNLOCKS } from '../../../src/domain/unlocks';
 
 /** The first shift with all three robots and every table. */
@@ -161,14 +162,20 @@ describe('recipes, handoffs, and capacities', () => {
     const r = service({});
     expect(r.first_failure).toBeNull();
     for (const e of r.events) expect(e.tickets.every((t) => t.status === 'served')).toBe(true);
+    expect(r.events.some((e) => e.tickets.length > 1)).toBe(true);
+    // Two-drink trays are Act III's lesson; Act IV's references carry one drink at a time.
+    const trays = service({}, FULL_HOUSE - 1).execution?.flatMap((s) => s.events) ?? [];
+    expect(trays.some((e) => e.actor === 'prep' && e.inventory.length === 2)).toBe(true);
+    expect(trays.some((e) => e.actor === 'floor' && e.inventory.length === 2)).toBe(true);
     const logs = r.execution?.flatMap((s) => s.events) ?? [];
-    expect(logs.some((e) => e.actor === 'prep' && e.inventory.length === 2)).toBe(true);
-    expect(logs.some((e) => e.actor === 'floor' && e.inventory.length === 2)).toBe(true);
     for (const e of logs)
       for (const item of e.inventory)
         expect(
           r.tickets.some(
-            (t) => t.ticket_id === item.ticketId && t.table_id === `T${String(item.table).padStart(2, '0')}`,
+            (t) =>
+              belongsToPaper(item.ticketId, t) &&
+              // Take-away orders have no table.
+              t.table_id === (item.table ? `T${String(item.table).padStart(2, '0')}` : null),
           ),
         ).toBe(true);
   });

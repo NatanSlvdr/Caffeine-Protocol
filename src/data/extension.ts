@@ -1,21 +1,48 @@
-import type { LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
+import type { LevelDefinition, RobotPrograms } from '@/domain/types';
 import { floorSource, preparationSource } from '@/domain/defaultPrograms';
+import type { ShiftRules } from '@/domain/defaultPrograms';
 import { countProgramBlocks } from '@/domain/scoring';
 import { ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { lessonById } from './campaign/load';
 import { extensionSeeds } from './campaign/extension-seeds';
 import type { LevelSeed } from './campaign/extension-seeds';
 import { extensionShiftConfig } from './campaign/extension-config';
+import type { ExtensionShiftConfig } from './campaign/extension-config';
 import { extensionSeed } from './campaign/generators/extensionCustomers';
 import {
   collectBuiltExtensionErrors,
+  extensionServiceForLevel,
   validateExtensionSeedData,
   validateLessonData,
   validateLevelData,
 } from './campaign/validate';
 
-/** Query reference solution for extension shifts (the Act I finale). */
-const queryReference = lessonById('L08').solution;
+/** The odd rules a shift switches on. */
+const rulesFor = (config: ExtensionShiftConfig): ShiftRules => ({
+  toGo: config.toGo,
+  cups: config.cups > 0,
+  rush: config.rush,
+  closing: config.closing,
+});
+
+/**
+ * Query reference for extension shifts: the Act I finale, plus the marks and the stop an Act IV rule
+ * needs. Marks go on each sheet just before it's handed over.
+ */
+function queryReference(rules: ShiftRules): string {
+  const marks = (['togo', 'rush'] as const).filter((mark) => (mark === 'togo' ? rules.toGo : rules.rush));
+  let source = lessonById('L08').solution;
+  if (marks.length)
+    source = source.replace(
+      '  MOVE RIGHT 1\n  DEPOSIT RIGHT',
+      [
+        ...marks.map((mark) => `  IF ${mark} IN item\n    WRITE ${mark}\n  END`),
+        '  MOVE RIGHT 1\n  DEPOSIT RIGHT',
+      ].join('\n'),
+    );
+  if (rules.closing) source = source.replace('LISTEN\n', 'LISTEN\nIF closed IN CUSTOMER SPEECH\n  STOP\nEND\n');
+  return source;
+}
 
 /** The line runs `command`, perhaps with operands after it (Move up 2). */
 const isCommand = (line: string, command: string) => {
@@ -35,11 +62,14 @@ function omitLine(source: string, command: string, occurrence: number, todo: str
 }
 
 export function referencePrograms(level: number): RobotPrograms {
-  const config = extensionShiftConfig(level);
+  const config = extensionShiftConfig(level),
+    rules = rulesFor(config);
+  // With all three robots on the floor, the reference makes and serves one drink at a time.
+  const batch = (size: number) => (config.fullHouse ? 1 : size);
   return {
-    query: queryReference,
-    prep: preparationSource(level, config.prepBatch),
-    floor: floorSource(level, config.floorBatch),
+    query: queryReference(rules),
+    prep: preparationSource(level, batch(config.prepBatch), rules),
+    floor: floorSource(level, batch(config.floorBatch), rules),
   };
 }
 
@@ -64,13 +94,7 @@ export const extensionLevels: LevelDefinition[] = extensionSeeds.map(buildExtens
 export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
   const level = Number(seed.id.slice(1)),
     config = extensionShiftConfig(level);
-  const service: ServiceConfig = {
-    prepCapacity: config.prepBatch,
-    floorCapacity: config.floorBatch,
-    clearing: true,
-    objective: 'serve',
-    minLoad: config.minLoad,
-  };
+  const service = extensionServiceForLevel(level);
   const active_tables = config.tables;
   const seeds = [0, 1, 2].map((s) => extensionSeed(level, s));
   return {
@@ -89,18 +113,19 @@ export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
 }
 export const extensionLessons = extensionSeeds.map(buildExtensionLesson);
 
-/** Derive starters (with one TODO omission) and solutions from one seed. */
+/**
+ * Derive starters and solutions from one seed. A solo shift's starter blanks one line of the reference with a
+ * TODO. An Act IV shift starts from the previous shift's programs, which its odd rule then breaks.
+ */
 export function buildExtensionLesson(seed: LevelSeed) {
   const level = Number(seed.id.slice(1)),
-    config = extensionShiftConfig(level),
     role = seed.robot ?? (level < ROBOT_UNLOCK_LEVELS.floor ? 'prep' : 'floor'),
-    programs = referencePrograms(level),
-    starter = { ...programs };
-  starter[role] = omitLine(starter[role], seed.omission, seed.occurrence ?? 1, seed.todo ?? seed.omission);
-  if (config.fullHouse) {
-    starter.query = lessonById('L02').solution;
-    starter.prep = omitLine(programs.prep, 'STORE var1 FROM sugar', 1, 'store the order’s sugar in Var A');
-  }
+    programs = referencePrograms(level);
+  if (!seed.omission && !extensionShiftConfig(level).fullHouse)
+    throw new Error(`Solo shift ${seed.id} needs an omission for its starter.`);
+  const starter = seed.omission
+    ? { ...programs, [role]: omitLine(programs[role], seed.omission, seed.occurrence ?? 1, seed.todo ?? seed.omission) }
+    : referencePrograms(level - 1);
   return {
     note: seed.note,
     starter: starter.query,

@@ -9,7 +9,7 @@ export function Harness({
   initial = 'LISTEN',
   locked = false,
   role = 'query',
-  level = 32,
+  level = 21,
 }: {
   initial?: string;
   locked?: boolean;
@@ -19,7 +19,15 @@ export function Harness({
   const [source, setSource] = useState(initial);
   return (
     <>
-      <Editor role={role} source={source} onChange={setSource} level={level} locked={locked} observation={false} textMode={false} />
+      <Editor
+        role={role}
+        source={source}
+        onChange={setSource}
+        level={level}
+        locked={locked}
+        observation={false}
+        textMode={false}
+      />
       <output aria-label="Current source">{source}</output>
     </>
   );

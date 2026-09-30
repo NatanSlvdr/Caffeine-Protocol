@@ -181,6 +181,8 @@ export function World({
                   key={item.ticketId}
                   at={[actor.position[0] - 0.2 + i * 0.4, 1.2, actor.position[1] + 0.3]}
                   tea={item.item === 'tea'}
+                  paper={item.table === 0 && item.stage !== 'dirty'}
+                  lid={item.lid}
                 />
               ))}
             </group>
@@ -201,11 +203,13 @@ export function World({
           <Box at={[-0.035, 0.009, 0.02]} size={[0.13, 0.006, 0.025]} color="#b77959" />
         </group>
       ))}
-      {state?.pickup.slice(0, 2).map(([id, item], i) => (
+      {state?.pickup.slice(0, 2).map(([id, drink], i) => (
         <Cup
           key={id}
           at={[STATIONS.pickup.cell[0] - 0.2 + i * 0.4, 1.16, STATIONS.pickup.cell[1]]}
-          tea={item === 'tea'}
+          tea={drink.item === 'tea'}
+          paper={drink.toGo}
+          lid={drink.toGo}
         />
       ))}
       {state?.tableDrinks.map((drink, index) => (
@@ -238,6 +242,7 @@ export function World({
                 facing={c.facing}
                 drinking={c.drinking}
                 tea={c.drink === 'tea'}
+                paper={c.toGo}
               />
               {event && c.showOrder && showStatusBubbles && (
                 <SceneHtml

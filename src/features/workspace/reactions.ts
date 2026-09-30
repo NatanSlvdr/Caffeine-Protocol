@@ -14,6 +14,48 @@ interface FailureKind {
 /** Failure reasons are the simulator's own sentences; each family gets a voice and a nudge. */
 const kinds: FailureKind[] = [
   {
+    match: /is to go: Write To go|says To go/,
+    by: 'guest',
+    react: (p) => `I said “${p}”. I’m taking it with me!`,
+    hint: 'Take-away orders say so: If To go IN item, then Write To go.',
+  },
+  {
+    match: /in a rush: Write Rush|says Rush/,
+    by: 'guest',
+    react: (p) => `“${p}”… and I really am in a hurry.`,
+    hint: 'Write Rush on their ticket, so the kitchen and the floor know.',
+  },
+  {
+    match: /lid/,
+    by: 'robot',
+    react: () => '*beep* Lid? No lid? Lid!',
+    hint: 'Take-away drinks leave with a lid on, after their sugar. Drinks that stay in don’t need one.',
+  },
+  {
+    match: /to-go shelf|to go: it has no table/,
+    by: 'guest',
+    react: () => 'That one’s mine. I’m waiting by the door!',
+    hint: 'Take-away drinks go on the to-go shelf by the door: walk there and Deposit down.',
+  },
+  {
+    match: /clean cups|waiting at the sink/,
+    by: 'robot',
+    react: () => '*clink clink* No cups! No cups!',
+    hint: 'Every cup has to come back and be washed before it can go out again.',
+  },
+  {
+    match: /in a rush: (make|serve)/,
+    by: 'robot',
+    react: () => '*alarm beep* Hurry! Hurry!',
+    hint: 'A rush order comes first: finish it before waiting for anything else.',
+  },
+  {
+    match: /closing time|café is closed|keeping the café open|isn’t closing time/,
+    by: 'robot',
+    react: () => '*yawn beep* Bedtime?',
+    hint: 'After Wait for Orders, check If Closed IN Orders, finish what’s in hand, and Stop.',
+  },
+  {
     match: /Expected Query to ask for help/,
     by: 'guest',
     react: (p) => `I said “${p}”… and that’s not what I meant at all.`,

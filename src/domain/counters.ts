@@ -1,16 +1,24 @@
 import { ticketUnits } from './tickets';
 import type { ExecutionEvent, OrderTicket, ReplayEvent } from './types';
 
+/** A drink waiting at pickup: take-away ones are in a lidded paper cup. */
+export interface PickupDrink {
+  item: string;
+  toGo: boolean;
+}
+
 /** Latest brewed-drink pickup contents per ticket id. */
 export function samplePickupCounter(
   logs: ExecutionEvent[],
   tickets: OrderTicket[],
   local: number,
-): Map<string, string> {
-  const pickup = new Map<string, string>();
+): Map<string, PickupDrink> {
+  const pickup = new Map<string, PickupDrink>();
   for (const e of logs.filter((e) => e.end <= local)) {
-    if (e.role === 'prep' && e.action === 'DEPOSIT' && e.ticketId)
-      pickup.set(e.ticketId, tickets.flatMap(ticketUnits).find((t) => t.ticket_id === e.ticketId)?.item ?? 'coffee');
+    if (e.role === 'prep' && e.action === 'DEPOSIT' && e.ticketId) {
+      const ticket = tickets.flatMap(ticketUnits).find((t) => t.ticket_id === e.ticketId);
+      pickup.set(e.ticketId, { item: ticket?.item ?? 'coffee', toGo: !!ticket?.to_go });
+    }
     if (e.role === 'floor' && e.action === 'PICKUP' && e.ticketId) pickup.delete(e.ticketId);
   }
   return pickup;

@@ -14,14 +14,23 @@ import { ROBOT_STAND_IN_LEVEL, ROBOT_MAX_BLOCKS } from './constants';
 import { ROBOT_DISPLAY_NAMES } from './robots';
 import { UNLOCKS } from './unlocks';
 
-/** What a kitchen or floor robot can read on its current order. */
-export const ROBOT_CONDITION_VALUES = ['coffee', 'tea', 'sugar'] as const;
+/** What a kitchen or floor robot can read on its current order, and the shift each word arrives. */
+const ROBOT_CONDITION_UNLOCKS: Record<string, number> = {
+  coffee: 0,
+  tea: 0,
+  sugar: 0,
+  togo: UNLOCKS.toGo,
+  rush: UNLOCKS.rush,
+  closed: UNLOCKS.closing,
+};
+const robotConditionValues = (level: number) =>
+  Object.keys(ROBOT_CONDITION_UNLOCKS).filter((value) => level >= ROBOT_CONDITION_UNLOCKS[value]);
 
 /**
  * Query's language, shared by every robot: wait for orders, move, take, deposit, branch, jump and repeat.
  * The first TAKE and DEPOSIT listed are the ones a robot's library offers.
  */
-function sharedCommands(take: string, deposit: string): string[] {
+function sharedCommands(take: string, deposit: string, level: number): string[] {
   return [
     'LISTEN',
     ...DIRECTIONS.map((direction) => `MOVE ${direction} 1`),
@@ -29,18 +38,19 @@ function sharedCommands(take: string, deposit: string): string[] {
     ...DIRECTIONS.filter((direction) => direction !== take).map((direction) => `TAKE ${direction}`),
     `DEPOSIT ${deposit}`,
     ...DIRECTIONS.filter((direction) => direction !== deposit).map((direction) => `DEPOSIT ${direction}`),
-    ...ROBOT_CONDITION_VALUES.map((value) => `IF ${value} IN CUSTOMER SPEECH`),
+    ...robotConditionValues(level).map((value) => `IF ${value} IN CUSTOMER SPEECH`),
     'ELSE',
     'END',
     'POSITION listen',
     'JUMP listen',
     'REPEAT',
+    ...(level >= UNLOCKS.closing ? ['STOP'] : []),
   ];
 }
 /** Brew runs the coffee machine with Use, and from the sugar shift on counts cubes from the order into memory. */
 function prepCommands(level: number): string[] {
   return [
-    ...sharedCommands('UP', 'UP'),
+    ...sharedCommands('UP', 'UP', level),
     'USE UP',
     ...DIRECTIONS.filter((direction) => direction !== 'UP').map((direction) => `USE ${direction}`),
     ...(level >= UNLOCKS.prepSugar ? ['STORE var1 FROM sugar', 'FOR var1 TIMES'] : []),
@@ -50,7 +60,7 @@ function prepCommands(level: number): string[] {
 /** Porter reads each order's table into memory and walks there by itself; it also clears dirty cups. */
 function floorCommands(level: number): string[] {
   return [
-    ...sharedCommands('DOWN', 'UP'),
+    ...sharedCommands('DOWN', 'UP', level),
     'MOVE var1',
     'STORE var1 FROM table',
     'STORE var1 FROM here',
@@ -80,10 +90,9 @@ function memoryInstruction(command: string, role: Exclude<RobotRole, 'query'>, l
   return (role === 'floor' && !!parseMoveTo(command)) || (role === 'prep' && USE_RE.test(command));
 }
 /** Order conditions read like Query's, against the order a robot is working on. */
-const robotCondition = (command: string) =>
+const robotCondition = (command: string, level: number) =>
   parseConditionExpression(command)?.conditions.every(
-    (condition) =>
-      condition.right === 'CUSTOMER SPEECH' && (ROBOT_CONDITION_VALUES as readonly string[]).includes(condition.left),
+    (condition) => condition.right === 'CUSTOMER SPEECH' && robotConditionValues(level).includes(condition.left),
   ) ?? false;
 /** Commands are role-gated; numbered MOVE operands are edited separately in the block editor. */
 export function robotCommands(role: RobotRole, level: number): string[] {
@@ -120,7 +129,7 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
       !TAKE_RE.test(c) &&
       !DEPOSIT_RE.test(c) &&
       !/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c) &&
-      !robotCondition(c) &&
+      !robotCondition(c, level) &&
       !memoryInstruction(c, role, level) &&
       // Porter's older saves still route by table checks; new programs store the order's table instead.
       !(role === 'floor' && /^IF TABLE ([1-9]|1[0-6])$/.test(c)) &&
@@ -193,7 +202,7 @@ function migrateRobotCondition(command: string): string {
   const bare = /^IF (coffee|tea|sugar)$/.exec(command);
   if (bare) return `IF ${bare[1]} IN CUSTOMER SPEECH`;
   const comparison = parseWorkerComparison(command);
-  if (!comparison || !(ROBOT_CONDITION_VALUES as readonly string[]).includes(comparison.left)) return command;
+  if (!comparison || !['coffee', 'tea', 'sugar'].includes(comparison.left)) return command;
   const { left, operator, right } = comparison;
   const present =
     right === 'CUSTOMER SPEECH'

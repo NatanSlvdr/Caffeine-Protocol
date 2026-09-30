@@ -185,7 +185,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Some customers order their drink to go. They don’t sit down: they wait by the door for a drink with a lid.',
     hint: 'To-go drinks never reach a table.',
     lessonNote:
-      'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
+      'Some customers order to go. Query writes To go on their ticket: If To go IN item, then Write To go. Brew puts a lid on those drinks: Take up at the lids, between the sugar and pickup. Porter leaves them on the to-go shelf by the door: walk there and Deposit down. They go in paper cups, so there’s nothing to clear.',
   },
   {
     level: 18,
@@ -196,7 +196,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'Only four cups go round. When they run out, the next drink has to wait until a used cup is cleared and washed.',
     hint: 'A cup has to come back before it can go out again.',
     lessonNote:
-      'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
+      'There are only four café cups. Taking beans or leaves at storage uses a clean cup, and Porter drops the used ones in the sink. Use up at the sink washes them. When no clean cup is left, Brew waits at the sink until a used one comes back.',
   },
   {
     level: 19,
@@ -205,7 +205,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'Some customers are in a hurry. Their drinks must jump the queue in the kitchen and on the floor.',
     hint: 'Hurried orders go first.',
     lessonNote:
-      'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
+      'Customers in a rush say so: Query writes Rush on their ticket. Rush orders jump the queue, and whoever holds one handles it first. Brew can’t wait for another ticket while it holds a rush order, and Porter can’t wait or pick up another drink while it carries one.',
   },
   {
     level: 20,
@@ -215,7 +215,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective: 'When the last customer has been served and every table is cleared, all three robots must stop.',
     hint: 'Finish up, then stop.',
     lessonNote:
-      'All three programs run together. Repair order interpretation, recipes, and floor service across mixed requests.',
+      'After the last customer, Wait for Orders reports Closed instead of waiting. Check If Closed IN Orders, and Stop. Every robot has to stop, after finishing whatever it’s holding. A robot that keeps waiting keeps the café open.',
   },
   {
     level: 21,
@@ -224,7 +224,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective:
       'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, deliveries, and clearing. Every guest must be served and every table cleared.',
     hint: 'Everything, all at once.',
-    lessonNote: 'The final service combines groups, clarification, both recipes, sugar, two-item trays, and clearing.',
+    lessonNote:
+      'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
   },
 ];
 
