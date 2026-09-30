@@ -5,7 +5,8 @@ import { fit, ready, seedSave, skipIntro } from '../helpers';
 for (const width of [1280, 1100])
   test(`framing and working controls at ${width} × 720`, async ({ page }) => {
     await page.setViewportSize({ width, height: 720 });
-    await seedSave(page, { ...newSave(), unlocked: 13, selected: 13 });
+    // The Floor Robot cutscene counts as watched, so Special Delivery opens straight away.
+    await seedSave(page, { ...newSave(), unlocked: 13, selected: 13, story: { 13: true } });
     await ready(page);
     await page.getByRole('button', { name: 'Choose a shift', exact: true }).click();
     await page.getByRole('button', { name: 'Start shift', exact: true }).click();
