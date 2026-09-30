@@ -5,6 +5,7 @@ import {
   newSave,
   parseSave,
   readSave,
+  resetRobotPrograms,
   saveRobotDraft,
   writeSave,
 } from '../../../src/features/campaign/save/persistence';
@@ -158,6 +159,12 @@ describe('version 4 campaign saves', () => {
     expect(next.query).toBe('# custom Query');
     expect(next.prep).toBe('# custom Brew');
     expect(next.floor).toContain('TODO');
+  });
+  it('resets the Query program past its own draft to the incoming one', () => {
+    const save = saveRobotDraft(newSave(), PORTER, { query: '# edited', prep: '# edited', floor: '# edited' });
+    const fresh = incomingRobotPrograms(newSave(), PORTER, lessons);
+    expect(incomingRobotPrograms(save, PORTER, lessons).query).toBe('# edited');
+    expect(resetRobotPrograms(save, PORTER, lessons)).toEqual(fresh);
   });
   it(`unlocks the new acts and completes only at shift ${lessons.length}`, () => {
     expect(completeLevel(newSave(), BREW - 1, 3, '', lessons).complete).toBe(false);

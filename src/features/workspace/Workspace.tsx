@@ -3,7 +3,7 @@ import { ArrowLeft, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS } from '@/domain';
 import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
-import { incomingRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
+import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
@@ -263,7 +263,7 @@ export function Workspace({
         <ResetModal
           onClose={() => setModal('')}
           onConfirm={() => {
-            change(incomingRobotPrograms(save, index, lessons)[role]);
+            change(resetRobotPrograms(save, index, lessons)[role]);
             setModal('');
           }}
         />

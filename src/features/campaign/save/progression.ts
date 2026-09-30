@@ -37,6 +37,12 @@ export function incomingRobotPrograms(save: ProgressSave, index: number, lessons
     floor: cleanFloor(index === UNLOCKS.floor - 1 ? defaults.floor : (previous?.floor ?? defaults.floor)),
   };
 }
+/** What "Reset to incoming program" restores: the incoming programs, ignoring this shift's own draft. */
+export function resetRobotPrograms(save: ProgressSave, index: number, lessons: LessonCatalog): RobotPrograms {
+  const drafts = { ...save.drafts };
+  delete drafts[index];
+  return incomingRobotPrograms({ ...save, drafts }, index, lessons);
+}
 export function saveRobotDraft(save: ProgressSave, index: number, programs: RobotPrograms): ProgressSave {
   return {
     ...save,
