@@ -43,12 +43,14 @@ export function ReceiptModal({ index, level, result, observation, isLastShift, o
               <dt>Blocks used</dt>
               <dd>
                 {blocks} <small>/ {level.block_target}</small>
+                <TargetMet met={blocks <= level.block_target} />
               </dd>
             </div>
             <div className={result.executed_instructions <= level.instruction_target ? 'met' : ''}>
               <dt>Steps run</dt>
               <dd>
                 {result.executed_instructions} <small>/ {level.instruction_target}</small>
+                <TargetMet met={result.executed_instructions <= level.instruction_target} />
               </dd>
             </div>
           </>
@@ -72,4 +74,9 @@ export function ReceiptModal({ index, level, result, observation, isLastShift, o
       </div>
     </Modal>
   );
+}
+
+/** The ✓ on a met total is drawn in CSS, so screen readers hear the verdict here instead. */
+function TargetMet({ met }: { met: boolean }) {
+  return <span className="sr-only">{met ? ', star target met' : ', over the star target'}</span>;
 }
