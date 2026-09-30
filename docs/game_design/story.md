@@ -2,20 +2,17 @@
 
 ## Campaign Setup
 
-Niko inherits his Aunt Lou's small, modern, cozy café. Lou died in March and
-left the café to him, with a postcard for Moka to post: “The café is yours now,
-Niko. Be kind to the old machine.” Moka didn't post it. She ran the café alone,
-the way Lou had, until the counter robot broke in June and she had to close.
-The card reaches Niko in October, with the keys: a café full of half-working
-equipment, old service manuals, and a quiet repair bay in the back room with
-three empty charging docks.
+Niko inherits his Aunt Lou's small, modern, cozy café, closed for a while and
+full of half-working equipment, old service manuals, and a quiet repair bay in
+the back room with three empty charging docks. Lou has retired to the seaside.
+The café can still open, but only because Niko can patch together temporary
+scripted routines and salvaged machines.
 
-He doesn't start alone. Moka, who ran the espresso machine beside Lou for forty
-years, lives across the street and walks in on his first night. She tells him
-the post is slow. Pip, a kid who lives in the flat upstairs, wants to help: Lou
-made him a hot chocolate every Saturday and let him carry the empties, he is
-saving his pocket money (for something new every week), and he spent last
-summer helping at his mum's restaurant.
+He doesn't start alone. Moka, Lou's friend who ran the espresso machine beside
+her for forty years, lives across the street and walks in on his first night.
+Pip, a kid who lives in the flat upstairs, wants to help: he is saving his
+pocket money (for something new every week) and spent last summer helping at
+his mum's restaurant.
 
 The early cafe runs prove that doing everything by hand does not scale. Niko
 starts repairing robots from a nearby scrapyard so the cafe can become stable
@@ -89,48 +86,39 @@ Writing the scripts (`src/data/campaign/dialogue.ts`):
 Scripts live in `src/data/campaign/dialogue.ts` (intros),
 `src/data/campaign/cutscenes.ts` (cutscenes) and
 `src/features/workspace/reactions.ts` (failure and success lines). The tone is
-cozy, with grief handled gently: no villains, Lou's death is never shown, and
-the story is about moving on, not about loss.
+cozy only: no villains, no stakes beyond a busy morning.
 
 ### Cast
 
-| Id       | Name       | Who                                                                                     |
-| -------- | ---------- | --------------------------------------------------------------------------------------- |
-| `niko`   | Niko       | The new owner, a young man. Warm, a little tired, loves a pun.                          |
-| `query`  | Query      | Counter robot. Literal-minded, precise, speaks in short reports.                        |
-| `brew`   | Brew       | Kitchen robot. Eager perfectionist, loves the grinder.                                  |
-| `porter` | Porter     | Floor robot. Cheerful and chatty, occasionally clumsy.                                  |
-| `moka`   | Moka       | Lou's friend of forty years, the old kitchen stand-in. Dry, proud, retires in shift 22. |
-| `pip`    | Pip        | Kid from the flat upstairs, the delivery stand-in. Fast, kind, easily excited.          |
-| `albert` | Mr. Albert | Elderly regular. Always orders “the usual”. It is coffee.                               |
-| `juno`   | Juno       | Student with a laptop. Tea, never sugar.                                                |
-| `dot`    | Dot        | Sweet-toothed regular. Counts her sugars exactly.                                       |
-| `rosa`   | Rosa       | Arrives with friends and orders for the whole group.                                    |
-| `guest`  | Guest      | Any customer at the counter.                                                            |
+| Id       | Name       | Who                                                                                      |
+| -------- | ---------- | ---------------------------------------------------------------------------------------- |
+| `niko`   | Niko       | The new owner, a young man. Warm, a little tired, loves a pun.                           |
+| `query`  | Query      | Counter robot. Literal-minded, precise, speaks in short reports.                         |
+| `brew`   | Brew       | Kitchen robot. Eager perfectionist, loves the grinder.                                   |
+| `porter` | Porter     | Floor robot. Cheerful and chatty, occasionally clumsy.                                   |
+| `moka`   | Moka       | Lou's friend of forty years, the old kitchen stand-in. Dry, grumpy, retires in shift 22. |
+| `pip`    | Pip        | Kid from the flat upstairs, the delivery stand-in. Fast, kind, easily excited.           |
+| `albert` | Mr. Albert | Elderly regular. Always orders “the usual”. It is coffee.                                |
+| `juno`   | Juno       | Student with a laptop. Tea, never sugar.                                                 |
+| `dot`    | Dot        | Sweet-toothed regular. Counts her sugars exactly.                                        |
+| `rosa`   | Rosa       | Arrives with friends and orders for the whole group.                                     |
+| `guest`  | Guest      | Any customer at the counter.                                                             |
 
 ### Cutscenes
 
-Seven scenes tell the story between shifts, each a few stills with dialogue
-under them. The stills are photo prints dropped one by one onto a dark table:
-a still stays on top while its lines play, then the next one lands on the
-pile.
+Seven scenes tell the story between shifts, each a few full-screen stills with
+dialogue over them. A still stays up while its lines play, then crossfades to
+the next one.
 
-Underneath the robots, the campaign asks one question: whose café is it? It
-starts as Lou's. Moka guards it that way (six sharp, cups on the left, no
-robots in the kitchen) because keeping it Lou's is how she holds on to her.
-Each scene moves it a step toward being Niko's, and the two stand-ins each
-change their mind on the way: Moka lets go of the kitchen, Pip lets a robot
-onto his floor. Lou never appears; her card opens the story and closes it.
-
-| Scene                  | Plays before | Stills | What happens                                                                        |
-| ---------------------- | ------------ | ------ | ----------------------------------------------------------------------------------- |
-| The Keys               | Shift 1      | 10     | Lou's card arrives seven months late; Moka says the post is slow; Pip signs on.     |
-| The Scrapyard          | Shift 3      | 8      | Too many tickets; Niko rebuilds Query, Lou's robot that Moka threw out.             |
-| A Second Pair of Hands | Shift 15     | 8      | Query's badge; Moka refuses a robot in Lou's kitchen; Niko finds Brew anyway.       |
-| Ninety-Two Degrees     | Shift 22     | 8      | Moka admits she kept the card, hands Brew her tamper and tells Niko to make it his. |
-| The Floor Robot        | Shift 23     | 8      | Pip doesn't want a robot on the floor, until he meets Porter.                       |
-| Back to School         | Shift 31     | 6      | Pip leaves for school; Niko moves the cups and becomes just the owner.              |
-| Closing Time           | The receipt  | 8      | “It's your café.” Lou's card goes up: the old machine was Moka all along.           |
+| Scene                  | Plays before | Stills | What happens                                          |
+| ---------------------- | ------------ | ------ | ----------------------------------------------------- |
+| The Keys               | Shift 1      | 5      | Niko opens Lou's café; Moka walks in; Pip signs on.   |
+| The Scrapyard          | Shift 3      | 4      | Too many tickets; Niko rebuilds Query.                |
+| A Second Pair of Hands | Shift 15     | 4      | Query's badge; the kitchen floods; Brew is found.     |
+| Ninety-Two Degrees     | Shift 22     | 4      | Moka's last morning; she hands Brew her tamper.       |
+| The Floor Robot        | Shift 23     | 4      | Pip is swamped and school is coming; Porter is found. |
+| Back to School         | Shift 31     | 3      | Pip leaves for school; Niko becomes just the owner.   |
+| Closing Time           | The receipt  | 4      | The café runs itself; everyone comes by.              |
 
 Scenes appear on the campaign rail as rows of their own, just above the shift
 they open, with a prune clapperboard instead of a number. The next shift stays
