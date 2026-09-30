@@ -61,9 +61,30 @@ function omitLine(source: string, command: string, occurrence: number, todo: str
   return lines.join('\n');
 }
 
+/**
+ * Act IV starts each shift from the previous shift's programs, so a rule stays handled once a shift has switched
+ * it on: the reference keeps handling every rule the crew has met so far, as a player's carried-forward programs do.
+ */
+function carriedRules(level: number): ShiftRules {
+  const rules = rulesFor(extensionShiftConfig(level));
+  if (!extensionShiftConfig(level).fullHouse) return rules;
+  for (
+    let earlier = level - 1;
+    earlier >= ROBOT_UNLOCK_LEVELS.prep && extensionShiftConfig(earlier).fullHouse;
+    earlier--
+  ) {
+    const met = rulesFor(extensionShiftConfig(earlier));
+    rules.toGo ||= met.toGo;
+    rules.cups ||= met.cups;
+    rules.rush ||= met.rush;
+    rules.closing ||= met.closing;
+  }
+  return rules;
+}
+
 export function referencePrograms(level: number): RobotPrograms {
   const config = extensionShiftConfig(level),
-    rules = rulesFor(config);
+    rules = carriedRules(level);
   // With all three robots on the floor, the reference makes and serves one drink at a time.
   const batch = (size: number) => (config.fullHouse ? 1 : size);
   return {
