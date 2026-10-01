@@ -6,7 +6,7 @@ import { Button } from '@/shared/ui/Button';
 import { SettingRow } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
 import { count, type ProgressSave } from '@/domain';
-import { download } from '@/shared/lib/download';
+import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
@@ -103,7 +103,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             </h3>
             <p>Progress stays in this browser. Export a copy to keep it safe or carry it to another computer.</p>
             <div className="settings-actions">
-              <button className="settings-chip" onClick={() => download(JSON.stringify(save, null, 2))}>
+              <button className="settings-chip" onClick={() => download(JSON.stringify(save, null, 2), saveFileName())}>
                 <Download size={15} /> Export café
               </button>
               <button className="settings-chip" onClick={() => input.current?.click()}>

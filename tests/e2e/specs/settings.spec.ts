@@ -45,7 +45,7 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   const exported = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export café' }).click();
   const file = await exported;
-  expect(file.suggestedFilename()).toBe('caffeine-protocol-save.json');
+  expect(file.suggestedFilename()).toMatch(/^caffeine-protocol-save-\d{4}-\d{2}-\d{2}\.json$/);
   // Broken imports alert without replacing anything.
   await page
     .getByLabel('Import save file')
