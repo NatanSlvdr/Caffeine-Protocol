@@ -4,7 +4,13 @@ import { levels } from '../../../src/data';
 import { sampleReplay } from '../../../src/domain/replay';
 import { STATIONS, tableSeat } from '../../../src/domain/layout';
 import { finishLiveRun as finish, referenceProgramsFor as programs } from '../../helpers/run';
-import { STREET_APPROACH_SECONDS, customerApproach, DRINK_SECONDS, SIT_SECONDS } from '../../../src/domain/street';
+import {
+  STREET_APPROACH_SECONDS,
+  customerApproach,
+  DRINK_SECONDS,
+  SIDEWALK_X,
+  SIT_SECONDS,
+} from '../../../src/domain/street';
 
 describe('live service', () => {
   it('lines up simultaneous arrivals and reveals each order only when intake starts', () => {
@@ -16,17 +22,30 @@ describe('live service', () => {
       arrival: 0,
     }));
     const run = createLiveRun(level, programs(3));
-    let frame = run.advance(STREET_APPROACH_SECONDS);
-    const waiting = sampleReplay(frame.result, frame.time).customers;
-    expect(waiting.map((customer) => customer.position)).toEqual([STATIONS.orders.floor, [-8, 5], [-9, 5]]);
-    expect(waiting.map((customer) => customer.showOrder)).toEqual([true, false, false]);
+    let frame = run.advance(STREET_APPROACH_SECONDS + 0.5);
+    const spot = (id: string) =>
+      sampleReplay(frame.result, frame.time)
+        .customers.find((customer) => customer.id === id)
+        ?.position.map((value) => Math.round(value * 100) / 100);
+    // The line forms outside, down the sidewalk, so the doorway stays clear.
+    const firstInLine = [SIDEWALK_X, 4.4],
+      secondInLine = [SIDEWALK_X, 3.2];
+    expect(['queue-0', 'queue-1', 'queue-2'].map(spot)).toEqual([STATIONS.orders.floor, firstInLine, secondInLine]);
+    expect(sampleReplay(frame.result, frame.time).customers.map((customer) => customer.showOrder)).toEqual([
+      true,
+      false,
+      false,
+    ]);
     for (let i = 0; i < 100 && !frame.result.execution?.[0].events.some((log) => log.customerId === 'queue-1'); i++)
       frame = run.advance(0.25);
     const next = sampleReplay(frame.result, frame.time).customers;
-    expect(next.find((customer) => customer.id === 'queue-1')?.position).toEqual(STATIONS.orders.floor);
     expect(next.find((customer) => customer.id === 'queue-1')?.showOrder).toBe(true);
-    expect(next.find((customer) => customer.id === 'queue-2')?.position).toEqual([-8, 5]);
     expect(next.find((customer) => customer.id === 'queue-2')?.showOrder).toBe(false);
+    // Nobody shares the counter: the next customer walks up once the one before has stepped away.
+    expect(spot('queue-1')).toEqual(firstInLine);
+    frame = run.advance(3);
+    expect(spot('queue-1')).toEqual(STATIONS.orders.floor);
+    expect(spot('queue-2')).toEqual(firstInLine);
   });
 
   it('does no execution on creation and advances only as time passes', () => {
