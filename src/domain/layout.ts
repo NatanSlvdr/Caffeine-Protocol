@@ -3,3 +3,4 @@ export * from './layout/geometry';
 export * from './layout/stations';
 export * from './layout/routes';
 export * from './layout/camera';
+export * from './layout/counterOutline';
