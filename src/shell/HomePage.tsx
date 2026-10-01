@@ -1,13 +1,14 @@
 import { ArrowRight, BookOpen, CircleHelp, Settings2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
 import { go, openGuide, openSettings } from '@/shared/lib/navigation';
-import { useGame, useProgress } from '@/state/GameStore';
+import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { HomeCafePreview } from './HomeCafePreview';
 
 /** The café's front door: a menu ticket pinned over the live café, which runs in the background. */
 export function HomePage() {
   const { save } = useGame();
   const progress = useProgress();
+  const cafe = useCafeName();
 
   return (
     <main className="front-page">
@@ -17,7 +18,7 @@ export function HomePage() {
       <section className="front-menu">
         <article className="front-ticket">
           <span className="front-clip" aria-hidden="true" />
-          <p className="front-kicker">Café Niko · A cozy coding adventure</p>
+          <p className="front-kicker">{cafe} · A cozy coding adventure</p>
           <h1 aria-label="Caffeine Protocol">
             Caffeine
             <br />

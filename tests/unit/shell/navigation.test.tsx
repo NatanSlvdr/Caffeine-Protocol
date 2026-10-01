@@ -16,6 +16,8 @@ describe('shift entry navigation', () => {
     render(<App />);
     expect(screen.getByRole('heading', { name: 'Caffeine Protocol' })).toBeTruthy();
     expect(document.querySelector('.app-header')).toBeNull();
+    // Whose café is it? Lou’s, until the story says otherwise.
+    expect(screen.getByText('Lou’s · A cozy coding adventure')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Choose a shift' }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
@@ -75,6 +77,8 @@ describe('shift entry navigation', () => {
     // Each shift says how it went, since the marks beside its name are visual only.
     expect(screen.getByRole('button', { name: /^Shift 1: .*, served$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 3: .*, 3 of 3 stars$/ })).toBeTruthy();
+    // A finished campaign hangs Niko’s name over the door.
+    expect(screen.getByText(/^Café Niko · Order #/)).toBeTruthy();
   });
 
   it('labels the next and locked shifts on the rail', () => {

@@ -7,6 +7,8 @@ export type ActState = 'locked' | 'active' | 'done';
 
 interface TicketProps {
   act: Act;
+  /** The name over the door, printed on the current act's ticket. */
+  shop: string;
   number: number;
   state: ActState;
   current: boolean;
@@ -35,6 +37,7 @@ type Row = { shift: number } | { scene: Cutscene };
  */
 export function Ticket({
   act,
+  shop,
   number,
   state,
   current,
@@ -83,7 +86,7 @@ export function Ticket({
         onClick={onOpen}
       >
         <span className="ticket-shop">
-          {current && 'Café Niko · '}Order #{pad2(number + 1)}
+          {current && `${shop} · `}Order #{pad2(number + 1)}
         </span>
         {/* Sealed, the act name takes the crew's place; the blank lines keep the head its open height. */}
         <span className="ticket-kicker">{sealed ? '\u00a0' : act.kicker}</span>

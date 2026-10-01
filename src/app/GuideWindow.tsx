@@ -2,13 +2,15 @@ import { Bot, Map, Puzzle, Star } from 'lucide-react';
 import { Modal } from '@/components';
 import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
+import { useCafeName } from '@/state/GameStore';
 
 /** How to play, printed on the same slip of order paper as the house settings. */
 export function GuideWindow({ onClose }: { onClose: () => void }) {
+  const cafe = useCafeName();
   return (
     <Modal
       className="settings-window guide-window"
-      kicker="Café Niko · Staff handbook"
+      kicker={`${cafe} · Staff handbook`}
       title="How the café runs."
       onClose={onClose}
       wide

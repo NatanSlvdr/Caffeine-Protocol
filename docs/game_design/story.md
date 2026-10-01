@@ -79,8 +79,11 @@ Space advances, and Escape or Skip ends the scene.
   into these intros.
 - **Reactions** replace the failure panel. When a run fails, the guest who got
   the wrong order, or the robot that got stuck, reacts first, then Niko names
-  the problem and gives a hint while the failing block stays highlighted. A
-  finished service gets a cheer from the robot before the receipt.
+  the problem and gives a hint while the failing block stays highlighted.
+- **Payoffs** close a finished service before the receipt: whoever the intro
+  left waiting gets what they came for (Juno's tea, Dot's two sugars, Moka's
+  grudging nod), then Niko gives the star verdict. A shift without a written
+  payoff gets a stock cheer from its robot.
 - **Cutscenes** move the story on between shifts (see below). The last one,
   _Closing Time_, plays before the final receipt.
 
@@ -98,7 +101,7 @@ Writing the scripts (`src/data/campaign/dialogue.ts`):
   tinkers with the robot, then shows the player the new block and what it does,
   never where it goes.
 
-Scripts live in `src/data/campaign/dialogue.ts` (intros),
+Scripts live in `src/data/campaign/dialogue.ts` (intros and payoffs),
 `src/data/campaign/cutscenes.ts` (cutscenes) and
 `src/features/workspace/reactions.ts` (failure and success lines). The tone is
 cozy, with grief handled gently: no villains, Lou's death is never shown, and
@@ -133,6 +136,10 @@ robots in the kitchen) because keeping it Lou's is how she holds on to her.
 Each scene moves it a step toward being Niko's, and the two stand-ins each
 change their mind on the way: Moka lets go of the kitchen, Pip lets a robot
 onto his floor. Lou never appears; her card opens the story and closes it.
+
+The menus follow the same question. The name on the front ticket, the order
+rail and the handbooks reads “Lou's” until the campaign is finished, and the
+closing receipt is the first place that says “Café Niko” (`useCafeName`).
 
 | Scene                  | Plays before | Stills | What happens                                                                        |
 | ---------------------- | ------------ | ------ | ----------------------------------------------------------------------------------- |

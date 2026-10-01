@@ -8,7 +8,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
 import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
-import { useGame, useProgress } from '@/state/GameStore';
+import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
 import { ShellBar } from './ShellBar';
@@ -35,6 +35,7 @@ const entries: Entry[] = [
 export function CampaignPage() {
   const { save, select, launch } = useGame();
   const progress = useProgress();
+  const shop = useCafeName();
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
   const rail = useRef<HTMLDivElement>(null);
   const orderTimer = useRef<number | undefined>(undefined);
@@ -176,6 +177,7 @@ export function CampaignPage() {
               <Ticket
                 key={act.kicker}
                 act={act}
+                shop={shop}
                 number={actIndex}
                 state={stateOf(actIndex)}
                 current={actIndex === current}

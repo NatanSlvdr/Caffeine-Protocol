@@ -7,7 +7,7 @@ import { SettingRow } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
 import type { ProgressSave } from '@/domain';
 import { download } from '@/shared/lib/download';
-import { starTotal, useGame, useSettings } from '@/state/GameStore';
+import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
 
 const volumes = [
   { key: 'volume', name: 'Master volume', label: 'Master volume' },
@@ -18,6 +18,7 @@ const volumes = [
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
   const { save, recovery, saveError, importCafe } = useGame();
+  const cafe = useCafeName();
   const [pending, setPending] = useState<ProgressSave | null>(null),
     [error, setError] = useState('');
   const input = useRef<HTMLInputElement>(null);
@@ -46,7 +47,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
     <>
       <Modal
         className="settings-window"
-        kicker="Café Niko · House settings"
+        kicker={`${cafe} · House settings`}
         title="The little things."
         onClose={onClose}
         wide

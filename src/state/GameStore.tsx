@@ -151,6 +151,14 @@ export function useProgress(): { done: number; total: number; stars: number; max
   };
 }
 
+/**
+ * The name over the door. The story asks whose café it is: it stays Lou’s until the closing scene,
+ * where Moka says “It’s your café”, and only a finished campaign hangs up Niko’s name.
+ */
+export function useCafeName(): string {
+  return useGame().save.complete ? 'Café Niko' : 'Lou’s';
+}
+
 /** Audio/display settings plus a single-key updater. */
 export function useSettings(): [Settings, <K extends keyof Settings>(key: K, value: Settings[K]) => void] {
   const { save, updateSetting } = useGame();

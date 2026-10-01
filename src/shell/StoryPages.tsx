@@ -61,9 +61,12 @@ export function EndingPage() {
       ) : (
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
-          <p className="story-kicker">Employee of the month</p>
+          <p className="story-kicker">Café Niko · Under new management</p>
           <h1>Closing time.</h1>
-          <p className="story-narration">Niko sits down with a warm coffee. The café can finally run itself.</p>
+          <p className="story-narration">
+            Lou’s card hangs on the wall by the register. Niko sits down with a warm coffee: the café runs itself now,
+            and the name over the door is his.
+          </p>
           <dl className="story-receipt">
             <div>
               <dt>Shifts served</dt>
