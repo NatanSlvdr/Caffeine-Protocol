@@ -46,6 +46,7 @@ describe('live workspace lifecycle', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
     const speed = screen.getByRole('slider', { name: 'Playback speed' });
+    expect(speed.getAttribute('aria-valuetext')).toMatch(/^[\d.]+× speed$/);
     speed.focus();
     fireEvent.keyDown(speed, { key: 'Escape' });
     expect(window.location.hash).toBe('#/shift/3');

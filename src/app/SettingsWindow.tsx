@@ -58,6 +58,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               </span>
               <input
                 aria-label="Music volume"
+                aria-valuetext={`${Math.round(settings.music * 100)}%`}
                 type="range"
                 min="0"
                 max="1"

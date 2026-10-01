@@ -1,6 +1,5 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
-import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH, isRated } from '@/data';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -11,14 +10,13 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ShellBar } from './ShellBar';
 
 /** The café in the evening light, running quietly behind the page. */
-function StoryScene({ level }: { level?: number }) {
+function StoryScene() {
   const { save } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   return (
     <div className="story-scene" aria-hidden="true">
       <Cafe
-        level={level}
-        evening={level === undefined || level > UNLOCKS.help}
+        evening
         reduced={reduced}
         pixelArt={save.settings.pixel_art}
         showStatusBubbles={false}

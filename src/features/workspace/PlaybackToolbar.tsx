@@ -48,6 +48,7 @@ export function PlaybackToolbar({
         <input
           type="range"
           aria-label="Playback speed"
+          aria-valuetext={`${speed}× speed`}
           min={1}
           max={MAX_PLAYBACK_SPEED}
           step={0.25}
