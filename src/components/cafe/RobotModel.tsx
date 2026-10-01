@@ -1,6 +1,9 @@
 import { RoundedBox } from '@react-three/drei';
+import type { Cargo } from '@/domain';
 import { Box, Cylinder } from './primitives';
 import { QUERY, type RobotLook } from './looks';
+import { ROBOT_ARM as ARM, itemsForHand, robotArmPose } from './arms';
+import { HeldItem } from './HeldItem';
 
 const CREAM = '#f1e2bd';
 const JOINT = '#3d403c';
@@ -26,10 +29,13 @@ export function RobotModel({
   look = QUERY,
   stride = 0,
   reach = 0,
+  held = [],
 }: {
   look?: RobotLook;
   stride?: number;
   reach?: number;
+  /** What the robot carries: one item per hand, held level on the palm. */
+  held?: readonly Cargo[];
 }) {
   const { body } = look;
   return (
@@ -118,15 +124,42 @@ export function RobotModel({
               <meshStandardMaterial color={JOINT} roughness={0.8} />
             </RoundedBox>
           </group>
-          {/* Arm: shoulder, upper arm, elbow joint, forearm and hand */}
-          <group position={[side * 0.37, 0.98, 0]} rotation-x={-stride * side * 0.35 - reach * 1.15}>
-            <Ball at={[0, 0, 0]} radius={0.1} color={body} />
-            <Box at={[0, -0.14, 0]} size={[0.12, 0.2, 0.13]} color={body} />
-            <Ball at={[0, -0.26, 0]} radius={0.06} color={JOINT} />
-            <Box at={[0, -0.37, 0]} size={[0.13, 0.19, 0.14]} color={body} />
-            <Ball at={[0, -0.5, 0]} radius={0.07} color={JOINT} />
-          </group>
+          <Arm side={side} body={body} items={itemsForHand(held, side)} stride={stride} reach={reach} />
         </group>
+      ))}
+    </>
+  );
+}
+
+/** Shoulder, upper arm, elbow, forearm and hand; a full hand holds its item out level in front. */
+function Arm({
+  side,
+  body,
+  items,
+  stride,
+  reach,
+}: {
+  side: number;
+  body: string;
+  items: readonly Cargo[];
+  stride: number;
+  reach: number;
+}) {
+  const pose = robotArmPose(side, items.length > 0, stride, reach);
+  const [x, y, z] = pose.hand;
+  return (
+    <>
+      <group position={[side * ARM.shoulderX, ARM.shoulderY, 0]} quaternion={pose.upper}>
+        <Ball at={[0, 0, 0]} radius={0.1} color={body} />
+        <Box at={[0, -0.14, 0]} size={[0.12, 0.2, 0.13]} color={body} />
+        <Ball at={[0, -ARM.upper, 0]} radius={0.06} color={JOINT} />
+        <group position={[0, -ARM.upper, 0]} quaternion={pose.lower}>
+          <Box at={[0, -0.11, 0]} size={[0.13, 0.19, 0.14]} color={body} />
+          <Ball at={[0, -ARM.lower, 0]} radius={ARM.hand} color={JOINT} />
+        </group>
+      </group>
+      {items.map((cargo, i) => (
+        <HeldItem key={cargo.ticketId} cargo={cargo} at={[x, y + ARM.hand, z + i * 0.3]} />
       ))}
     </>
   );
