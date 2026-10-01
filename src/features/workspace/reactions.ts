@@ -156,6 +156,13 @@ const cheers: Record<RobotRole, string[]> = {
   floor: ['*ding ding!* Every guest served!', 'Zero spills! *bip* …Zero big spills.'],
 };
 
+/** Niko names the star target that was missed, and why it matters in the café. */
+const starVerdict: Record<number, string> = {
+  1: 'Every guest served! The routine is longer than it needs to be, though: fewer blocks means less to fix when the menu changes.',
+  2: 'Every guest served, with a tidy routine too! The robots still take the long way round: fewer steps and nobody waits as long.',
+  3: 'Three stars. That’s the tidiest routine I’ve ever seen.',
+};
+
 /** The crew's reaction to a finished service, before the receipt. */
 export function successLines(result: RunResult, role: RobotRole, index: number): DialogueLine[] {
   if (result.observation)
@@ -163,11 +170,6 @@ export function successLines(result: RunResult, role: RobotRole, index: number):
   const pool = cheers[role];
   return [
     line(ROBOT_CAST[role], pool[index % pool.length]),
-    line(
-      'niko:happy',
-      result.stars >= 3
-        ? 'Three stars. That’s the tidiest routine I’ve ever seen.'
-        : 'Every guest served! There’s an even tidier routine in there, if you’re after more stars.',
-    ),
+    line('niko:happy', starVerdict[Math.min(3, Math.max(1, result.stars))]),
   ];
 }

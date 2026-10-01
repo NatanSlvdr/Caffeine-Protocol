@@ -152,5 +152,7 @@ describe('reactions', () => {
     expect(robot.who).toBe('brew');
     expect(niko.text).toContain('Three stars');
     expect(successLines({ ...passed, observation: true }, 'query', 0)).toHaveLength(1);
+    expect(successLines({ ...passed, stars: 1 }, 'query', 0)[1].text).toContain('fewer blocks');
+    expect(successLines({ ...passed, stars: 2 }, 'query', 0)[1].text).toContain('fewer steps');
   });
 });
