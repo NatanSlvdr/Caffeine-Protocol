@@ -56,6 +56,36 @@ const kinds: FailureKind[] = [
     hint: 'After Wait for Orders, check If Closed IN Orders, finish what’s in hand, and Stop.',
   },
   {
+    match: /order is unclear|unsupported order/,
+    by: 'guest',
+    react: (p) => `I said “${p}”… I’m not sure that came out right.`,
+    hint: 'Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',
+  },
+  {
+    match: /does not match the customer|too few items|too many items|missing an item/,
+    by: 'guest',
+    react: (p) => `I said “${p}”. That’s not quite my order.`,
+    hint: 'The kitchen makes exactly what the ticket says, so it has to say every drink they named, and nothing else.',
+  },
+  {
+    match: /stopped listening/,
+    by: 'guest',
+    react: () => 'Hello? Is the counter closed already?',
+    hint: 'The café doesn’t close after one guest: loop back to Wait for Orders so Query hears the next one.',
+  },
+  {
+    match: /^Wait for (Orders first|a ready drink|an order ticket|dirty cups)/,
+    by: 'robot',
+    react: () => '*beep?* Job? What job?',
+    hint: 'A robot only acts on a job it has been handed. Start with the right Wait block, so it knows what to do.',
+  },
+  {
+    match: /requires carrying \d+ items together/,
+    by: 'robot',
+    react: () => '*huff puff* So… much… walking.',
+    hint: 'This service is too busy for single trips. Fill both hands before setting off.',
+  },
+  {
     match: /Expected Query to ask for help/,
     by: 'guest',
     react: (p) => `I said “${p}”… and that’s not what I meant at all.`,
