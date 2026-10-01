@@ -9,6 +9,7 @@ const settings: Settings = {
   reduced_motion: false,
   pixel_art: true,
   fullscreen: false,
+  text_editor: false,
 };
 
 class FakeParam {
