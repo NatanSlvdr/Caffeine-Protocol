@@ -78,7 +78,7 @@ describe('movement language and execution', () => {
     expect(log.some((e) => e.command === 'MOVE RIGHT 1' && samePoint(e.to, [STARTS.prep[0] + 1, STARTS.prep[1]]))).toBe(
       true,
     );
-    expect(r.failure?.reason).toContain('Unfinished work');
+    expect(r.failure?.reason).toContain('Brew reached the end of its program');
   });
   it('does not enter another worker area or leave the room', () => {
     const r = physical('MOVE RIGHT 19\nMOVE DOWN 19');
@@ -229,8 +229,9 @@ describe('concurrency and replay', () => {
   });
   it('reports a blocked queue instead of hanging and identifies the robot and line', () => {
     const r = service({ prep: 'LISTEN\nMOVE LEFT 19' });
-    expect(r.first_failure?.reason).toContain('Unfinished work');
-    expect(r.first_failure?.role).toBeDefined();
+    // Brew ran past its last line with tickets still waiting: it needs Repeat, not a hang.
+    expect(r.first_failure?.reason).toContain('end it with Repeat');
+    expect(r.first_failure?.role).toBe('prep');
   });
   it('freezes replay at the failure clock', () => {
     const r = service({ floor: 'DEPOSIT UP' }, FULL_HOUSE);

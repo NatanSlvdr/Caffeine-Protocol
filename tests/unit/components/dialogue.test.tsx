@@ -160,6 +160,11 @@ describe('reactions', () => {
     expect(niko('This order is unclear. Use Help before taking paper.')).toContain('Guessing');
     expect(niko('Wait for dirty cups before collecting one.')).toContain('job it has been handed');
     expect(niko('This shift requires carrying 2 items together.')).toContain('Fill both hands');
+    expect(
+      niko(
+        'Brew reached the end of its program with work still to do: end it with Repeat, so Brew goes back to the top for the next ticket.',
+      ),
+    ).toContain('from top to bottom once');
     // Brew's sugar slip is about counting it in, not reading the order.
     expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
     expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');

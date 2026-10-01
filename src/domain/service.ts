@@ -1257,12 +1257,18 @@ export function* streamService(
           dirtyLeft()!.worker,
           `A used cup is still on table ${dirtyLeft()!.job.table}. Porter has to clear it: Wait for Dirty cups, take it up, and carry it to the sink.`,
         );
-      else if (!finished())
+      else if (!finished()) {
+        // A robot that ran past its last line (rather than Stopping at closing) left its work behind.
+        const ranOut = workers.find((w) => w.done && !w.closed && number >= ROBOT_UNLOCK_LEVELS[w.role]);
+        const stuck = ranOut ?? workers.find((w) => !w.done) ?? workers[0];
+        const name = ROBOT_DISPLAY_NAMES[stuck.role];
         fail(
-          workers.find((w) => !w.done) ?? workers[0],
-          'Unfinished work: no worker can advance. Check event waits, routes, and repeat instructions.',
+          stuck,
+          ranOut
+            ? `${name} reached the end of its program with work still to do: end it with Repeat, so ${name} goes back to the top for the next ${stuck.role === 'prep' ? 'ticket' : 'job'}.`
+            : `${name} is waiting here, but nothing more is coming its way, and the service isn’t finished. Check where the work it’s waiting for got stuck.`,
         );
-      else if (config.closing) {
+      } else if (config.closing) {
         const open = workers.find((w) => number >= ROBOT_UNLOCK_LEVELS[w.role] && !w.done);
         if (open)
           fail(
