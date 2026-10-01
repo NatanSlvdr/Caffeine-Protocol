@@ -2,8 +2,8 @@ import type { StationId } from '@/domain';
 import { Box, Cylinder, SoftBox, CAFE_COLORS } from './primitives';
 import { Cup, PaperCup } from './Cup';
 
-const STEEL = '#c1cfcc';
-const DARK = '#304941';
+const STEEL = CAFE_COLORS.steel;
+const DARK = CAFE_COLORS.steelDark;
 
 /** Recognizable workstation silhouettes: a two-group espresso machine and a full cash register. */
 export function Appliance({ id }: { id: StationId }) {
@@ -28,6 +28,7 @@ export function Appliance({ id }: { id: StationId }) {
                   at={[x + dx, 1.74, 0.22]}
                   size={[0.045, 0.055, 0.02]}
                   color={dx === 0 ? '#9fc4b0' : CAFE_COLORS.charcoal}
+                  glow={dx === 0 ? 0.6 : 0}
                 />
               ))}
               <Cup at={[x, 2.015, -0.13]} />
@@ -144,7 +145,7 @@ export function Appliance({ id }: { id: StationId }) {
           ))}
           <Box at={[0, 1.75, -0.23]} size={[0.07, 0.3, 0.07]} color={CAFE_COLORS.charcoal} />
           <SoftBox at={[0, 1.9, -0.23]} size={[0.64, 0.26, 0.13]} radius={0.025} color={CAFE_COLORS.charcoal} />
-          <Box at={[0, 1.9, -0.155]} size={[0.52, 0.16, 0.012]} color="#a9c7a3" />
+          <Box at={[0, 1.9, -0.155]} size={[0.52, 0.16, 0.012]} color="#a9c7a3" glow={0.35} />
           {[-0.12, 0, 0.12].map((x) => (
             <group key={x}>
               {[-0.045, 0.045].map((y) => (
@@ -167,7 +168,7 @@ function Fridge() {
         <Box key={x} at={[x, 1, 0]} size={[0.06, 1.9, 0.86]} color="#d8e0dc" />
       ))}
       {[0.1, 0.65, 1.2, 1.85].map((y) => (
-        <Box key={y} at={[0, y, 0]} size={[0.84, 0.045, 0.78]} color="#c1cfcc" />
+        <Box key={y} at={[0, y, 0]} size={[0.84, 0.045, 0.78]} color={STEEL} />
       ))}
       {[0.3, 0.85, 1.4].flatMap((y) =>
         [-0.25, 0, 0.25].map((x) => (
@@ -189,10 +190,10 @@ function Fridge() {
         />
       </mesh>
       {[-0.42, 0.42].map((x) => (
-        <Box key={x} at={[x, 1, 0.46]} size={[0.05, 1.83, 0.045]} color="#496267" />
+        <Box key={x} at={[x, 1, 0.46]} size={[0.05, 1.83, 0.045]} color={DARK} />
       ))}
-      <Box at={[0.31, 1.1, 0.5]} size={[0.045, 0.5, 0.07]} color="#334c50" />
-      <Box at={[0, 1.95, 0]} size={[0.98, 0.06, 0.9]} color="#496267" />
+      <Box at={[0.31, 1.1, 0.5]} size={[0.045, 0.5, 0.07]} color={DARK} />
+      <Box at={[0, 1.95, 0]} size={[0.98, 0.06, 0.9]} color={DARK} />
     </group>
   );
 }
@@ -202,7 +203,7 @@ function HighShelf() {
   return (
     <group>
       {['left', 'right'].map((side, i) => (
-        <Box key={side} at={[0.57 + i * 0.86, 1, -0.02]} size={[0.07, 2, 0.74]} color="#355358" />
+        <Box key={side} at={[0.57 + i * 0.86, 1, -0.02]} size={[0.07, 2, 0.74]} color={DARK} />
       ))}
       {[0.08, 0.7, 1.32, 1.94].map((y) => (
         <Box key={y} at={[1, y, -0.02]} size={[0.92, 0.07, 0.78]} color="#b68b69" />
@@ -233,7 +234,7 @@ export function TicketTray() {
       {[-0.37, 0.37].map((z) => (
         <Box key={z} at={[0, 1.17, z]} size={[0.85, 0.075, 0.045]} color="#9bb9b0" />
       ))}
-      <Box at={[-0.26, 1.15, 0]} size={[0.1, 0.035, 0.55]} color="#334e53" />
+      <Box at={[-0.26, 1.15, 0]} size={[0.1, 0.035, 0.55]} color={DARK} />
     </group>
   );
 }

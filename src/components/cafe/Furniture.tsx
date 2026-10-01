@@ -1,6 +1,6 @@
 import { useMemo, useRef } from 'react';
 import { Shape, type ExtrudeGeometryOptions, type Group } from 'three';
-import { Box, Cylinder, SoftBox, CAFE_COLORS } from '../CafeModels';
+import { Box, Cylinder, SoftBox, CAFE_COLORS, finishFor } from '../CafeModels';
 import type { Vec3 } from '../CafeModels';
 import { insetOutline, STAFF_ENTRY, type Point } from '@/domain';
 import { useDampedRotation } from '@/hooks/useDampedRotation';
@@ -9,7 +9,7 @@ import { useTextSprite } from '@/hooks/useTextSprite';
 function Plant({ at, scale = 1 }: { at: Vec3; scale?: number }) {
   return (
     <group position={at} scale={scale}>
-      <Cylinder at={[0, 0.32, 0]} size={[0.35, 0.25, 0.62]} color="#c26b50" />
+      <Cylinder at={[0, 0.32, 0]} size={[0.35, 0.25, 0.62]} color={CAFE_COLORS.terracotta} />
       <Cylinder at={[0, 0.65, 0]} size={[0.29, 0.29, 0.04]} color="#514439" />
       <Cylinder at={[0, 1.08, 0]} size={[0.035, 0.045, 0.9]} color="#5f6c43" />
       {Array.from({ length: 7 }, (_, i) => (
@@ -21,7 +21,7 @@ function Plant({ at, scale = 1 }: { at: Vec3; scale?: number }) {
           castShadow
         >
           <icosahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color={i % 2 ? '#6a895b' : '#93a86d'} />
+          <meshStandardMaterial color={i % 2 ? CAFE_COLORS.leaf : CAFE_COLORS.leafLight} />
         </mesh>
       ))}
     </group>
@@ -156,7 +156,7 @@ function CounterSlab({
   return (
     <mesh position={[0, bottom + soft, 0]} rotation-x={-Math.PI / 2} castShadow receiveShadow>
       <extrudeGeometry args={args} />
-      <meshStandardMaterial color={color} roughness={0.48} />
+      <meshStandardMaterial color={color} {...finishFor(color, 0.48)} />
     </mesh>
   );
 }
