@@ -178,6 +178,11 @@ describe('reactions', () => {
     ).toContain('Something loops forever');
     expect(
       niko(
+        'Brew keeps going round its loop without doing anything: put Wait for Orders inside it, so Brew waits for its next ticket.',
+      ),
+    ).toContain('Something loops forever');
+    expect(
+      niko(
         'Porter is still holding the coffee for table 2, and its guest is waiting for it: serve it before waiting for more work.',
       ),
     ).toContain('has to see it through');

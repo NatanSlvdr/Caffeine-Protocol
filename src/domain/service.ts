@@ -593,7 +593,11 @@ export function* streamService(
       return true;
     }
     if (++w.count > INSTRUCTION_LIMIT) {
-      fail(w, 'Instruction limit reached (10,000 per robot).');
+      // A loop of blocks that take no time (Ifs, Stores, Jumps, Repeat) piles these up while the clock stands still.
+      fail(
+        w,
+        `${name} keeps going round its loop without doing anything: put Wait for Orders inside it, so ${name} waits for its next ${w.role === 'prep' ? 'ticket' : 'job'}.`,
+      );
       return false;
     }
     if (isMoveCommand(c)) {

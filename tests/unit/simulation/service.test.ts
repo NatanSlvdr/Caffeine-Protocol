@@ -99,7 +99,9 @@ describe('movement language and execution', () => {
       }
   });
   it('bounds programs that cannot reach a wait', () => {
-    expect(physical('REPEAT').failure?.reason).toContain('10,000');
+    expect(physical('REPEAT').failure?.reason).toBe(
+      'Brew keeps going round its loop without doing anything: put Wait for Orders inside it, so Brew waits for its next ticket.',
+    );
   });
 });
 
