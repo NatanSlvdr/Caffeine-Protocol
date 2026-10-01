@@ -24,7 +24,7 @@ export const QUEUE_SPACING = 1.2;
 /** Two people side by side need this much room between their centers (shoulders and swinging arms). */
 export const PASSING_WIDTH = 0.86;
 /** Front-to-back clearance below which two people on the sidewalk would touch. */
-export const PASSING_DEPTH = 0.72;
+export const PASSING_DEPTH = 0.8;
 /** People plan a sidestep this far ahead, and never slide sideways faster than a quick step. */
 const LOOKAHEAD_SECONDS = 0.7;
 const SIDESTEP_SPEED = 2.2;
@@ -71,7 +71,7 @@ const laneCache = new WeakMap<ReplayEvent, Lane>();
  */
 export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: ReplayEvent) => number) {
   const order = new Map(events.map((event, i) => [event, i]));
-  const poses = new Map<string, Pose>();
+  const poses = new Map<ReplayEvent, Map<number, Pose>>();
   const approaches = new Map<ReplayEvent, Approach>();
 
   const ahead = (event: ReplayEvent) => events.slice(0, order.get(event) ?? 0);
@@ -112,19 +112,20 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
       .map(release)
       .sort((a, b) => a - b);
     const finite = steps.filter((at) => Number.isFinite(at));
-    const before = (at: number) => queueOffset(placeAt(event, at - 1e-6));
+    /** How many are still ahead in line at a moment: the hand-overs, sorted, that have not happened yet. */
+    const placeOf = (time: number) => steps.length - steps.filter((at) => at <= time).length;
+    // Where the customer stood just before each step forward, worked out once instead of on every frame.
+    const before = finite.map((at) => queueOffset(placeOf(at - 1e-6)));
     const along = (time: number) => {
-      let s = Math.min(speed * (time - start), length - queueOffset(placeAt(event, time)));
-      for (const at of finite) {
-        if (at > time) break;
-        s = Math.min(s, length - before(at) + CUSTOMER_WALK_SPEED * (time - at));
-      }
+      let s = Math.min(speed * (time - start), length - queueOffset(placeOf(time)));
+      for (let i = 0; i < finite.length && finite[i] <= time; i++)
+        s = Math.min(s, length - before[i] + CUSTOMER_WALK_SPEED * (time - finite[i]));
       return Math.max(0, s);
     };
     const reached =
       steps.length > finite.length
         ? Infinity
-        : Math.max(start + length / speed, ...finite.map((at) => at + before(at) / CUSTOMER_WALK_SPEED));
+        : Math.max(start + length / speed, ...finite.map((at, i) => at + before[i] / CUSTOMER_WALK_SPEED));
     const result = { path, length, along, reached };
     approaches.set(event, result);
     return result;
@@ -145,8 +146,9 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
   });
 
   function pose(event: ReplayEvent, time: number): Pose {
-    const key = `${order.get(event)}@${time.toFixed(3)}`;
-    const cached = poses.get(key);
+    let known = poses.get(event);
+    if (!known) poses.set(event, (known = new Map()));
+    const cached = known.get(time);
     if (cached) return cached;
     const timing = event.timing,
       seating = seatingOf(event),
@@ -204,7 +206,7 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
         facing: now >= line.length - 1e-6 ? Math.PI / 2 : undefined,
       };
     }
-    poses.set(key, result);
+    known.set(time, result);
     return result;
   }
 
@@ -222,13 +224,24 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
       .slice(0, (order.get(event) ?? 0) + 1)
       .map(timingKey)
       .join(';')}`;
+  /** Lanes already checked against this sample's timings, which cannot change while it is taken. */
+  const checked = new Map<ReplayEvent, Lane>();
+  /** The step on screen. A live run fills in timings as it plays; sidesteps already walked stay, the rest is replanned. */
+  let shown = -Infinity;
   function lane(event: ReplayEvent): Lane {
+    const ready = checked.get(event);
+    if (ready) return ready;
     const key = laneKey(event),
+      first = steps(event).first,
       known = laneCache.get(event);
-    if (known?.key === key) return known;
-    const fresh = { key, first: steps(event).first, offsets: [] };
-    laneCache.set(event, fresh);
-    return fresh;
+    let plan = known;
+    if (known?.key !== key || known.first !== first) {
+      const walked = known?.first === first ? known.offsets.slice(0, Math.max(0, shown - first + 1)) : [];
+      plan = { key, first, offsets: walked };
+      laneCache.set(event, plan);
+    }
+    checked.set(event, plan!);
+    return plan!;
   }
   /** Where an earlier customer will be, sidestep included, for planning around them. */
   function placed(event: ReplayEvent, step: number): Point | undefined {
@@ -261,8 +274,11 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
             blocked.push([SIDEWALK_BENCH.minX - PASSING_WIDTH / 2 - raw[0], Infinity]);
           for (const other of earlier) {
             const at = placed(other, k + i);
-            if (at && onSidewalk(at) && Math.abs(at[1] - z) < PASSING_DEPTH)
-              blocked.push([at[0] - PASSING_WIDTH - raw[0], at[0] + PASSING_WIDTH - raw[0]]);
+            const depth = at && onSidewalk(at) ? Math.abs(at[1] - z) / PASSING_DEPTH : 1;
+            if (depth >= 1) continue;
+            // Room to the side shrinks the further ahead or behind someone is, so a line turning the corner needs no sidestep.
+            const width = PASSING_WIDTH * Math.sqrt(1 - depth * depth);
+            blocked.push([at![0] - width - raw[0], at![0] + width - raw[0]]);
           }
         }
         const lowest = OUTERMOST_X - raw[0],
@@ -293,6 +309,7 @@ export function customerCrowd(events: readonly ReplayEvent[], indexOf: (event: R
 
   return {
     sample(event: ReplayEvent, time: number): CustomerMotion {
+      shown = Math.floor(time / GRID + 1e-9);
       const raw = pose(event, time),
         at = position(event, time);
       const lookX = raw.ahead[0] - raw.position[0],
