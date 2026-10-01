@@ -27,6 +27,8 @@ export interface HumanLook {
   headband?: string;
   headphones?: string;
   scarf?: string;
+  /** A hoodie's hood bunched behind the neck. */
+  hood?: boolean;
   sunglasses?: string;
   /** Pip is a kid and stands shorter than the adults. */
   scale?: number;
@@ -121,6 +123,7 @@ export const CUSTOMER_LOOKS: readonly HumanLook[] = [
     trousers: '#3b3f4a',
     shoes: '#e9e5dc',
     headphones: '#ece8df',
+    hood: true,
   },
   {
     // Dot: grey-streaked curls, pink headband, mauve cardigan over a white blouse.
@@ -145,6 +148,13 @@ export const CUSTOMER_LOOKS: readonly HumanLook[] = [
     shoes: '#6b3e2a',
     sunglasses: '#2a2522',
   },
+];
+
+/** Passers-by on the street, in plain coats so the café's own cast stays the one you notice. */
+export const PEDESTRIAN_LOOKS: readonly HumanLook[] = [
+  { skin: '#dca87b', hair: '#4a3328', hairStyle: 'short', top: '#aa7965', trousers: '#393b36', shoes: '#e9e5dc' },
+  { skin: '#f0c7a0', hair: '#c9a066', hairStyle: 'long', top: '#70503d', trousers: '#3d3a45', shoes: '#3b2d24' },
+  { skin: '#9a6844', hair: '#2a2320', hairStyle: 'bun', top: '#9aa88f', trousers: '#4b4642', shoes: '#2f2a27' },
 ];
 
 /** The same customer keeps the same look for the whole replay, even as others leave the queue. */

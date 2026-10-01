@@ -2,6 +2,7 @@ import { Box, SoftBox, CAFE_COLORS } from '../cafe/primitives';
 import { STREET_BOUNDS } from '@/domain';
 import { StreetClip } from './StreetClip';
 import { Car } from './Car';
+import { PEDESTRIAN_LOOKS } from '../cafe/looks';
 import { Pedestrian } from './Pedestrian';
 import { StreetLamp } from './StreetLamp';
 import type { StreetMotion } from './StreetMotion';
@@ -48,9 +49,9 @@ export function Street({ paused, reduced, evening }: StreetMotion & { evening: b
       <StreetClip>
         <Car lane={-14.35} direction={1} offset={6} color={CAFE_COLORS.sage} {...motion} />
         <Car lane={-12.4} direction={-1} offset={13} color={CAFE_COLORS.sand} {...motion} />
-        <Pedestrian offset={3} color={CAFE_COLORS.clay} {...motion} />
-        <Pedestrian offset={7.7} color={CAFE_COLORS.walnut} {...motion} />
-        <Pedestrian offset={12.4} color={CAFE_COLORS.sage} {...motion} />
+        <Pedestrian offset={3} look={PEDESTRIAN_LOOKS[0]} {...motion} />
+        <Pedestrian offset={7.7} look={PEDESTRIAN_LOOKS[1]} {...motion} />
+        <Pedestrian offset={12.4} look={PEDESTRIAN_LOOKS[2]} {...motion} />
       </StreetClip>
     </group>
   );

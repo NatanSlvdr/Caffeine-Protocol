@@ -111,20 +111,9 @@ export function Box({
     </mesh>
   );
 }
-export function Cylinder({
-  at,
-  size = [0.3, 0.3, 1],
-  color = '#d3b690',
-  depth = 1,
-}: {
-  at: Vec3;
-  size?: Vec3;
-  color?: string;
-  /** Squashes the cylinder front to back, so a torso reads as a body rather than a canister. */
-  depth?: number;
-}) {
+export function Cylinder({ at, size = [0.3, 0.3, 1], color = '#d3b690' }: { at: Vec3; size?: Vec3; color?: string }) {
   return (
-    <mesh position={at} scale={[1, 1, depth]} castShadow receiveShadow>
+    <mesh position={at} castShadow receiveShadow>
       <cylinderGeometry args={[...size, 12]} />
       <Surface color={color} roughness={0.8} />
     </mesh>

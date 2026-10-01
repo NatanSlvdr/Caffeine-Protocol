@@ -67,7 +67,7 @@ export function itemsForHand(items: readonly Cargo[], side: number): Cargo[] {
 }
 
 export const ROBOT_ARM: ArmRig = { shoulderX: 0.37, shoulderY: 0.98, upper: 0.26, lower: 0.24, hand: 0.07 };
-export const HUMAN_ARM: ArmRig = { shoulderX: 0.31, shoulderY: 1, upper: 0.21, lower: 0.22, hand: 0.08 };
+export const HUMAN_ARM: ArmRig = { shoulderX: 0.27, shoulderY: 1, upper: 0.22, lower: 0.23, hand: 0.065 };
 /** Counter tops stand at 1.10, so anything carried rides just above. */
 export const CARRY_HEIGHT = 1.06;
 export const DRINK_SCALE = 0.72;
