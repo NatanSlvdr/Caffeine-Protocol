@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { UNLOCKS } from '@/domain';
-import { CAMPAIGN_LENGTH } from '@/data';
+import { CAMPAIGN_LENGTH, levels } from '@/data';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
@@ -45,6 +45,8 @@ export function ScenePage({ scene }: { scene: CutsceneData }) {
 }
 
 const closing = cutscenes[cutscenes.length - 1];
+/** The shifts the player writes code for: the ones that can earn three stars. */
+const rated = levels.flatMap((level, index) => (level.programming_enabled ? [index] : []));
 
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
@@ -52,6 +54,7 @@ export function EndingPage() {
   const { save } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const [talking, setTalking] = useState(true);
+  const perfect = rated.filter((index) => save.stars[index] === 3).length;
   return (
     <main className="story-page ending-page">
       <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
@@ -80,13 +83,19 @@ export function EndingPage() {
                 {progress.stars}/{progress.max} ★
               </dd>
             </div>
+            <div>
+              <dt>Three-star shifts</dt>
+              <dd>
+                {perfect}/{rated.length}
+              </dd>
+            </div>
           </dl>
           <div className="story-actions">
             <Button variant="primary" className="story-start" onClick={() => go('/')}>
               Back to the café <ArrowRight size={18} />
             </Button>
             <button className="story-link" onClick={() => go('/campaign')}>
-              Keep tinkering
+              {perfect < rated.length ? 'Go back for the missing stars' : 'Keep tinkering'}
             </button>
           </div>
           <footer className="story-foot story-thanks">

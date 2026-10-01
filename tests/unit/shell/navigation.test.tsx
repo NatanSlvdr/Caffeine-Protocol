@@ -84,6 +84,30 @@ describe('shift entry navigation', () => {
     expect(screen.getByText('Café Niko · Order rail')).toBeTruthy();
   });
 
+  it('closes the campaign by saying how many shifts still have stars to win', () => {
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 || i === 9 ? 2 : 3]));
+    const settings = { volume: 0.5, music: 0, effects: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
+    const save = {
+      version: 4,
+      selected: 20,
+      unlocked: 20,
+      complete: true,
+      drafts: {},
+      solutions: {},
+      stars,
+      story: {},
+    };
+    localStorage.setItem(
+      'caffeine-protocol.v1',
+      JSON.stringify({ ...save, robotDrafts: {}, robotSolutions: {}, settings }),
+    );
+    window.location.hash = '#/ending';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Skip/ }));
+    expect(screen.getByText('Three-star shifts').nextElementSibling?.textContent).toBe('18/20');
+    expect(screen.getByRole('button', { name: 'Go back for the missing stars' })).toBeTruthy();
+  });
+
   it('labels the next and locked shifts on the rail', () => {
     window.location.hash = '#/campaign';
     render(<App />);
