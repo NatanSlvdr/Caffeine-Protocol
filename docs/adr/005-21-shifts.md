@@ -31,7 +31,10 @@ the other two do their part.
   rules are in [robots.md](../game_design/robots.md#act-iv-the-whole-crew).
 - **Rules only add work.** Handling a rule that isn't active is harmless
   (washing an empty sink, an If that never matches), so a player's programs
-  carry forward from shift to shift. The Act IV reference programs make and
+  carry forward from shift to shift. The Act IV reference programs carry
+  forward the same way: each one keeps handling every rule met since shift 17,
+  so the star targets of shifts 18–20 leave room for the code a player brings
+  in, and the finale is served by the Last Orders programs. They make and
   serve one drink at a time; batching still works, but has to make room for
   rush orders and for a half-full batch at closing.
 - **One unlock table.** `src/domain/unlocks.ts` names the shift where each
@@ -48,5 +51,7 @@ the other two do their part.
 Cutscenes open before shifts 1, 2, 9, 13, 14 and 17, and after 21. A finished
 32-shift save resumes at the start of Act IV. Act IV adds two stations to the
 café: a stack of paper cups and lids between the sugar and pickup, and a to-go
-shelf on the counter corner by the door. The Act I level documents in
-`docs/game_design/levels/` still describe the older 14-shift Act I.
+shelf on the counter corner by the door. The hand-written Act I level documents
+in `docs/game_design/levels/` described the older 14-shift Act I; they were
+replaced by one generated page per shift in
+[docs/campaign/shifts/](../campaign/shifts/README.md).

@@ -24,6 +24,15 @@ import {
 import { Room } from './Room';
 import { Character } from './Character';
 import { CameraFit } from './CameraFit';
+import { BREW, MOKA, NIKO, PIP, PORTER, QUERY, customerLook, type HumanLook, type RobotLook } from './looks';
+
+/** Each crew post is drawn as whoever holds it: the robot once it is unlocked, otherwise its human stand-in. */
+export function crewLook(id: string, level: number): { robot: RobotLook } | { human: HumanLook } {
+  if (id === 'query') return { robot: QUERY };
+  if (id === 'prep') return robotUnlocked('prep', level) ? { robot: BREW } : { human: MOKA };
+  if (id === 'floor') return robotUnlocked('floor', level) ? { robot: PORTER } : { human: PIP };
+  return { human: NIKO };
+}
 
 /** Idle actors before the first replay event: Niko covers Query's counter until it unlocks. */
 export function fallbackActors(level: number): Partial<Record<ActorId, ActorSnapshot>> {
@@ -123,11 +132,7 @@ export function World({
             <group key={id}>
               <Character
                 at={actor.position}
-                robot={
-                  id === 'query' ||
-                  (id === 'prep' && robotUnlocked('prep', level)) ||
-                  (id === 'floor' && robotUnlocked('floor', level))
-                }
+                look={crewLook(id, level)}
                 label={
                   !showStatusBubbles
                     ? undefined
@@ -140,7 +145,7 @@ export function World({
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}
                 walking={moving && actor.walking}
                 reach={actor.reach}
-                color={id === 'floor' ? '#d4ac6b' : id === 'prep' ? '#7d9eae' : '#80a889'}
+                held={actor.inventory}
                 animate={moving}
                 phase={time}
                 reduced={reduced}
@@ -176,15 +181,6 @@ export function World({
                   />
                 </SceneHtml>
               )}
-              {actor.inventory.map((item, i) => (
-                <Cup
-                  key={item.ticketId}
-                  at={[actor.position[0] - 0.2 + i * 0.4, 1.2, actor.position[1] + 0.3]}
-                  tea={item.item === 'tea'}
-                  paper={item.table === 0 && item.stage !== 'dirty'}
-                  lid={item.lid}
-                />
-              ))}
             </group>
           ),
       )}
@@ -221,7 +217,7 @@ export function World({
       ))}
       <Street evening={evening} paused={!!result && !moving} reduced={reduced} />
       <StreetClip>
-        {state?.customers.map((c, i) => {
+        {state?.customers.map((c) => {
           const event = result?.events.find(
             (event) => event.seed_id === state.seed?.seed_id && event.customer.customer_id === c.id,
           );
@@ -233,7 +229,7 @@ export function World({
             <group key={c.id}>
               <Character
                 at={c.position}
-                color={['#af7e67', '#79929c', '#b29c66'][i % 3]}
+                look={{ human: customerLook(c.id) }}
                 sit={c.sit}
                 walking={moving && c.walking}
                 animate={moving}
