@@ -1,4 +1,5 @@
 import { UNLOCKS } from '@/domain';
+import { levels } from '@/data';
 
 export interface Act {
   kicker: string;
@@ -26,13 +27,19 @@ export const acts: Act[] = [
     from: UNLOCKS.prep - 1,
     to: UNLOCKS.floor - 1,
   },
-  { kicker: 'Act III', crew: 'Porter', tagline: 'Teach the floor robot the room.', from: UNLOCKS.floor - 1, to: 16 },
+  {
+    kicker: 'Act III',
+    crew: 'Porter',
+    tagline: 'Teach the floor robot the room.',
+    from: UNLOCKS.floor - 1,
+    to: UNLOCKS.toGo - 1,
+  },
   {
     kicker: 'Act IV',
     crew: 'The whole crew',
-    tagline: 'Three robots, one café, and some very odd days.',
-    from: 16,
-    to: 21,
+    tagline: 'Nobody covers for them now: three robots, and some very odd days.',
+    from: UNLOCKS.toGo - 1,
+    to: levels.length,
   },
 ];
 
