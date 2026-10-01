@@ -206,7 +206,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story: 'The lunch rush brings people with a train to catch. They can’t wait behind the whole queue.',
     objective:
       'Some customers are in a rush, but their tickets look like everyone else’s, so their drinks wait in line. Every rush order needs Rush on its ticket, and a robot holding one must finish it before waiting for anything else.',
-    hint: 'Hurried orders go first.',
+    hint: 'Mark it Rush, then don’t keep it waiting.',
     lessonNote:
       'Customers in a rush say so: Query writes Rush on their ticket. Rush orders jump the queue, and whoever holds one handles it first. Brew can’t wait for another ticket while it holds a rush order, and Porter can’t wait or pick up another drink while it carries one.',
   },
