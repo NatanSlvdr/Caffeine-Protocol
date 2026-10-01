@@ -249,6 +249,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       )}
       {modal === 'options' && (
         <OptionsModal
+          robot={ROBOT_DISPLAY_NAMES[role]}
           pixelArt={save.settings.pixel_art}
           textMode={textMode}
           observation={observation}
@@ -261,6 +262,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       )}
       {modal === 'reset' && (
         <ResetModal
+          robot={ROBOT_DISPLAY_NAMES[role]}
           onClose={() => setModal('')}
           onConfirm={() => {
             change(resetRobotPrograms(save, index, lessons)[role]);

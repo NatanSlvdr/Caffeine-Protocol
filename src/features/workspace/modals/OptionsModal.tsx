@@ -3,6 +3,8 @@ import { Modal } from '@/components';
 import { SettingRow } from '@/shared/ui/SettingRow';
 
 export interface OptionsModalProps {
+  /** The robot whose tab is open, named on the reset button. */
+  robot: string;
   pixelArt: boolean;
   textMode: boolean;
   observation: boolean;
@@ -13,8 +15,9 @@ export interface OptionsModalProps {
   onClose: () => void;
 }
 
-/** Workspace options: shader, text editor, and routine reset. */
+/** Workspace options: shader, text editor, and resetting the open robot’s routine. */
 export function OptionsModal({
+  robot,
   pixelArt,
   textMode,
   observation,
@@ -41,7 +44,7 @@ export function OptionsModal({
       />
       <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
       <button className="settings-chip" disabled={running || observation} onClick={onRequestReset}>
-        <RotateCcw size={15} /> Reset to incoming program
+        <RotateCcw size={15} /> Reset {robot}’s routine
       </button>
     </Modal>
   );

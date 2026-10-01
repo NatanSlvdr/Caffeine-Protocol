@@ -169,7 +169,7 @@ describe('live workspace lifecycle', () => {
       screen.getByRole('img', { name: 'Current instruction' }).querySelector('.execution-line-highlight'),
     ).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    fireEvent.click(screen.getByRole('button', { name: /Reset to incoming program/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
