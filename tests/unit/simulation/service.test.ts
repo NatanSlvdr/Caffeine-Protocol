@@ -179,6 +179,15 @@ describe('recipes, handoffs, and capacities', () => {
       'Brew’s hands are full. Deposit a drink before waiting for another ticket.',
     );
   });
+  it('asks for the named recipe on the shift that teaches functions', () => {
+    // Shift 11's flat recipe still serves shift 12's guests, but the shift is about putting it in Function recipe.
+    const flat = service({ prep: referencePrograms(UNLOCKS.functions - 1).prep }, UNLOCKS.functions);
+    expect(flat.first_failure?.role).toBe('prep');
+    expect(flat.first_failure?.reason).toBe(
+      'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
+    );
+    expect(service({}, UNLOCKS.functions).first_failure).toBeNull();
+  });
   it('rejects pickup without a claimed ready drink', () => {
     expect(physical('TAKE DOWN', 'floor').failure?.reason).toBe('Wait for a ready drink before taking one.');
   });

@@ -168,6 +168,11 @@ describe('reactions', () => {
     expect(niko('This shift requires carrying 2 items together.')).toContain('Fill both hands');
     expect(
       niko(
+        'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
+      ),
+    ).toContain('one place to change');
+    expect(
+      niko(
         'Brew reached the end of its program with work still to do: end it with Repeat, so Brew goes back to the top for the next ticket.',
       ),
     ).toContain('from top to bottom once');

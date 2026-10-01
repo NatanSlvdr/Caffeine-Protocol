@@ -104,6 +104,12 @@ const kinds: FailureKind[] = [
     hint: 'A robot runs its program from top to bottom once. Repeat at the end sends it back to the top for the next job.',
   },
   {
+    match: /recipe isn’t in a function yet/,
+    by: 'robot',
+    react: () => '*bip* Beans grind water brew. Beans grind water b— *bzzt*',
+    hint: 'Wrap the recipe steps in Function recipe, then put Call recipe right after Wait for Orders: one name, one place to change.',
+  },
+  {
     match: /requires carrying \d+ items together/,
     by: 'robot',
     react: () => '*huff puff* So… much… walking.',

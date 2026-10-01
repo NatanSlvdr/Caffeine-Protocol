@@ -32,6 +32,7 @@ import {
 import { RECIPE_RULES, machineStep, machineStepError, recipeStepError } from './drinks';
 import { satisfactionFor, tableForShift } from './scoring';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from './robots';
+import { UNLOCKS } from './unlocks';
 import type {
   ActorId,
   Cargo,
@@ -1223,10 +1224,15 @@ export function* streamService(
     ) {
       const floor = workers[1],
         loadWorker = number < ROBOT_UNLOCK_LEVELS.floor ? workers[0] : floor;
-      if ((config.minLoad ?? 0) > loadWorker.maxLoad) {
+      if ((config.minLoad ?? 0) > loadWorker.maxLoad)
         fail(loadWorker, `This shift requires carrying ${config.minLoad} items together.`);
-        break;
-      } else break;
+      // Call Me Maybe is about naming the recipe: a flat recipe still serves, but misses the shift's point.
+      else if (number === UNLOCKS.functions && !workers[0].program.instructions.includes('CALL recipe'))
+        fail(
+          workers[0],
+          'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
+        );
+      break;
     }
     let advanced = false;
     for (const w of workers) {
