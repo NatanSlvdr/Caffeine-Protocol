@@ -80,7 +80,7 @@ const kinds: FailureKind[] = [
     hint: 'The café doesn’t close after one guest: loop back to Wait for Orders so Query hears the next one.',
   },
   {
-    match: /^Wait for (Orders first|a ready drink|an order ticket|dirty cups)/,
+    match: /^Wait for (Orders first|Orders or Wait for Dirty cups first|a ready drink|an order ticket|dirty cups)/,
     by: 'robot',
     react: () => '*beep?* Job? What job?',
     hint: 'A robot only acts on a job it has been handed. Start with the right Wait block, so it knows what to do.',

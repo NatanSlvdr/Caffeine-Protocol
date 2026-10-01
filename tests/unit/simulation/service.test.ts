@@ -151,6 +151,14 @@ describe('recipes, handoffs, and capacities', () => {
     const r = service({ floor }, UNLOCKS.floor);
     expect(r.first_failure?.reason).toMatch(/^Move to the drink pickup first/);
   });
+  it('names the Wait blocks that give Porter a table to store', () => {
+    // Without Wait for Dirty cups, clearing starts with no job to read a table from.
+    const floor = referencePrograms(UNLOCKS.clearing).floor.replace(/\n\s*WAIT DIRTY/, '');
+    const r = service({ floor }, UNLOCKS.clearing);
+    expect(r.first_failure?.reason).toBe(
+      'Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.',
+    );
+  });
   it('blames the robot holding an undelivered drink, not the one waiting for work', () => {
     // Without Call deliver, Porter takes a drink down and goes straight to clearing cups that never come.
     const floor = referencePrograms(UNLOCKS.clearing).floor.replace('\nCALL deliver', '');

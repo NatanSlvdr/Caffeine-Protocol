@@ -680,7 +680,12 @@ export function* streamService(
       }
       const value = storedValue(w, stored.value);
       if (value === undefined) {
-        fail(w, `Wait for an order before storing its ${stored.value}.`);
+        // Name the Wait blocks that hand this robot a job: Porter's can come from either.
+        const waits = w.role === 'floor' && config.clearing ? 'Orders or Wait for Dirty cups' : 'Orders';
+        fail(
+          w,
+          `Wait for ${waits} first: ${ROBOT_DISPLAY_NAMES[w.role]} has no ${w.role === 'prep' ? 'ticket' : 'job'} yet, so there’s no ${stored.value} to store.`,
+        );
         return false;
       }
       return control(() => {
