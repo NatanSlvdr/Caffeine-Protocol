@@ -141,7 +141,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Moka has hung up her apron, and Brew runs the kitchen alone. Its hands fit two cups now, and a little planning saves a lot of walking.',
     objective:
-      'Brew can now carry two cups, but still makes one drink per trip. Drinks must leave in order and match their tickets.',
+      'Brew can now carry two cups, but still makes one drink per trip. Brew must make two at a time, and drinks must leave in order and match their tickets.',
     hint: 'Two cups, one trip.',
     lessonNote: 'Brew now holds two cups. Claim two tickets before making them. Finished drinks leave in pickup order.',
   },
@@ -173,7 +173,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Pip’s last shift before school starts. Porter’s new tray carries two items: two guests, one trip, zero spills. Hopefully.',
     objective:
-      'Porter’s tray now holds two items, and one-at-a-time trips are too slow for this service. Porter must carry two at a time to keep up, and anything beyond two won’t fit.',
+      'Porter’s tray now holds two items, but Porter still carries one at a time. Porter must fill the tray before setting off, and anything beyond two won’t fit.',
     hint: 'Fill the tray before you go.',
     lessonNote:
       'Porter now holds two items. Take two drinks before serving, then clear both tables. The tray empties in the order it was filled.',

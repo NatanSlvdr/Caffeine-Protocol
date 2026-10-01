@@ -165,7 +165,12 @@ describe('reactions', () => {
     expect(
       niko('Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.'),
     ).toContain('job it has been handed');
-    expect(niko('This shift requires carrying 2 items together.')).toContain('Fill both hands');
+    expect(
+      niko('Brew made every drink one at a time: this shift, claim 2 tickets and make them in one trip.'),
+    ).toContain('Fill both before setting off');
+    expect(niko('Porter carried one item at a time: this shift, fill the tray with 2 before setting off.')).toContain(
+      'Fill both before setting off',
+    );
     expect(
       niko(
         'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',

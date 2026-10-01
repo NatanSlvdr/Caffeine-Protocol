@@ -1225,7 +1225,12 @@ export function* streamService(
       const floor = workers[1],
         loadWorker = number < ROBOT_UNLOCK_LEVELS.floor ? workers[0] : floor;
       if ((config.minLoad ?? 0) > loadWorker.maxLoad)
-        fail(loadWorker, `This shift requires carrying ${config.minLoad} items together.`);
+        fail(
+          loadWorker,
+          loadWorker.role === 'prep'
+            ? `Brew made every drink one at a time: this shift, claim ${config.minLoad} tickets and make them in one trip.`
+            : `Porter carried one item at a time: this shift, fill the tray with ${config.minLoad} before setting off.`,
+        );
       // Call Me Maybe is about naming the recipe: a flat recipe still serves, but misses the shift's point.
       else if (number === UNLOCKS.functions && !workers[0].program.instructions.includes('CALL recipe'))
         fail(

@@ -110,10 +110,10 @@ const kinds: FailureKind[] = [
     hint: 'Wrap the recipe steps in Function recipe, then put Call recipe right after Wait for Orders: one name, one place to change.',
   },
   {
-    match: /requires carrying \d+ items together/,
+    match: /at a time: this shift/,
     by: 'robot',
     react: () => '*huff puff* So… much… walking.',
-    hint: 'This service is too busy for single trips. Fill both hands before setting off.',
+    hint: 'That’s what the bigger hands are for. Fill both before setting off, then finish both on the same trip.',
   },
   {
     match: /had to ask for help/,
