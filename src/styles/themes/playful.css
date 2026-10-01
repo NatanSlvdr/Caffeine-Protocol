@@ -184,25 +184,29 @@ input[type='checkbox']:checked {
 
 /* Color lives in the commands: the same family follows a tile from library to canvas. */
 .block,
-.command-tile {
+.command-tile,
+.robot-action {
   --tile: #f4c95d;
   --edge: #b3822b;
   --tile-ink: #443117;
 }
 .block.flow,
-.command-tile.flow {
+.command-tile.flow,
+.robot-action.flow {
   --tile: #f49b83;
   --edge: #b26550;
   --tile-ink: #502c25;
 }
 .block.motion,
-.command-tile.motion {
+.command-tile.motion,
+.robot-action.motion {
   --tile: #91d5b6;
   --edge: #4d9275;
   --tile-ink: #203e33;
 }
 .block.function,
-.command-tile.function {
+.command-tile.function,
+.robot-action.function {
   --tile: #c3acf0;
   --edge: #8a70b8;
   --tile-ink: #38274f;
@@ -1871,18 +1875,40 @@ html[data-motion='reduced'] .execution-line-highlight {
   transition-timing-function: inherit;
 }
 
+/* A robot's bubble: its name on a tab in its body colour, over a lifted paper card. */
 .robot-holding {
+  --crew: var(--yellow);
+  --crew-ink: var(--ink);
+  --bubble-edge: #dccbad;
   position: relative;
   transform: translateY(-50%);
   width: max-content;
   max-width: 160px;
   padding: 4px;
-  border: 1px solid var(--sand);
-  border-radius: 12px;
-  background: #fffbedf5;
+  border: 1px solid var(--bubble-edge);
+  border-radius: 14px;
+  background: var(--paper);
   color: var(--umber);
-  box-shadow: 0 2px 0 #b4a28b55;
+  box-shadow:
+    0 3px 0 #b4a28b66,
+    0 12px 18px -10px #2a1a1080;
   pointer-events: auto;
+}
+.robot-holding.crew-query {
+  --crew: #80a889;
+  --crew-ink: #1d3825;
+}
+.robot-holding.crew-prep {
+  --crew: #7d9eae;
+  --crew-ink: #18303c;
+}
+.robot-holding.crew-floor {
+  --crew: #d8b163;
+  --crew-ink: #463210;
+}
+.robot-holding.crew-niko {
+  --crew: #d6a77a;
+  --crew-ink: #4a2e1d;
 }
 .robot-holding:after {
   content: '';
@@ -1893,8 +1919,27 @@ html[data-motion='reduced'] .execution-line-highlight {
   height: 9px;
   transform: rotate(45deg);
   background: var(--paper);
-  border-right: 1px solid var(--sand);
-  border-bottom: 1px solid var(--sand);
+  border-right: 1px solid var(--bubble-edge);
+  border-bottom: 1px solid var(--bubble-edge);
+}
+.robot-name {
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--crew);
+  color: var(--crew-ink);
+  box-shadow: 0 0 0 2px var(--paper);
+  font:
+    800 9px/1.2 'Avenir Next',
+    'Nunito',
+    ui-rounded,
+    sans-serif;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 .robot-holding ul {
   list-style: none;
@@ -2222,13 +2267,15 @@ html[data-motion='reduced'] .execution-line-highlight {
 
 /* Categories are identical in the shop, canvas and full-size drag preview. */
 .block.data,
-.command-tile.data {
+.command-tile.data,
+.robot-action.data {
   --tile: #f4d27d;
   --edge: #b38b3d;
   --tile-ink: #493715;
 }
 .block.jump,
-.command-tile.jump {
+.command-tile.jump,
+.robot-action.jump {
   --tile: #b6d8ee;
   --edge: #5c88aa;
   --tile-ink: #183e5a;
@@ -2499,30 +2546,65 @@ html[data-motion='reduced'] .drop-projection {
   border: 0;
   box-shadow: none;
 }
+/* The action tile is a small copy of the code block running, with how far through it the robot is. */
 .robot-action {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: auto 1fr;
   align-items: center;
-  text-align: center;
-  gap: 4px;
-  padding: 4px;
+  gap: 4px 6px;
+  padding: 6px 2px 2px;
   color: #493e33;
   font:
-    600 10px/1.3 ui-monospace,
+    650 10px/1.25 ui-monospace,
     monospace;
 }
-.robot-action-icon {
-  display: inline-flex;
-  transform-origin: center;
-}
 .robot-action-icon .block-icon {
-  width: 32px;
-  height: 32px;
+  width: 20px;
+  height: 20px;
+}
+.robot-action-progress {
+  grid-column: 1 / -1;
+  height: 3px;
+  border-radius: 999px;
+  background: #ece2cf;
+  overflow: hidden;
+}
+.robot-action-progress:before {
+  content: '';
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--edge);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+}
+/* A wait with no end in sight yet keeps a slow pulse sweeping through instead of an empty bar. */
+.robot-action-progress.idle:before {
+  width: 35%;
+  transform: none;
+  animation: wait-sweep 1.6s ease-in-out infinite alternate;
+  animation-play-state: inherit;
+}
+@keyframes wait-sweep {
+  from {
+    margin-left: 0;
+  }
+  to {
+    margin-left: 65%;
+  }
+}
+/* Held things sit on a little tray, memory on chips shaped like the Store block. */
+.robot-holding ul {
+  padding: 3px;
+  border-radius: 10px;
+  background: #f4ead6;
+  box-shadow: inset 0 1px 2px #8a6d4a2e;
+}
+.robot-holding-content > ul:first-of-type:nth-child(2) {
+  margin-top: 6px;
 }
 .robot-action + ul {
-  border-top: 1px solid var(--sand);
-  margin-top: 4px;
-  padding-top: 4px;
+  margin-top: 5px;
 }
 .robot-holding .holding-sugar .model-thumbnail {
   width: 14px;
@@ -2531,18 +2613,25 @@ html[data-motion='reduced'] .drop-projection {
 .robot-memory {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  border-top: 1px solid var(--sand);
-  margin-top: 4px;
-  padding-top: 4px;
+  justify-content: center;
+  gap: 3px;
+  padding-top: 6px;
   font:
-    600 10px ui-monospace,
+    650 9.5px/1.2 ui-monospace,
     monospace;
+}
+:is(.robot-action, ul) + .robot-memory {
+  padding-top: 5px;
 }
 .robot-memory > span {
   display: flex;
   gap: 3px;
   align-items: center;
+  padding: 2px 6px 2px 3px;
+  border: 1px solid #c3acf0;
+  border-radius: 999px;
+  background: #efe8fc;
+  color: #38274f;
   white-space: nowrap;
 }
 .robot-holding ul {
@@ -2551,19 +2640,18 @@ html[data-motion='reduced'] .drop-projection {
 
 /* A steady width and two-line labels keep state changes calm. */
 .robot-holding {
-  width: 118px;
+  width: 128px;
   transition: height 0.24s ease;
   animation: none;
 }
 .robot-holding-content {
-  width: 108px;
+  width: 118px;
   animation-play-state: inherit;
 }
 .robot-action-label {
-  width: 100%;
   min-height: 26px;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
   white-space: normal;
   overflow-wrap: anywhere;
   text-wrap: balance;
@@ -2578,27 +2666,32 @@ html[data-motion='reduced'] .drop-projection {
   position: relative;
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 34px;
+  width: 34px;
+  height: 30px;
+  border: 1px solid var(--edge);
+  border-radius: 8px;
+  background: var(--tile);
+  color: var(--tile-ink);
+  box-shadow: 0 2px 0 var(--edge);
 }
 .robot-action-icon svg {
   transform-origin: center;
 }
 .action-thinking .thinking-gear {
   position: absolute;
-  width: 24px;
-  height: 24px;
-  left: 2px;
-  top: 0;
-  color: var(--umber);
+  width: 17px;
+  height: 17px;
+  left: 3px;
+  top: 2px;
+  color: var(--tile-ink);
   animation: action-turn 4s linear infinite;
 }
 .action-thinking .thinking-gear + .thinking-gear {
-  left: 20px;
-  top: 15px;
-  width: 19px;
-  height: 19px;
-  color: var(--umber);
+  left: 16px;
+  top: 12px;
+  width: 14px;
+  height: 14px;
+  color: var(--tile-ink);
   animation-direction: reverse;
   animation-duration: 3.2s;
 }

@@ -173,6 +173,7 @@ export function World({
                           ? ROBOT_DISPLAY_NAMES.query
                           : robotActorName(id === 'prep' ? 'prep' : 'floor', level)
                     }
+                    crew={id}
                     inventory={actor.inventory}
                     paper={actor.heldPaper}
                     action={actor.action}

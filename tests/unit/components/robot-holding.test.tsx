@@ -93,7 +93,7 @@ it('shows action, inventory with sugar cubes, and compact memory in order', () =
     Array.from(bubble.querySelector('.robot-holding-content')!.children).map(
       (child) => child.className || child.tagName,
     ),
-  ).toEqual(['robot-action', 'UL', 'robot-memory']);
+  ).toEqual(['robot-name', 'robot-action motion', 'UL', 'robot-memory']);
   expect(screen.getByLabelText('Brew inventory').querySelector('.holding-sugar .model-sugar')).toBeTruthy();
 });
 
@@ -160,4 +160,30 @@ it.each([
 ])('names the sugar count for %s, as the code row does', (command, label) => {
   render(<RobotHolding name="Query" inventory={[]} action={{ command, start: 0, progress: 0.5 }} />);
   expect(screen.getByText(label)).toBeTruthy();
+});
+
+it('names the robot on a tab in its crew colour and tints the action like its code block', () => {
+  render(
+    <RobotHolding
+      name="Brew"
+      crew="prep"
+      inventory={[]}
+      action={{ command: 'STORE var1 FROM number', start: 0, progress: 0.25 }}
+    />,
+  );
+  expect(screen.getByLabelText('Brew is holding').classList).toContain('crew-prep');
+  expect(document.querySelector('.robot-name')?.textContent).toBe('Brew');
+  expect(document.querySelector('.robot-action')?.classList).toContain('function');
+  expect(document.querySelector<HTMLElement>('.robot-action-progress')?.style.getPropertyValue('--progress')).toBe(
+    '0.25',
+  );
+});
+
+it('sweeps the progress bar while a wait has not started counting', () => {
+  const { rerender } = render(
+    <RobotHolding name="Query" inventory={[]} action={{ command: 'LISTEN', start: 0, progress: 0 }} />,
+  );
+  expect(document.querySelector('.robot-action-progress')?.classList).toContain('idle');
+  rerender(<RobotHolding name="Query" inventory={[]} action={{ command: 'TAKE UP', start: 0, progress: 0 }} />);
+  expect(document.querySelector('.robot-action-progress')?.classList).not.toContain('idle');
 });

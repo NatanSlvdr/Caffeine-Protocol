@@ -2,15 +2,20 @@ import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain'
 import { blockFields, cargoLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
 import { Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
+import { category } from '../editor/blockMeta';
 import { OperandIcon } from '../OperandIcon';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
 import { OrderMarks } from '../OrderIcons';
 import { AutoHeight } from '@/shared/ui/AutoHeight';
 import { HoldingIcon } from './HoldingIcon';
 
-/** Show waiting and physical actions, with a shared thinking state for control flow. */
+/**
+ * Show waiting and physical actions, with a shared thinking state for control flow. The bubble wears
+ * its robot's colour on a name tab, and the action tile wears the colour of the code block running.
+ */
 export function RobotHolding({
   name,
+  crew,
   inventory,
   paper,
   action,
@@ -19,6 +24,8 @@ export function RobotHolding({
   reduced = false,
 }: {
   name: string;
+  /** Crew post, for the name tab's colour. */
+  crew?: string;
   inventory: Cargo[];
   paper?: OrderTicket;
   action?: ActorSnapshot['action'];
@@ -62,15 +69,22 @@ export function RobotHolding({
     : '';
   return (
     <AutoHeight
-      className="robot-holding"
+      className={`robot-holding${crew ? ` crew-${crew}` : ''}`}
       contentClassName="robot-holding-content"
       label={`${name} is holding`}
       paused={paused}
       reduced={reduced}
       extraHeight={10}
     >
+      <span className="robot-name" aria-hidden="true">
+        {name}
+      </span>
       {visibleAction && (
-        <div className="robot-action" role="group" aria-label={`${name}: ${actionLabel}`}>
+        <div
+          className={`robot-action ${category(visibleAction.command)}`}
+          role="group"
+          aria-label={`${name}: ${actionLabel}`}
+        >
           <span
             className={`robot-action-icon action-${thinking ? 'thinking' : fields?.family.toLowerCase()}`}
             aria-hidden="true"
@@ -85,6 +99,11 @@ export function RobotHolding({
             )}
           </span>
           <span className="robot-action-label">{actionLabel}</span>
+          <span
+            className={`robot-action-progress${fields?.family === 'WAIT' && !visibleAction.progress ? ' idle' : ''}`}
+            aria-hidden="true"
+            style={{ '--progress': visibleAction.progress } as React.CSSProperties}
+          />
         </div>
       )}
       {(paper || inventory.length > 0) && (
