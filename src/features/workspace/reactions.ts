@@ -17,7 +17,7 @@ const kinds: FailureKind[] = [
     match: /is to go: Write To go|says To go/,
     by: 'guest',
     react: (p) => `I said “${p}”. I’m taking it with me!`,
-    hint: 'Take-away orders say so: If To go IN item, then Write To go.',
+    hint: 'To-go orders say so: If To go IN item, then Write To go.',
   },
   {
     match: /in a rush: Write Rush|says Rush/,
@@ -29,13 +29,13 @@ const kinds: FailureKind[] = [
     match: /lid/,
     by: 'robot',
     react: () => '*beep* Lid? No lid? Lid!',
-    hint: 'Take-away drinks leave with a lid on, after their sugar. Drinks that stay in don’t need one.',
+    hint: 'To-go drinks leave with a lid on, after their sugar. Drinks that stay in don’t need one.',
   },
   {
     match: /to-go shelf|to go: it has no table/,
     by: 'guest',
     react: () => 'That one’s mine. I’m waiting by the door!',
-    hint: 'Take-away drinks go on the to-go shelf by the door: walk there and Deposit down.',
+    hint: 'To-go drinks go on the to-go shelf by the door: walk there and Deposit down.',
   },
   {
     match: /clean cups|waiting at the sink/,

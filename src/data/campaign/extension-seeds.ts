@@ -118,7 +118,7 @@ export const extensionSeeds: LevelSeed[] = [
   {
     id: 'L21',
     title: 'Espresso Yourself',
-    note: 'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
+    note: 'Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time.',
     blocks: 108,
     instructions: 3347,
   },

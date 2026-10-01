@@ -227,7 +227,7 @@ export const campaignNarrative: ShiftNarrative[] = [
       'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, drinks to go, only four cups, customers in a rush, and closing time. Every guest must be served, every table cleared, and every robot stopped.',
     hint: 'Everything, all at once.',
     lessonNote:
-      'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
+      'Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time.',
   },
 ];
 

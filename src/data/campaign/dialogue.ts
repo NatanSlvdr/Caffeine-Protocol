@@ -258,7 +258,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['albert', 'The usual.'],
     ['rosa:happy', 'A coffee and a tea for my table!'],
     ['guest', 'Coffee to go, please. And quickly!'],
-    ['niko:worried', 'Four cups, take-away orders, people in a rush, and we still close on time tonight.'],
+    ['niko:worried', 'Four cups, drinks to go, people in a rush, and we still close on time tonight.'],
     ['niko:happy', 'I’m going to sit right here with a coffee and let the café run itself. It’s all yours.'],
     ['query', '*bip*'],
     ['brew', '*BEEP!*'],
