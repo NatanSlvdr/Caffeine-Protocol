@@ -64,6 +64,15 @@ describe('paper order handoff', () => {
     expect(restored.robotDrafts[2].query).toBe(migrated);
   });
 
+  it('turns a retired Repeat into a Jump back to a marker at the top', () => {
+    const old = 'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nREPEAT';
+    const migrated = `POSITION listen\n${old.replace('REPEAT', 'JUMP listen')}`;
+    expect(migrateQuerySource(old)).toBe(migrated);
+    expect(migrateQuerySource(migrated)).toBe(migrated);
+    // A marker that is already there is reused rather than doubled.
+    expect(migrateQuerySource('POSITION listen\nLISTEN\nREPEAT')).toBe('POSITION listen\nLISTEN\nJUMP listen');
+  });
+
   it('restores handoff movement only for saves from the stationary pickup version', () => {
     const old = '# routine\nLISTEN\nPICKUP UP\nITEM coffee\nDEPOSIT RIGHT';
     const migrated = '# routine\nLISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1';

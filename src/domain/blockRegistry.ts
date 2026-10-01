@@ -6,7 +6,6 @@ import { isWorkerComparison as isRobotComparison } from './robotConditions';
 export const HIDDEN_LIBRARY_COMMANDS = [
   'END',
   'ELSE',
-  'REPEAT',
   'ITEM heard',
   'TICKET',
   'SUBMIT',

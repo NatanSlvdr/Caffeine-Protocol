@@ -6,7 +6,7 @@ export function category(command: string) {
   if (['JUMP', 'POSITION'].includes(family)) return 'jump';
   if (['STORE', 'FUNCTION', 'CALL', 'RETURN'].includes(family)) return 'function';
   if (['MOVE', 'MOVE TO', 'TAKE', 'DEPOSIT', 'USE'].includes(family)) return 'motion';
-  if (['IF', 'ELSE', 'FOR', 'REPEAT', 'STOP'].includes(family)) return 'flow';
+  if (['IF', 'ELSE', 'FOR', 'STOP'].includes(family)) return 'flow';
   if (['HELP', 'ERROR'].includes(family)) return 'help';
   return 'data';
 }

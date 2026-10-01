@@ -6,7 +6,7 @@
 export const UNLOCKS = {
   /** Query takes orders: Wait for Orders, paper, Write coffee, Move, Deposit. */
   query: 2,
-  /** Jump back to Wait for Orders, and Repeat: a queue of coffee drinkers. */
+  /** Jump back to Wait for Orders: a queue of coffee drinkers. */
   loop: 3,
   /** If/Else on what the customer said, and tea. Comes after the loop so there is a queue to tell apart. */
   choices: 4,

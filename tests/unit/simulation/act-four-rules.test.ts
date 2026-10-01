@@ -172,7 +172,7 @@ describe('Last Orders', () => {
     expect(service({ query }, shift).first_failure?.reason).toContain('stopped listening');
   });
   it('refuses to stop a robot before closing time', () => {
-    const prep = referencePrograms(shift).prep.replace('REPEAT', 'STOP\nREPEAT');
+    const prep = referencePrograms(shift).prep.replace(/^JUMP listen$/m, 'STOP\nJUMP listen');
     expect(reason(shift, { prep })).toMatch(/^It isn’t closing time yet: Brew still has work coming/);
   });
   it('fails a robot that waits again after closing', () => {

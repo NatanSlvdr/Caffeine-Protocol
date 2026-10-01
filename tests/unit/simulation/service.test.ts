@@ -99,7 +99,7 @@ describe('movement language and execution', () => {
       }
   });
   it('bounds programs that cannot reach a wait', () => {
-    expect(physical('REPEAT').failure?.reason).toBe(
+    expect(physical('POSITION listen\nJUMP listen').failure?.reason).toBe(
       'Brew keeps going round its loop without doing anything: put Wait for Orders inside it, so Brew waits for its next ticket.',
     );
   });
@@ -170,7 +170,7 @@ describe('recipes, handoffs, and capacities', () => {
   });
   it('blames the robot pacing in circles when the service runs out of time', () => {
     // Porter never waits for a drink, so Brew sits idle at Wait for Orders: Porter is the one to fix.
-    const r = service({ floor: 'MOVE RIGHT 1\nMOVE LEFT 1\nREPEAT' }, UNLOCKS.floor);
+    const r = service({ floor: 'POSITION listen\nMOVE RIGHT 1\nMOVE LEFT 1\nJUMP listen' }, UNLOCKS.floor);
     expect(r.first_failure?.role).toBe('floor');
     expect(r.first_failure?.reason).toContain('Porter keeps going round its loop');
   });
@@ -267,8 +267,8 @@ describe('concurrency and replay', () => {
   });
   it('reports a blocked queue instead of hanging and identifies the robot and line', () => {
     const r = service({ prep: 'LISTEN\nMOVE LEFT 19' });
-    // Brew ran past its last line with tickets still waiting: it needs Repeat, not a hang.
-    expect(r.first_failure?.reason).toContain('end it with Repeat');
+    // Brew ran past its last line with tickets still waiting: it needs a Jump back, not a hang.
+    expect(r.first_failure?.reason).toContain('a Jump back to it at the end');
     expect(r.first_failure?.role).toBe('prep');
   });
   it('freezes replay at the failure clock', () => {

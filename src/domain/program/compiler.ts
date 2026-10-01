@@ -51,7 +51,7 @@ export function availableCommands(level: number): string[] {
       'END',
       'ITEM tea',
     );
-  if (level >= UNLOCKS.loop) c.push('POSITION listen', 'JUMP listen', 'REPEAT');
+  if (level >= UNLOCKS.loop) c.push('POSITION listen', 'JUMP listen');
   if (level >= UNLOCKS.sugar) c.push('WRITE 1 sugar', 'WRITE 0 sugar');
   if (level >= UNLOCKS.forEach) c.push('FOR item IN heard orders');
   if (level >= UNLOCKS.numbers) c.push('STORE var1 FROM number', 'WRITE var1 sugar');
@@ -148,11 +148,6 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
     p.compile_error = 'Start with Wait for Orders, or a jump destination.';
   else if (p.instructions.filter((c) => c === 'LISTEN').length !== 1)
     p.compile_error = 'Use one Wait for Orders; jump back to it for continuous service.';
-  else if (
-    p.instructions.includes('REPEAT') &&
-    (p.instructions.at(-1) !== 'REPEAT' || p.instructions.filter((c) => c === 'REPEAT').length > 1)
-  )
-    p.compile_error = 'REPEAT belongs once, at the very end.';
   p.instructions.forEach((c, i) => {
     if (c.startsWith('JUMP ') && !(c.slice(5) in p.positions)) {
       p.compile_error = 'Jump target has no matching Position block.';

@@ -101,7 +101,7 @@ const kinds: FailureKind[] = [
     match: /reached the end of its program/,
     by: 'robot',
     react: () => '*whirr… click* All done? Not all done.',
-    hint: 'A robot runs its program from top to bottom once. Repeat at the end sends it back to the top for the next job.',
+    hint: 'A robot runs its program from top to bottom once. A Jump back to a Position marker at the top sends it round again for the next job.',
   },
   {
     match: /recipe isn’t in a function yet/,

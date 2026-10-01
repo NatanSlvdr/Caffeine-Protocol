@@ -178,7 +178,7 @@ describe('reactions', () => {
     ).toContain('one place to change');
     expect(
       niko(
-        'Brew reached the end of its program with work still to do: end it with Repeat, so Brew goes back to the top for the next ticket.',
+        'Brew reached the end of its program with work still to do: put a Position marker at the top and a Jump back to it at the end, so Brew goes back for the next ticket.',
       ),
     ).toContain('from top to bottom once');
     expect(

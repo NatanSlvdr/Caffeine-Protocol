@@ -76,20 +76,19 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
     // A rush order is made straight away, before waiting for another ticket.
     ...(rules.rush && i + 1 < batch ? ['IF rush IN CUSTOMER SPEECH', ...call, 'JUMP listen', 'END'] : []),
   ]).flat();
-  const top = rules.rush && batch > 1 ? ['POSITION listen'] : [];
   return (
     functions
       ? [
-          ...top,
+          'POSITION listen',
           ...waits,
           ...Array.from({ length: batch }, () => 'CALL recipe'),
-          'REPEAT',
+          'JUMP listen',
           'FUNCTION recipe',
           ...recipe,
           'RETURN',
           'END',
         ]
-      : [...top, ...waits, ...recipe, 'REPEAT']
+      : ['POSITION listen', ...waits, ...recipe, 'JUMP listen']
   ).join('\n');
 }
 export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
@@ -121,6 +120,7 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
       : [];
     return [
       'STORE var2 FROM here',
+      'POSITION listen',
       'LISTEN',
       ...(rules.closing ? STOP_WHEN_CLOSED() : []),
       'TAKE DOWN',
@@ -128,7 +128,7 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
       'CALL deliver',
       ...(clearing ? ['CALL clear'] : []),
       ...(rules.toGo ? ['END'] : []),
-      'REPEAT',
+      'JUMP listen',
       'FUNCTION deliver',
       ...serve,
       'RETURN',
@@ -138,10 +138,11 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
   }
   return [
     'STORE var2 FROM here',
+    'POSITION listen',
     ...Array.from({ length: batch }, () => ['LISTEN', 'TAKE DOWN']).flat(),
     ...Array.from({ length: batch }, () => ['CALL deliver']).flat(),
     ...(clearing ? Array.from({ length: batch }, () => ['CALL clear']).flat() : []),
-    'REPEAT',
+    'JUMP listen',
     'FUNCTION deliver',
     ...serve,
     'RETURN',

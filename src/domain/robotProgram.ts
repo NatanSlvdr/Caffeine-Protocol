@@ -6,6 +6,7 @@ import {
   parseConditionExpression,
   parseStore,
   parseTimes,
+  retireRepeat,
 } from './program';
 import { comparisonUnlocked, parseWorkerComparison } from './robotConditions';
 import { DIRECTIONS } from './directions';
@@ -43,7 +44,6 @@ function sharedCommands(take: string, deposit: string, level: number): string[] 
     'END',
     'POSITION listen',
     'JUMP listen',
-    'REPEAT',
     ...(level >= UNLOCKS.closing ? ['STOP'] : []),
   ];
 }
@@ -217,7 +217,7 @@ function migrateRobotCondition(command: string): string {
 }
 /** Rewrite a saved Brew or Porter program into the shared language, keeping indentation and comments. */
 export function migrateRobotSource(source: string, role: Exclude<RobotRole, 'query'>): string {
-  return source
+  return retireRepeat(source)
     .split('\n')
     .map((raw) => {
       const command = raw.trim();

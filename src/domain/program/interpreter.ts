@@ -175,8 +175,7 @@ export function* streamCustomerEvent(
             if (!orders.length) {
               out.state = {
                 pc: 0,
-                stopped:
-                  !p.instructions.includes('REPEAT') && !p.instructions.some((command) => command.startsWith('JUMP ')),
+                stopped: !p.instructions.some((command) => command.startsWith('JUMP ')),
               };
               return out;
             }
@@ -280,9 +279,6 @@ export function* streamCustomerEvent(
           out.tickets.push(ticket);
           ticket = undefined;
           break;
-        case 'REPEAT':
-          out.state.pc = 0;
-          return finish();
         case 'STOP':
           if (ticket) return fail('Deposit the current paper before stopping.');
           out.state = { ...out.state, pc: 0, stopped: true };

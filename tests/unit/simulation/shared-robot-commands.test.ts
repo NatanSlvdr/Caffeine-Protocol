@@ -20,9 +20,9 @@ describe('Brew and Porter speak Query’s language', () => {
         'IF sugar IN CUSTOMER SPEECH',
         'POSITION listen',
         'JUMP listen',
-        'REPEAT',
       ])
         expect(commands).toContain(command);
+      expect(commands).not.toContain('REPEAT');
     }
   });
 
@@ -62,14 +62,6 @@ describe('Brew and Porter speak Query’s language', () => {
     expect(compileRobot('LISTEN\nJUMP listen', 'prep', UNLOCKS.functions).compile_error).toBe(
       'Jump target has no matching Position block.',
     );
-  });
-
-  it('loops a full service with Position and Jump instead of Repeat', () => {
-    const jump = (source: string) => `POSITION listen\n${source.replace(/^REPEAT$/m, 'JUMP listen')}`;
-    const programs = referencePrograms(FLOOR_TRAY);
-    const r = service({ prep: jump(programs.prep), floor: jump(programs.floor) }, FLOOR_TRAY);
-    expect(r.first_failure).toBeNull();
-    expect(r.passed).toBe(true);
   });
 
   it('lets the station a robot faces decide what Take and Deposit do', () => {

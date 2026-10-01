@@ -5,13 +5,23 @@ import { VARIABLES, parseStore, parseSugarWrite } from './vars';
 export const legacyQueryAction = (command: string) =>
   command === 'TICKET' || command === 'SUBMIT' || /^MOVE (RIGHT|LEFT) 1$/.test(command);
 
+/** Repeat is retired: loop back with a Jump to a marker at the top instead. */
+export function retireRepeat(source: string): string {
+  const lines = source.split('\n');
+  if (!lines.some((line) => line.trim() === 'REPEAT')) return source;
+  const looped = lines.map((raw) => (raw.trim() === 'REPEAT' ? raw.replace('REPEAT', 'JUMP listen') : raw));
+  if (!lines.some((line) => line.trim() === 'POSITION listen')) looped.unshift('POSITION listen');
+  return looped.join('\n');
+}
+
 /** Find whether a source row belongs to a FOR body, including nested IF branches. */
 export function insideOrderLoop(source: string, line: number) {
   return insideScope(source, line, 'FOR item IN ');
 }
 
 /** Rename old actions without removing movement, comments, or formatting. */
-export function migrateQuerySource(source: string): string {
+export function migrateQuerySource(saved: string): string {
+  const source = retireRepeat(saved);
   const lines = source.split('\n');
   const used = new Set(lines.flatMap((raw) => raw.match(/\bvar[1-4]\b/g) ?? []));
   const aliases = new Map<string, string>();

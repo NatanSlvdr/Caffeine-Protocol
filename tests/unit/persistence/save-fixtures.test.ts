@@ -109,9 +109,10 @@ describe('historical save fixtures', () => {
     expect(migrated.robotSolutions['13'].query).toBe(lessons[13].starter);
     expect(migrated.robotDrafts['13'].query).not.toContain('CHARGE ORDER');
     expect(migrated.robotDrafts['13'].query).not.toContain('TICKET');
-    // Brew routines keep their shape; retired station verbs become Take, Use and Deposit.
+    // Brew routines keep their shape; retired station verbs become Take, Use and Deposit,
+    // and the retired Repeat becomes a Jump back to a marker at the top.
     const brew =
-      'LISTEN\nCALL recipe\nREPEAT\nFUNCTION recipe\nTAKE UP\nUSE UP\nTAKE UP\nUSE UP\nTAKE UP\nDEPOSIT UP\nRETURN\nEND';
+      'POSITION listen\nLISTEN\nCALL recipe\nJUMP listen\nFUNCTION recipe\nTAKE UP\nUSE UP\nTAKE UP\nUSE UP\nTAKE UP\nDEPOSIT UP\nRETURN\nEND';
     expect(migrated.robotDrafts['13'].prep).toBe(brew);
     expect(migrated.robotSolutions['13'].prep).toBe(brew);
     // Porter routines preserved; retired charging branches keep only the

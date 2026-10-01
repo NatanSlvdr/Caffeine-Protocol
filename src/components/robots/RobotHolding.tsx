@@ -32,9 +32,7 @@ export function RobotHolding({
   const fields = action ? blockFields(action.command) : undefined;
   const thinking =
     !!fields &&
-    ['IF', 'ELSE', 'FOR', 'REPEAT', 'END', 'JUMP', 'CALL', 'RETURN', 'FUNCTION', 'READ', 'POSITION'].includes(
-      fields.family,
-    );
+    ['IF', 'ELSE', 'FOR', 'END', 'JUMP', 'CALL', 'RETURN', 'FUNCTION', 'READ', 'POSITION'].includes(fields.family);
   const visibleAction =
     fields &&
     (thinking || ['TAKE', 'DEPOSIT', 'USE', 'ITEM', 'STORE', 'MOVE', 'MOVE TO', 'WAIT'].includes(fields.family))

@@ -8,7 +8,7 @@ Act I offers these operations progressively:
 
 - `LISTEN`, `TAKE <direction>`, `ITEM coffee`, `ITEM tea`, `MOVE <direction> <tiles>`, `DEPOSIT <direction>`.
 - `IF <token> IN item` or `IF <token> NOT IN item`, `ELSE`, `END`.
-- `POSITION <label>` and `JUMP <label>` for continuous service. `REPEAT` remains accepted at the end of a program.
+- `POSITION <label>` and `JUMP <label>` for continuous service. `REPEAT` is retired; saved programs that used it get a `POSITION listen` at the top and a `JUMP listen` in its place.
 - `WRITE 1 sugar` and `WRITE 0 sugar`.
 - `FOR item IN heard orders` with a closing `END`.
 - `STORE var1 FROM number` and `WRITE var1 sugar`.
