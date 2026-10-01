@@ -29,7 +29,9 @@ timing details where the earlier specification left tuning open.
 - `orders.md` - order phrases, ticket fields, modifiers, ambiguity rules.
 - `pricing.md` - future pricing-machine hook and customer total rules.
 - `ui.md` - main puzzle screen, debug views, and run controls.
-- `levels/` - one implementation-ready spec per Act I level.
+- Shift-by-shift specs (story, lesson, customers, reference programs) are
+  generated into [../campaign/shifts/](../campaign/shifts/README.md) by
+  `npm run docs:gen`.
 
 ## Documentation Rules
 

@@ -43,12 +43,27 @@ describe('Act IV unlocks', () => {
       expect(frame.result.stars).toBe(3);
     },
   );
-  it.each(levels.slice(UNLOCKS.toGo - 1).map((level, i) => [level.id, UNLOCKS.toGo + i] as const))(
+  const ruleShifts = [UNLOCKS.toGo, UNLOCKS.cups, UNLOCKS.rush, UNLOCKS.closing];
+  it.each(ruleShifts.map((shift) => [levels[shift - 1].id, shift] as const))(
     '%s breaks the programs from the shift before it',
     (_, shift) => {
       expect(service(referencePrograms(shift - 1), shift).passed).toBe(false);
     },
   );
+  // Stop only unlocks at Last Orders, so its programs can't be replayed on the shifts before it.
+  it.each(ruleShifts.slice(1, -1).map((shift) => [levels[shift - 1].id, shift] as const))(
+    '%s keeps handling the rules of the shifts before it, as carried-forward programs do',
+    (_, shift) => {
+      const programs = referencePrograms(shift);
+      for (let earlier = UNLOCKS.toGo; earlier < shift; earlier++) {
+        expect(service(programs, earlier).first_failure?.reason).toBeUndefined();
+      }
+    },
+  );
+  it('serves the finale with the programs carried forward from Last Orders', () => {
+    const finale = levels.length;
+    expect(service(referencePrograms(finale - 1), finale).passed).toBe(true);
+  });
 });
 
 describe('To Go', () => {

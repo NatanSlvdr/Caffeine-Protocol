@@ -1,10 +1,10 @@
 # September 2026 implementation notes
 
-The sections below describe an earlier prototype. The current TypeScript Query implementation is documented in [programming.md](programming.md), [orders.md](orders.md), and the Level 3–14 documents. Those documents supersede the former Act I EACH, semantic-copy, and function progression. The current game has 21 shifts; kitchen/floor behavior is preserved by the Query redesign.
+The sections below describe an earlier prototype. The current TypeScript Query implementation is documented in [programming.md](programming.md), [orders.md](orders.md), and the generated shift pages in [docs/campaign/shifts/](../campaign/shifts/README.md). Those documents supersede the former Act I EACH, semantic-copy, and function progression. The current game has 21 shifts; kitchen/floor behavior is preserved by the Query redesign.
 
 ## Source of truth and completed scope
 
-The design specification was recovered from commit `5a31554` after its deletion in `770783a`. The 14 documented Act I levels remain the campaign. The older 10-level draft in Downloads is superseded by these documents. No undocumented future acts have been invented.
+The design specification was recovered from commit `5a31554` after its deletion in `770783a`. The campaign has since been restructured into 21 shifts ([ADR 005](../adr/005-21-shifts.md)). The older 10-level draft in Downloads is superseded by these documents. No undocumented future acts have been invented.
 
 ## Historical supplied artwork
 
