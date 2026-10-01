@@ -41,6 +41,18 @@ function savedStars() {
   return JSON.parse(localStorage.getItem(SAVE_KEY)!).stars;
 }
 describe('live workspace lifecycle', () => {
+  it('steps out of a text field on Escape before leaving the shift', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const speed = screen.getByRole('slider', { name: 'Playback speed' });
+    speed.focus();
+    fireEvent.keyDown(speed, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/shift/3');
+    expect(document.activeElement).not.toBe(speed);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/campaign');
+  });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
     window.location.hash = '/shift/14';

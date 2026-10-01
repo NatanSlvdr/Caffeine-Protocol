@@ -112,7 +112,11 @@ export function Workspace({
         run();
       }
       // Menus and drags claim their own Escape; only an unclaimed one leaves the shift.
-      if (e.key === 'Escape' && !modal && !e.defaultPrevented) go('/campaign');
+      if (e.key === 'Escape' && !modal && !e.defaultPrevented) {
+        // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
+        if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
+        else go('/campaign');
+      }
     };
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
