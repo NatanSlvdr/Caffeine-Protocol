@@ -36,7 +36,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ],
     [
       'niko',
-      'Then [MOVE RIGHT 1|Move] walks Query to the kitchen handoff, one tile at a time. [DEPOSIT RIGHT|Deposit] hands the ticket over, and Query walks back to the register.',
+      'Then [MOVE RIGHT 1|Move] walks Query to the kitchen handoff, one tile at a time, and [DEPOSIT RIGHT|Deposit] hands the ticket over. After that, Move Query back to the register: that’s where the guest pays.',
     ],
     ['query', '*bip* Listen. Paper. Write. Walk. Give. Walk back. Simple.'],
     [
