@@ -2344,7 +2344,7 @@ html[data-motion='reduced'] .drop-projection {
 
 /*
  * Scene bubbles. Quiet notes over the café: warm paper, a fine brown outline, a soft shadow and a
- * small curved tail. Colour is kept for information only: the speaker's name pill, in their
+ * small pointer. Colour is kept for information only: the speaker's name pill, tinted from their
  * cutscene colour, and the running action, in its code block's colour.
  */
 .customer-speech,
@@ -2367,9 +2367,9 @@ html[data-motion='reduced'] .drop-projection {
 .bubble-tail {
   position: absolute;
   top: calc(100% - 1px);
-  left: calc(50% - 4.5px);
-  width: 14px;
-  height: 10px;
+  left: calc(50% - 6px);
+  width: 12px;
+  height: 7px;
   overflow: visible;
   fill: var(--bubble-paper);
   stroke: var(--bubble-line);
@@ -2387,11 +2387,11 @@ html[data-motion='reduced'] .drop-projection {
   gap: 3px;
   height: 16px;
   padding: 0 7px 0 5px;
-  border: 1.5px solid var(--bubble-paper);
+  /* A light tint of the speaker's colour, named in a deep shade of it, edged in a mid shade. */
+  border: 1px solid color-mix(in srgb, var(--pill, #d4ac6b) 70%, #5a4332);
   border-radius: 999px;
-  background: var(--pill, #ecd29b);
-  box-shadow: 0 0 0 1px var(--bubble-line);
-  color: var(--pill-ink, var(--bubble-ink));
+  background: color-mix(in srgb, var(--pill, #d4ac6b) 38%, var(--bubble-paper));
+  color: color-mix(in srgb, var(--pill, #d4ac6b) 45%, #2a1d15);
   font:
     800 9.5px/1 'Avenir Next',
     'Nunito',
@@ -2418,7 +2418,7 @@ html[data-motion='reduced'] .drop-projection {
   transform: translate(calc(-50% + 36px), -50%);
 }
 .customer-speech.at-counter .bubble-tail {
-  left: calc(100% - 40.5px);
+  left: calc(100% - 42px);
 }
 .customer-speech blockquote {
   margin: 0;
@@ -2474,11 +2474,18 @@ html[data-motion='reduced'] .drop-projection {
     ui-rounded,
     sans-serif;
 }
-/* The queue stands on the handoff tickets, narrow enough to fit between Query's and Brew's bubbles. */
+/*
+ * The queue stands up and to the left of the paper stack, pointing down at it so the tickets stay in
+ * view, and is narrow enough to fit between Query's and Brew's bubbles.
+ */
 .order-queue-bubble {
   min-width: 74px;
   max-width: 104px;
   padding: 11px 6px 6px;
+  transform: translate(calc(-50% + 18px), -50%);
+}
+.order-queue-bubble .bubble-tail {
+  left: calc(100% - 24px);
 }
 .order-queue-bubble .order-icons {
   margin: 0;

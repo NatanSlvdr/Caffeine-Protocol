@@ -175,7 +175,6 @@ it('names the robot on a pill in its cutscene colour and tints the action like i
   expect(pill.textContent).toBe('Brew');
   expect(pill.querySelector('.lucide-chef-hat')).toBeTruthy();
   expect(pill.style.getPropertyValue('--pill')).toBe('#7d9eae');
-  expect(pill.style.getPropertyValue('--pill-ink')).toBe('#392b24');
   expect(screen.getByLabelText('Brew is holding').querySelector('.bubble-tail')).toBeTruthy();
   expect(document.querySelector('.robot-action')?.classList).toContain('function');
   expect(document.querySelector<HTMLElement>('.robot-action-progress')?.style.getPropertyValue('--progress')).toBe(

@@ -13,12 +13,6 @@ import { OrderMarks } from '../OrderIcons';
 import { AutoHeight } from '@/shared/ui/AutoHeight';
 import { HoldingIcon } from './HoldingIcon';
 
-/** Ink or paper, whichever reads better on a pill of this colour. */
-function pillInk(hex: string) {
-  const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
-  return 0.299 * r + 0.587 * g + 0.114 * b > 140 ? '#392b24' : '#fffcf4';
-}
-
 /**
  * Show waiting and physical actions, with a shared thinking state for control flow. The bubble is a
  * comic speech bubble under a name pill in the speaker's cutscene colour, and the action wears the
@@ -90,11 +84,7 @@ export function RobotHolding({
       reduced={reduced}
       extraHeight={20}
     >
-      <span
-        className="robot-name bubble-pill"
-        aria-hidden="true"
-        style={{ '--pill': color, '--pill-ink': pillInk(color) } as React.CSSProperties}
-      >
+      <span className="robot-name bubble-pill" aria-hidden="true" style={{ '--pill': color } as React.CSSProperties}>
         <CrewIcon strokeWidth={2.2} />
         {name}
       </span>

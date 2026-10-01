@@ -187,9 +187,9 @@ export function World({
           ),
       )}
       {state && showStatusBubbles && (
-        // The queue points at the paper stack on the handoff, below the robots' bubbles so theirs stay readable.
+        // The queue points down at the paper stack from above and to its left, below the robots' bubbles.
         <SceneHtml
-          position={[STATIONS.orders.cell[0] + 0.1, 0.7, STATIONS.orders.cell[1] + 0.18]}
+          position={[STATIONS.orders.cell[0] - 0.15, 2.3, STATIONS.orders.cell[1] + 0.18]}
           zIndexRange={[9, 0]}
           style={{ pointerEvents: 'none' }}
         >
