@@ -1,5 +1,5 @@
 import { line, variableLabels } from '@/domain';
-import type { CastId, DialogueLine, RobotRole, RunResult } from '@/domain';
+import type { CastId, DialogueLine, LevelDefinition, RobotRole, RunResult } from '@/domain';
 
 const ROBOT_CAST: Record<RobotRole, CastId> = { query: 'query', prep: 'brew', floor: 'porter' };
 
@@ -193,18 +193,23 @@ const cheers: Record<RobotRole, string[]> = {
   floor: ['*ding ding!* Every guest served!', 'Zero spills! *bip* …Zero big spills.'],
 };
 
-/** Niko names the star target that was missed, and why it matters in the café. */
-const starVerdict: Record<number, string> = {
-  1: 'Every guest served! The routine is longer than it needs to be, though: fewer blocks means less to fix when the menu changes.',
-  2: 'Every guest served, with a tidy routine too! The robots still take the long way round: fewer steps and nobody waits as long.',
-  3: 'Three stars. That’s the tidiest routine I’ve ever seen.',
-};
+type Targets = Pick<LevelDefinition, 'block_target' | 'instruction_target'>;
+
+/** Niko names the star target that was missed, by how much, and why it matters in the café. */
+function starVerdict(result: RunResult, targets: Targets): string {
+  if (result.stars <= 1)
+    return `Every guest served! The routine runs ${result.block_count ?? 0} blocks, though, and ${targets.block_target} would do: fewer blocks means less to fix when the menu changes.`;
+  if (result.stars === 2)
+    return `Every guest served, with a tidy routine too! The robots still took ${result.executed_instructions} steps where ${targets.instruction_target} would do: fewer steps and nobody waits as long.`;
+  return 'Three stars. That’s the tidiest routine I’ve ever seen.';
+}
 
 /** The crew's reaction to a finished service, before the receipt: the shift's payoff scene, then Niko's verdict. */
 export function successLines(
   result: RunResult,
   role: RobotRole,
   index: number,
+  targets: Targets,
   payoff: DialogueLine[] = [],
 ): DialogueLine[] {
   if (result.observation)
@@ -214,6 +219,6 @@ export function successLines(
   const pool = cheers[role];
   return [
     ...(payoff.length ? payoff : [line(ROBOT_CAST[role], pool[index % pool.length])]),
-    line('niko:happy', starVerdict[Math.min(3, Math.max(1, result.stars))]),
+    line('niko:happy', starVerdict(result, targets)),
   ];
 }

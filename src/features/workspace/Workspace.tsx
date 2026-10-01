@@ -129,7 +129,7 @@ export function Workspace({
     scene === 'failure' && running && result && !result.passed
       ? failureLines(result, role)
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index, outro)
+        ? successLines(result, role, index, level, outro)
         : undefined;
   return (
     <main className="workspace-main">

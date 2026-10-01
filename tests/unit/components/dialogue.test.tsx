@@ -167,21 +167,26 @@ describe('reactions', () => {
     expect(floor.text).toContain('not ready');
   });
 
+  const targets = { block_target: 10, instruction_target: 40 };
   it('cheers a finished service before the receipt', () => {
     const passed = { passed: true, observation: false, stars: 3, first_failure: null } as unknown as RunResult;
-    const [robot, niko] = successLines(passed, 'prep', 0);
+    const [robot, niko] = successLines(passed, 'prep', 0, targets);
     expect(robot.who).toBe('brew');
     expect(niko.text).toContain('Three stars');
-    expect(successLines({ ...passed, observation: true }, 'query', 0)).toHaveLength(1);
-    expect(successLines({ ...passed, stars: 1 }, 'query', 0)[1].text).toContain('fewer blocks');
-    expect(successLines({ ...passed, stars: 2 }, 'query', 0)[1].text).toContain('fewer steps');
+    expect(successLines({ ...passed, observation: true }, 'query', 0, targets)).toHaveLength(1);
+  });
+  it('says which star target was missed, and by how much', () => {
+    const passed = { passed: true, observation: false, first_failure: null } as unknown as RunResult;
+    const verdict = (patch: Partial<RunResult>) => successLines({ ...passed, ...patch }, 'query', 0, targets)[1].text;
+    expect(verdict({ stars: 1, block_count: 14 })).toContain('runs 14 blocks, though, and 10 would do');
+    expect(verdict({ stars: 2, executed_instructions: 52 })).toContain('took 52 steps where 40 would do');
   });
 
   it('plays the shift payoff in place of the stock cheer, then the verdict', () => {
     const passed = { passed: true, observation: false, stars: 3, first_failure: null } as unknown as RunResult;
     const payoff = [line('juno:happy', 'Actual tea.')];
-    const lines = successLines(passed, 'query', 2, payoff);
+    const lines = successLines(passed, 'query', 2, targets, payoff);
     expect(lines.map((l) => l.text)).toEqual(['Actual tea.', expect.stringContaining('Three stars')]);
-    expect(successLines({ ...passed, observation: true }, 'query', 0, payoff)).toEqual(payoff);
+    expect(successLines({ ...passed, observation: true }, 'query', 0, targets, payoff)).toEqual(payoff);
   });
 });
