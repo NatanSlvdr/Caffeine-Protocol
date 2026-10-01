@@ -1,7 +1,5 @@
-import { BOUNDS, TABLE_LAYOUT, STATIONS } from '@/domain';
-
-/** The dining-room face of the back wall, half a tile behind the last row of tiles. */
-const BACK_WALL_FACE = BOUNDS.minZ - 0.5;
+import { TABLE_LAYOUT, STATIONS } from '@/domain';
+import { BACK_WALL_FACE } from '../cafe/dressing';
 
 /** One time of day: a soft sky fill, a ground bounce, and a key light that carries the shadows. */
 export interface LightMood {

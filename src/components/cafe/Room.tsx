@@ -11,6 +11,8 @@ import {
   tableSeat,
   type StationId,
 } from '@/domain';
+import { STREET_WINDOWS } from './dressing';
+import { WallDressing, KitchenFloor } from './WallDressing';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
 
 /** The storage tile holds the fridge and shelf instead of a counter, so it is left out of the joinery. */
@@ -24,16 +26,23 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
       <CafeFloor showGrid={showLabels} />
       <Box at={[-0.6, 1.3, -6.6]} size={[16.2, 2.7, 0.2]} color={CAFE_COLORS.wall} />
       <CafeMural />
+      <WallDressing />
+      <KitchenFloor />
       <Box at={[-8.6, 1.3, -1.6]} size={[0.2, 2.7, 10.2]} color={CAFE_COLORS.wall} />
       <Box at={[-8.6, 2.48, 4.5]} size={[0.24, 0.34, 2]} color={CAFE_COLORS.walnut} />
       <Box at={[-8.6, 1.14, 3.45]} size={[0.25, 2.3, 0.1]} color={CAFE_COLORS.walnut} />
       <Box at={[-8.6, 1.14, 5.55]} size={[0.25, 2.3, 0.1]} color={CAFE_COLORS.walnut} />
       {/* The two-tile sliding entrance stays fully open, with its panels recessed into the wall. */}
       <Box at={[-8.6, 0.035, 4.5]} size={[0.6, 0.025, 2]} color={CAFE_COLORS.sand} />
-      {[-4, 0, 2.3].map((z) => (
+      {STREET_WINDOWS.map((z) => (
         <group key={z}>
           <Box at={[-8.48, 1.7, z]} size={[0.1, 1.8, 2]} color={CAFE_COLORS.walnut} />
-          <Box at={[-8.41, 1.7, z]} size={[0.04, 1.5, 1.7]} color={evening ? '#aa99a2' : '#c7e3df'} />
+          <Box
+            at={[-8.41, 1.7, z]}
+            size={[0.04, 1.5, 1.7]}
+            color={evening ? '#e8c58f' : '#c7e3df'}
+            glow={evening ? 0.35 : 0}
+          />
           <Box at={[-8.37, 1.7, z]} size={[0.06, 1.55, 0.055]} color={CAFE_COLORS.walnut} />
           <Box at={[-8.37, 1.7, z]} size={[0.06, 0.055, 1.7]} color={CAFE_COLORS.walnut} />
           <Box at={[-8.28, 0.88, z]} size={[0.35, 0.09, 2.12]} color={CAFE_COLORS.clay} />
