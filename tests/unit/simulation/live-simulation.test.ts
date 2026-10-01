@@ -210,6 +210,19 @@ describe('live service', () => {
     );
     expect(failed.result.first_failure?.reason).toBe('Ticket 1 needs sugar: they asked for some.');
   });
+  it('says the ticket never left Query’s hand when Deposit is missing', () => {
+    // Written but never handed over: the slip is the missing Deposit, not the number of tickets.
+    const failed = finish(
+      createLiveRun(levels[1], {
+        query: 'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nMOVE LEFT 1',
+        prep: '',
+        floor: '',
+      }),
+    );
+    expect(failed.result.first_failure?.reason).toBe(
+      'Query is still holding a ticket the kitchen never got: Deposit right at the kitchen handoff.',
+    );
+  });
   it('uses every required scenario and produces the same outcome regardless of playback speed', () => {
     const slow = createLiveRun(levels[3], programs(3)),
       fast = createLiveRun(levels[3], programs(3));

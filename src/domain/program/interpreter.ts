@@ -44,6 +44,9 @@ export function* streamCustomerEvent(
   const ambiguous = () => orders.some((order) => order.tokens.includes('ambiguous'));
   // Checkout is automatic once the complete paper order is deposited.
   const finish = () => {
+    // A written ticket still in Query's hand never reached the kitchen: that's the slip, not the count.
+    if (!out.error && ticket)
+      return fail('Query is still holding a ticket the kitchen never got: Deposit right at the kitchen handoff.');
     if (checkWrittenOrder && !out.error) {
       const expected = customer.expected.tickets ?? (customer.expected.item ? [customer.expected] : []);
       const count = out.tickets.reduce((sum, paper) => sum + (paper.quantity ?? 1), 0);
@@ -53,7 +56,6 @@ export function* streamCustomerEvent(
       }
     }
     if (!out.error && out.tickets.length && !out.payment) {
-      if (ticket) return fail('Deposit the current paper before finishing the order.');
       if (out.state.counter) return fail('Return to the register after depositing the order.');
       out.payment = { amount: orderTotal(out.tickets), ticketIds: out.tickets.map((t) => t.ticket_id) };
     }

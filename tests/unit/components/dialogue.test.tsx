@@ -158,6 +158,9 @@ describe('reactions', () => {
       'every drink they named',
     );
     expect(niko('This order is unclear. Use Help before taking paper.')).toContain('Guessing');
+    expect(
+      niko('Query is still holding a ticket the kitchen never got: Deposit right at the kitchen handoff.'),
+    ).toContain('only half of it');
     expect(niko('Wait for dirty cups before collecting one.')).toContain('job it has been handed');
     expect(
       niko('Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.'),
