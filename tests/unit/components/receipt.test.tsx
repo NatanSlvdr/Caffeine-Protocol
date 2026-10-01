@@ -6,13 +6,13 @@ import type { RunResult } from '../../../src/domain/types';
 
 const result = (stars: number) =>
   ({ passed: true, stars, block_count: 5, executed_instructions: 20, tickets: [] }) as unknown as RunResult;
-const receipt = (stars: number, best?: number) =>
+const receipt = (stars: number, best?: number, observation = false) =>
   render(
     <ReceiptModal
       index={2}
       level={levels[2]}
       result={result(stars)}
-      observation={false}
+      observation={observation}
       best={best}
       onNext={() => {}}
       onClose={() => {}}
@@ -35,6 +35,11 @@ describe('service receipt', () => {
   it('keeps the best when a replay falls short', () => {
     receipt(1, 3);
     expect(screen.getByText('Your best stays at 3 stars.')).toBeTruthy();
+  });
+  it('credits the opening day to the people who served it by hand', () => {
+    receipt(0, 0, true);
+    expect(screen.getByText('Niko, Moka and Pip served every order by hand.')).toBeTruthy();
+    expect(screen.queryByText(/best/)).toBeNull();
   });
   it('says nothing about bests on a first serve or a matching replay', () => {
     const { unmount } = receipt(2);

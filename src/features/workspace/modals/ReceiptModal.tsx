@@ -46,7 +46,8 @@ export function ReceiptModal({
       className="settings-window confirm-slip receipt-slip"
     >
       <p className="receipt-lead">
-        {observation ? 'The crew served every order on their own.' : 'Every order, taken care of.'}
+        {/* The watch-only shift is the opening day, before any robot: the café's people serve it by hand. */}
+        {observation ? 'Niko, Moka and Pip served every order by hand.' : 'Every order, taken care of.'}
       </p>
       {!observation && (
         <p className="receipt-stars" role="img" aria-label={`${result.stars} of 3 stars`}>
