@@ -19,11 +19,14 @@ describe('shift entry navigation', () => {
     // Whose café is it? Lou’s, until the story says otherwise.
     expect(screen.getByText('Lou’s · A cozy coding adventure')).toBeTruthy();
     expect(screen.getByText('Doors open soon')).toBeTruthy();
+    // The tab names each screen.
+    expect(document.title).toBe('Caffeine Protocol');
     fireEvent.click(screen.getByRole('button', { name: 'Choose a shift' }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
     expect(screen.getByRole('heading', { name: 'Choose a shift' })).toBeTruthy();
     expect(screen.getByText('Lou’s · Order rail')).toBeTruthy();
+    expect(document.title).toBe('Choose a shift · Caffeine Protocol');
     expect(screen.queryByRole('button', { name: 'Selected shift' })).toBeNull();
 
     // A new café opens on its first scene; the first shift waits behind it.
@@ -31,12 +34,14 @@ describe('shift entry navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Watch scene' }));
     await waitFor(() => expect(window.location.hash).toBe('#/scene/the-keys'));
     expect(screen.getByText('The Keys')).toBeTruthy();
+    expect(document.title).toBe('The Keys · Caffeine Protocol');
     fireEvent.click(screen.getByRole('button', { name: /Skip/ }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
     expect(screen.getByRole('button', { name: 'Scene: The Keys, seen' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
     await waitFor(() => expect(window.location.hash).toBe('#/shift/1'));
+    await waitFor(() => expect(document.title).toMatch(/^Shift 01: .+ · Caffeine Protocol$/));
   });
 
   it.each(['#/shift/1', '#/scene/the-scrapyard', '#/scene/closing-time', '#/scene/nope'])(

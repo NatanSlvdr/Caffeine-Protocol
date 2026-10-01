@@ -13,6 +13,7 @@ import { narrativeFor } from '@/data/campaign/narrative';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
+import { pad2 } from '@/shared/lib/format';
 
 export default function App() {
   return (
@@ -49,6 +50,17 @@ function Shell() {
             ? 'ending'
             : 'home';
   const shift = useShift(index);
+  // The tab names the screen, so browser history and screen readers can tell the pages apart.
+  const title = {
+    home: '',
+    campaign: 'Choose a shift',
+    workspace: `Shift ${pad2(index + 1)}: ${shift.title}`,
+    scene: scene?.title ?? '',
+    ending: 'Closing time',
+  }[screen];
+  useEffect(() => {
+    document.title = title ? `${title} · Caffeine Protocol` : 'Caffeine Protocol';
+  }, [title]);
   return (
     <div className={`app ${screen}`}>
       <div className="app-body">
