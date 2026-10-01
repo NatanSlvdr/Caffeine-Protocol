@@ -29,7 +29,7 @@ describe('quantity on one paper', () => {
         customer,
         executeCustomerEvent(compileProgram(source.replace('2 coffee', '1 coffee')), customer, 'wrong'),
       ),
-    ).toContain('ticket count');
+    ).toContain('but Query wrote');
   });
   it.each(['offline', 'live'])('prepares and serves every cup in %s service', (mode) => {
     let result = runLevel(level, compileProgram(source, UNLOCKS.forEach));

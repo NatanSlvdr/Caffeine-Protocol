@@ -92,13 +92,13 @@ const kinds: FailureKind[] = [
     hint: 'This service is too busy for single trips. Fill both hands before setting off.',
   },
   {
-    match: /Expected Query to ask for help/,
+    match: /had to ask for help/,
     by: 'guest',
     react: (p) => `I said “${p}”… and that’s not what I meant at all.`,
     hint: 'When an order is unclear, ask me with Help before writing anything.',
   },
   {
-    match: /asked for help on a supported phrase/,
+    match: /asked for help on an order it could read/,
     by: 'guest',
     react: (p) => `“${p}.” I thought that was clear enough?`,
     hint: 'Only ask for Help when the order really is unclear.',
@@ -110,19 +110,19 @@ const kinds: FailureKind[] = [
     hint: 'If nobody can clarify, don’t take a sheet at all.',
   },
   {
-    match: /No ticket was created/,
+    match: /No ticket was written/,
     by: 'guest',
     react: (p) => `Hello? I said “${p}”. Is anyone writing this down?`,
     hint: 'Every order needs a written ticket handed to the kitchen.',
   },
   {
-    match: /Wrong ticket count/,
+    match: /but Query wrote \d+ tickets?/,
     by: 'guest',
     react: (p) => `I asked for “${p}”. That’s not the right number of drinks.`,
     hint: 'One sheet per drink, no more and no less.',
   },
   {
-    match: /Wrong item/,
+    match: /has the wrong item/,
     by: 'guest',
     react: (p) => `I said “${p}”. This isn’t what I ordered.`,
     hint: 'Check what the order says before you write the drink.',

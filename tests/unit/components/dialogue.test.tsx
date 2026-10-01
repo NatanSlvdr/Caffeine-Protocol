@@ -141,11 +141,14 @@ describe('reactions', () => {
     }) as RunResult;
 
   it('lets the guest react to a wrong order, then Niko explains', () => {
-    const [guest, niko] = failureLines(failure('Wrong item: expected tea, got coffee.'), 'query');
+    const [guest, niko] = failureLines(
+      failure('Ticket 1 has the wrong item: they asked for tea, not coffee.'),
+      'query',
+    );
     expect(guest).toMatchObject({ who: 'guest', mood: 'worried' });
     expect(guest.text).toContain('Two teas, please.');
     expect(niko.who).toBe('niko');
-    expect(niko.text).toContain('Wrong item');
+    expect(niko.text).toContain('has the wrong item');
   });
 
   it('explains why the common Query and robot mistakes matter', () => {
