@@ -1,7 +1,20 @@
-import { Box, SoftBox, Appliance, TicketTray, CAFE_COLORS } from '../CafeModels';
+import { Box, Appliance, TicketTray, CAFE_COLORS } from '../CafeModels';
 import { CafeFloor } from '../CafeFloor';
-import { ENTRANCE, FURNITURE, ROOM, STARTS, STATIONS, TABLE_LAYOUT, tableSeat, type StationId } from '@/domain';
-import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate } from './Furniture';
+import {
+  counterOutlines,
+  ENTRANCE,
+  FURNITURE,
+  ROOM,
+  STARTS,
+  STATIONS,
+  TABLE_LAYOUT,
+  tableSeat,
+  type StationId,
+} from '@/domain';
+import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
+
+/** The storage tile holds the fridge and shelf instead of a counter, so it is left out of the joinery. */
+const COUNTER_OUTLINES = counterOutlines(FURNITURE.filter((f) => f.kind === 'counter' && f.id !== 'storage'));
 
 /** Floor zones, furniture, and station positions share the simulation's tile model. */
 export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gateOpen: boolean; showLabels: boolean }) {
@@ -26,18 +39,11 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
           <Box at={[-8.28, 0.88, z]} size={[0.35, 0.09, 2.12]} color={CAFE_COLORS.clay} />
         </group>
       ))}
-      {FURNITURE.filter((f) => f.kind !== 'table' && f.kind !== 'chair' && f.id !== 'storage').map((f) => (
-        <group key={f.id} position={[f.x + (f.width - 1) / 2, 0, f.z + (f.depth - 1) / 2]}>
-          {f.kind === 'plant' ? (
-            <Plant at={[0, 0, 0]} />
-          ) : (
-            <>
-              <SoftBox at={[0, 0.54, 0]} size={[f.width, 0.98, f.depth]} radius={0.16} color={CAFE_COLORS.walnut} />
-              <SoftBox at={[0, 1.04, 0]} size={[f.width, 0.12, f.depth]} radius={0.059} color={CAFE_COLORS.sand} />
-              <Box at={[0, 0.065, 0]} size={[f.width - 0.08, 0.1, f.depth - 0.08]} color={CAFE_COLORS.charcoal} />
-            </>
-          )}
-        </group>
+      {FURNITURE.filter((f) => f.kind === 'plant').map((f) => (
+        <Plant key={f.id} at={[f.x + (f.width - 1) / 2, 0, f.z + (f.depth - 1) / 2]} />
+      ))}
+      {COUNTER_OUTLINES.map((outline) => (
+        <CounterRun key={outline.join(';')} outline={outline} />
       ))}
       {Object.entries(STATIONS).map(([id, station]) =>
         id === 'returns' || id === 'brewer' ? null : (
