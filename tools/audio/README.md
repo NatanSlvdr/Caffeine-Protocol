@@ -2,7 +2,7 @@
 
 `generate_audio.py` synthesizes every sound with the standard library only (no
 dependencies, no samples, so nothing to license): the `cafe_loop.wav` lo-fi
-jazz loop, the `cafe_room.wav` room tone mixed under it, and the soft `click`,
+jazz loop, the `cafe_room.wav` distant cups mixed under it, and the soft `click`,
 `retry`, `serve`, `success` and `pour` one-shots. It writes `assets/audio/`
 (the source of truth); `npm run audio:sync` copies the results plus the icon
 into `public/` for serving. The id list is shared with the build in

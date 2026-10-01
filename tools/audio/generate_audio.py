@@ -7,8 +7,8 @@ samples, so every sound is original and free of third-party licences.
   electric-piano chords, round bass, brushed drums, a sparse vibraphone line
   and a little vinyl crackle, all rolled off for warmth. Tails wrap around so
   the loop is seamless.
-- `cafe_room.wav`: a seamless café room tone (murmur, distant cups) mixed
-  under the music.
+- `cafe_room.wav`: distant cups and spoons now and then, mixed under the
+  music. No continuous noise bed: filtered noise read as a passing train.
 - `click`, `success`, `retry`, `serve`, `pour`: short, soft one-shots.
 
 Levels are deliberately low; the runtime fades the music in after a pause.
@@ -187,7 +187,7 @@ def render_music():
         add(drums, at(bar, 0), kick(1.0))
         add(drums, at(bar, 2.5 + SWING), kick(0.6))
         for beat in (1, 3):
-            add(drums, at(bar, beat), noise_burst(rng, 0.35, 13, 3200, rng.uniform(0.32, 0.4), attack=0.012))
+            add(drums, at(bar, beat), noise_burst(rng, 0.22, 24, 2600, rng.uniform(0.22, 0.28), attack=0.008))
         for eighth in range(8):
             beat = eighth / 2 + (SWING if eighth % 2 else 0)
             vel = 0.11 if eighth % 2 else 0.07
@@ -214,35 +214,13 @@ def render_music():
 ROOM_SECONDS = 24
 
 
-def loop_lfo(t, length, rng_terms):
-    """Smooth positive envelope built from sines that repeat exactly every `length` seconds."""
-    return sum(g * (0.5 + 0.5 * math.sin(TAU * k * t / length + p)) for k, g, p in rng_terms)
-
-
 def render_room():
     rng = random.Random(11)
     n = ROOM_SECONDS * RATE
     room = [0.0] * n
 
-    # Murmur: band-limited noise "voices" with syllable-rate and phrase-rate envelopes.
-    for _ in range(5):
-        raw = [rng.uniform(-1, 1) for _ in range(n)]
-        band = highpass(lowpass(raw, 900, passes=2), 220, wrap=True)
-        syllables = [(k, rng.uniform(0.3, 1), rng.uniform(0, TAU)) for k in rng.sample(range(70, 140), 3)]
-        phrases = [(k, rng.uniform(0.5, 1), rng.uniform(0, TAU)) for k in rng.sample(range(1, 6), 2)]
-        for i in range(n):
-            t = i / RATE
-            s = loop_lfo(t, ROOM_SECONDS, syllables) / 2.5
-            p = max(0.0, loop_lfo(t, ROOM_SECONDS, phrases) / 1.5 - 0.25)
-            room[i] += band[i] * s * p
-
-    # Low room tone.
-    rumble = lowpass([rng.uniform(-1, 1) for _ in range(n)], 120, passes=2)
-    for i in range(n):
-        room[i] += rumble[i] * 0.3
-
     # Distant cups and spoons now and then.
-    for _ in range(9):
+    for _ in range(7):
         start = rng.uniform(0, ROOM_SECONDS)
         add(room, start, clink(rng.uniform(1700, 2700), 0.5, rng.uniform(0.025, 0.05)))
         if rng.random() < 0.4:
@@ -319,7 +297,7 @@ def render_pour():
 
 if __name__ == '__main__':
     save('cafe_loop.wav', render_music(), 0.55)
-    save('cafe_room.wav', render_room(), 0.45)
+    save('cafe_room.wav', render_room(), 0.3)
     save('click.wav', render_click(), 0.32)
     save('success.wav', phrase([(72, 0.8), (76, 0.8), (79, 0.9), (84, 0.6)], 0.09, 1.1, marimba, 4000), 0.45)
     save('retry.wav', phrase([(69, 0.8), (65, 0.7)], 0.16, 0.8, marimba, 2200), 0.35)
