@@ -4,7 +4,7 @@ import { STARTS } from '../layout';
 import { moveQuery } from '../queryMovement';
 import { orderTotal } from '../pricing';
 import { BLOCK_SECONDS, INSTRUCTION_LIMIT } from '../constants';
-import { validate } from '../simulation';
+import { failureLine, validate } from '../simulation';
 import type {
   CustomerExecution,
   ExecutionEvent,
@@ -175,7 +175,7 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
       const failed = closing ? deps.events.at(-1)! : event;
       failed.passed = false;
       failed.reason = reason;
-      failed.failure_line = actual.error_line ?? actual.trace.at(-1)?.line ?? deps.program.error_line;
+      failed.failure_line = failureLine(reason, actual) ?? deps.program.error_line;
       state.queryNext = Infinity;
       return;
     }

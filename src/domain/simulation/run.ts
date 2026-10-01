@@ -15,7 +15,7 @@ import type {
 } from '../types';
 import { closingCall, createTicket } from '../tickets';
 import { executeCustomerEvent } from '../program';
-import { validate } from './validate';
+import { failureLine, validate } from './validate';
 
 const round = (n: number) => Math.round(n * 10) / 10;
 
@@ -82,18 +82,7 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
       if (seedInstructions > INSTRUCTION_LIMIT) actual.error = 'Instruction limit reached (10,000 per robot).';
       result.executed_instructions += actual.executed_instructions;
       const reason = validate(customer, actual);
-      let line = actual.error_line ?? -1;
-      if (reason && !actual.error) {
-        const prefix =
-          reason.includes('checkout') || reason.includes('payment')
-            ? 'DEPOSIT'
-            : reason.includes('item')
-              ? 'ITEM'
-              : reason.includes('sugar')
-                ? 'SUGAR'
-                : 'DEPOSIT';
-        line = actual.trace.findLast((s) => s.command.startsWith(prefix))?.line ?? line;
-      }
+      const line = reason ? (failureLine(reason, actual) ?? -1) : -1;
       const event: ReplayEvent = {
         payment: actual.payment,
         seed_id: seed.id,

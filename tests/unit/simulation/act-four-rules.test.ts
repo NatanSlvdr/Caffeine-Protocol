@@ -74,6 +74,12 @@ describe('To Go', () => {
     expect(reason(shift, { ...actThree(), ...withMarks })).toMatch(/is to go: put a lid on it first/);
     expect(reason(shift, { floor: actThree().floor })).toMatch(/is to go: it has no table/);
   });
+  it('points at the line that wrote the mark when it’s wrong', () => {
+    const query = referencePrograms(shift).query.replace('  IF togo IN item\n    WRITE togo\n  END', '  WRITE togo');
+    const failure = service({ query }, shift).first_failure;
+    expect(failure?.reason).toMatch(/but it says To go/);
+    expect(query.split('\n')[failure!.error_line!].trim()).toBe('WRITE togo');
+  });
   it('keeps lids off drinks that stay in', () => {
     const prep = referencePrograms(shift).prep.replace('IF togo IN CUSTOMER SPEECH\nTAKE UP\nEND', 'TAKE UP');
     expect(reason(shift, { prep })).toMatch(/is staying in: it doesn’t need a lid/);

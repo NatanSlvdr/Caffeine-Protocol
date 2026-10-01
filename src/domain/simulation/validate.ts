@@ -1,6 +1,7 @@
 /** Offline order validation against the expected tickets and payment. */
 import { CLOSING_TICKET_ERROR, ticketUnits } from '../tickets';
 import { orderTotal } from '../pricing';
+import { parseMarkWrite, parseSugarWrite } from '../program/vars';
 import type { Customer, CustomerExecution } from '../types';
 
 export function validate(customer: Customer, actual: CustomerExecution): string {
@@ -46,6 +47,32 @@ export function validate(customer: Customer, actual: CustomerExecution): string 
   if (actual.payment.amount !== orderTotal(actual.tickets) || actual.payment.ticketIds.length !== actual.tickets.length)
     return 'The payment doesn’t match the tickets Query handed over.';
   return '';
+}
+
+const isHandOver = (command: string) => command === 'SUBMIT' || command === 'DEPOSIT' || command.startsWith('DEPOSIT ');
+const writesItem = (command: string) =>
+  command === 'ITEM' || command.startsWith('ITEM ') || /^WRITE (coffee|tea|heard)$/.test(command);
+
+/** Which instruction each kind of slip comes from, so the editor can point at it. */
+const SLIP_SOURCES: [RegExp, (command: string) => boolean][] = [
+  [/checkout|payment/, isHandOver],
+  [/To go/, (command) => parseMarkWrite(command) === 'togo'],
+  [/Rush/, (command) => parseMarkWrite(command) === 'rush'],
+  [/sugar/, (command) => command.startsWith('SUGAR ') || parseSugarWrite(command) !== undefined],
+  [/item|ask for help|guess a drink/, writesItem],
+  [/asked for help on/, (command) => command === 'HELP'],
+  [/ticket/i, isHandOver],
+];
+
+/**
+ * The program line behind a failed order: the line that errored, else the instruction that wrote the slip
+ * (or the hand-over, when that never ran). Anything else points at whatever ran last.
+ */
+export function failureLine(reason: string, actual: CustomerExecution): number | undefined {
+  if (actual.error) return actual.error_line;
+  const last = (runs: (command: string) => boolean) => actual.trace.findLast((step) => runs(step.command))?.line;
+  const source = SLIP_SOURCES.find(([pattern]) => pattern.test(reason))?.[1];
+  return (source && (last(source) ?? last(isHandOver))) ?? actual.trace.at(-1)?.line;
 }
 
 /** “1 drink”, “2 drinks”, “0 sugars”. */
