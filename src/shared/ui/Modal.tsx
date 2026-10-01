@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ReactNode } from 'react';
+import type { MouseEvent, ReactNode } from 'react';
 import { X } from 'lucide-react';
 export function Modal({
   title,
@@ -19,6 +19,9 @@ export function Modal({
   className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
+  // Only a press that starts and ends on the backdrop closes the window: the dialog's own padding is
+  // also its target, and a text selection dragged out of the window ends on it too.
+  const pressedBackdrop = useRef(false);
   useEffect(() => {
     const dialog = ref.current,
       previous = document.activeElement;
@@ -37,8 +40,12 @@ export function Modal({
         e.preventDefault();
         onClose();
       }}
+      onPointerDown={(e) => {
+        pressedBackdrop.current = onBackdrop(e);
+      }}
       onClick={(e) => {
-        if (e.target === ref.current) onClose();
+        if (pressedBackdrop.current && onBackdrop(e)) onClose();
+        pressedBackdrop.current = false;
       }}
     >
       <div className="modal-top">
@@ -58,4 +65,11 @@ export function Modal({
       {children}
     </dialog>
   );
+}
+
+/** The backdrop is the dialog element itself, hit outside its box. */
+function onBackdrop(e: MouseEvent<HTMLDialogElement>): boolean {
+  if (e.target !== e.currentTarget) return false;
+  const box = e.currentTarget.getBoundingClientRect();
+  return e.clientX < box.left || e.clientX > box.right || e.clientY < box.top || e.clientY > box.bottom;
 }
