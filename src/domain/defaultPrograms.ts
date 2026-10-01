@@ -106,7 +106,7 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
     'DEPOSIT DOWN',
     ...movementSource(STATIONS.returns.floor, STARTS.floor, 'floor'),
   ];
-  const clearing = level >= UNLOCKS.floor;
+  const clearing = level >= UNLOCKS.clearing;
   if (rules.toGo || rules.cups || rules.rush || rules.closing) {
     // One drink at a time: rush orders never wait on the tray, and every table cup is cleared as it's served.
     if (batch !== 1) throw new Error('Porter handles the odd rules one drink at a time.');

@@ -1,6 +1,9 @@
 import { Pause, Play, Square } from 'lucide-react';
 import { BLOCK_SECONDS, MAX_PLAYBACK_SPEED } from '@/domain';
 
+/** The run shortcut's modifier as the player's keyboard labels it. */
+const RUN_MODIFIER = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
+
 export interface PlaybackToolbarProps {
   running: boolean;
   observation: boolean;
@@ -32,7 +35,7 @@ export function PlaybackToolbar({
       >
         {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}
         {running ? 'Stop & edit' : observation ? 'Watch service' : 'Run service'}
-        <kbd aria-hidden="true">{navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'} ↵</kbd>
+        <kbd aria-hidden="true">{RUN_MODIFIER} ↵</kbd>
       </button>
       <button aria-label={paused ? 'Resume playback' : 'Pause playback'} disabled={!pausable} onClick={onTogglePause}>
         {paused ? <Play size={15} /> : <Pause size={15} />} {paused ? 'Resume' : 'Pause'}

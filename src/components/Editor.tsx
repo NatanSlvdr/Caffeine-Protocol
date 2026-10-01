@@ -1,10 +1,11 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, useSensors } from '@dnd-kit/core';
 import {
   robotCommands,
   blockPrototypes,
   indentSource,
   placeBlock,
+  tabSource,
   DRAG_SCROLL_EDGE,
   DRAG_SCROLL_SPEED,
   type DraggedScope,
@@ -98,6 +99,23 @@ export function Editor({
       lastSlot,
     },
   );
+  // Tab indents in the text view; the cursor is put back once the new source has rendered.
+  const textInput = useRef<HTMLTextAreaElement>(null),
+    tabCursor = useRef<number | null>(null);
+  useLayoutEffect(() => {
+    if (tabCursor.current === null || !textInput.current) return;
+    textInput.current.setSelectionRange(tabCursor.current, tabCursor.current);
+    tabCursor.current = null;
+  }, [source]);
+  const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== 'Tab' || disabled || e.ctrlKey || e.metaKey || e.altKey) return;
+    e.preventDefault();
+    const { selectionStart, selectionEnd } = e.currentTarget;
+    const tabbed = tabSource(source, selectionStart, selectionEnd, e.shiftKey);
+    tabCursor.current = tabbed.cursor;
+    if (tabbed.source !== source) change(tabbed.source);
+    else e.currentTarget.setSelectionRange(tabbed.cursor, tabbed.cursor);
+  };
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
   const lines = source.split('\n');
 
@@ -145,7 +163,10 @@ export function Editor({
               <textarea
                 onClick={failureLine >= 0 ? onDismissFailure : undefined}
                 spellCheck={false}
+                ref={textInput}
                 aria-label="Program source"
+                aria-description="Tab indents, Shift+Tab outdents, Escape leaves the editor."
+                onKeyDown={onTextKey}
                 value={source}
                 onChange={(e) => change(e.target.value)}
                 readOnly={locked}

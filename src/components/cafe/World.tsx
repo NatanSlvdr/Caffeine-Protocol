@@ -24,6 +24,7 @@ import {
 import { Room } from './Room';
 import { Character } from './Character';
 import { CameraFit } from './CameraFit';
+import { Steam, machineSteaming } from './Steam';
 import { BREW, MOKA, NIKO, PIP, PORTER, QUERY, customerLook, type HumanLook, type RobotLook } from './looks';
 
 /** Each crew post is drawn as whoever holds it: the robot once it is unlocked, otherwise its human stand-in. */
@@ -145,6 +146,7 @@ export function World({
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}
                 walking={moving && actor.walking}
                 reach={actor.reach}
+                held={actor.inventory}
                 animate={moving}
                 phase={time}
                 reduced={reduced}
@@ -180,15 +182,6 @@ export function World({
                   />
                 </SceneHtml>
               )}
-              {actor.inventory.map((item, i) => (
-                <Cup
-                  key={item.ticketId}
-                  at={[actor.position[0] - 0.2 + i * 0.4, 1.2, actor.position[1] + 0.3]}
-                  tea={item.item === 'tea'}
-                  paper={item.table === 0 && item.stage !== 'dirty'}
-                  lid={item.lid}
-                />
-              ))}
             </group>
           ),
       )}
@@ -216,6 +209,31 @@ export function World({
           lid={drink.toGo}
         />
       ))}
+      {/* Fresh drinks steam on the pickup counter, and the machine steams while it brews or steeps. */}
+      {state?.pickup
+        .slice(0, 2)
+        .map(([id, drink], i) =>
+          drink.toGo ? null : (
+            <Steam
+              key={id}
+              at={[
+                STATIONS.pickup.cell[0] - 0.2 + i * 0.4,
+                drink.item === 'tea' ? 1.62 : 1.48,
+                STATIONS.pickup.cell[1],
+              ]}
+              phase={time}
+              reduced={reduced}
+            />
+          ),
+        )}
+      {state?.seed && machineSteaming(state.seed.events, state.local) && (
+        <Steam
+          at={[STATIONS.brewer.cell[0] - 0.4, 1.4, STATIONS.brewer.cell[1] + 0.3]}
+          phase={time}
+          reduced={reduced}
+          height={0.7}
+        />
+      )}
       {state?.tableDrinks.map((drink, index) => (
         <Cup
           key={drink.id}

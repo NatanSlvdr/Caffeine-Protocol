@@ -138,6 +138,14 @@ describe('reactions', () => {
     expect(niko.text).toContain('Wrong item');
   });
 
+  it('explains why the common Query and robot mistakes matter', () => {
+    const niko = (reason: string) => failureLines(failure(reason, { role: 'query' }), 'query')[1].text;
+    expect(niko('Query stopped listening. Jump back to Wait for Orders after serving.')).toContain('next one');
+    expect(niko('The submitted order has too few items.')).toContain('every drink they named');
+    expect(niko('This order is unclear. Use Help before taking paper.')).toContain('Guessing');
+    expect(niko('Wait for dirty cups before collecting one.')).toContain('job it has been handed');
+    expect(niko('This shift requires carrying 2 items together.')).toContain('Fill both hands');
+  });
   it('lets the stuck robot speak for itself', () => {
     const [robot] = failureLines(failure('Something odd happened.', { role: 'prep' }), 'query');
     expect(robot.who).toBe('brew');
@@ -152,5 +160,7 @@ describe('reactions', () => {
     expect(robot.who).toBe('brew');
     expect(niko.text).toContain('Three stars');
     expect(successLines({ ...passed, observation: true }, 'query', 0)).toHaveLength(1);
+    expect(successLines({ ...passed, stars: 1 }, 'query', 0)[1].text).toContain('fewer blocks');
+    expect(successLines({ ...passed, stars: 2 }, 'query', 0)[1].text).toContain('fewer steps');
   });
 });

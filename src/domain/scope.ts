@@ -68,3 +68,17 @@ export function indentSource(source: string): string {
     })
     .join('\n');
 }
+
+/**
+ * Tab in the text editor: indent at the cursor, or with Shift take one level off the cursor's line.
+ * Returns the new source and where the cursor lands.
+ */
+export function tabSource(source: string, start: number, end: number, outdent: boolean) {
+  if (!outdent) return { source: source.slice(0, start) + '  ' + source.slice(end), cursor: start + 2 };
+  const lineStart = source.lastIndexOf('\n', start - 1) + 1;
+  const removed = /^ {0,2}/.exec(source.slice(lineStart))![0].length;
+  return {
+    source: source.slice(0, lineStart) + source.slice(lineStart + removed),
+    cursor: Math.max(lineStart, start - removed),
+  };
+}

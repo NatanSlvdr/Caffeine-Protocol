@@ -14,6 +14,7 @@ const defaultSettings: Settings = {
   effects: 0.65,
   reduced_motion: false,
   pixel_art: true,
+  text_editor: false,
   fullscreen: false,
 };
 export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSave => ({

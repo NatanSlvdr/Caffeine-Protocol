@@ -5,7 +5,7 @@ import { Html } from '@react-three/drei';
 import { RobotModel } from './RobotModel';
 import { HumanModel } from './HumanModel';
 import type { HumanLook, RobotLook } from './looks';
-import type { Point } from '@/domain';
+import type { Cargo, Point } from '@/domain';
 
 /** Smooth heading changes, hinged walking legs, and a seated sipping pose share replay time. */
 export function Character({
@@ -22,6 +22,7 @@ export function Character({
   tea = false,
   paper = false,
   reach = 0,
+  held = [],
 }: {
   at: Point;
   /** A crew robot or a person, drawn after their portrait. */
@@ -38,6 +39,8 @@ export function Character({
   /** The drink is take-away, in a paper cup with a lid. */
   paper?: boolean;
   reach?: number;
+  /** Carried cargo, drawn in the hands so it turns and walks with the character. */
+  held?: readonly Cargo[];
 }) {
   const ref = useRef<Group>(null),
     initialFacing = useRef(facing);
@@ -53,7 +56,7 @@ export function Character({
     <group position={[at[0], bob, at[1]]}>
       <group ref={ref} rotation-y={initialFacing.current}>
         {'robot' in look ? (
-          <RobotModel look={look.robot} stride={stride} reach={reduced ? 0 : reach} />
+          <RobotModel look={look.robot} stride={stride} reach={reduced ? 0 : reach} held={held} />
         ) : (
           <HumanModel
             look={look.human}
@@ -63,6 +66,8 @@ export function Character({
             drinking={drinking}
             tea={tea}
             paper={paper}
+            held={held}
+            reach={reduced ? 0 : reach}
           />
         )}
       </group>

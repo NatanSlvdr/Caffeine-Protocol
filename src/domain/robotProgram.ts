@@ -57,7 +57,7 @@ function prepCommands(level: number): string[] {
     ...(level >= UNLOCKS.functions ? ['FUNCTION recipe', 'CALL recipe', 'RETURN'] : []),
   ];
 }
-/** Porter reads each order's table into memory and walks there by itself; it also clears dirty cups. */
+/** Porter reads each order's table into memory and walks there by itself; from its second shift it also clears dirty cups. */
 function floorCommands(level: number): string[] {
   return [
     ...sharedCommands('DOWN', 'UP', level),
@@ -66,10 +66,9 @@ function floorCommands(level: number): string[] {
     'STORE var1 FROM here',
     'FUNCTION deliver',
     'CALL deliver',
-    'FUNCTION clear',
-    'CALL clear',
+    ...(level >= UNLOCKS.clearing ? ['FUNCTION clear', 'CALL clear'] : []),
     'RETURN',
-    ...(level >= UNLOCKS.floor ? ['WAIT DIRTY'] : []),
+    ...(level >= UNLOCKS.clearing ? ['WAIT DIRTY'] : []),
   ];
 }
 /** Where each robot's Store can read from. */

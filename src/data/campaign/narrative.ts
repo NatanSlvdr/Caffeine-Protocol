@@ -147,7 +147,8 @@ export const campaignNarrative: ShiftNarrative[] = [
   {
     level: 14,
     title: 'Special Delivery',
-    story: 'Meet Porter, the brand-new floor robot. Pip points at a finished drink and the guest waiting for it.',
+    story:
+      'Meet Porter, the brand-new floor robot. Pip points at a finished drink and the guest waiting for it, and keeps clearing the tables, just for today.',
     objective:
       'Finished drinks wait at pickup, and each ticket names the table that ordered it. Porter walks off without reading it.',
     hint: 'The ticket names the table.',
@@ -158,9 +159,9 @@ export const campaignNarrative: ShiftNarrative[] = [
     level: 15,
     title: 'Cups and Robbers',
     story:
-      'Happy guests leave their empty cups behind. A clean table is the next guest’s first impression, so round them up.',
+      'Pip is buried in homework, so the empty cups are Porter’s job now. A clean table is the next guest’s first impression.',
     objective:
-      'Guests leave empty cups on their tables, and Porter walks up to them without picking them up. They need to go back to the sink before new guests arrive.',
+      'Guests leave their empty cups behind, and Porter only knows how to deliver. Every used cup has to go back to the sink before the next guest can sit down.',
     hint: 'Empty cups go to the sink.',
     lessonNote:
       'Wait for Dirty cups picks a used cup. Walk to its table, Take it up, then carry it to the sink and Deposit down.',
@@ -222,7 +223,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     title: 'Espresso Yourself',
     story: 'The busiest day yet. Niko sits down with a coffee and trusts the whole team with the room.',
     objective:
-      'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, deliveries, and clearing. Every guest must be served and every table cleared.',
+      'The final service combines everything: group orders, coffee and tea, sugar, unclear requests, drinks to go, only four cups, customers in a rush, and closing time. Every guest must be served, every table cleared, and every robot stopped.',
     hint: 'Everything, all at once.',
     lessonNote:
       'Everything at once: groups, “the usual”, take-away orders, four cups, customers in a rush, and closing time.',
