@@ -18,6 +18,7 @@ describe('shift entry navigation', () => {
     expect(document.querySelector('.app-header')).toBeNull();
     // Whose café is it? Lou’s, until the story says otherwise.
     expect(screen.getByText('Lou’s · A cozy coding adventure')).toBeTruthy();
+    expect(screen.getByText('Doors open soon')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Choose a shift' }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));

@@ -25,7 +25,8 @@ export function HomePage() {
             <em>Protocol</em>
           </h1>
           <p className="front-tagline">
-            A little café, a secondhand robot, and a fresh start. Teach Query one thoughtful routine at a time.
+            A little café, a secondhand robot, and a fresh start. Teach Query one thoughtful routine at a time, until
+            the café runs itself.
           </p>
           <div className="front-actions">
             <Button variant="primary" className="front-start" onClick={() => go('/campaign')}>
@@ -56,7 +57,9 @@ export function HomePage() {
               </span>
             </p>
             <span className="front-barcode" aria-hidden="true" />
-            <small>{progress.done > 0 ? 'Welcome back' : 'Doors open soon'}</small>
+            <small>
+              {save.complete ? 'Under new management' : progress.done > 0 ? 'Welcome back' : 'Doors open soon'}
+            </small>
           </footer>
         </article>
       </section>
