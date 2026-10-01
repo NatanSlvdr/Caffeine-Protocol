@@ -879,7 +879,9 @@ export function* streamService(
       };
     } else if (a === 'COLLECT') {
       if (!w.job || w.job.dirtyAt > now) {
-        fail(w, 'Wait for dirty cups before collecting one.');
+        // Holding a drink's job, or before Porter clears tables, a Take at a table is just the wrong place.
+        const drinkJob = w.job?.dirtyAt === Infinity;
+        fail(w, drinkJob || !config.clearing ? handMiss(w, c) : 'Wait for dirty cups before collecting one.');
         return false;
       }
       if (hand.table !== w.job.table) {

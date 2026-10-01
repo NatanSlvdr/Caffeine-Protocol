@@ -145,6 +145,12 @@ describe('recipes, handoffs, and capacities', () => {
     expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
     expect(r.first_failure?.role).toBe('prep');
   });
+  it('sends Porter back to the pickup, not to a block it has not met, when it takes from a table', () => {
+    // Without walking back after serving, the next Take down lands on the table. Wait for Dirty cups comes later.
+    const floor = referencePrograms(UNLOCKS.floor).floor.replace(/\n\s*MOVE var2/, '');
+    const r = service({ floor }, UNLOCKS.floor);
+    expect(r.first_failure?.reason).toMatch(/^Move to the drink pickup first/);
+  });
   it('blames the robot holding an undelivered drink, not the one waiting for work', () => {
     // Without Call deliver, Porter takes a drink down and goes straight to clearing cups that never come.
     const floor = referencePrograms(UNLOCKS.clearing).floor.replace('\nCALL deliver', '');
