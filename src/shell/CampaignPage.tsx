@@ -232,12 +232,24 @@ export function CampaignPage() {
                 ) : (
                   <>
                     <div>
-                      <dt>★★</dt>
-                      <dd>≤ {level.block_target} blocks</dd>
+                      <dt>
+                        <span aria-hidden="true">★★</span>
+                        <span className="sr-only">Two stars</span>
+                      </dt>
+                      <dd>
+                        <span aria-hidden="true">≤ {level.block_target} blocks</span>
+                        <span className="sr-only">{level.block_target} blocks or fewer</span>
+                      </dd>
                     </div>
                     <div>
-                      <dt>★★★</dt>
-                      <dd>≤ {level.instruction_target} steps</dd>
+                      <dt>
+                        <span aria-hidden="true">★★★</span>
+                        <span className="sr-only">Three stars</span>
+                      </dt>
+                      <dd>
+                        <span aria-hidden="true">≤ {level.instruction_target} steps</span>
+                        <span className="sr-only">{level.instruction_target} steps or fewer</span>
+                      </dd>
                     </div>
                   </>
                 )}
@@ -269,7 +281,14 @@ export function CampaignPage() {
                 onClick={() => start(selected)}
                 disabled={ordering !== null}
               >
-                <Play size={17} fill="currentColor" /> {ordering !== null ? 'Order up…' : 'Start shift'}
+                <Play size={17} fill="currentColor" />{' '}
+                {ordering !== null
+                  ? 'Order up…'
+                  : isComplete(selected)
+                    ? observation
+                      ? 'Watch again'
+                      : 'Serve again'
+                    : 'Start shift'}
               </Button>
               <p className="board-hint" aria-hidden="true">
                 <kbd>←</kbd> <kbd>→</kbd> browse · double-click to start

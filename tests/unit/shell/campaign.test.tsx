@@ -61,6 +61,16 @@ describe('campaign order rail', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/shift/3'));
   });
 
+  it('offers a served shift again and reads its star targets in words', async () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 1, stars: { 0: 0, 1: 3 } }));
+    const board = within(screen.getByRole('complementary', { name: 'Selected shift' }));
+    expect(board.getByText('Two stars')).toBeTruthy();
+    expect(board.getByText(`${levels[1].block_target} blocks or fewer`)).toBeTruthy();
+    expect(board.getByText(`${levels[1].instruction_target} steps or fewer`)).toBeTruthy();
+    fireEvent.click(board.getByRole('button', { name: 'Serve again' }));
+    await waitFor(() => expect(window.location.hash).toBe('#/shift/2'));
+  });
+
   it('leaves arrows to editable fields and modified shortcuts', () => {
     openCampaign(makeSave({ unlocked: 2, selected: 0 }));
     const field = document.createElement('div');
