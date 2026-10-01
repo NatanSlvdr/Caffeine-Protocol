@@ -1,7 +1,10 @@
 import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain';
 import { blockFields, cargoLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
+import type { CastId } from '@/domain/dialogue';
+import { cast } from '@/data/campaign/cast';
 import { Coffee, Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
+import { BubbleTail } from '../BubbleTail';
 import { robotIcons } from '../RobotChoice';
 import { category } from '../editor/blockMeta';
 import { OperandIcon } from '../OperandIcon';
@@ -10,9 +13,16 @@ import { OrderMarks } from '../OrderIcons';
 import { AutoHeight } from '@/shared/ui/AutoHeight';
 import { HoldingIcon } from './HoldingIcon';
 
+/** Ink or paper, whichever reads better on a pill of this colour. */
+function pillInk(hex: string) {
+  const [r, g, b] = [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b > 140 ? '#392b24' : '#fffcf4';
+}
+
 /**
- * Show waiting and physical actions, with a shared thinking state for control flow. The bubble is
- * headed in its robot's colour, and the action wears the colour of the code block running.
+ * Show waiting and physical actions, with a shared thinking state for control flow. The bubble is a
+ * comic speech bubble under a name pill in the speaker's cutscene colour, and the action wears the
+ * colour of the code block running.
  */
 export function RobotHolding({
   name,
@@ -25,7 +35,7 @@ export function RobotHolding({
   reduced = false,
 }: {
   name: string;
-  /** Crew post, for the name tab's colour. */
+  /** Crew post, for the name pill's icon. */
   crew?: string;
   inventory: Cargo[];
   paper?: OrderTicket;
@@ -70,16 +80,21 @@ export function RobotHolding({
     : '';
   // Robots carry their selector icon; Niko, covering the counter, carries a cup.
   const CrewIcon = (crew && robotIcons[crew as keyof typeof robotIcons]) || Coffee;
+  const color = cast[name.toLowerCase() as CastId]?.color ?? '#ecd29b';
   return (
     <AutoHeight
-      className={`robot-holding${crew ? ` crew-${crew}` : ''}`}
+      className="robot-holding"
       contentClassName="robot-holding-content"
       label={`${name} is holding`}
       paused={paused}
       reduced={reduced}
-      extraHeight={10}
+      extraHeight={25}
     >
-      <span className="robot-name" aria-hidden="true">
+      <span
+        className="robot-name bubble-pill"
+        aria-hidden="true"
+        style={{ '--pill': color, '--pill-ink': pillInk(color) } as React.CSSProperties}
+      >
         <CrewIcon strokeWidth={2.2} />
         {name}
       </span>
@@ -160,6 +175,7 @@ export function RobotHolding({
           ))}
         </div>
       )}
+      <BubbleTail />
     </AutoHeight>
   );
 }

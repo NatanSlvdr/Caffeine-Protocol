@@ -91,9 +91,9 @@ it('shows action, inventory with sugar cubes, and compact memory in order', () =
   const bubble = screen.getByLabelText('Brew is holding');
   expect(
     Array.from(bubble.querySelector('.robot-holding-content')!.children).map(
-      (child) => child.className || child.tagName,
+      (child) => child.getAttribute('class') || child.tagName,
     ),
-  ).toEqual(['robot-name', 'robot-action motion', 'UL', 'robot-memory']);
+  ).toEqual(['robot-name bubble-pill', 'robot-action motion', 'UL', 'robot-memory', 'bubble-tail']);
   expect(screen.getByLabelText('Brew inventory').querySelector('.holding-sugar .model-sugar')).toBeTruthy();
 });
 
@@ -131,7 +131,7 @@ it('animates bubble height without changing its width or remounting the shell', 
   );
   const bubble = screen.getByLabelText('Query is holding');
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('100px');
+  expect(bubble.style.height).toBe('115px');
   bounds = { width: 150, height: 140 };
   rerender(
     <RobotHolding
@@ -144,12 +144,12 @@ it('animates bubble height without changing its width or remounting the shell', 
   act(() => resize?.());
   expect(screen.getByLabelText('Query is holding')).toBe(bubble);
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('150px');
+  expect(bubble.style.height).toBe('165px');
   bounds = { width: 50, height: 20 };
   rerender(<RobotHolding name="Query" inventory={[]} variables={{ var1: 2 }} />);
   act(() => resize?.());
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('30px');
+  expect(bubble.style.height).toBe('45px');
   unmount();
   expect(disconnect).toHaveBeenCalledOnce();
 });
@@ -162,7 +162,7 @@ it.each([
   expect(screen.getByText(label)).toBeTruthy();
 });
 
-it('names the robot on a tab in its crew colour and tints the action like its code block', () => {
+it('names the robot on a pill in its cutscene colour and tints the action like its code block', () => {
   render(
     <RobotHolding
       name="Brew"
@@ -171,9 +171,12 @@ it('names the robot on a tab in its crew colour and tints the action like its co
       action={{ command: 'STORE var1 FROM number', start: 0, progress: 0.25 }}
     />,
   );
-  expect(screen.getByLabelText('Brew is holding').classList).toContain('crew-prep');
-  expect(document.querySelector('.robot-name')?.textContent).toBe('Brew');
-  expect(document.querySelector('.robot-name .lucide-chef-hat')).toBeTruthy();
+  const pill = document.querySelector<HTMLElement>('.robot-name')!;
+  expect(pill.textContent).toBe('Brew');
+  expect(pill.querySelector('.lucide-chef-hat')).toBeTruthy();
+  expect(pill.style.getPropertyValue('--pill')).toBe('#7d9eae');
+  expect(pill.style.getPropertyValue('--pill-ink')).toBe('#392b24');
+  expect(screen.getByLabelText('Brew is holding').querySelector('.bubble-tail')).toBeTruthy();
   expect(document.querySelector('.robot-action')?.classList).toContain('function');
   expect(document.querySelector<HTMLElement>('.robot-action-progress')?.style.getPropertyValue('--progress')).toBe(
     '0.25',

@@ -1,5 +1,6 @@
 import type { Customer } from '@/domain';
 import { heardToIconOrders } from '@/domain';
+import { BubbleTail } from './BubbleTail';
 import { OrderIcons } from './OrderIcons';
 
 /** Once intake begins, the customer's phrase and grouped order icons stay attached. */
@@ -19,6 +20,7 @@ export function CustomerSpeech({
       <blockquote>“{customer.phrase}”</blockquote>
       {clarified && <small>Niko: {customer.clarification || 'No clarification available.'}</small>}
       <OrderIcons orders={heardToIconOrders(heard)} label="Heard orders" />
+      <BubbleTail />
     </div>
   );
 }
