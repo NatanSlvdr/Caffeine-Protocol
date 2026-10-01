@@ -82,7 +82,9 @@ export function Ticket({
         aria-label={
           sealed
             ? `${act.kicker}, locked until ${unlockedBy} is served`
-            : `${act.kicker} · ${act.crew}, ${served} of ${shifts.length} served`
+            : `${act.kicker} · ${act.crew}, ${served} of ${shifts.length} served${
+                rated > 0 ? `, ${earned} of ${rated * 3} stars` : ''
+              }`
         }
         onClick={onOpen}
       >
@@ -132,15 +134,17 @@ export function Ticket({
                 onDoubleClick={() => onStart(shift)}
                 // The marks beside the name are visual only, so the label carries the same status.
                 aria-label={`Shift ${shift + 1}: ${titles[shift]}${
-                  locked
-                    ? ', locked'
-                    : !done
-                      ? shift === unlocked
-                        ? ', next up'
-                        : ''
-                      : !isRated(shift)
-                        ? ', served'
-                        : `, ${stars[shift]} of 3 stars`
+                  shift === gated
+                    ? `, opens after ${sceneBefore(shift)?.title}`
+                    : locked
+                      ? ', locked'
+                      : !done
+                        ? shift === unlocked
+                          ? ', next up'
+                          : ''
+                        : !isRated(shift)
+                          ? ', served'
+                          : `, ${stars[shift]} of 3 stars`
                 }`}
                 aria-pressed={!locked && selected === shift}
                 title={titles[shift]}

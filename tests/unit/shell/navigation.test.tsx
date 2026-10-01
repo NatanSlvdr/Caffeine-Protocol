@@ -114,7 +114,7 @@ describe('shift entry navigation', () => {
     window.location.hash = '#/campaign';
     render(<App />);
     expect(screen.getByRole('button', { name: 'Scene: The Keys, next up' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /^Shift 1: .*, locked$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Shift 1: .*, opens after The Keys$/ })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /^Shift 2:/ })).toBeNull();
   });
 

@@ -102,6 +102,8 @@ describe('campaign order rail', () => {
     fireEvent.click(screen.getByRole('button', { name: /Act I · Query/ }));
     expect(scrollTo).toHaveBeenCalledWith({ left: 149, behavior: 'auto' });
     expect(screen.getByRole('button', { name: /Act I · Query/ }).getAttribute('aria-current')).toBe('step');
+    // The ticket's foot is drawn only, so its head carries the act's tally aloud.
+    expect(screen.getByRole('button', { name: /^Act I · Query, 1 of \d+ served, 0 of \d+ stars$/ })).toBeTruthy();
     expect(document.querySelector('.campaign-page.still')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Start shift' }));
     expect(window.location.hash).toBe('#/shift/3');
@@ -129,7 +131,9 @@ describe('campaign order rail', () => {
   it('holds the next shift behind its scene until the scene is watched', () => {
     openCampaign(makeSave({ unlocked: 1, selected: 1, stars: { 0: 0 }, story: { 0: true } }));
     expect(selectedShift().getAttribute('aria-label')).toBe('Scene: The Scrapyard, next up');
-    expect(screen.getByRole('button', { name: /^Shift 2: .*, locked$/ }).hasAttribute('disabled')).toBe(true);
+    expect(
+      screen.getByRole('button', { name: /^Shift 2: .*, opens after The Scrapyard$/ }).hasAttribute('disabled'),
+    ).toBe(true);
     expect(screen.getByRole('button', { name: 'Scene: The Keys, seen' })).toBeTruthy();
     const board = within(screen.getByRole('complementary', { name: 'Selected scene' }));
     expect(board.getByRole('heading', { name: 'The Scrapyard' })).toBeTruthy();
