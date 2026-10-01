@@ -3,7 +3,6 @@ import { AudioService, MUSIC_DELAY, MUSIC_FADE_IN } from '../../../src/shared/li
 import type { Settings } from '../../../src/domain';
 
 const settings: Settings = {
-  volume: 0.5,
   music: 0.4,
   reduced_motion: false,
   pixel_art: true,
@@ -114,15 +113,15 @@ describe('AudioService', () => {
     ]);
   });
 
-  it('follows the master and music sliders', async () => {
+  it('follows the music slider', async () => {
     const audio = new AudioService();
     audio.configure(settings);
     audio.start();
     await flush();
     const ctx = FakeContext.last!;
-    expect(ctx.gains).toHaveLength(3);
-    const [master, , music] = ctx.gains;
-    expect([master.gain.value, music.gain.value]).toEqual([0.5, 0.4]);
+    expect(ctx.gains).toHaveLength(2);
+    const [, music] = ctx.gains;
+    expect(music.gain.value).toBe(0.4);
     audio.configure({ ...settings, music: 0 });
     expect(music.gain.value).toBe(0);
   });
@@ -139,7 +138,7 @@ describe('AudioService', () => {
     hidden.mockReturnValue(false);
     document.dispatchEvent(new Event('visibilitychange'));
     expect(ctx.suspended).toBe(false);
-    const fade = ctx.gains[1];
+    const [fade] = ctx.gains;
     expect(fade.gain.calls.at(-1)?.[0]).toBe('ramp');
     hidden.mockRestore();
   });

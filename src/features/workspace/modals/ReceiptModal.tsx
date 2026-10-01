@@ -1,7 +1,7 @@
 import { ArrowRight } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import type { LevelDefinition, RunResult } from '@/domain';
+import { count, type LevelDefinition, type RunResult } from '@/domain';
 import { pad2, starRow } from '@/shared/lib/format';
 
 export interface ReceiptModalProps {
@@ -38,9 +38,9 @@ export function ReceiptModal({
     observation || best === undefined
       ? ''
       : result.stars > best
-        ? `New best, up from ${stars(best)}!`
+        ? `New best, up from ${count(best, 'star')}!`
         : result.stars < best
-          ? `Your best stays at ${stars(best)}.`
+          ? `Your best stays at ${count(best, 'star')}.`
           : '';
   return (
     <Modal
@@ -113,8 +113,6 @@ export function ReceiptModal({
     </Modal>
   );
 }
-
-const stars = (n: number) => `${n} ${n === 1 ? 'star' : 'stars'}`;
 
 /** The ✓ on a met total is drawn in CSS, so screen readers hear the verdict here instead. */
 function TargetMet({ met }: { met: boolean }) {

@@ -161,7 +161,7 @@ export interface RunResult {
   first_failure: RunFailure | null;
 }
 export interface Settings {
-  volume: number;
+  /** The café soundtrack's loudness, the game's only sound. */
   music: number;
   reduced_motion: boolean;
   pixel_art: boolean;

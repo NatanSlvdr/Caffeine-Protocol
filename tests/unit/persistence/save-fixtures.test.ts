@@ -41,10 +41,10 @@ describe('historical save fixtures', () => {
     expect(migrated.selected).toBe(5);
     expect(migrated.unlocked).toBe(6);
     expect(migrated.complete).toBe(false);
-    // Settings preserved; pre-display-option saves default pixel_art on, and the retired effects volume is dropped.
+    // Settings preserved; pre-display-option saves default pixel_art on, the retired effects volume is
+    // dropped, and the old master volume folds into the music (0.6 × 0.55).
     expect(migrated.settings).toEqual({
-      volume: 0.6,
-      music: 0.55,
+      music: 0.33,
       reduced_motion: false,
       pixel_art: true,
       text_editor: false,
@@ -84,10 +84,10 @@ describe('historical save fixtures', () => {
     expect(migrated.selected).toBe(13);
     expect(migrated.unlocked).toBe(13);
     expect(migrated.complete).toBe(false);
-    // Settings preserved (v2 already had pixel_art); the retired effects volume is dropped.
+    // Settings preserved (v2 already had pixel_art); the retired effects volume is dropped, and the
+    // old master volume folds into the music (0.6 × 0.4).
     expect(migrated.settings).toEqual({
-      volume: 0.6,
-      music: 0.4,
+      music: 0.24,
       reduced_motion: true,
       pixel_art: true,
       text_editor: false,

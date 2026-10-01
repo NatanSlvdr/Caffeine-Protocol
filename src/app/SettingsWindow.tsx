@@ -5,14 +5,9 @@ import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
-import type { ProgressSave } from '@/domain';
+import { count, type ProgressSave } from '@/domain';
 import { download } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
-
-const volumes = [
-  { key: 'volume', name: 'Master volume', label: 'Master volume' },
-  { key: 'music', name: 'Music', label: 'Music volume' },
-] as const;
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
@@ -56,23 +51,21 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <h3>
               <Volume2 size={16} /> Sound
             </h3>
-            {volumes.map(({ key, name, label }) => (
-              <label className="settings-volume" key={key}>
-                <span>
-                  {name}
-                  <strong>{Math.round(settings[key] * 100)}%</strong>
-                </span>
-                <input
-                  aria-label={label}
-                  type="range"
-                  min="0"
-                  max="1"
-                  step=".01"
-                  value={settings[key]}
-                  onChange={(e) => setting(key, Number(e.target.value))}
-                />
-              </label>
-            ))}
+            <label className="settings-volume">
+              <span>
+                Music
+                <strong>{Math.round(settings.music * 100)}%</strong>
+              </span>
+              <input
+                aria-label="Music volume"
+                type="range"
+                min="0"
+                max="1"
+                step=".01"
+                value={settings.music}
+                onChange={(e) => setting('music', Number(e.target.value))}
+              />
+            </label>
           </section>
           <section className="settings-block">
             <h3>
@@ -185,8 +178,9 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
           onClose={() => setPending(null)}
         >
           <p>
-            This export contains {Object.keys(pending.stars).length} completed shifts and {starTotal(pending.stars)}{' '}
-            stars. Importing it will replace your current progress, programs and settings.
+            This export contains {count(Object.keys(pending.stars).length, 'completed shift')} and{' '}
+            {count(starTotal(pending.stars), 'star')}. Importing it will replace your current progress, programs and
+            settings.
           </p>
           <div className="modal-buttons">
             <button className="settings-chip" onClick={() => setPending(null)}>

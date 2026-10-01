@@ -73,5 +73,5 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page.getByRole('button', { name: 'Start a new café', exact: true }).click();
   await page.getByRole('button', { name: 'Start new café', exact: true }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expect(page.getByRole('slider', { name: 'Music volume', exact: true })).toHaveValue('0.55');
+  await expect(page.getByRole('slider', { name: 'Music volume', exact: true })).toHaveValue('0.33');
 });

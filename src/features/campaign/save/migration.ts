@@ -94,17 +94,17 @@ function validateMaps(v: Record<string, unknown>, shifts: number): void {
 function validateSettingsMap(v: Record<string, unknown>): Settings {
   const settings = v.settings;
   if (!isRecord(settings)) throw new Error('Missing settings.');
-  for (const k of ['volume', 'music']) {
-    const n = settings[k];
-    if (typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > 1) throw new Error('Invalid audio setting.');
-  }
+  const level = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1;
+  if (!level(settings.music) || (settings.volume !== undefined && !level(settings.volume)))
+    throw new Error('Invalid audio setting.');
+  // Older saves kept a master volume over the music; with music the only sound, the two fold into one.
+  const music = Math.round((settings.music as number) * ((settings.volume as number | undefined) ?? 1) * 100) / 100;
   for (const k of ['reduced_motion', 'fullscreen'])
     if (typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
   for (const k of ['pixel_art', 'text_editor'])
     if (settings[k] !== undefined && typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
   return {
-    volume: settings.volume as number,
-    music: settings.music as number,
+    music,
     reduced_motion: settings.reduced_motion as boolean,
     pixel_art: (settings.pixel_art as boolean | undefined) ?? true,
     text_editor: (settings.text_editor as boolean | undefined) ?? false,

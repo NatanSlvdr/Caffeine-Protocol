@@ -30,7 +30,6 @@ function audioContextCtor(): AudioContextCtor | undefined {
 export class AudioService {
   private settings?: Settings;
   private ctx?: AudioContext;
-  private master?: GainNode;
   private music?: GainNode;
   /** Fades the music in and out (launch, tab hidden) independently of the sliders. */
   private loopFade?: GainNode;
@@ -38,7 +37,7 @@ export class AudioService {
 
   configure(next: Settings): void {
     this.settings = next;
-    this.applyVolumes();
+    this.applyVolume();
   }
 
   start(): void {
@@ -48,14 +47,12 @@ export class AudioService {
     this.started = true;
     const ctx = new Ctor();
     this.ctx = ctx;
-    this.master = ctx.createGain();
-    this.master.connect(ctx.destination);
     this.loopFade = ctx.createGain();
     this.loopFade.gain.value = 0;
-    this.loopFade.connect(this.master);
+    this.loopFade.connect(ctx.destination);
     this.music = ctx.createGain();
     this.music.connect(this.loopFade);
-    this.applyVolumes(true);
+    this.applyVolume(true);
     void ctx.resume?.();
     void this.startMusic();
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -86,16 +83,11 @@ export class AudioService {
     }
   }
 
-  private applyVolumes(immediate = false): void {
-    const { ctx, settings } = this;
-    if (!ctx || !settings) return;
-    const set = (node: GainNode | undefined, value: number) => {
-      if (!node) return;
-      if (immediate) node.gain.value = value;
-      else node.gain.setTargetAtTime(value, ctx.currentTime, VOLUME_SMOOTHING);
-    };
-    set(this.master, settings.volume);
-    set(this.music, settings.music);
+  private applyVolume(immediate = false): void {
+    const { ctx, music, settings } = this;
+    if (!ctx || !music || !settings) return;
+    if (immediate) music.gain.value = settings.music;
+    else music.gain.setTargetAtTime(settings.music, ctx.currentTime, VOLUME_SMOOTHING);
   }
 
   /** Hush the café while the tab is hidden; ease back in when it returns. */
