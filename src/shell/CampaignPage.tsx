@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import { CircleHelp, Clapperboard, Play } from 'lucide-react';
-import { playSound } from '@/audio';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { narrativeFor } from '@/data/campaign/narrative';
@@ -127,7 +126,6 @@ export function CampaignPage() {
     }
     if (index !== selected) select(index);
     setOrdering(index);
-    playSound('click');
     orderTimer.current = window.setTimeout(() => launch(index), ORDER_UP_MS);
   };
 

@@ -42,21 +42,10 @@ export interface WorkspaceProps {
   nextShift?: string;
   onNext: () => void;
   onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
-  onSound: (passed: boolean) => void;
 }
 
 /** Shift workspace layout: scene panel, editor panel, playback, and modals. Run state lives in useLiveRun. */
-export function Workspace({
-  index,
-  save,
-  update,
-  lessons,
-  shift,
-  nextShift,
-  onNext,
-  onComplete,
-  onSound,
-}: WorkspaceProps) {
+export function Workspace({ index, save, update, lessons, shift, nextShift, onNext, onComplete }: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
@@ -79,7 +68,6 @@ export function Workspace({
     onFinish: (passed) => {
       if (passed) setWrapUp(true);
       else setScene('failure');
-      onSound(passed);
     },
   });
   const {

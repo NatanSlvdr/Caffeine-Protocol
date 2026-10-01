@@ -7,7 +7,7 @@ import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
 import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
-import { configureAudio, playSound, startAudio } from '@/audio';
+import { configureAudio, startAudio } from '@/audio';
 import { go } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
 
@@ -55,10 +55,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     document.documentElement.dataset.motion = save.settings.reduced_motion ? 'reduced' : 'full';
   }, [save, recovery]);
   useEffect(() => {
-    const gesture = (e: Event) => {
-      startAudio();
-      if (e.target instanceof Element && e.target.closest('button')) playSound('click');
-    };
+    const gesture = () => startAudio();
     window.addEventListener('pointerdown', gesture);
     window.addEventListener('keydown', gesture);
     return () => {

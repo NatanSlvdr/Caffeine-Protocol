@@ -4,6 +4,6 @@
  * Policy: behavior may use shared interaction hooks.
  * Expected: no `boundaries/dependencies` error.
  */
-import { useSound } from '@/hooks/useSound';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
-export const probe = useSound;
+export const probe = useReducedMotion;

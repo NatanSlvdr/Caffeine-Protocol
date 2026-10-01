@@ -13,7 +13,6 @@ import { narrativeFor } from '@/data/campaign/narrative';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
-import { useSound } from '@/hooks/useSound';
 
 export default function App() {
   return (
@@ -50,8 +49,6 @@ function Shell() {
             ? 'ending'
             : 'home';
   const shift = useShift(index);
-  const playSuccess = useSound('success');
-  const playRetry = useSound('retry');
   return (
     <div className={`app ${screen}`}>
       <div className="app-body">
@@ -76,7 +73,6 @@ function Shell() {
               }
             }}
             onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
-            onSound={(passed) => (passed ? playSuccess() : playRetry())}
           />
         )}
         {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}

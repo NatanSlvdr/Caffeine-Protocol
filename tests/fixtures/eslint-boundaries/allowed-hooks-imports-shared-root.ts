@@ -7,4 +7,4 @@
 import type { SoundName } from '@/shared/audio-manifest';
 
 export type Probe = SoundName;
-export const probe: Probe = 'click';
+export const probe: Probe = 'cafe_loop';

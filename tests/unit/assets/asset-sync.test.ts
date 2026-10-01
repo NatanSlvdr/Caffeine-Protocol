@@ -72,10 +72,10 @@ describe('asset source-of-truth sync (ADR 003)', () => {
   });
 
   it('audio:sync --check detects a divergent served sound', () => {
-    withDivergedServedCopy('public/audio/serve.wav', () => {
+    withDivergedServedCopy('public/audio/cafe_loop.wav', () => {
       const result = runTool('tools/audio-sync.mjs', ['--check']);
       expect(result.ok).toBe(false);
-      expect(result.output).toContain('serve.wav');
+      expect(result.output).toContain('cafe_loop.wav');
       expect(result.output).toContain('audio:sync');
     });
   });
@@ -90,10 +90,10 @@ describe('asset source-of-truth sync (ADR 003)', () => {
   });
 
   it('validate:data detects a divergent served sound', () => {
-    withDivergedServedCopy('public/audio/click.wav', () => {
+    withDivergedServedCopy('public/audio/cafe_loop.wav', () => {
       const result = runTool('tools/validate-data.mjs');
       expect(result.ok).toBe(false);
-      expect(result.output).toContain('click.wav');
+      expect(result.output).toContain('cafe_loop.wav');
     });
   });
 });

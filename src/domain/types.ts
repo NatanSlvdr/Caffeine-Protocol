@@ -163,7 +163,6 @@ export interface RunResult {
 export interface Settings {
   volume: number;
   music: number;
-  effects: number;
   reduced_motion: boolean;
   pixel_art: boolean;
   /** Edit programs as plain text instead of blocks. */

@@ -11,7 +11,6 @@ export const SAVE_KEY = 'caffeine-protocol.v1';
 const defaultSettings: Settings = {
   volume: 0.6,
   music: 0.55,
-  effects: 0.65,
   reduced_motion: false,
   pixel_art: true,
   text_editor: false,

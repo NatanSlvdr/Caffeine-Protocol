@@ -1,17 +1,16 @@
-"""Render the café soundtrack, room ambience and soft UI sounds by synthesis.
+"""Render the café soundtrack by synthesis.
 
 Run from the repository root (`npm run gen:audio`); standard library only, no
-samples, so every sound is original and free of third-party licences.
+samples, so the music is original and free of third-party licences.
 
 - `cafe_loop.wav`: a slow lo-fi jazz loop (72 BPM, 16 bars, Dm9 G13 Cmaj9 A7):
   electric-piano chords, round bass, brushed drums, a sparse vibraphone line
   and a little vinyl crackle, all rolled off for warmth. Tails wrap around so
   the loop is seamless.
-- `cafe_room.wav`: distant cups and spoons now and then, mixed under the
-  music. No continuous noise bed: filtered noise read as a passing train.
-- `click`, `success`, `retry`, `serve`, `pour`: short, soft one-shots.
 
-Levels are deliberately low; the runtime fades the music in after a pause.
+The music is the game's only sound: no room tone, no UI or service effects.
+
+The level is deliberately low; the runtime fades the music in after a pause.
 """
 import math
 import random
@@ -57,7 +56,7 @@ def add(target, start, values, gain=1.0):
 
 
 def save(name, samples, peak):
-    """Normalize to a soft peak, fade the edges of one-shots, and write 16-bit mono."""
+    """Normalize to a soft peak and write 16-bit mono."""
     top = max(abs(x) for x in samples) or 1
     factor = peak / top
     payload = b''.join(struct.pack('<h', round(max(-1, min(1, x * factor)) * 32767)) for x in samples)
@@ -122,17 +121,6 @@ def noise_burst(rng, duration, decay, cutoff, velocity=1.0, attack=0.002):
         x * math.exp(-(i / RATE) * decay) * min(1.0, (i / RATE) / attack) * velocity
         for i, x in enumerate(shaped)
     ]
-
-
-def clink(freq, duration=0.6, velocity=1.0):
-    """Ceramic or glass ping: inharmonic partials with fast decays."""
-    partials = [(1.0, 1.0, 9), (2.71, 0.45, 14), (5.12, 0.22, 22), (8.3, 0.1, 30)]
-    out = []
-    for i in range(int(duration * RATE)):
-        t = i / RATE
-        v = sum(g * math.sin(TAU * freq * r * t) * math.exp(-t * d) for r, g, d in partials)
-        out.append(v * min(1.0, t / 0.001) * velocity)
-    return out
 
 
 # --- Music -----------------------------------------------------------------
@@ -209,98 +197,6 @@ def render_music():
     return lowpass(mix, 5200)
 
 
-# --- Ambience --------------------------------------------------------------
-
-ROOM_SECONDS = 24
-
-
-def render_room():
-    rng = random.Random(11)
-    n = ROOM_SECONDS * RATE
-    room = [0.0] * n
-
-    # Distant cups and spoons now and then.
-    for _ in range(7):
-        start = rng.uniform(0, ROOM_SECONDS)
-        add(room, start, clink(rng.uniform(1700, 2700), 0.5, rng.uniform(0.025, 0.05)))
-        if rng.random() < 0.4:
-            add(room, start + 0.09, clink(rng.uniform(1700, 2700), 0.4, rng.uniform(0.015, 0.03)))
-    return lowpass(room, 3500)
-
-
-# --- One-shots -------------------------------------------------------------
-
-
-def render_click():
-    """Soft wooden tock, like a pencil tapped on the counter."""
-    rng = random.Random(3)
-    out, phase = [], 0.0
-    for i in range(int(0.07 * RATE)):
-        t = i / RATE
-        phase += TAU * (720 + 380 * math.exp(-t * 90)) / RATE
-        out.append(math.sin(phase) * math.exp(-t * 75) * min(1.0, t / 0.0015))
-    tap = noise_burst(rng, 0.02, 220, 2500, 0.35, attack=0.0005)
-    for i, v in enumerate(tap):
-        out[i] += v
-    return lowpass(out + [0.0] * int(0.02 * RATE), 3800, wrap=False)
-
-
-def marimba(midi, duration, velocity=1.0):
-    f = hz(midi)
-    out = []
-    for i in range(int(duration * RATE)):
-        t = i / RATE
-        env = min(1.0, t / 0.002) * math.exp(-t * 6)
-        p = TAU * f * t
-        out.append((math.sin(p) + 0.12 * math.sin(4 * p) * math.exp(-t * 25)) * env * velocity)
-    return out
-
-
-def phrase(notes, spacing, tail, voice, cutoff):
-    out = [0.0] * int((spacing * len(notes) + tail) * RATE)
-    for index, (note, vel) in enumerate(notes):
-        for i, v in enumerate(voice(note, tail, vel)):
-            j = int(spacing * index * RATE) + i
-            if j < len(out):
-                out[j] += v
-    return lowpass(out, cutoff, wrap=False)
-
-
-def render_serve():
-    """A cup set down on its saucer: a ceramic ping over a soft thud."""
-    rng = random.Random(5)
-    out = clink(2350, 0.55, 0.6)
-    second = clink(2950, 0.4, 0.25)
-    for i, v in enumerate(second):
-        if i + int(0.045 * RATE) < len(out):
-            out[i + int(0.045 * RATE)] += v
-    thud = noise_burst(rng, 0.08, 60, 400, 1.2)
-    for i, v in enumerate(thud):
-        out[i] += v
-    return lowpass(out, 4500, wrap=False)
-
-
-def render_pour():
-    """Coffee poured into a cup: filtered splash whose resonance rises as it fills."""
-    rng = random.Random(9)
-    n = int(1.0 * RATE)
-    raw = lowpass([rng.uniform(-1, 1) for _ in range(n)], 1800, passes=2, wrap=False)
-    out, phase, wobble = [], 0.0, 0.0
-    for i in range(n):
-        t = i / RATE
-        wobble += (rng.uniform(-1, 1) - wobble) * 0.002
-        phase += TAU * (420 + 520 * t + 140 * wobble) / RATE
-        env = min(1.0, t / 0.06) * min(1.0, (1.0 - t) / 0.25)
-        out.append((raw[i] * 0.9 + 0.25 * math.sin(phase) * abs(raw[i]) * 3) * env)
-    return highpass(out, 150)
-
-
 if __name__ == '__main__':
     save('cafe_loop.wav', render_music(), 0.55)
-    save('cafe_room.wav', render_room(), 0.3)
-    save('click.wav', render_click(), 0.32)
-    save('success.wav', phrase([(72, 0.8), (76, 0.8), (79, 0.9), (84, 0.6)], 0.09, 1.1, marimba, 4000), 0.45)
-    save('retry.wav', phrase([(69, 0.8), (65, 0.7)], 0.16, 0.8, marimba, 2200), 0.35)
-    save('serve.wav', render_serve(), 0.4)
-    save('pour.wav', render_pour(), 0.35)
-    print('Rendered cafe_loop, cafe_room and five soft one-shots into assets/audio/.')
+    print('Rendered cafe_loop into assets/audio/.')

@@ -4,7 +4,7 @@ import App from '../../../src/App';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
 vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div /> }));
-vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), playSound: vi.fn(), startAudio: vi.fn() }));
+vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
 
 beforeEach(() => {
   window.location.hash = '/';
@@ -58,7 +58,7 @@ describe('shift entry navigation', () => {
 
   it('counts only rated shifts, so stars never total past the maximum', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
-    const settings = { volume: 0.5, music: 0, effects: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
+    const settings = { volume: 0.5, music: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
     const save = {
       version: 4,
       selected: 20,
@@ -86,7 +86,7 @@ describe('shift entry navigation', () => {
 
   it('closes the campaign by saying how many shifts still have stars to win', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 || i === 9 ? 2 : 3]));
-    const settings = { volume: 0.5, music: 0, effects: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
+    const settings = { volume: 0.5, music: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
     const save = {
       version: 4,
       selected: 20,

@@ -94,7 +94,7 @@ function validateMaps(v: Record<string, unknown>, shifts: number): void {
 function validateSettingsMap(v: Record<string, unknown>): Settings {
   const settings = v.settings;
   if (!isRecord(settings)) throw new Error('Missing settings.');
-  for (const k of ['volume', 'music', 'effects']) {
+  for (const k of ['volume', 'music']) {
     const n = settings[k];
     if (typeof n !== 'number' || !Number.isFinite(n) || n < 0 || n > 1) throw new Error('Invalid audio setting.');
   }
@@ -105,7 +105,6 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
   return {
     volume: settings.volume as number,
     music: settings.music as number,
-    effects: settings.effects as number,
     reduced_motion: settings.reduced_motion as boolean,
     pixel_art: (settings.pixel_art as boolean | undefined) ?? true,
     text_editor: (settings.text_editor as boolean | undefined) ?? false,

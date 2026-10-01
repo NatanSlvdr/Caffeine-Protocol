@@ -10,7 +10,7 @@ vi.mock('../../../src/components/Cafe', () => ({
     <div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole} />
   ),
 }));
-vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), playSound: vi.fn(), startAudio: vi.fn() }));
+vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
 beforeEach(() => {
   vi.useFakeTimers();
   localStorage.clear();

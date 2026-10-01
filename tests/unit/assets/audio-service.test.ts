@@ -5,7 +5,6 @@ import type { Settings } from '../../../src/domain';
 const settings: Settings = {
   volume: 0.5,
   music: 0.4,
-  effects: 0.8,
   reduced_motion: false,
   pixel_art: true,
   fullscreen: false,
@@ -95,20 +94,19 @@ describe('AudioService', () => {
 
   it('stays silent until configured and started by a gesture', () => {
     const audio = new AudioService();
-    audio.play('click');
     audio.start();
     expect(FakeContext.last).toBeUndefined();
   });
 
-  it('starts both loops after a pause and fades them in slowly', async () => {
+  it('starts the music alone after a pause and fades it in slowly', async () => {
     const audio = new AudioService();
     audio.configure(settings);
     audio.start();
     await flush();
     const ctx = FakeContext.last!;
-    const loops = ctx.sources.filter((s) => s.loop);
-    expect(loops.map((s) => s.buffer?.name).sort()).toEqual(['/audio/cafe_loop.wav', '/audio/cafe_room.wav']);
-    expect(loops.every((s) => s.started === 10 + MUSIC_DELAY)).toBe(true);
+    expect(ctx.sources.map((s) => [s.buffer?.name, s.loop, s.started])).toEqual([
+      ['/audio/cafe_loop.wav', true, 10 + MUSIC_DELAY],
+    ]);
     const fade = ctx.gains.find((g) => g.gain.calls.some(([kind]) => kind === 'ramp'))!;
     expect(fade.gain.calls).toEqual([
       ['set', 0, 10 + MUSIC_DELAY],
@@ -116,36 +114,17 @@ describe('AudioService', () => {
     ]);
   });
 
-  it('keeps the room tone under the music and follows the sliders', async () => {
+  it('follows the master and music sliders', async () => {
     const audio = new AudioService();
     audio.configure(settings);
     audio.start();
     await flush();
     const ctx = FakeContext.last!;
-    const [master, , music, room, effects] = ctx.gains;
-    expect([master.gain.value, music.gain.value, effects.gain.value]).toEqual([0.5, 0.4, 0.8]);
-    expect(room.gain.value).toBeLessThan(music.gain.value);
+    expect(ctx.gains).toHaveLength(3);
+    const [master, , music] = ctx.gains;
+    expect([master.gain.value, music.gain.value]).toEqual([0.5, 0.4]);
     audio.configure({ ...settings, music: 0 });
     expect(music.gain.value).toBe(0);
-    expect(room.gain.value).toBe(0);
-  });
-
-  it('varies one-shots slightly and drops instant repeats', async () => {
-    const values = [0, 1];
-    const audio = new AudioService(() => values.shift() ?? 0.5);
-    audio.configure(settings);
-    audio.start();
-    audio.play('click');
-    audio.play('click');
-    await flush();
-    const ctx = FakeContext.last!;
-    const clicks = ctx.sources.filter((s) => s.buffer?.name === '/audio/click.wav');
-    expect(clicks).toHaveLength(1);
-    expect(clicks[0].playbackRate.value).toBeCloseTo(0.96);
-    ctx.currentTime += 0.1;
-    audio.play('click');
-    await flush();
-    expect(ctx.sources.filter((s) => s.buffer?.name === '/audio/click.wav')).toHaveLength(2);
   });
 
   it('suspends while the tab is hidden and eases back in', async () => {

@@ -12,7 +12,6 @@ import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore'
 const volumes = [
   { key: 'volume', name: 'Master volume', label: 'Master volume' },
   { key: 'music', name: 'Music', label: 'Music volume' },
-  { key: 'effects', name: 'Sound effects', label: 'Effects volume' },
 ] as const;
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */

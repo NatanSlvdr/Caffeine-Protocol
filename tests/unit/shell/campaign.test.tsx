@@ -6,7 +6,7 @@ import { CampaignPage } from '../../../src/shell/CampaignPage';
 import { GameProvider } from '../../../src/state/GameStore';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
-vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), playSound: vi.fn(), startAudio: vi.fn() }));
+vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
 
 beforeEach(() => {
   window.location.hash = '/campaign';
