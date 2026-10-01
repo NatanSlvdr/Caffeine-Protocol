@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -12,6 +13,9 @@ export interface HelpModalProps {
   brief: ShiftBrief;
   level: LevelDefinition;
   role: RobotRole;
+  /** The open robot's routine as it stands, and as it was when the shift opened. */
+  source: string;
+  opening: string;
   observation: boolean;
   running: boolean;
   showSolution: boolean;
@@ -29,6 +33,8 @@ export function HelpModal({
   brief,
   level,
   role,
+  source,
+  opening,
   observation,
   running,
   showSolution,
@@ -38,6 +44,11 @@ export function HelpModal({
   onClose,
 }: HelpModalProps) {
   const example = lesson.robotSolution?.[role] ?? lesson.solution;
+  const robot = ROBOT_DISPLAY_NAMES[role];
+  // The example overwrites the routine with no undo, so the player's own edits get a second look first.
+  // The opening routine needs none: Reset brings it back.
+  const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
+  const [confirming, setConfirming] = useState(false);
   return (
     <Modal
       className="settings-window confirm-slip help-slip"
@@ -84,28 +95,47 @@ export function HelpModal({
               </dd>
             </div>
           </dl>
-          <div className="modal-buttons help-example-actions">
-            <button className="settings-chip" aria-expanded={showSolution} onClick={onToggleSolution}>
-              {showSolution ? 'Hide worked example' : 'Reveal worked example'}
-            </button>
-            {showSolution && (
-              <Button
-                variant="primary"
-                disabled={running}
+          {confirming ? (
+            <>
+              <p className="help-example-warning" role="alert">
+                The example replaces {robot}’s routine, and your edits to it are lost.
+              </p>
+              <div className="modal-buttons help-example-actions">
+                <button className="settings-chip" autoFocus onClick={() => setConfirming(false)}>
+                  Keep my edits
+                </button>
+                <Button variant="primary" disabled={running} onClick={() => onUseExample(example)}>
+                  Replace my edits <ArrowRight size={15} />
+                </Button>
+              </div>
+            </>
+          ) : (
+            <div className="modal-buttons help-example-actions">
+              <button
+                className="settings-chip"
+                aria-expanded={showSolution}
                 onClick={() => {
-                  onUseExample(example);
+                  setConfirming(false);
+                  onToggleSolution();
                 }}
               >
-                Use this example <ArrowRight size={15} />
-              </Button>
-            )}
-          </div>
+                {showSolution ? 'Hide worked example' : 'Reveal worked example'}
+              </button>
+              {showSolution && (
+                <Button
+                  variant="primary"
+                  disabled={running}
+                  onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
+                >
+                  Use this example <ArrowRight size={15} />
+                </Button>
+              )}
+            </div>
+          )}
           {showSolution && (
             <>
               {lesson.robotSolution && (
-                <p className="code-example-label">
-                  {ROBOT_DISPLAY_NAMES[role]}’s routine · the other robots keep theirs
-                </p>
+                <p className="code-example-label">{robot}’s routine · the other robots keep theirs</p>
               )}
               <pre className="code-example">{indentSource(example)}</pre>
             </>

@@ -232,6 +232,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           brief={brief}
           level={level}
           role={role}
+          source={source}
+          opening={resetRobotPrograms(save, index, lessons)[role]}
           observation={observation}
           running={running}
           showSolution={showSolution}

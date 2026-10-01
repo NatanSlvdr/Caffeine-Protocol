@@ -1379,6 +1379,11 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 12px;
   line-height: 1.6;
 }
+.settings-window.help-slip p.help-example-warning {
+  margin: 0 0 10px;
+  color: var(--slip-ink);
+  font-size: 13px;
+}
 .confirm-slip .help-example-actions {
   justify-content: space-between;
   margin-top: 0;

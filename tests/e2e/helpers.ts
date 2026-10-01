@@ -61,9 +61,12 @@ export async function finishShift(page: Page) {
   await expect(page.getByRole('dialog', { name: 'Service complete' })).toBeVisible();
 }
 
-/** Reveal the worked example in Help and insert it into the editor. */
+/** Reveal the worked example in Help and insert it into the editor, over any edits. */
 export async function useWorkedExample(page: Page) {
   await page.getByRole('button', { name: 'Help', exact: true }).click();
   await page.getByRole('button', { name: 'Reveal worked example' }).click();
   await page.getByRole('button', { name: 'Use this example' }).click();
+  // Help asks first when the routine holds the player's own edits.
+  const replace = page.getByRole('button', { name: 'Replace my edits' });
+  if (await replace.isVisible()) await replace.click();
 }
