@@ -35,7 +35,8 @@ export interface WorkspaceProps {
   update: (updater: (save: ProgressSave) => ProgressSave) => void;
   lessons: LessonCatalog;
   shift: WorkspaceShift;
-  isLastShift: boolean;
+  /** The next shift's title, or nothing on the last shift. */
+  nextShift?: string;
   onNext: () => void;
   onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
   onSound: (passed: boolean) => void;
@@ -48,7 +49,7 @@ export function Workspace({
   update,
   lessons,
   shift,
-  isLastShift,
+  nextShift,
   onNext,
   onComplete,
   onSound,
@@ -274,7 +275,7 @@ export function Workspace({
           level={level}
           result={result}
           observation={observation}
-          isLastShift={isLastShift}
+          nextShift={nextShift}
           onNext={onNext}
           onClose={() => setModal('')}
         />

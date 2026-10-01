@@ -95,6 +95,7 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByText('Service complete')).toBeTruthy();
     expect(savedStars()['2']).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Next shift/ })).toBeTruthy();
+    expect(screen.getByText('Groundhog Latte')).toBeTruthy();
   });
   it('pauses without advancing and cancels an unfinished run without awarding progress', () => {
     open();
