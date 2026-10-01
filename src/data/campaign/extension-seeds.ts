@@ -22,8 +22,8 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'Brew waits for Query’s tickets at the order handoff and makes each drink: Take up the beans at storage, Use up the coffee machine to grind them, Take up water at the sink, Use up the machine again to brew, then Deposit up at pickup. Pip still serves the room.',
     omission: 'USE UP',
     todo: 'use up the coffee machine to grind the beans',
-    blocks: 48,
-    instructions: 215,
+    blocks: 44,
+    instructions: 202,
   },
   {
     id: 'L10',

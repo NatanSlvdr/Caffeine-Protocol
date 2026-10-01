@@ -47,16 +47,16 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
         ...move(at.lids.prep, at.pickup.prep),
       ]
     : move(afterSugar, at.pickup.prep);
+  const grind = [...move(at.ingredients.prep, at.grinder.prep), 'USE UP', ...move(at.grinder.prep, at.water.prep)];
+  // Until tea reaches the kitchen every ticket is a coffee, so there is nothing to branch on yet.
+  const ingredients =
+    level >= UNLOCKS.prepTea
+      ? ['IF coffee IN CUSTOMER SPEECH', ...grind, 'ELSE', ...move(at.ingredients.prep, at.water.prep), 'END']
+      : grind;
   const recipe = [
     ...move(STARTS.prep, at.ingredients.prep),
     'TAKE UP',
-    'IF coffee IN CUSTOMER SPEECH',
-    ...move(at.ingredients.prep, at.grinder.prep),
-    'USE UP',
-    ...move(at.grinder.prep, at.water.prep),
-    'ELSE',
-    ...move(at.ingredients.prep, at.water.prep),
-    'END',
+    ...ingredients,
     'TAKE UP',
     ...move(at.water.prep, at.brewer.prep),
     'USE UP',

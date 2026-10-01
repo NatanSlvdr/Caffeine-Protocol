@@ -14,7 +14,7 @@ Each shift has a page with its story, lesson, customers and reference programs i
 | L06 | For Each Their Own | 6 | 3 | 23 | 264 | For item in order visits each drink in the order. |
 | L07 | One Lump or Two? | 6 | 4 | 28 | 383 | If Number IN item checks for a count. |
 | L08 | The Usual Suspect | 6 | 4 | 31 | 410 | An unclear request contains Ambiguous. |
-| L09 | A Brew-tiful Friendship | 1 | 3 | 48 | 215 | Brew waits for Query’s tickets at the order handoff and makes each drink: Take up the beans at storage, Use up the coffee machine to grind them, Take up water at the sink, Use up the machine again to brew, then Deposit up at pickup. |
+| L09 | A Brew-tiful Friendship | 1 | 3 | 44 | 202 | Brew waits for Query’s tickets at the order handoff and makes each drink: Take up the beans at storage, Use up the coffee machine to grind them, Take up water at the sink, Use up the machine again to brew, then Deposit up at pickup. |
 | L10 | Steep Thoughts | 1 | 3 | 48 | 208 | Tea uses leaves, water, and steeping. |
 | L11 | A Spoonful of Sugar | 1 | 3 | 53 | 241 | Orders now ask for sugar. |
 | L12 | Call Me Maybe | 1 | 3 | 57 | 255 | Move the recipe into Function recipe. |

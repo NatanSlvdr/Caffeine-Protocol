@@ -20,6 +20,8 @@ export const UNLOCKS = {
   help: 8,
   /** Brew runs the kitchen. */
   prep: 9,
+  /** Tea reaches the kitchen: Brew branches on the ticket, and leaves skip the grinder. */
+  prepTea: 10,
   /** Brew counts sugar cubes from the order into memory. */
   prepSugar: 11,
   /** Brew's recipe function. */
