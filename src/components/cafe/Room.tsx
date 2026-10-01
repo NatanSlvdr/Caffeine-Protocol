@@ -13,6 +13,7 @@ import {
 } from '@/domain';
 import { STREET_WINDOWS, cushionIsSage } from './dressing';
 import { WallDressing, KitchenFloor } from './WallDressing';
+import { Facade } from './Facade';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
 
 /** The storage tile holds the fridge and shelf instead of a counter, so it is left out of the joinery. */
@@ -28,6 +29,7 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
       <CafeMural />
       <WallDressing />
       <KitchenFloor />
+      <Facade />
       <Box at={[-8.6, 1.3, -1.6]} size={[0.2, 2.7, 10.2]} color={CAFE_COLORS.wall} />
       <Box at={[-8.6, 2.48, 4.5]} size={[0.24, 0.34, 2]} color={CAFE_COLORS.walnut} />
       <Box at={[-8.6, 1.14, 3.45]} size={[0.25, 2.3, 0.1]} color={CAFE_COLORS.walnut} />
