@@ -1,8 +1,6 @@
 import { Pause, Play, Square } from 'lucide-react';
 import { BLOCK_SECONDS, MAX_PLAYBACK_SPEED } from '@/domain';
-
-/** The run shortcut's modifier as the player's keyboard labels it. */
-const RUN_MODIFIER = /Mac|iPhone|iPad/.test(navigator.userAgent) ? '⌘' : 'Ctrl';
+import { RUN_MODIFIER } from '@/shared/lib/format';
 
 export interface PlaybackToolbarProps {
   running: boolean;

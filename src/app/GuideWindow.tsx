@@ -2,7 +2,20 @@ import { Bot, Map, Puzzle, Star } from 'lucide-react';
 import { Modal } from '@/components';
 import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
+import { RUN_MODIFIER } from '@/shared/lib/format';
 import { useCafeName } from '@/state/GameStore';
+
+/** A star count drawn as glyphs and read aloud in words. */
+function Stars({ n }: { n: 1 | 2 | 3 }) {
+  return (
+    <>
+      <span className="guide-stars" aria-hidden="true">
+        {'★'.repeat(n)}
+      </span>
+      <span className="sr-only">{['One star', 'Two stars', 'Three stars'][n - 1]}</span>
+    </>
+  );
+}
 
 /** How to play, printed on the same slip of order paper as the house settings. */
 export function GuideWindow({ onClose }: { onClose: () => void }) {
@@ -45,12 +58,12 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Map size={16} /> Around the café
           </h3>
           <p>
-            MOVE counts whole tiles in screen directions. A blocked move stops early, and customers never block the way.
+            Move counts whole tiles in screen directions. A blocked move stops early, and customers never block the way.
             Station actions only work beside the matching equipment.
           </p>
           <p>
             The ticket ties the crew together: Query writes down what the guest asked for, Brew makes exactly what the
-            ticket says, and Porter takes it to the table it names. A slip at the counter reaches the table.
+            ticket says, and Porter takes it to the table it names. So a slip at the counter ends up at the table.
           </p>
         </section>
         <section className="settings-block">
@@ -58,13 +71,12 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Star size={16} /> Service & stars
           </h3>
           <p>
-            Run service with <kbd>Ctrl / ⌘ + Enter</kbd>. If an instruction fails, its line lights up and you can fix it
-            straight away.
+            Run service with <kbd>{RUN_MODIFIER} + Enter</kbd>. If an instruction fails, its line lights up and you can
+            fix it straight away.
           </p>
           <p>
-            <span className="guide-stars">★</span> serves every order correctly, <span className="guide-stars">★★</span>{' '}
-            meets the block target, <span className="guide-stars">★★★</span> the step target. Each shift’s Help has its
-            lesson and a worked example.
+            <Stars n={1} /> serves every order correctly, <Stars n={2} /> also meets the block target, and{' '}
+            <Stars n={3} /> the step target on top. Each shift’s Help has its lesson and a worked example.
           </p>
         </section>
       </div>
