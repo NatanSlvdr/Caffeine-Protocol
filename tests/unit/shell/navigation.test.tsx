@@ -78,6 +78,8 @@ describe('shift entry navigation', () => {
     expect(screen.getByRole('img', { name: '60 of 60 stars' })).toBeTruthy();
     // Each shift says how it went, since the marks beside its name are visual only.
     expect(screen.getByRole('button', { name: /^Shift 1: .*, served$/ })).toBeTruthy();
+    // Query's first shift is already rated: only the hand-served prologue is just "served".
+    expect(screen.getByRole('button', { name: /^Shift 2: .*, 3 of 3 stars$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Shift 3: .*, 3 of 3 stars$/ })).toBeTruthy();
     // A finished campaign hangs Niko’s name over the door.
     expect(screen.getByText(/^Café Niko · Order #/)).toBeTruthy();

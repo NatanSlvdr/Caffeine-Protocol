@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
+import { isRated, lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
 import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
@@ -134,7 +134,7 @@ export function useShift(index: number): {
 
 /** Stars across rated shifts only, matching MAX_STARS, so an edited save can't total past the maximum. */
 export function starTotal(stars: ProgressSave['stars']): number {
-  return Object.entries(stars).reduce((a, [i, b]) => a + (levels[Number(i)]?.programming_enabled ? b : 0), 0);
+  return Object.entries(stars).reduce((a, [i, b]) => a + (isRated(Number(i)) ? b : 0), 0);
 }
 
 /** Campaign progress: completed shifts, star totals, and maxima. */

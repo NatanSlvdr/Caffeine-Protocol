@@ -4,5 +4,7 @@ import type { LevelDefinition } from '../domain/types';
 export const levels: LevelDefinition[] = [...actLevels, ...extensionLevels];
 export const lessons = [...actLessons, ...extensionLessons];
 export const CAMPAIGN_LENGTH = levels.length;
+/** Shifts the player writes code for earn stars; the hand-served prologue is only served. */
+export const isRated = (index: number): boolean => !!levels[index]?.programming_enabled;
 export const MAX_STARS = levels.filter((l) => l.programming_enabled).length * 3;
 export const titleFor = (index: number) => levels[index]?.title.replace(/^Level \d+: /, '') ?? `Shift ${index + 1}`;

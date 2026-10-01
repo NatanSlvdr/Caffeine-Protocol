@@ -1,4 +1,5 @@
 import { Clapperboard, LockKeyhole } from 'lucide-react';
+import { isRated } from '@/data';
 import { sceneBefore, type Cutscene } from '@/data/campaign/cutscenes';
 import { pad2, starRow } from '@/shared/lib/format';
 import { acts, type Act } from './acts';
@@ -65,8 +66,8 @@ export function Ticket({
   });
   if (closing) rows.push({ scene: closing });
   const served = shifts.filter((shift) => stars[shift] !== undefined).length;
-  const earned = shifts.reduce((sum, shift) => sum + (shift < 2 ? 0 : (stars[shift] ?? 0)), 0);
-  const rated = shifts.filter((shift) => shift >= 2).length;
+  const earned = shifts.reduce((sum, shift) => sum + (isRated(shift) ? (stars[shift] ?? 0) : 0), 0);
+  const rated = shifts.filter(isRated).length;
   // A sealed ticket shows only the act name, never the crew or the shift names.
   const sealed = state === 'locked';
   const unlockedBy = acts[number - 1]?.kicker;
@@ -137,7 +138,7 @@ export function Ticket({
                       ? shift === unlocked
                         ? ', next up'
                         : ''
-                      : shift < 2
+                      : !isRated(shift)
                         ? ', served'
                         : `, ${stars[shift]} of 3 stars`
                 }`}
@@ -156,7 +157,7 @@ export function Ticket({
                     ) : (
                       '···'
                     )
-                  ) : shift < 2 ? (
+                  ) : !isRated(shift) ? (
                     'OK'
                   ) : (
                     starRow(stars[shift])

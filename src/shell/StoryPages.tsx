@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { UNLOCKS } from '@/domain';
-import { CAMPAIGN_LENGTH, levels } from '@/data';
+import { CAMPAIGN_LENGTH, isRated } from '@/data';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
@@ -46,7 +46,7 @@ export function ScenePage({ scene }: { scene: CutsceneData }) {
 
 const closing = cutscenes[cutscenes.length - 1];
 /** The shifts the player writes code for: the ones that can earn three stars. */
-const rated = levels.flatMap((level, index) => (level.programming_enabled ? [index] : []));
+const rated = Array.from({ length: CAMPAIGN_LENGTH }, (_, index) => index).filter(isRated);
 
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
