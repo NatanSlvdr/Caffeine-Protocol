@@ -58,8 +58,8 @@ export function Workspace({
   const { level, lesson, brief, intro } = shift;
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
+  const textMode = save.settings.text_editor;
   const [modal, setModal] = useState(''),
-    [textMode, setTextMode] = useState(false),
     [showSolution, setShowSolution] = useState(false);
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
   // A finished service pulls back to the whole café before the crew cheers and the receipt comes.
@@ -261,7 +261,7 @@ export function Workspace({
           observation={observation}
           running={running}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
-          onToggleTextMode={(value) => setTextMode(value)}
+          onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
           onRequestReset={() => setModal('reset')}
           onClose={() => setModal('')}
         />
