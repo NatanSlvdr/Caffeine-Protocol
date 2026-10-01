@@ -64,6 +64,10 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
           );
         })}
       </div>
+      {/* The stills are pictures only, so their art notes describe each one aloud as it lands. */}
+      <p className="sr-only" aria-live="polite">
+        {scene.panels[shown]?.art}
+      </p>
       <DialogueBox
         lines={lines}
         kicker={scene.title}

@@ -91,10 +91,14 @@ describe('Cutscene', () => {
     const shown = () =>
       [...container.querySelectorAll('.cutscene-still')].findIndex((still) => still.matches('.shown'));
     expect(container.querySelectorAll('.cutscene-still').length).toBe(scene.panels.length);
+    // The pictures are hidden from screen readers, so the shown still's art notes are read out instead.
+    const described = () => container.querySelector('.cutscene > p.sr-only[aria-live]')?.textContent;
     expect(shown()).toBe(0);
+    expect(described()).toBe(scene.panels[0].art);
     expect(container.querySelector('.cutscene-still.under')).toBeNull();
     for (let i = 0; i < scene.panels[0].lines.length; i++) fireEvent.keyDown(window, { key: 'Enter' });
     expect(shown()).toBe(1);
+    expect(described()).toBe(scene.panels[1].art);
     // The first photo stays on the pile under the new one.
     expect(container.querySelector('.cutscene-still')!.matches('.under')).toBe(true);
     fireEvent.keyDown(window, { key: 'Escape' });
