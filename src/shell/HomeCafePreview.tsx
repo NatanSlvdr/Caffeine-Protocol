@@ -8,8 +8,7 @@ import { HOME_PREVIEW_LEVEL, homePreviewResult } from './homePreview';
 export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixelArt: boolean }) {
   const [result] = useState(homePreviewResult);
   const [time, setTime] = useState(-STREET_APPROACH_SECONDS);
-  const prefersReducedMotion = useReducedMotion();
-  const reduceMotion = reduced || prefersReducedMotion;
+  const reduceMotion = useReducedMotion(reduced);
   const duration = result.execution?.[0]?.duration ?? 60;
   const stillTime = result.execution?.[0]?.events.find(
     (event) => event.actor === 'prep' && (event.action === 'BREW' || event.action === 'STEEP'),

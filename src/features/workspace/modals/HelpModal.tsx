@@ -61,21 +61,27 @@ export function HelpModal({
                 <span aria-hidden="true">★</span>
                 <span className="sr-only">One star</span>
               </dt>
-              <dd>Every ticket correct</dd>
+              <dd>
+                Every ticket correct<small>Every guest gets what they asked for</small>
+              </dd>
             </div>
             <div>
               <dt>
                 <span aria-hidden="true">★★</span>
                 <span className="sr-only">Two stars</span>
               </dt>
-              <dd>{level.block_target} blocks or fewer</dd>
+              <dd>
+                {level.block_target} blocks or fewer<small>A short routine is easy to change</small>
+              </dd>
             </div>
             <div>
               <dt>
                 <span aria-hidden="true">★★★</span>
                 <span className="sr-only">Three stars</span>
               </dt>
-              <dd>{level.instruction_target} steps or fewer</dd>
+              <dd>
+                {level.instruction_target} steps or fewer<small>Fewer steps, shorter waits</small>
+              </dd>
             </div>
           </dl>
           <div className="modal-buttons help-example-actions">

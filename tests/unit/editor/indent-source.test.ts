@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { indentSource } from '../../../src/domain/scope';
+import { indentSource, tabSource } from '../../../src/domain/scope';
 import { compileProgram } from '../../../src/domain/program';
 
 describe('indentSource', () => {
@@ -14,5 +14,17 @@ describe('indentSource', () => {
   });
   it('never indents below the left margin when ENDs are unbalanced', () => {
     expect(indentSource('END\n  TAKE UP')).toBe('END\nTAKE UP');
+  });
+});
+
+describe('tabSource', () => {
+  it('indents at the cursor, replacing any selection', () => {
+    expect(tabSource('IF tea\nTAKE UP', 7, 7, false)).toEqual({ source: 'IF tea\n  TAKE UP', cursor: 9 });
+    expect(tabSource('IF tea', 3, 6, false)).toEqual({ source: 'IF   ', cursor: 5 });
+  });
+  it('outdents the cursor line by one level and stops at the margin', () => {
+    expect(tabSource('IF tea\n    TAKE UP', 13, 13, true)).toEqual({ source: 'IF tea\n  TAKE UP', cursor: 11 });
+    expect(tabSource('IF tea\n TAKE UP', 8, 8, true)).toEqual({ source: 'IF tea\nTAKE UP', cursor: 7 });
+    expect(tabSource('TAKE UP', 3, 3, true)).toEqual({ source: 'TAKE UP', cursor: 3 });
   });
 });

@@ -274,6 +274,16 @@ describe('compact visual code', () => {
       expect(bend).toBeLessThanOrEqual(405 - 8);
     }
   });
+  it('indents with Tab in the text view instead of leaving the editor', async () => {
+    const onChange = vi.fn();
+    render(<Editor source="LISTEN" onChange={onChange} level={8} locked={false} observation={false} textMode />);
+    const text = screen.getByLabelText<HTMLTextAreaElement>('Program source');
+    text.focus();
+    text.setSelectionRange(0, 0);
+    await userEvent.keyboard('{Tab}');
+    expect(onChange).toHaveBeenLastCalledWith('  LISTEN');
+    expect(document.activeElement).toBe(text);
+  });
   it('draws saved jump connections on first mount and after returning from text mode', () => {
     const props = {
       source: 'POSITION listen\nLISTEN\nJUMP listen',

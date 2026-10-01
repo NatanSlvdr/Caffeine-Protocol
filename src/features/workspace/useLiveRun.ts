@@ -4,7 +4,9 @@ import { robotForLevel } from '@/domain/robots';
 import { incomingRobotPrograms } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunResult } from '@/domain';
+import { playSound } from '@/shared/lib/audio';
 import { usePlaybackClock } from './usePlaybackClock';
+import { serviceCues } from './serviceCues';
 
 export interface LiveRunArgs {
   index: number;
@@ -97,7 +99,10 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     (elapsed) => {
       const live = liveRun.current;
       if (!live) return;
+      const before = live.snapshot().time;
       const frame = live.advance(elapsed * speed);
+      // The café is heard as well as seen: a pour at the machine, a cup set down for a guest.
+      serviceCues(frame.result, before, frame.time).forEach(playSound);
       setResult(frame.result);
       setReplayTime(frame.time);
       if (!frame.done) return;

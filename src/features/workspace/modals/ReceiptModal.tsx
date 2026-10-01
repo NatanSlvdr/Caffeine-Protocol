@@ -9,13 +9,14 @@ export interface ReceiptModalProps {
   level: LevelDefinition;
   result: RunResult;
   observation: boolean;
-  isLastShift: boolean;
+  /** The next shift's title, or nothing after the last shift. */
+  nextShift?: string;
   onNext: () => void;
   onClose: () => void;
 }
 
 /** Service receipt: stars, the totals measured against this shift's targets, and the next shift. */
-export function ReceiptModal({ index, level, result, observation, isLastShift, onNext, onClose }: ReceiptModalProps) {
+export function ReceiptModal({ index, level, result, observation, nextShift, onNext, onClose }: ReceiptModalProps) {
   const blocks = result.block_count ?? 0;
   return (
     <Modal
@@ -43,18 +44,28 @@ export function ReceiptModal({ index, level, result, observation, isLastShift, o
               <dt>Blocks used</dt>
               <dd>
                 {blocks} <small>/ {level.block_target}</small>
+                <TargetMet met={blocks <= level.block_target} />
               </dd>
             </div>
             <div className={result.executed_instructions <= level.instruction_target ? 'met' : ''}>
               <dt>Steps run</dt>
               <dd>
                 {result.executed_instructions} <small>/ {level.instruction_target}</small>
+                <TargetMet met={result.executed_instructions <= level.instruction_target} />
               </dd>
             </div>
           </>
         )}
       </dl>
-      <p className="receipt-thanks">{isLastShift ? 'Last order of the day.' : 'Thank you. See you next shift!'}</p>
+      <p className="receipt-thanks">
+        {nextShift ? (
+          <>
+            Thank you. Next up: <strong>{nextShift}</strong>
+          </>
+        ) : (
+          'Last order of the day.'
+        )}
+      </p>
       <div className="modal-buttons">
         <button className="settings-chip" onClick={onClose}>
           Stay on this shift
@@ -66,10 +77,15 @@ export function ReceiptModal({ index, level, result, observation, isLastShift, o
             onNext();
           }}
         >
-          {isLastShift ? 'Closing time' : 'Next shift'}
+          {nextShift ? 'Next shift' : 'Closing time'}
           <ArrowRight size={16} />
         </Button>
       </div>
     </Modal>
   );
+}
+
+/** The ✓ on a met total is drawn in CSS, so screen readers hear the verdict here instead. */
+function TargetMet({ met }: { met: boolean }) {
+  return <span className="sr-only">{met ? ', star target met' : ', over the star target'}</span>;
 }
