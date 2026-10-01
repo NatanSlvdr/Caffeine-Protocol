@@ -26,6 +26,8 @@ export const UNLOCKS = {
   functions: 12,
   /** Porter runs the dining room. */
   floor: 14,
+  /** Porter clears used cups: Wait for Dirty cups. Until then Pip still clears the tables. */
+  clearing: 15,
   /** Take-away orders: the to-go mark, lids and the to-go shelf. */
   toGo: 17,
   /** Only four cups: Brew washes used cups at the sink. */

@@ -1048,6 +1048,12 @@ export function* streamService(
             ? j.status === 'cleared'
             : ['served', 'dirty', 'cleared'].includes(j.status),
     );
+  // A service Porter clears can only stall on cups nobody collected while Porter is the player's robot.
+  const dirtyLeft = () => {
+    const worker = workers.find((w) => w.role === 'floor' && number >= ROBOT_UNLOCK_LEVELS.floor);
+    const job = config.clearing && worker ? jobs.find((j) => j.status === 'dirty') : undefined;
+    return worker && job ? { worker, job } : undefined;
+  };
   // Query is done once live.done(); Brew once every drink left its hands; Porter once the whole service is finished.
   const playerDone = () =>
     workers
@@ -1245,6 +1251,11 @@ export function* streamService(
         fail(
           washer,
           `Brew is waiting at the sink for a used cup, but none are coming back: all ${config.cups} cups are out. Porter has to bring them back.`,
+        );
+      else if (!finished() && dirtyLeft())
+        fail(
+          dirtyLeft()!.worker,
+          `A used cup is still on table ${dirtyLeft()!.job.table}. Porter has to clear it: Wait for Dirty cups, take it up, and carry it to the sink.`,
         );
       else if (!finished())
         fail(

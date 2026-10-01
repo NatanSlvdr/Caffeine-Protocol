@@ -67,8 +67,8 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'Porter takes over the room. Wait for Orders claims a ready drink and Take down picks it up from pickup. Store the order’s table in Var A: Move to Var A walks Porter there by itself, and Deposit up serves it.',
     omission: 'STORE var1 FROM table',
     todo: 'store the order’s table in Var A',
-    blocks: 83,
-    instructions: 753,
+    blocks: 71,
+    instructions: 634,
   },
   {
     id: 'L15',

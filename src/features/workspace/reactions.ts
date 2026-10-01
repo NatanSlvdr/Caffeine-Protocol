@@ -56,6 +56,12 @@ const kinds: FailureKind[] = [
     hint: 'After Wait for Orders, check If Closed IN Orders, finish what’s in hand, and Stop.',
   },
   {
+    match: /used cup is still on table/,
+    by: 'guest',
+    react: () => 'Um… is someone going to clear this table?',
+    hint: 'A clean table is the next guest’s first impression, and nobody sits at a messy one.',
+  },
+  {
     match: /order is unclear|unsupported order/,
     by: 'guest',
     react: (p) => `I said “${p}”… I’m not sure that came out right.`,
