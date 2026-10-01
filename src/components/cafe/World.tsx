@@ -145,6 +145,7 @@ export function World({
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}
                 walking={moving && actor.walking}
                 reach={actor.reach}
+                held={actor.inventory}
                 animate={moving}
                 phase={time}
                 reduced={reduced}
@@ -180,15 +181,6 @@ export function World({
                   />
                 </SceneHtml>
               )}
-              {actor.inventory.map((item, i) => (
-                <Cup
-                  key={item.ticketId}
-                  at={[actor.position[0] - 0.2 + i * 0.4, 1.2, actor.position[1] + 0.3]}
-                  tea={item.item === 'tea'}
-                  paper={item.table === 0 && item.stage !== 'dirty'}
-                  lid={item.lid}
-                />
-              ))}
             </group>
           ),
       )}
