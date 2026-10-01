@@ -186,6 +186,7 @@ export function failureLines(result: RunResult, fallbackRole: RobotRole): Dialog
   return [reaction, line('niko:worried', kind ? `${reason} ${kind.hint}` : `${reason} Look at the highlighted block.`)];
 }
 
+/** Stand-in cheers for shifts without a written payoff. */
 const cheers: Record<RobotRole, string[]> = {
   query: ['*bip boop* Every order understood. Feeling: pleased?', '*bip* Zero errors. Is this… satisfaction?'],
   prep: ['*BEEP!* Every cup perfect! Ninety-two degrees!', '*sniff sniff* Smell that? Perfect service!'],
@@ -199,13 +200,20 @@ const starVerdict: Record<number, string> = {
   3: 'Three stars. That’s the tidiest routine I’ve ever seen.',
 };
 
-/** The crew's reaction to a finished service, before the receipt. */
-export function successLines(result: RunResult, role: RobotRole, index: number): DialogueLine[] {
+/** The crew's reaction to a finished service, before the receipt: the shift's payoff scene, then Niko's verdict. */
+export function successLines(
+  result: RunResult,
+  role: RobotRole,
+  index: number,
+  payoff: DialogueLine[] = [],
+): DialogueLine[] {
   if (result.observation)
-    return [line('niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?')];
+    return payoff.length
+      ? payoff
+      : [line('niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?')];
   const pool = cheers[role];
   return [
-    line(ROBOT_CAST[role], pool[index % pool.length]),
+    ...(payoff.length ? payoff : [line(ROBOT_CAST[role], pool[index % pool.length])]),
     line('niko:happy', starVerdict[Math.min(3, Math.max(1, result.stars))]),
   ];
 }

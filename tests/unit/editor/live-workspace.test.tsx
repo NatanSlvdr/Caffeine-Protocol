@@ -95,11 +95,11 @@ describe('live workspace lifecycle', () => {
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-    // The crew reacts first; the receipt waits until the player is done listening.
-    expect(screen.getByRole('dialog', { name: 'Dialogue' }).textContent).toContain('Query');
+    // The shift pays off first, Juno gets her tea; the receipt waits until the player is done listening.
+    expect(screen.getByRole('dialog', { name: 'Dialogue' }).textContent).toContain('Actual tea');
     expect(screen.queryByText('Service complete')).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    while (screen.queryByRole('button', { name: 'Next' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     act(() => {
       vi.advanceTimersByTime(5000);
     });

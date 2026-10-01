@@ -271,3 +271,107 @@ export function shiftIntro(index: number): DialogueLine[] {
   const written = intros[index + 1];
   return written ? script(written) : [line('niko', narrativeFor(index).story)];
 }
+
+/** Shift payoffs, keyed by 1-based level: whoever the intro left waiting gets what they came for. */
+const outros: Record<number, readonly ScriptLine[]> = {
+  1: [
+    ['niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?'],
+    ['moka', 'Easy to watch. Now write it out by hand eighty times a day.'],
+    ['niko:worried', 'My hand hurts already. Somebody else should be writing these tickets.'],
+  ],
+  2: [
+    ['guest:happy', 'A coffee, just like I asked. Thank you!'],
+    ['query', '*bip* First ticket. Filed under: proud.'],
+    ['niko:happy', 'Your code just served a real customer. Lou would have framed that ticket.'],
+  ],
+  3: [
+    ['juno:happy', 'Actual tea. In a cup. I could cry.'],
+    ['query', '*bip* Coffee or tea. Asked and answered.'],
+  ],
+  4: [
+    ['query', '*bip* Customer. Customer. Customer. Customer. …Still listening.'],
+    ['niko:happy', 'The whole bus, served. Now it keeps going for as long as anyone is at the counter.'],
+  ],
+  5: [
+    ['juno:happy', 'No sugar. It actually listened to the “without”.'],
+    ['dot:happy', 'And mine’s sweet as anything. Lovely, dear.'],
+  ],
+  6: [
+    ['rosa:happy', 'Two coffees, two tickets! My brother’s will still be hot when he’s done locking up the bike.'],
+    ['query', '*bip* One customer. Two tickets. Sharing: not on paper.'],
+  ],
+  7: [
+    ['dot:happy', 'Two sugars. Not one, not three. You remembered, dear.'],
+    ['query', '*bip* Var A: two. Memory chip: still slightly smoky.'],
+  ],
+  8: [
+    ['albert:happy', 'It rang the bell instead of guessing. Smart machine.'],
+    ['query', '*ding!* …Once. Once is enough.'],
+    ['niko:happy', 'Every guest got what they meant. That badge by the till is yours, Query.'],
+  ],
+  9: [
+    ['brew', '*BEEP BEEP!* Ground! Brewed! Coffee real!'],
+    ['moka', 'Hm. It didn’t burn it.'],
+    ['niko:happy', 'From Moka, that’s a standing ovation.'],
+  ],
+  10: [
+    ['juno:happy', 'Whole leaves, properly steeped. Your robot is forgiven.'],
+    ['brew', '*sniff beep* Grinder rested today. Grinder: fine.'],
+  ],
+  11: [
+    ['dot:happy', 'Two sugars, and not as a suggestion. Thank you, sweetheart.'],
+    ['brew', '*BEEP* Ticket: instructions. Not suggestions. Learned.'],
+  ],
+  12: [
+    ['brew', '*bip* Call recipe. Call recipe. …Much quieter.'],
+    ['query', '*bip* Kitchen noise: down. Thank you.'],
+    ['niko:happy', 'And the recipe lives in one place now. Change it once, and every call changes with it.'],
+  ],
+  13: [
+    ['brew', '*BEEP!* Two cups. One trip. Kitchen: mine.'],
+    ['', 'Across the street, Moka watches from her porch. She nods, once.'],
+  ],
+  14: [
+    ['porter', '*ding ding!* Table read! Table found! Drink delivered!'],
+    ['pip:happy', 'See? Best job. Wait till you know everybody’s name.'],
+  ],
+  15: [
+    ['albert:happy', 'My cup’s gone and the table’s spotless. Now that’s service.'],
+    ['porter', '*ding* Cup to sink. Gently. Brew said.'],
+    ['brew', '*bip* Gently. Good.'],
+  ],
+  16: [
+    ['porter', '*ding ding!* Two guests! One trip! Zero spills!'],
+    ['pip:happy', 'Zero spills. Okay, Porter. I think you’re ready.'],
+    ['porter', '*soft beep* Pip come back Saturday?'],
+  ],
+  17: [
+    ['guest:happy', 'Lid on, and I’ll still make my train. Brilliant!'],
+    ['porter', '*ding* Shelf is table now. Shelf: happy.'],
+    ['niko:happy', 'Their first morning on their own, and nobody missed a train.'],
+  ],
+  18: [
+    ['brew', '*clink clink* Washed. Washed. Washed. Four cups, every guest!'],
+    ['niko:happy', 'Four cups for the whole café, and they kept up. Let’s not tell the supplier.'],
+  ],
+  19: [
+    ['rosa:happy', 'Tea in hand, and four minutes to spare! I owe you a tip.'],
+    ['brew', '*BEEP* Rush done. Breathing now.'],
+  ],
+  20: [
+    ['', 'The last table is clear. Three little lights blink off in the back room.'],
+    ['niko:happy', 'Everyone served, every cup washed, every robot docked. I can actually lock up on time.'],
+  ],
+  21: [
+    ['niko:happy', 'Look at that. I finished a whole coffee, and nobody needed me once.'],
+    ['query', '*bip*'],
+    ['brew', '*BEEP!*'],
+    ['porter', '*ding!*'],
+  ],
+};
+
+/** The scene that closes a passed shift, before Niko's star verdict. Empty when none is written. */
+export function shiftOutro(index: number): DialogueLine[] {
+  const written = outros[index + 1];
+  return written ? script(written) : [];
+}

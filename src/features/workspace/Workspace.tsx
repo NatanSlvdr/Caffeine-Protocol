@@ -27,6 +27,8 @@ export interface WorkspaceShift {
   brief: ShiftBrief;
   /** The café scene that opens the shift. */
   intro: DialogueLine[];
+  /** The scene that pays a passed shift off, before the star verdict. */
+  outro: DialogueLine[];
   title: string;
 }
 
@@ -55,7 +57,7 @@ export function Workspace({
   onComplete,
   onSound,
 }: WorkspaceProps) {
-  const { level, lesson, brief, intro } = shift;
+  const { level, lesson, brief, intro, outro } = shift;
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
   const textMode = save.settings.text_editor;
@@ -127,7 +129,7 @@ export function Workspace({
     scene === 'failure' && running && result && !result.passed
       ? failureLines(result, role)
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index)
+        ? successLines(result, role, index, outro)
         : undefined;
   return (
     <main className="workspace-main">

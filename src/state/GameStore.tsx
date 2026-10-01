@@ -3,7 +3,7 @@ import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
 import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
-import { shiftIntro } from '@/data/campaign/dialogue';
+import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
 import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
@@ -116,12 +116,13 @@ export function useGame(): GameStore {
   return store;
 }
 
-/** Everything a shift screen needs: level, lesson, brief, intro scene, and title. */
+/** Everything a shift screen needs: level, lesson, brief, intro and payoff scenes, and title. */
 export function useShift(index: number): {
   level: (typeof levels)[number];
   lesson: (typeof lessons)[number];
   brief: ShiftNarrative;
   intro: DialogueLine[];
+  outro: DialogueLine[];
   title: string;
 } {
   return {
@@ -129,6 +130,7 @@ export function useShift(index: number): {
     lesson: lessons[index],
     brief: narrativeFor(index),
     intro: shiftIntro(index),
+    outro: shiftOutro(index),
     title: titleFor(index),
   };
 }

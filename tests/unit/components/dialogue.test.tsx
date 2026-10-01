@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
 import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
-import { shiftIntro } from '../../../src/data/campaign/dialogue';
+import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
 import { levels } from '../../../src/data';
 import { failureLines, successLines } from '../../../src/features/workspace/reactions';
@@ -116,6 +116,16 @@ describe('scripts', () => {
     }
   });
 
+  it('pays every shift off with a scene, spoken only by known cast', () => {
+    for (let i = 0; i < levels.length; i++) {
+      const outro = shiftOutro(i);
+      expect(outro.length, `shift ${i + 1}`).toBeGreaterThan(0);
+      for (const l of outro) expect(l.text.trim(), `shift ${i + 1}`).not.toBe('');
+      for (const who of speakers(outro)) expect(CAST_IDS).toContain(who);
+    }
+    expect(shiftOutro(levels.length)).toEqual([]);
+  });
+
   it('names every cast member', () => {
     for (const id of CAST_IDS) expect(cast[id].name).toBeTruthy();
   });
@@ -162,5 +172,13 @@ describe('reactions', () => {
     expect(successLines({ ...passed, observation: true }, 'query', 0)).toHaveLength(1);
     expect(successLines({ ...passed, stars: 1 }, 'query', 0)[1].text).toContain('fewer blocks');
     expect(successLines({ ...passed, stars: 2 }, 'query', 0)[1].text).toContain('fewer steps');
+  });
+
+  it('plays the shift payoff in place of the stock cheer, then the verdict', () => {
+    const passed = { passed: true, observation: false, stars: 3, first_failure: null } as unknown as RunResult;
+    const payoff = [line('juno:happy', 'Actual tea.')];
+    const lines = successLines(passed, 'query', 2, payoff);
+    expect(lines.map((l) => l.text)).toEqual(['Actual tea.', expect.stringContaining('Three stars')]);
+    expect(successLines({ ...passed, observation: true }, 'query', 0, payoff)).toEqual(payoff);
   });
 });
