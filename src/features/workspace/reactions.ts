@@ -152,6 +152,12 @@ const kinds: FailureKind[] = [
     hint: 'Head back to the register after the last ticket so the guest can pay.',
   },
   {
+    match: /dirty cup is on table/,
+    by: 'robot',
+    react: () => '*beep?* No cup here.',
+    hint: 'Used cups don’t come with a ticket: Wait for Dirty cups names the table one was left on. Store its table and walk there before you Take it up.',
+  },
+  {
     match: /not table|no table|Store a table/,
     by: 'guest',
     react: () => 'Sorry, I don’t think that one’s mine.',

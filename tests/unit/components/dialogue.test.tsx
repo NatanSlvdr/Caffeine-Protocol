@@ -165,6 +165,9 @@ describe('reactions', () => {
     expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
     expect(niko('Move to the sink first: it’s 2 tiles from here.')).toContain('walk over before using it');
     expect(niko('Carry a ready drink before serving.')).toContain('Pick it up first');
+    // A dirty cup has no ticket, so Niko doesn't point at one.
+    expect(niko('The dirty cup is on table 3, not table 2.')).toContain('Wait for Dirty cups names the table');
+    expect(niko('This drink is for table 3, not table 2.')).toContain('The ticket names the table');
   });
   it('lets the stuck robot speak for itself', () => {
     const [robot] = failureLines(failure('Something odd happened.', { role: 'prep' }), 'query');
