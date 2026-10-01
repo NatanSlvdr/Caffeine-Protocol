@@ -21,8 +21,9 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Bot size={16} /> The crew
           </h3>
           <p>
-            {CAMPAIGN_LENGTH} shifts, three robots. Query takes orders from shift {UNLOCKS.query}, Brew runs the kitchen
-            from shift {UNLOCKS.prep}, and Porter works the floor from shift {UNLOCKS.floor}.
+            The café has more guests than one pair of hands can serve. Over {CAMPAIGN_LENGTH} shifts, you program three
+            secondhand robots until it runs by itself: Query takes orders from shift {UNLOCKS.query}, Brew runs the
+            kitchen from shift {UNLOCKS.prep}, and Porter works the floor from shift {UNLOCKS.floor}.
           </p>
           <p>Until you program those roles, Moka brews and Pip serves on their own.</p>
         </section>
@@ -47,7 +48,10 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             MOVE counts whole tiles in screen directions. A blocked move stops early, and customers never block the way.
             Station actions only work beside the matching equipment.
           </p>
-          <p>Coffee costs 3 credits and tea 2; sugar is on the house. Checkout at the register is automatic.</p>
+          <p>
+            The ticket ties the crew together: Query writes down what the guest asked for, Brew makes exactly what the
+            ticket says, and Porter takes it to the table it names. A slip at the counter reaches the table.
+          </p>
         </section>
         <section className="settings-block">
           <h3>
