@@ -158,6 +158,11 @@ describe('reactions', () => {
     expect(niko('This order is unclear. Use Help before taking paper.')).toContain('Guessing');
     expect(niko('Wait for dirty cups before collecting one.')).toContain('job it has been handed');
     expect(niko('This shift requires carrying 2 items together.')).toContain('Fill both hands');
+    // Brew's sugar slip is about counting it in, not reading the order.
+    expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
+    expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
+    expect(niko('Move to the sink first: it’s 2 tiles from here.')).toContain('walk over before using it');
+    expect(niko('Carry a ready drink before serving.')).toContain('Pick it up first');
   });
   it('lets the stuck robot speak for itself', () => {
     const [robot] = failureLines(failure('Something odd happened.', { role: 'prep' }), 'query');

@@ -134,6 +134,12 @@ const kinds: FailureKind[] = [
     hint: 'Finish the recipe before adding sugar or sending the drink out.',
   },
   {
+    match: /takes .+, but it has \d+/,
+    by: 'guest',
+    react: (p) => `I said “${p}”. The sugar’s all wrong.`,
+    hint: 'Brew adds exactly the sugar on the ticket: count it out, and stop there.',
+  },
+  {
     match: /sugar/i,
     by: 'guest',
     react: (p) => `I said “${p}”. The sugar’s all wrong.`,
@@ -156,6 +162,18 @@ const kinds: FailureKind[] = [
     by: 'robot',
     react: () => '*bzzt* Hands full. Cannot hold more.',
     hint: 'Put something down before picking up more.',
+  },
+  {
+    match: /^Move to .+ first/,
+    by: 'robot',
+    react: () => '*bonk* Too far. Arms not that long.',
+    hint: 'A robot only reaches what’s right beside it: walk over before using it.',
+  },
+  {
+    match: /^Carry a .+ before/,
+    by: 'robot',
+    react: () => '*whirr* Hands empty. Nothing to put down.',
+    hint: 'Pick it up first: a robot can only put down what it’s holding.',
   },
   {
     match: /Instruction limit/,
