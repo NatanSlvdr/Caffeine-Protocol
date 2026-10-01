@@ -29,7 +29,7 @@ const entries: Entry[] = [
 ];
 
 /**
- * The campaign as Niko's kitchen rail. Each act hangs there as an order ticket, one line per shift,
+ * The campaign as the café's kitchen rail. Each act hangs there as an order ticket, one line per shift,
  * and the selected shift is chalked up beside it as today’s special.
  */
 export function CampaignPage() {
@@ -163,7 +163,7 @@ export function CampaignPage() {
       </ShellBar>
 
       <header className="pass-title">
-        <p className="pass-kicker">Niko’s kitchen · Order rail</p>
+        <p className="pass-kicker">{shop} · Order rail</p>
         <h1>Choose a shift</h1>
         <p className="pass-progress">
           <strong>{progress.done}</strong> of {progress.total} shifts served

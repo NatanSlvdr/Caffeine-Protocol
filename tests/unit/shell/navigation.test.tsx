@@ -22,6 +22,7 @@ describe('shift entry navigation', () => {
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
     expect(screen.getByRole('heading', { name: 'Choose a shift' })).toBeTruthy();
+    expect(screen.getByText('Lou’s · Order rail')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Selected shift' })).toBeNull();
 
     // A new café opens on its first scene; the first shift waits behind it.
@@ -79,6 +80,7 @@ describe('shift entry navigation', () => {
     expect(screen.getByRole('button', { name: /^Shift 3: .*, 3 of 3 stars$/ })).toBeTruthy();
     // A finished campaign hangs Niko’s name over the door.
     expect(screen.getByText(/^Café Niko · Order #/)).toBeTruthy();
+    expect(screen.getByText('Café Niko · Order rail')).toBeTruthy();
   });
 
   it('labels the next and locked shifts on the rail', () => {
