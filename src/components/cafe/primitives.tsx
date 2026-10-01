@@ -59,7 +59,7 @@ function Surface({ color, roughness, glow = 0 }: { color: string; roughness: num
       color={color}
       roughness={finish.roughness}
       metalness={finish.metalness}
-      emissive={glow ? color : undefined}
+      emissive={glow ? color : '#000000'}
       emissiveIntensity={glow}
     />
   );
