@@ -1282,8 +1282,17 @@ export function* streamService(
     yield next;
     now = next;
   }
-  if (!failure && (now > SIM_DURATION_SECONDS || transitions >= MAX_TRANSITIONS))
-    fail(workers[0], 'Simulation limit reached (3,600 seconds).');
+  if (!failure && (now > SIM_DURATION_SECONDS || transitions >= MAX_TRANSITIONS)) {
+    // Blame the robot still on the move, not one patiently waiting for work that never came.
+    const busy =
+      workers.find(
+        (w) => number >= ROBOT_UNLOCK_LEVELS[w.role] && !w.done && !isWait(w.program.instructions[w.pc] ?? ''),
+      ) ?? workers[0];
+    fail(
+      busy,
+      `An hour went by and the service still isn’t finished: ${ROBOT_DISPLAY_NAMES[busy.role]} keeps going round its loop without reaching its next job.`,
+    );
+  }
   for (const event of events) {
     const created = Number.isFinite(event.timing.created) ? event.timing.created : Math.max(now, event.timing.arrival);
     const served = Number.isFinite(event.timing.served) ? event.timing.served : Math.max(now, created);

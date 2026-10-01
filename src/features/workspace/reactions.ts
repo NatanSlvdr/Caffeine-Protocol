@@ -188,7 +188,7 @@ const kinds: FailureKind[] = [
     hint: 'Pick it up first: a robot can only put down what it’s holding.',
   },
   {
-    match: /Instruction limit/,
+    match: /Instruction limit|keeps going round its loop/,
     by: 'robot',
     react: () => '*whirrrrrr* Round and round. Very dizzy.',
     hint: 'Something loops forever. Make sure every loop waits for, or reaches, its next job.',
