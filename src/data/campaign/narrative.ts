@@ -13,12 +13,12 @@ export const campaignNarrative: ShiftNarrative[] = [
     level: 1,
     title: 'Brew Beginnings',
     story:
-      'The doors are open again! Niko greets the very first customers, Moka runs the kitchen and Pip carries the drinks. Everyone is very busy. Mostly Niko.',
+      'The doors are open again! Niko greets the very first customer, Moka runs the kitchen and Pip carries the drinks. Everyone is very busy. Mostly Niko.',
     objective:
       'Watch how one customer’s order goes from the register to a finished drink and a cleared table. Niko writes every ticket by hand: spot the job Query could take over.',
     hint: 'Watch one order go round.',
     lessonNote:
-      'Niko: The café is ours now. Watch customers order, receive a drink and leave a clean table. Follow each order from the register, through the kitchen, to the table.',
+      'Niko: The café is ours now. Watch a customer order, receive a drink and leave a clean table. Follow each order from the register, through the kitchen, to the table.',
   },
   {
     level: 2,
@@ -32,24 +32,24 @@ export const campaignNarrative: ShiftNarrative[] = [
   },
   {
     level: 3,
-    title: 'Coffee or Tea?',
-    story:
-      'Tea has joined the menu and the great debate begins. Some guests still want coffee, others would like tea. Query has to listen closely.',
-    objective:
-      'Customers now order either coffee or tea. Each ticket must name the drink the customer actually asked for.',
-    hint: 'Listen for the word tea.',
-    lessonNote:
-      'Conditions check what the customer said. Use If Tea IN Orders to test it, then Write Tea or Write Coffee. No loop is needed yet.',
-  },
-  {
-    level: 4,
     title: 'Groundhog Latte',
     story: 'One happy customer is a good start. But another guest is already at the door. And another. And another…',
     objective:
-      'Several customers are waiting, but Query stops after the first order. Every customer in the queue needs to be served.',
+      'Several customers are waiting for a coffee, but Query stops after the first order. Every customer in the queue needs to be served.',
     hint: 'Jump back and listen again.',
     lessonNote:
       'Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. Keep serving every customer.',
+  },
+  {
+    level: 4,
+    title: 'Coffee or Tea?',
+    story:
+      'Tea has joined the menu and the great debate begins. Some guests in the queue still want coffee, others would like tea. Query has to listen closely.',
+    objective:
+      'Customers now order either coffee or tea. Each ticket must name the drink that customer actually asked for.',
+    hint: 'Listen for the word tea.',
+    lessonNote:
+      'Conditions check what the customer said. Inside the loop, use If Tea IN Orders to test it, then Write Tea or Write Coffee.',
   },
   {
     level: 5,

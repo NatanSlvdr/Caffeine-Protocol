@@ -1,5 +1,5 @@
 {
-  "note": "Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. Keep serving every customer.",
+  "note": "Conditions check what the customer said. Inside the loop, use If Tea IN Orders to test it, then Write Tea or Write Coffee.",
   "solution": "POSITION listen\nLISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen",
-  "starter": "LISTEN\nTAKE UP\nIF tea IN CUSTOMER SPEECH\n  ITEM tea\nELSE\n  ITEM coffee\nEND\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1"
+  "starter": "POSITION listen\nLISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen"
 }

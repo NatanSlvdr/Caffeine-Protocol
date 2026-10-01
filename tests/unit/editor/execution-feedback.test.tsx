@@ -129,14 +129,14 @@ describe('story-led, compact shift header', () => {
   it('places compact help and options beside the title, with story before goal', async () => {
     const onHelp = vi.fn(),
       onOptions = vi.fn(),
-      brief = narrativeFor(2);
+      brief = narrativeFor(3);
     render(
       <CodingPaneHeader
         shift="Coffee or Tea?"
         story={brief.story}
         objective={brief.objective}
         role="query"
-        level={3}
+        level={4}
         onRole={() => {}}
         onHelp={onHelp}
         onOptions={onOptions}

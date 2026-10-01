@@ -26,49 +26,11 @@
               "tokens": ["coffee"]
             }
           ]
-        },
-        {
-          "arrival": 12,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C2",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
-        },
-        {
-          "arrival": 24,
-          "clarification": "",
-          "clarification_intent": {},
-          "customer_id": "C3",
-          "expected": {
-            "item": "coffee"
-          },
-          "intent": {
-            "confidence": "clear",
-            "drink": "coffee"
-          },
-          "phrase": "coffee",
-          "heard_orders": [
-            {
-              "tokens": ["coffee"]
-            }
-          ]
         }
       ],
       "id": "L01_A"
     }
   ],
-  "summary": "Watch Niko welcome the first customers and serve their coffee.",
+  "summary": "Watch Niko welcome the first customer and serve their coffee.",
   "title": "Level 1: Brew Beginnings"
 }

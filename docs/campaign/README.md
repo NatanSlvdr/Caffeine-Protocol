@@ -8,8 +8,8 @@ Each shift has a page with its story, lesson, customers and reference programs i
 | --- | --- | --- | --- | --- | --- | --- |
 | L01 | Brew Beginnings | 2 | 1 | 0 | 0 | Niko: The café is ours now. |
 | L02 | Hello, World Roast | 3 | 1 | 8 | 7 | Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. |
-| L03 | Coffee or Tea? | 4 | 3 | 12 | 27 | Conditions check what the customer said. |
-| L04 | Groundhog Latte | 5 | 3 | 14 | 136 | Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. |
+| L03 | Groundhog Latte | 5 | 3 | 10 | 109 | Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. |
+| L04 | Coffee or Tea? | 5 | 3 | 14 | 136 | Conditions check what the customer said. |
 | L05 | Sugar, No Sugar | 5 | 3 | 21 | 301 | If Sugar IN Orders catches a request for sugar, and Write 1 Sugar puts it on the held paper. |
 | L06 | For Each Their Own | 6 | 3 | 23 | 264 | For item in order visits each drink in the order. |
 | L07 | One Lump or Two? | 6 | 4 | 28 | 383 | If Number IN item checks for a count. |

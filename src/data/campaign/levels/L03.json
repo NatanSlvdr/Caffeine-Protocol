@@ -1,10 +1,10 @@
 {
-  "active_tables": 4,
-  "block_target": 12,
+  "active_tables": 5,
+  "block_target": 10,
   "id": "L03",
-  "instruction_target": 27,
+  "instruction_target": 109,
   "programming_enabled": true,
-  "reference_block_count": 10,
+  "reference_block_count": 8,
   "seeds": [
     {
       "id": "L03_A",
@@ -22,6 +22,48 @@
           },
           "customer_id": "C1",
           "arrival": 0
+        },
+        {
+          "phrase": "coffee please",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "a coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C4",
+          "arrival": 24
         }
       ]
     },
@@ -29,18 +71,60 @@
       "id": "L03_B",
       "customers": [
         {
-          "phrase": "tea",
+          "phrase": "coffee please",
           "heard_orders": [
             {
-              "tokens": ["tea"]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
           "expected": {
-            "item": "tea"
+            "item": "coffee"
           },
           "customer_id": "C1",
           "arrival": 0
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "a coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C4",
+          "arrival": 24
         }
       ]
     },
@@ -48,23 +132,65 @@
       "id": "L03_C",
       "customers": [
         {
-          "phrase": "tea please",
+          "phrase": "a coffee",
           "heard_orders": [
             {
-              "tokens": ["tea"]
+              "tokens": ["coffee"]
             }
           ],
           "intent": {},
           "expected": {
-            "item": "tea"
+            "item": "coffee"
           },
           "customer_id": "C1",
           "arrival": 0
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C2",
+          "arrival": 8
+        },
+        {
+          "phrase": "coffee please",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C3",
+          "arrival": 16
+        },
+        {
+          "phrase": "coffee",
+          "heard_orders": [
+            {
+              "tokens": ["coffee"]
+            }
+          ],
+          "intent": {},
+          "expected": {
+            "item": "coffee"
+          },
+          "customer_id": "C4",
+          "arrival": 24
         }
       ]
     }
   ],
-  "summary": "Conditions check what the customer said. Use If Tea IN Orders to test it, then Write Tea or Write Coffee. No loop is needed yet.",
-  "title": "Level 3: Coffee or Tea?",
+  "summary": "Put a Jump destination above Wait for Orders, and a Jump back to it after returning to the register. Keep serving every customer.",
+  "title": "Level 3: Groundhog Latte",
   "act": 1
 }

@@ -52,12 +52,12 @@ describe('token interpreter and physical order handling', () => {
       intent: { drink: 'tea' as const, with_sugar: true },
       expected: { item: 'tea' as const },
     };
-    const result = exec(lessons[2].solution, customer, UNLOCKS.choices);
+    const result = exec(lessons[UNLOCKS.choices - 1].solution, customer, UNLOCKS.choices);
     expect(result.tickets[0].item).toBe('coffee');
     expect(result.tickets[0].source_intent).toEqual({});
   });
   it('resumes at the next customer without stale tokens', () => {
-    const p = compileProgram(lessons[3].solution, UNLOCKS.loop),
+    const p = compileProgram(lessons[UNLOCKS.choices - 1].solution, UNLOCKS.choices),
       a = executeCustomerEvent(p, coffee, 'a'),
       b = executeCustomerEvent(p, tea, 'b', a.state);
     expect(b.error).toBe('');
@@ -181,9 +181,9 @@ describe('token interpreter and physical order handling', () => {
       'Deposit this item’s paper',
     ));
   it('fails on first customer mismatch and highlights the item source', () => {
-    const r = run(2, lessons[1].solution);
+    const r = run(UNLOCKS.choices - 1, lessons[UNLOCKS.loop - 1].solution);
     expect(r.events).toHaveLength(2);
-    expect(r.first_failure?.seed_id).toBe('L03_B');
-    expect(r.first_failure?.error_line).toBe(2);
+    expect(r.first_failure?.seed_id).toBe('L04_A');
+    expect(r.first_failure?.error_line).toBe(3);
   });
 });

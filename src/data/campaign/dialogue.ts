@@ -45,18 +45,6 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ],
   ],
   3: [
-    ['niko:happy', 'Big news: tea is on the menu!'],
-    ['juno:happy', 'Finally. I’ve been drinking hot water with a sad face for a week.'],
-    ['query', '*bip boop* Menu doubled. Only know write coffee.'],
-    ['niko:worried', 'Right. It can’t choose yet. Hang on…'],
-    ['', 'Niko props the manual open on the counter and starts turning screws.'],
-    ['query', '*bzzt* Ticklish.'],
-    [
-      'niko:happy',
-      'There! New command: [IF tea IN CUSTOMER SPEECH|If]. It checks something, like what the customer said. The blocks inside only run when it’s true, and [ELSE|Else] covers everything else.',
-    ],
-  ],
-  4: [
     ['query', 'One customer served. Task complete. *whirrr… click*'],
     ['niko:surprised', 'Wait! There’s another one at the door. And another. And… is that a bus?'],
     ['query', '*bzzt* No more lines. Nothing to do. Sleep now.'],
@@ -66,6 +54,18 @@ const intros: Record<number, readonly ScriptLine[]> = {
     [
       'niko:happy',
       'Got it! You now have [JUMP listen|Jump]. When it’s read, the code goes straight back to a [POSITION listen|Position] marker, wherever you put it. Everything after the marker runs again.',
+    ],
+  ],
+  4: [
+    ['niko:happy', 'Big news: tea is on the menu!'],
+    ['juno:happy', 'Finally. I’ve been drinking hot water with a sad face for a week.'],
+    ['query', '*bip boop* Menu doubled. Only know write coffee.'],
+    ['niko:worried', 'Right. It can’t choose yet. Hang on…'],
+    ['', 'Niko props the manual open on the counter and starts turning screws.'],
+    ['query', '*bzzt* Ticklish.'],
+    [
+      'niko:happy',
+      'There! New command: [IF tea IN CUSTOMER SPEECH|If]. It checks something, like what the customer said. The blocks inside only run when it’s true, and [ELSE|Else] covers everything else.',
     ],
   ],
   5: [
@@ -285,12 +285,12 @@ const outros: Record<number, readonly ScriptLine[]> = {
     ['niko:happy', 'Your code just served a real customer. Lou would have framed that ticket.'],
   ],
   3: [
-    ['juno:happy', 'Actual tea. In a cup. I could cry.'],
-    ['query', '*bip* Coffee or tea. Asked and answered.'],
-  ],
-  4: [
     ['query', '*bip* Customer. Customer. Customer. Customer. …Still listening.'],
     ['niko:happy', 'The whole bus, served. Now it keeps going for as long as anyone is at the counter.'],
+  ],
+  4: [
+    ['juno:happy', 'Actual tea. In a cup. I could cry.'],
+    ['query', '*bip* Coffee or tea. Asked and answered.'],
   ],
   5: [
     ['juno:happy', 'No sugar. It actually listened to the “without”.'],

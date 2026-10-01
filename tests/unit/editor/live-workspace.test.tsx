@@ -95,8 +95,8 @@ describe('live workspace lifecycle', () => {
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-    // The shift pays off first, Juno gets her tea; the receipt waits until the player is done listening.
-    expect(screen.getByRole('dialog', { name: 'Dialogue' }).textContent).toContain('Actual tea');
+    // The shift pays off first, Query keeps listening; the receipt waits until the player is done listening.
+    expect(screen.getByRole('dialog', { name: 'Dialogue' }).textContent).toContain('Still listening');
     expect(screen.queryByText('Service complete')).toBeNull();
     while (screen.queryByRole('button', { name: 'Next' }))
       fireEvent.click(screen.getByRole('button', { name: 'Next' }));
@@ -107,7 +107,7 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByText('Service complete')).toBeTruthy();
     expect(savedStars()['2']).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: /Next shift/ })).toBeTruthy();
-    expect(screen.getByText('Groundhog Latte')).toBeTruthy();
+    expect(screen.getByText('Coffee or Tea?')).toBeTruthy();
   });
   it('pauses without advancing and cancels an unfinished run without awarding progress', () => {
     open();
