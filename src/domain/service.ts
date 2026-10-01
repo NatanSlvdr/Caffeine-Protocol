@@ -1260,13 +1260,22 @@ export function* streamService(
       else if (!finished()) {
         // A robot that ran past its last line (rather than Stopping at closing) left its work behind.
         const ranOut = workers.find((w) => w.done && !w.closed && number >= ROBOT_UNLOCK_LEVELS[w.role]);
-        const stuck = ranOut ?? workers.find((w) => !w.done) ?? workers[0];
+        // Otherwise the robot sitting on unfinished work is the one to fix, not the one waiting for it.
+        const holding = workers.find((w) => !w.done && w.inventory.length && number >= ROBOT_UNLOCK_LEVELS[w.role]);
+        const stuck = ranOut ?? holding ?? workers.find((w) => !w.done) ?? workers[0];
         const name = ROBOT_DISPLAY_NAMES[stuck.role];
+        const cargo = stuck.inventory[0];
         fail(
           stuck,
           ranOut
             ? `${name} reached the end of its program with work still to do: end it with Repeat, so ${name} goes back to the top for the next ${stuck.role === 'prep' ? 'ticket' : 'job'}.`
-            : `${name} is waiting here, but nothing more is coming its way, and the service isn’t finished. Check where the work it’s waiting for got stuck.`,
+            : !holding
+              ? `${name} is waiting here, but nothing more is coming its way, and the service isn’t finished. Check where the work it’s waiting for got stuck.`
+              : cargo.stage === 'dirty'
+                ? `${name} is still holding a used cup, and it never reached the sink: finish clearing it before waiting for more work.`
+                : stuck.role === 'prep'
+                  ? `${name} is still holding a ${cargo.item}, and its guest is waiting for it: finish it and leave it at pickup before waiting for another ticket.`
+                  : `${name} is still holding the ${cargo.item} for ${cargo.table ? `table ${cargo.table}` : 'the to-go shelf'}, and its guest is waiting for it: serve it before waiting for more work.`,
         );
       } else if (config.closing) {
         const open = workers.find((w) => number >= ROBOT_UNLOCK_LEVELS[w.role] && !w.done);

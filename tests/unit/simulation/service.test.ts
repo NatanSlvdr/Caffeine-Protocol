@@ -145,6 +145,13 @@ describe('recipes, handoffs, and capacities', () => {
     expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
     expect(r.first_failure?.role).toBe('prep');
   });
+  it('blames the robot holding an undelivered drink, not the one waiting for work', () => {
+    // Without Call deliver, Porter takes a drink down and goes straight to clearing cups that never come.
+    const floor = referencePrograms(UNLOCKS.clearing).floor.replace('\nCALL deliver', '');
+    const r = service({ floor }, UNLOCKS.clearing);
+    expect(r.first_failure?.role).toBe('floor');
+    expect(r.first_failure?.reason).toMatch(/^Porter is still holding the (coffee|tea) for table \d+/);
+  });
   it('blames the robot pacing in circles when the service runs out of time', () => {
     // Porter never waits for a drink, so Brew sits idle at Wait for Orders: Porter is the one to fix.
     const r = service({ floor: 'MOVE RIGHT 1\nMOVE LEFT 1\nREPEAT' }, UNLOCKS.floor);

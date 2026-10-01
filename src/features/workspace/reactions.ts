@@ -86,6 +86,12 @@ const kinds: FailureKind[] = [
     hint: 'A robot only acts on a job it has been handed. Start with the right Wait block, so it knows what to do.',
   },
   {
+    match: /is still holding .+ waiting for/,
+    by: 'robot',
+    react: () => '*whirr* Still holding this. Forgot?',
+    hint: 'A robot that picks something up has to see it through. Make sure every path through its program puts it down where it belongs.',
+  },
+  {
     match: /reached the end of its program/,
     by: 'robot',
     react: () => '*whirr… click* All done? Not all done.',

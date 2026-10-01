@@ -170,6 +170,11 @@ describe('reactions', () => {
         'An hour went by and the service still isn’t finished: Porter keeps going round its loop without reaching its next job.',
       ),
     ).toContain('Something loops forever');
+    expect(
+      niko(
+        'Porter is still holding the coffee for table 2, and its guest is waiting for it: serve it before waiting for more work.',
+      ),
+    ).toContain('has to see it through');
     // Brew's sugar slip is about counting it in, not reading the order.
     expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
     expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
