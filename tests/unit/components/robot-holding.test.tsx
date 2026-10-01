@@ -131,7 +131,7 @@ it('animates bubble height without changing its width or remounting the shell', 
   );
   const bubble = screen.getByLabelText('Query is holding');
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('115px');
+  expect(bubble.style.height).toBe('110px');
   bounds = { width: 150, height: 140 };
   rerender(
     <RobotHolding
@@ -144,12 +144,12 @@ it('animates bubble height without changing its width or remounting the shell', 
   act(() => resize?.());
   expect(screen.getByLabelText('Query is holding')).toBe(bubble);
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('165px');
+  expect(bubble.style.height).toBe('160px');
   bounds = { width: 50, height: 20 };
   rerender(<RobotHolding name="Query" inventory={[]} variables={{ var1: 2 }} />);
   act(() => resize?.());
   expect(bubble.style.width).toBe('');
-  expect(bubble.style.height).toBe('45px');
+  expect(bubble.style.height).toBe('40px');
   unmount();
   expect(disconnect).toHaveBeenCalledOnce();
 });

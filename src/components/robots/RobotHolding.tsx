@@ -88,7 +88,7 @@ export function RobotHolding({
       label={`${name} is holding`}
       paused={paused}
       reduced={reduced}
-      extraHeight={25}
+      extraHeight={20}
     >
       <span
         className="robot-name bubble-pill"

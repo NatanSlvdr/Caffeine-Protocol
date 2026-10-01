@@ -2343,70 +2343,74 @@ html[data-motion='reduced'] .drop-projection {
 }
 
 /*
- * Scene bubbles. Customers, the order queue and the robots all talk in comic speech bubbles drawn
- * like the cutscene dialogue box: a thick ink outline on warm paper, a hard ink lip under it and a
- * curved tail. A speaker with a name wears it on a pill over the top edge, in their cutscene colour.
+ * Scene bubbles. Quiet notes over the café: warm paper, a fine brown outline, a soft shadow and a
+ * small curved tail. Colour is kept for information only: the speaker's name pill, in their
+ * cutscene colour, and the running action, in its code block's colour.
  */
 .customer-speech,
 .robot-holding {
-  --bubble-ink: #392b24;
-  --bubble-paper: #fffcf4;
+  --bubble-ink: #3d2e25;
+  --bubble-line: #7a5f4a;
+  --bubble-paper: #fffaf0;
+  --bubble-well: #f5ecdc;
+  --bubble-well-line: #e8d9bf;
   position: relative;
   transform: translateY(-50%);
-  border: 2.5px solid var(--bubble-ink);
-  border-radius: 16px;
+  border: 1.5px solid var(--bubble-line);
+  border-radius: 12px;
   background: var(--bubble-paper);
   color: var(--bubble-ink);
-  /* A filter rather than a box-shadow, so the tail and pill share the lip and shadow. */
-  filter: drop-shadow(0 3px 0 var(--bubble-ink)) drop-shadow(0 9px 10px #1d151047);
+  /* A filter rather than a box-shadow, so the tail shares the shadow. */
+  filter: drop-shadow(0 5px 7px #2a1a0e38);
   pointer-events: auto;
 }
 .bubble-tail {
   position: absolute;
   top: calc(100% - 1px);
-  left: calc(50% - 6.5px);
-  width: 20px;
-  height: 15px;
+  left: calc(50% - 4.5px);
+  width: 14px;
+  height: 10px;
   overflow: visible;
   fill: var(--bubble-paper);
-  stroke: var(--bubble-ink);
-  stroke-width: 2.5px;
+  stroke: var(--bubble-line);
+  stroke-width: 1.5px;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
 .bubble-pill {
   position: absolute;
-  top: -12px;
+  top: -9px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 4px;
-  height: 21px;
-  padding: 0 9px 0 7px;
-  border: 2.5px solid var(--bubble-ink);
+  gap: 3px;
+  height: 16px;
+  padding: 0 7px 0 5px;
+  border: 1.5px solid var(--bubble-paper);
   border-radius: 999px;
   background: var(--pill, #ecd29b);
+  box-shadow: 0 0 0 1px var(--bubble-line);
   color: var(--pill-ink, var(--bubble-ink));
   font:
-    800 10.5px/1 'Avenir Next',
+    800 9.5px/1 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.03em;
   white-space: nowrap;
 }
 .bubble-pill svg {
   flex: none;
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
 }
 
 /* A customer's bubble holds their words and, beneath, the orders the counter heard. */
 .customer-speech {
   width: max-content;
-  max-width: 220px;
-  padding: 8px 11px 9px;
+  max-width: 210px;
+  padding: 7px 10px 8px;
   text-align: center;
 }
 /* Beside the order taker, a long order grows away from it: right edge fixed just past the customer. */
@@ -2414,12 +2418,12 @@ html[data-motion='reduced'] .drop-projection {
   transform: translate(calc(-50% + 36px), -50%);
 }
 .customer-speech.at-counter .bubble-tail {
-  left: calc(100% - 42.5px);
+  left: calc(100% - 40.5px);
 }
 .customer-speech blockquote {
   margin: 0;
   font:
-    700 12.5px/1.35 'Avenir Next',
+    650 12px/1.35 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
@@ -2430,8 +2434,8 @@ html[data-motion='reduced'] .drop-projection {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 5px;
-  margin: 6px 0 0;
+  gap: 4px;
+  margin: 5px 0 0;
   padding: 0;
 }
 .customer-speech .order-icons li {
@@ -2440,41 +2444,41 @@ html[data-motion='reduced'] .drop-projection {
   align-items: center;
   gap: 2px;
   max-width: 100%;
-  padding: 2px 6px 2px 3px;
-  border-radius: 9px;
-  background: #f3e8d2;
-  box-shadow: inset 0 0 0 1.5px #e2d0ae;
+  padding: 2px 5px 2px 3px;
+  border-radius: 8px;
+  background: var(--bubble-well);
+  box-shadow: inset 0 0 0 1px var(--bubble-well-line);
   color: var(--umber);
   font:
-    750 11px/1.3 'Avenir Next',
+    700 10.5px/1.3 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
   overflow-wrap: anywhere;
 }
 .customer-speech .order-icons .model-thumbnail {
-  width: 26px;
-  height: 26px;
+  width: 24px;
+  height: 24px;
 }
 .customer-speech .order-icons .model-sugar {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
 }
 .customer-speech small {
   display: block;
-  margin-top: 5px;
-  color: #817062;
+  margin-top: 4px;
+  color: #8a7564;
   font:
-    italic 650 10.5px/1.3 'Avenir Next',
+    italic 600 10px/1.3 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
 }
 /* The queue stands on the handoff tickets, narrow enough to fit between Query's and Brew's bubbles. */
 .order-queue-bubble {
-  min-width: 80px;
+  min-width: 74px;
   max-width: 104px;
-  padding: 14px 6px 7px;
+  padding: 11px 6px 6px;
 }
 .order-queue-bubble .order-icons {
   margin: 0;
@@ -2484,38 +2488,37 @@ html[data-motion='reduced'] .drop-projection {
   font-style: normal;
 }
 
-/* A robot's bubble: the running action as a small copy of its code block, held things, then memory. */
+/* A robot's bubble: the running action in its code block's colour, held things, then memory. */
 .robot-holding {
-  width: 128px;
-  padding: 13px 7px 7px;
+  width: 124px;
+  padding: 11px 6px 6px;
   transition: height 0.24s ease;
 }
 .robot-holding-content {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   animation-play-state: inherit;
 }
 .robot-holding-content * {
   animation-play-state: inherit;
 }
 
-/* The action wears its block's colour, edge and lip, exactly as the line does in the editor. */
+/* The action is a flat row in its block's colour, with its progress drawn along the bottom. */
 .robot-action {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 6px;
-  min-height: 34px;
-  padding: 5px 7px 7px 5px;
+  gap: 5px;
+  min-height: 28px;
+  padding: 5px 7px 6px 5px;
   overflow: hidden;
-  border: 1.5px solid var(--edge);
-  border-radius: 8px;
+  border-radius: 7px;
   background: var(--tile);
-  box-shadow: 0 2px 0 var(--edge);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--edge) 45%, transparent);
   color: var(--tile-ink);
   font:
-    750 10.5px/1.15 'Avenir Next',
+    750 10px/1.15 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
@@ -2525,12 +2528,12 @@ html[data-motion='reduced'] .drop-projection {
   flex: none;
   display: grid;
   place-items: center;
-  width: 22px;
-  height: 20px;
+  width: 20px;
+  height: 18px;
 }
 .robot-action-icon .block-icon {
-  width: 17px;
-  height: 17px;
+  width: 15px;
+  height: 15px;
 }
 .robot-action-icon svg {
   transform-origin: center;
@@ -2545,15 +2548,15 @@ html[data-motion='reduced'] .drop-projection {
   position: absolute;
   left: 0;
   top: 0;
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
   animation: action-turn 4s linear infinite;
 }
 .action-thinking .thinking-gear + .thinking-gear {
-  left: 10px;
-  top: 8px;
-  width: 12px;
-  height: 12px;
+  left: 9px;
+  top: 7px;
+  width: 11px;
+  height: 11px;
   animation-direction: reverse;
   animation-duration: 3.2s;
 }
@@ -2568,8 +2571,8 @@ html[data-motion='reduced'] .drop-projection {
 .robot-action-progress {
   position: absolute;
   inset: auto 0 0;
-  height: 3px;
-  background: color-mix(in srgb, var(--edge) 28%, transparent);
+  height: 2px;
+  background: color-mix(in srgb, var(--edge) 22%, transparent);
 }
 .robot-action-progress:before {
   content: '';
@@ -2579,7 +2582,7 @@ html[data-motion='reduced'] .drop-projection {
   transform: scaleX(var(--progress, 0));
   transform-origin: left;
 }
-/* A wait with no end in sight yet keeps a slow pulse sweeping through instead of an empty strip. */
+/* A wait with no end in sight yet keeps a slow pulse sweeping through instead of an empty line. */
 .robot-action-progress.idle:before {
   width: 35%;
   border-radius: 999px;
@@ -2595,14 +2598,14 @@ html[data-motion='reduced'] .drop-projection {
   }
 }
 
-/* Each held thing sits in its own little slot, with sugar and order tags beneath. */
+/* Each held thing sits in a small paper well, with sugar and order tags beneath. */
 .robot-holding ul {
   list-style: none;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   align-items: flex-start;
-  gap: 5px;
+  gap: 4px;
   margin: 0;
   padding: 0;
 }
@@ -2617,15 +2620,15 @@ html[data-motion='reduced'] .drop-projection {
   position: relative;
   display: grid;
   place-items: center;
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  background: #f3e8d2;
-  box-shadow: inset 0 0 0 1.5px #e2d0ae;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  background: var(--bubble-well);
+  box-shadow: inset 0 0 0 1px var(--bubble-well-line);
 }
 .robot-holding .model-thumbnail {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
 }
 .robot-holding .holding-badge {
   position: absolute;
@@ -2634,45 +2637,44 @@ html[data-motion='reduced'] .drop-projection {
   padding: 1px;
   border-radius: 4px;
   background: var(--bubble-paper);
-  box-shadow: 0 0 0 1.5px #e2d0ae;
+  box-shadow: 0 0 0 1px var(--bubble-well-line);
 }
 .holding-sugar {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 2px;
-  min-height: 14px;
+  min-height: 13px;
   white-space: nowrap;
   font:
-    750 10px/1.2 'Avenir Next',
+    750 9.5px/1.2 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
 }
 .robot-holding .holding-sugar .model-thumbnail {
-  width: 14px;
-  height: 14px;
+  width: 13px;
+  height: 13px;
 }
 
-/* Memory reads like the Store block that wrote it. */
+/* Memory sits on soft chips in the Store block's purple. */
 .robot-memory {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 4px;
+  gap: 3px;
 }
 .robot-memory > span {
   display: flex;
   align-items: center;
   gap: 3px;
-  padding: 2px 7px 2px 3px;
-  border: 1.5px solid #a993d6;
+  padding: 2px 6px 2px 3px;
   border-radius: 999px;
-  background: #ece4fb;
-  box-shadow: 0 1px 0 #a993d6;
-  color: #38274f;
+  background: #efe8fb;
+  box-shadow: inset 0 0 0 1px #d4c6ee;
+  color: #45336b;
   font:
-    750 9.5px/1.2 'Avenir Next',
+    750 9px/1.2 'Avenir Next',
     'Nunito',
     ui-rounded,
     sans-serif;
