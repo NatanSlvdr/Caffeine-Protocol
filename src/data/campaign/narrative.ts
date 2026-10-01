@@ -160,7 +160,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     level: 15,
     title: 'Cups and Robbers',
     story:
-      'Pip is buried in homework, so the empty cups are Porter’s job now. A clean table is the next guest’s first impression.',
+      'Pip is out buying his school books, so the empty cups are Porter’s job now. A clean table is the next guest’s first impression.',
     objective:
       'Guests leave their empty cups behind, and Porter only knows how to deliver. Every used cup has to go back to the sink before the next guest can sit down.',
     hint: 'Empty cups go to the sink.',
