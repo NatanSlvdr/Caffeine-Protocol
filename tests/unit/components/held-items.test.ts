@@ -61,7 +61,7 @@ describe('arms reach what they hold', () => {
           const pose = humanArmPose(side, { carrying: true, scale, reach });
           const [x, y, z] = pose.hand;
           expect((y + HUMAN_ARM.hand) * scale).toBeGreaterThan(COUNTER_TOP - 0.01);
-          // Torso radius 0.27 and head radius 0.26 (centred above the cup) stay outside the saucer.
+          // The torso (0.25 at the shoulders) and the head (0.21 across) stay outside the saucer.
           expect(Math.hypot(x, z) - SAUCER).toBeGreaterThan(0.27);
         }
   });

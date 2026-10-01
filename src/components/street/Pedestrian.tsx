@@ -6,6 +6,8 @@ import { PEDESTRIAN_LANE_X, STREET_BOUNDS } from '@/domain';
 import { useLoopPosition } from '@/hooks/useLoopPosition';
 import type { StreetMotion } from './StreetMotion';
 
+const SKIN = '#dca87b';
+
 /** Background walkers share one curb-side lane, one direction and one pace, so they never meet each other or the customers' line. */
 export function Pedestrian({ offset, color, paused, reduced }: StreetMotion & { offset: number; color: string }) {
   const ref = useRef<Group>(null);
@@ -23,26 +25,42 @@ export function Pedestrian({ offset, color, paused, reduced }: StreetMotion & { 
   });
   return (
     <group ref={ref} position={[PEDESTRIAN_LANE_X, 0, 0]}>
-      <Cylinder at={[0, 0.84, 0]} size={[0.22, 0.27, 0.62]} color={color} />
-      <mesh position={[0, 1.4, 0]} castShadow>
-        <sphereGeometry args={[0.27, 10, 8]} />
-        <meshStandardMaterial color="#dca87b" />
-      </mesh>
-      <mesh position={[0, 1.54, -0.02]} castShadow>
-        <sphereGeometry args={[0.28, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2]} />
-        <meshStandardMaterial color="#594238" />
-      </mesh>
+      {/* Built like the café's guests: hips, a torso tapering to the waist, a neck and a head smaller than the shoulders. */}
+      <Cylinder at={[0, 0.56, 0]} size={[0.19, 0.2, 0.18]} depth={0.7} color={CAFE_COLORS.charcoal} />
+      <Cylinder at={[0, 0.85, 0]} size={[0.24, 0.18, 0.5]} depth={0.66} color={color} />
+      <Cylinder at={[0, 1.15, 0]} size={[0.065, 0.075, 0.16]} color={SKIN} />
+      <group position={[0, 1.38, 0]} scale={[0.8, 0.86, 0.82]}>
+        <mesh castShadow>
+          <sphereGeometry args={[0.26, 10, 8]} />
+          <meshStandardMaterial color={SKIN} />
+        </mesh>
+        <mesh position={[0, 0.02, -0.02]} rotation-x={-0.5} castShadow>
+          <sphereGeometry args={[0.278, 10, 6, 0, Math.PI * 2, 0, Math.PI * 0.6]} />
+          <meshStandardMaterial color="#594238" />
+        </mesh>
+      </group>
       <group ref={legs} position={[0, 0.52, 0]}>
         {[-1, 1].map((side) => (
-          <group key={side} position={[side * 0.14, 0, 0]}>
-            <Box at={[0, -0.22, 0]} size={[0.16, 0.44, 0.18]} color={CAFE_COLORS.charcoal} />
-            <SoftBox at={[0, -0.45, 0.06]} size={[0.2, 0.12, 0.3]} radius={0.035} color={CAFE_COLORS.cream} />
+          <group key={side} position={[side * 0.1, 0, 0]}>
+            <Box at={[0, -0.22, 0]} size={[0.14, 0.44, 0.16]} color={CAFE_COLORS.charcoal} />
+            <SoftBox at={[0, -0.46, 0.06]} size={[0.16, 0.1, 0.28]} radius={0.03} color={CAFE_COLORS.cream} />
           </group>
         ))}
       </group>
-      <Box at={[-0.33, 0.83, 0]} size={[0.13, 0.44, 0.16]} color={color} />
-      <Box at={[0.33, 0.83, 0]} size={[0.13, 0.44, 0.16]} color={color} />
-      <SoftBox at={[0.34, 0.46, 0.08]} size={[0.3, 0.33, 0.2]} radius={0.025} color={CAFE_COLORS.sand} />
+      {[-1, 1].map((side) => (
+        <group key={side} position={[side * 0.3, 1.02, 0]}>
+          <mesh castShadow>
+            <sphereGeometry args={[0.072, 8, 6]} />
+            <meshStandardMaterial color={color} />
+          </mesh>
+          <Box at={[0, -0.2, 0]} size={[0.1, 0.4, 0.12]} color={color} />
+          <mesh position={[0, -0.43, 0]} castShadow>
+            <sphereGeometry args={[0.065, 8, 6]} />
+            <meshStandardMaterial color={SKIN} />
+          </mesh>
+        </group>
+      ))}
+      <SoftBox at={[0.32, 0.42, 0.06]} size={[0.26, 0.3, 0.18]} radius={0.025} color={CAFE_COLORS.sand} />
     </group>
   );
 }
