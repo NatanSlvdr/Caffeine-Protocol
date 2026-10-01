@@ -147,7 +147,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko taps something inside Brew. A sugar cube falls out of its ear.'],
     [
       'niko:happy',
-      'Found it! For can repeat a number of times now, like [FOR var1 TIMES|For Var A times]. The blocks inside run once per count.',
+      'Found it! [STORE var1 FROM sugar|Store] can keep the sugar on Brew’s ticket in Var A, and For can repeat that many times, like [FOR var1 TIMES|For Var A times]. The blocks inside run once per count.',
     ],
   ],
   12: [
@@ -193,7 +193,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['', 'Niko bends Porter’s antenna until it points, very slightly, at the dirty mugs.'],
     [
       'niko:happy',
-      'There. [WAIT DIRTY|Wait for Dirty cups] is new: Porter picks a used cup and knows which table it’s on.',
+      'There. [WAIT DIRTY|Wait for Dirty cups] is new: Porter picks a used cup and knows which table it’s on. The clearing steps go in their own [FUNCTION clear|Function clear], next to deliver.',
     ],
   ],
   16: [
