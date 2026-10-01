@@ -126,7 +126,7 @@ describe('live workspace lifecycle', () => {
     });
     expect(savedStars()['2']).toBeUndefined();
   });
-  it('freezes the error cursor and keeps editing locked until service is stopped', () => {
+  it('stops service on an error, holding the failed frame and error cursor until the code changes', () => {
     open('LISTEN\nITEM coffee');
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     for (
@@ -152,8 +152,9 @@ describe('live workspace lifecycle', () => {
     expect(reaction.textContent).toContain('Take the order paper');
     expect(screen.getByRole('button', { name: 'Back to the code' })).toBeTruthy();
     expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('true');
-    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
-    expect(screen.getByRole('combobox', { name: 'Block 2 value' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByRole('button', { name: /Stop & edit/ })).toBeNull();
+    expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Block 2 value' }).hasAttribute('disabled')).toBe(false);
     fireEvent.click(document.body);
     fireEvent.keyDown(document.body, { key: 'Shift' });
     const failed = [...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))!;
@@ -167,9 +168,12 @@ describe('live workspace lifecycle', () => {
     expect(
       screen.getByRole('img', { name: 'Current instruction' }).querySelector('.execution-line-highlight'),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('button', { name: /Reset to incoming program/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
+    expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('false');
     expect(savedStars()['2']).toBeUndefined();
   });
 });

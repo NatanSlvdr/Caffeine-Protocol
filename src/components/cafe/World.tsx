@@ -186,7 +186,12 @@ export function World({
           ),
       )}
       {state && showStatusBubbles && (
-        <SceneHtml position={[STATIONS.orders.cell[0] - 0.25, 2.8, STATIONS.orders.cell[1]]} zIndexRange={[11, 0]}>
+        // The queue points at the paper stack on the handoff, below the robots' bubbles so theirs stay readable.
+        <SceneHtml
+          position={[STATIONS.orders.cell[0] + 0.1, 1.3, STATIONS.orders.cell[1] + 0.18]}
+          zIndexRange={[9, 0]}
+          style={{ pointerEvents: 'none' }}
+        >
           <OrderQueueBubble tickets={state.waitingTickets} />
         </SceneHtml>
       )}

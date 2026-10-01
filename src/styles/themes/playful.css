@@ -2159,9 +2159,10 @@ html[data-motion='reduced'] .execution-line-highlight {
 .order-queue-bubble strong {
   font-size: 11px;
 }
-/* Hang the queue just under the robots' bubble line, over the handoff between their heads. */
+/* The queue stands on the handoff tickets, narrow enough to fit between Query's and Brew's bubbles. */
 .order-queue-bubble {
-  transform: translateY(calc(50% + 18px));
+  max-width: 104px;
+  padding: 5px 7px;
 }
 
 /* One draggable assignment, with two inset tiles and an unboxed equals sign. */

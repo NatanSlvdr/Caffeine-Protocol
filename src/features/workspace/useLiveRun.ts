@@ -47,10 +47,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     running && (!result || result.passed)
       ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine))
       : -1;
-  const failureLine =
-    showFailure && result && !result.passed && result.first_failure?.role === role
-      ? (result.first_failure?.error_line ?? -1)
-      : -1;
+  // A failed run stops at once so the code can be fixed, but its last frame stays up until the code changes.
+  const failed = showFailure && !!result && !result.passed;
+  const failureLine = failed && result.first_failure?.role === role ? (result.first_failure?.error_line ?? -1) : -1;
   const instructionProgress =
     displayedTrace && sampled && displayedTrace.end > displayedTrace.start
       ? (sampled.local - displayedTrace.start) / (displayedTrace.end - displayedTrace.start)
@@ -60,6 +59,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     const updated = { ...programs, [role]: next };
     setPrograms(updated);
     setResult(null);
+    setShowFailure(false);
     onDraft(updated);
   };
   const stop = () => {
@@ -68,10 +68,12 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPaused(false);
     setShowFailure(false);
   };
-  const fail = (failed: RunResult) => {
-    setPaused(true);
+  const fail = (failure: RunResult) => {
+    liveRun.current = null;
+    setRunning(false);
+    setPaused(false);
     setShowFailure(true);
-    if (failed.first_failure?.role) setRole(failed.first_failure.role);
+    if (failure.first_failure?.role) setRole(failure.first_failure.role);
     onFinish(false);
   };
   const run = () => {
@@ -82,10 +84,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     // A program that fails as the doors open, like a typo, reports at once instead of after the street intro.
     const opening = createLiveRun(level, programs).advance(STREET_APPROACH_SECONDS);
     if (opening.done && !opening.result.passed) {
-      liveRun.current = null;
       setResult(opening.result);
       setReplayTime(opening.time);
-      setRunning(true);
       fail(opening.result);
       return;
     }
@@ -109,8 +109,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       setResult(frame.result);
       setReplayTime(frame.time);
       if (!frame.done) return;
-      liveRun.current = null;
       if (frame.result.passed) {
+        liveRun.current = null;
         setRunning(false);
         setPaused(false);
         onComplete(frame.result.stars, programs.query, programs);
@@ -126,6 +126,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     source,
     result,
     running,
+    failed,
     paused,
     setPaused,
     speed,
@@ -137,7 +138,6 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     change,
     run,
     stop,
-    showFailure,
     bestBefore,
   };
 }

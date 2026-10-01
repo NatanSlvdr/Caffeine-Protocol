@@ -110,6 +110,8 @@ button.primary:hover:not(:disabled) {
   width: 100%;
   height: 100%;
   position: relative;
+  /* Scene bubbles stack among themselves, never above the dialogue and controls laid over the café. */
+  isolation: isolate;
 }
 .cafe-canvas canvas {
   outline: none;

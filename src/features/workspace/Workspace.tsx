@@ -88,6 +88,7 @@ export function Workspace({
     source,
     result,
     running,
+    failed,
     paused,
     setPaused,
     speed,
@@ -125,8 +126,10 @@ export function Workspace({
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
   });
+  // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
+  const serviceView = running || failed;
   const reaction =
-    scene === 'failure' && running && result && !result.passed
+    scene === 'failure' && failed && result
       ? failureLines(result, role)
       : scene === 'success' && result?.passed
         ? successLines(result, role, index, level, outro)
@@ -163,9 +166,9 @@ export function Workspace({
               time={time}
               reduced={reduced}
               pixelArt={save.settings.pixel_art}
-              showLabels={!running && !modal && !observation}
+              showLabels={!serviceView && !modal && !observation}
               moving={running && !paused}
-              serviceView={running}
+              serviceView={serviceView}
               focusRole={focused ? role : undefined}
               level={index + 1}
             />
