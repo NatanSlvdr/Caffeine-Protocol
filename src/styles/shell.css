@@ -1436,6 +1436,17 @@ html[data-motion='reduced'] .front-page *::after {
   content: ' ✓';
   color: #5f7f45;
 }
+/* A target met out of order: ticked in grey, since the star ladder has not reached it yet. */
+.receipt-slip .receipt-totals .held dd::after {
+  color: var(--slip-muted);
+}
+.settings-window.receipt-slip p.receipt-note {
+  margin: 8px 0 0;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  text-align: center;
+}
 .settings-window.receipt-slip p.receipt-thanks {
   margin: 16px 0 0;
   color: var(--slip-muted);

@@ -4,14 +4,14 @@ import { ReceiptModal } from '../../../src/features/workspace/modals/ReceiptModa
 import { levels } from '../../../src/data';
 import type { RunResult } from '../../../src/domain/types';
 
-const result = (stars: number) =>
-  ({ passed: true, stars, block_count: 5, executed_instructions: 20, tickets: [] }) as unknown as RunResult;
-const receipt = (stars: number, best?: number, observation = false) =>
+const result = (stars: number, block_count = 5, executed_instructions = 20) =>
+  ({ passed: true, stars, block_count, executed_instructions, tickets: [] }) as unknown as RunResult;
+const receipt = (stars: number, best?: number, observation = false, run = result(stars)) =>
   render(
     <ReceiptModal
       index={2}
       level={levels[2]}
-      result={result(stars)}
+      result={run}
       observation={observation}
       best={best}
       onNext={() => {}}
@@ -47,5 +47,12 @@ describe('service receipt', () => {
     unmount();
     receipt(2, 2);
     expect(screen.queryByText(/best/)).toBeNull();
+  });
+  it('explains a step target met while the block target is still missed', () => {
+    const { unmount } = receipt(1, undefined, false, result(1, levels[2].block_target + 1, 1));
+    expect(screen.getByText(/stars climb in order: trim the blocks first/)).toBeTruthy();
+    unmount();
+    receipt(3, undefined, false, result(3, 1, 1));
+    expect(screen.queryByText(/stars climb in order/)).toBeNull();
   });
 });

@@ -29,6 +29,10 @@ export function ReceiptModal({
   onClose,
 }: ReceiptModalProps) {
   const blocks = result.block_count ?? 0;
+  const blocksMet = blocks <= level.block_target;
+  const stepsMet = result.executed_instructions <= level.instruction_target;
+  // Stars climb in order, so a step target beaten over the block target earns nothing yet: say so.
+  const stepsHeld = stepsMet && !blocksMet;
   // A replay says whether it beat the shift's best, so going back for stars has a point.
   const replay =
     observation || best === undefined
@@ -62,23 +66,26 @@ export function ReceiptModal({
         </div>
         {!observation && (
           <>
-            <div className={blocks <= level.block_target ? 'met' : ''}>
+            <div className={blocksMet ? 'met' : ''}>
               <dt>Blocks used</dt>
               <dd>
                 {blocks} <small>/ {level.block_target}</small>
-                <TargetMet met={blocks <= level.block_target} />
+                <TargetMet met={blocksMet} />
               </dd>
             </div>
-            <div className={result.executed_instructions <= level.instruction_target ? 'met' : ''}>
+            <div className={stepsHeld ? 'met held' : stepsMet ? 'met' : ''}>
               <dt>Steps run</dt>
               <dd>
                 {result.executed_instructions} <small>/ {level.instruction_target}</small>
-                <TargetMet met={result.executed_instructions <= level.instruction_target} />
+                <TargetMet met={stepsMet} />
               </dd>
             </div>
           </>
         )}
       </dl>
+      {!observation && stepsHeld && (
+        <p className="receipt-note">Steps are on target too, but stars climb in order: trim the blocks first.</p>
+      )}
       <p className="receipt-thanks">
         {nextShift ? (
           <>
