@@ -1,6 +1,9 @@
+import type { Cargo } from '@/domain';
 import { Box, Cylinder, type Vec3 } from './primitives';
 import { Cup } from './Cup';
 import type { HumanLook } from './looks';
+import { DRINK_SCALE, HUMAN_ARM as ARM, humanArmPose, itemsForHand, sipCup, type ArmPose } from './arms';
+import { HeldItem } from './HeldItem';
 
 function Ball({ at = [0, 0, 0], radius, color, scale }: { at?: Vec3; radius: number; color: string; scale?: Vec3 }) {
   return (
@@ -183,6 +186,8 @@ export function HumanModel({
   drinking,
   tea,
   paper,
+  held = [],
+  reach = 0,
 }: {
   look: HumanLook;
   sit: number;
@@ -191,17 +196,32 @@ export function HumanModel({
   drinking: boolean;
   tea: boolean;
   paper: boolean;
+  /** What a crew stand-in carries: one item per hand. */
+  held?: readonly Cargo[];
+  reach?: number;
 }) {
   const lift = sit * 0.26;
   const hip = 0.51 + sit * 0.21;
+  const scale = look.scale ?? 1;
+  const drink = sipCup(sit, sip, tea);
+  const arms = [-1, 1].map((side) =>
+    humanArmPose(side, {
+      carrying: itemsForHand(held, side).length > 0,
+      scale,
+      reach,
+      sit,
+      stride,
+      drink: drinking ? drink.handle : undefined,
+    }),
+  );
   return (
-    <group scale={look.scale ?? 1}>
+    <group scale={scale}>
       <group position={[0, lift, 0]}>
         <Cylinder at={[0, 0.78, 0]} size={[0.25, 0.29, 0.6]} color={look.top} />
         <Cylinder at={[0, 1.12, 0]} size={[0.08, 0.09, 0.1]} color={look.skin} />
         <Outfit look={look} />
       </group>
-      <group position={[0, 1.37 + lift, 0]} rotation-x={sip * 0.12}>
+      <group position={[0, 1.37 + lift, 0]} rotation-x={-sip * 0.1}>
         <Head look={look} />
       </group>
       {[-1, 1].map((side) => (
@@ -216,20 +236,31 @@ export function HumanModel({
               <Box at={[0, -0.2, 0.09]} size={[0.2, 0.13, 0.33]} color={look.shoes} />
             </group>
           </group>
-          <group
-            position={[side * 0.35, 1 + lift, 0]}
-            rotation-x={drinking && side === 1 ? -1.05 - sip * 0.7 : -sit * 0.75 - stride * side * 0.4}
-          >
-            <Box at={[0, -0.2, 0]} size={[0.13, 0.42, 0.15]} color={look.top} />
-            <Ball at={[0, -0.43, 0]} radius={0.08} color={look.skin} />
-          </group>
+          <Arm look={look} side={side} pose={arms[side === 1 ? 1 : 0]} lift={lift} />
+          {itemsForHand(held, side).map((cargo, i) => {
+            const [x, y, z] = arms[side === 1 ? 1 : 0].hand;
+            return <HeldItem key={cargo.ticketId} cargo={cargo} at={[x, y + lift + ARM.hand, z + i * 0.3]} />;
+          })}
         </group>
       ))}
       {drinking && (
-        <group position={[0.22, 1.26 + sip * 0.27, 0.43 - sip * 0.19]} rotation-x={-sip * 0.3} scale={0.72}>
+        <group position={[drink.at[0], drink.at[1] + lift, drink.at[2]]} rotation-x={drink.tilt} scale={DRINK_SCALE}>
           <Cup tea={tea} paper={paper} lid={paper} />
         </group>
       )}
+    </group>
+  );
+}
+
+/** Sleeve and hand, posed by the shared two-bone arm. */
+function Arm({ look, side, pose, lift }: { look: HumanLook; side: number; pose: ArmPose; lift: number }) {
+  return (
+    <group position={[side * ARM.shoulderX, ARM.shoulderY + lift, 0]} quaternion={pose.upper}>
+      <Box at={[0, -ARM.upper / 2, 0]} size={[0.13, ARM.upper + 0.02, 0.15]} color={look.top} />
+      <group position={[0, -ARM.upper, 0]} quaternion={pose.lower}>
+        <Box at={[0, -ARM.lower / 2 + 0.02, 0]} size={[0.125, ARM.lower, 0.145]} color={look.top} />
+        <Ball at={[0, -ARM.lower, 0]} radius={ARM.hand} color={look.skin} />
+      </group>
     </group>
   );
 }
