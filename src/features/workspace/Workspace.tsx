@@ -284,6 +284,7 @@ export function Workspace({
           result={result}
           observation={observation}
           nextShift={nextShift}
+          best={live.bestBefore}
           onNext={onNext}
           onClose={() => setModal('')}
         />

@@ -11,13 +11,33 @@ export interface ReceiptModalProps {
   observation: boolean;
   /** The next shift's title, or nothing after the last shift. */
   nextShift?: string;
+  /** This shift's stars before the run, if it had been served before. */
+  best?: number;
   onNext: () => void;
   onClose: () => void;
 }
 
 /** Service receipt: stars, the totals measured against this shift's targets, and the next shift. */
-export function ReceiptModal({ index, level, result, observation, nextShift, onNext, onClose }: ReceiptModalProps) {
+export function ReceiptModal({
+  index,
+  level,
+  result,
+  observation,
+  nextShift,
+  best,
+  onNext,
+  onClose,
+}: ReceiptModalProps) {
   const blocks = result.block_count ?? 0;
+  // A replay says whether it beat the shift's best, so going back for stars has a point.
+  const replay =
+    observation || best === undefined
+      ? ''
+      : result.stars > best
+        ? `New best, up from ${stars(best)}!`
+        : result.stars < best
+          ? `Your best stays at ${stars(best)}.`
+          : '';
   return (
     <Modal
       title="Service complete"
@@ -33,6 +53,7 @@ export function ReceiptModal({ index, level, result, observation, nextShift, onN
           {starRow(result.stars)}
         </p>
       )}
+      {replay && <p className="receipt-best">{replay}</p>}
       <dl className="receipt-totals">
         <div>
           <dt>Orders served</dt>
@@ -84,6 +105,8 @@ export function ReceiptModal({ index, level, result, observation, nextShift, onN
     </Modal>
   );
 }
+
+const stars = (n: number) => `${n} ${n === 1 ? 'star' : 'stars'}`;
 
 /** The ✓ on a met total is drawn in CSS, so screen readers hear the verdict here instead. */
 function TargetMet({ met }: { met: boolean }) {

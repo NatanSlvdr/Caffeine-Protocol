@@ -32,6 +32,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
   const [showFailure, setShowFailure] = useState(false);
+  // The shift's stars before this run, so the receipt can tell a new best from a replay.
+  const [bestBefore, setBestBefore] = useState<number | undefined>(save.stars[index]);
   const time = replayTime;
   const sampled = result ? sampleReplay(result, time) : undefined;
   const displayedTrace = sampled?.seed?.events.findLast(
@@ -88,6 +90,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       return;
     }
     liveRun.current = createLiveRun(level, programs);
+    setBestBefore(save.stars[index]);
     setResult(null);
     setReplayTime(-STREET_APPROACH_SECONDS);
     setShowFailure(false);
@@ -135,5 +138,6 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     run,
     stop,
     showFailure,
+    bestBefore,
   };
 }

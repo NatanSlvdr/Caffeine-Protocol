@@ -1400,6 +1400,13 @@ html[data-motion='reduced'] .front-page *::after {
   line-height: 1;
   text-align: center;
 }
+.settings-window.receipt-slip p.receipt-best {
+  margin: -8px 0 12px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 12px;
+  text-align: center;
+}
 .receipt-slip .receipt-totals {
   margin: 14px 0 0;
   padding: 6px 0;
