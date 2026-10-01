@@ -264,7 +264,7 @@ it.each([
     }),
   ).result;
   expect(result.first_failure?.error_line).toBe(4);
-  expect(result.first_failure?.reason).toBe(`The submitted order has too ${kind} items.`);
+  expect(result.first_failure?.reason).toMatch(`Query handed over too ${kind} tickets`);
   expect(result.tickets).toHaveLength(0);
 });
 it('shows Store in progress and publishes memory only after the action completes', () => {

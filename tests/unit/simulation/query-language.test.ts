@@ -169,7 +169,8 @@ describe('token interpreter and physical order handling', () => {
     for (const command of ['ITEM coffee', 'SUGAR true'])
       expect(exec('LISTEN\n' + command).error).toContain('Take the order paper');
     expect(exec('LISTEN\nTAKE UP\nTAKE UP').error).toContain('Deposit the current paper');
-    expect(exec('LISTEN\nTAKE UP\nMOVE RIGHT 1\nDEPOSIT RIGHT').error).toContain('missing an item');
+    expect(exec('LISTEN\nTAKE UP\nMOVE RIGHT 1\nDEPOSIT RIGHT').error).toContain('no drink written');
+    expect(exec('LISTEN\nMOVE RIGHT 1\nDEPOSIT RIGHT').error).toContain('isn’t holding a ticket');
   });
   it('rejects jumping from an active loop', () =>
     expect(exec('POSITION listen\nLISTEN\nFOR item IN heard orders\nJUMP listen\nEND').error).toContain(

@@ -68,7 +68,7 @@ const kinds: FailureKind[] = [
     hint: 'Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',
   },
   {
-    match: /too few items|too many items|missing an item/,
+    match: /handed over too (few|many) tickets|has no drink written/,
     by: 'guest',
     react: (p) => `I said “${p}”. That’s not quite my order.`,
     hint: 'The kitchen makes exactly what the ticket says, so it has to say every drink they named, and nothing else.',

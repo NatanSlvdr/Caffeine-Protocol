@@ -49,7 +49,7 @@ export function* streamCustomerEvent(
       const count = out.tickets.reduce((sum, paper) => sum + (paper.quantity ?? 1), 0);
       if (count < expected.length) {
         out.error_line = out.trace.findLast((step) => isOrderDeposit(step.command))?.line ?? out.error_line;
-        return fail('The submitted order has too few items.');
+        return fail('Query handed over too few tickets: every drink they ordered needs its own.');
       }
     }
     if (!out.error && out.tickets.length && !out.payment) {
@@ -244,7 +244,8 @@ export function* streamCustomerEvent(
         case 'DEPOSIT DOWN_LEFT':
         case 'DEPOSIT LEFT':
         case 'DEPOSIT UP_LEFT':
-          if (!ticket || !['coffee', 'tea'].includes(ticket.item)) return fail('The order paper is missing an item.');
+          if (!ticket) return fail('Query isn’t holding a ticket to hand over: Take up a sheet and write on it first.');
+          if (!['coffee', 'tea'].includes(ticket.item)) return fail('This ticket has no drink written on it yet.');
           {
             const target = interactionTarget(queryPosition(out.state.counter), c.slice(8));
             if (!target || !samePoint(target, STATIONS.orders.cell))
@@ -254,7 +255,8 @@ export function* streamCustomerEvent(
             const expected = customer.expected.tickets ?? (customer.expected.item ? [customer.expected] : []);
             const offset = out.tickets.reduce((sum, paper) => sum + (paper.quantity ?? 1), 0);
             const count = ticket.quantity ?? 1;
-            if (offset + count > expected.length) return fail('The submitted order has too many items.');
+            if (offset + count > expected.length)
+              return fail('Query handed over too many tickets: one per drink they ordered, and no more.');
             const moreLoopItems = loops.some((loop) => loop.index + 1 < loop.values.length);
             const morePaper = p.instructions
               .slice(pc + 1)
@@ -267,7 +269,7 @@ export function* streamCustomerEvent(
                       .find((next) => !next.startsWith('POSITION ')) !== 'LISTEN'),
               );
             if (!moreLoopItems && !morePaper && offset + count < expected.length)
-              return fail('The submitted order has too few items.');
+              return fail('Query handed over too few tickets: every drink they ordered needs its own.');
             for (const [k, request] of expected.slice(offset, offset + count).entries()) {
               const mismatch = ticketMismatch(offset + k, request, ticket);
               if (mismatch) return fail(mismatch);
