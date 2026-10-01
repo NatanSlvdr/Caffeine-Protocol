@@ -6,6 +6,7 @@ import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/com
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
@@ -55,6 +56,7 @@ export function Workspace({
   onSound,
 }: WorkspaceProps) {
   const { level, lesson, brief, intro } = shift;
+  const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
   const [modal, setModal] = useState(''),
     [textMode, setTextMode] = useState(false),
@@ -101,7 +103,7 @@ export function Workspace({
   }, [running]);
   useEffect(() => {
     if (!wrapUp) return;
-    const timer = setTimeout(() => setScene('success'), save.settings.reduced_motion ? 0 : 900);
+    const timer = setTimeout(() => setScene('success'), reduced ? 0 : 900);
     return () => clearTimeout(timer);
   }, [wrapUp]);
   useEffect(() => {
@@ -157,7 +159,7 @@ export function Workspace({
               evening={index > 10}
               result={result ?? undefined}
               time={time}
-              reduced={save.settings.reduced_motion}
+              reduced={reduced}
               pixelArt={save.settings.pixel_art}
               showLabels={!running && !modal && !observation}
               moving={running && !paused}
@@ -170,7 +172,7 @@ export function Workspace({
                 key={`${scene}-${result?.first_failure?.reason}`}
                 variant="aside"
                 lines={reaction}
-                instant={save.settings.reduced_motion}
+                instant={reduced}
                 doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
                 onDone={() => {
                   if (scene === 'success') setModal('receipt');
@@ -225,7 +227,7 @@ export function Workspace({
           lines={intro}
           kicker={`Shift ${pad2(index + 1)} · ${shift.title}`}
           doneLabel="Start the shift"
-          instant={save.settings.reduced_motion}
+          instant={reduced}
           onDone={() => setScene('')}
         />
       )}

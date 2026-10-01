@@ -7,17 +7,19 @@ import { Button } from '@/shared/ui/Button';
 import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ShellBar } from './ShellBar';
 
 /** The café in the evening light, running quietly behind the page. */
 function StoryScene({ level }: { level?: number }) {
   const { save } = useGame();
+  const reduced = useReducedMotion(save.settings.reduced_motion);
   return (
     <div className="story-scene" aria-hidden="true">
       <Cafe
         level={level}
         evening={level === undefined || level > UNLOCKS.help}
-        reduced={save.settings.reduced_motion}
+        reduced={reduced}
         pixelArt={save.settings.pixel_art}
         showStatusBubbles={false}
         zoomScale={0.92}
@@ -30,13 +32,14 @@ function StoryScene({ level }: { level?: number }) {
 /** A story scene between shifts. Finishing or skipping it opens the shift it leads to. */
 export function ScenePage({ scene }: { scene: CutsceneData }) {
   const { save, finishScene } = useGame();
+  const reduced = useReducedMotion(save.settings.reduced_motion);
   const done = () => {
     finishScene(scene);
     go('/campaign');
   };
   return (
     <main className="story-page scene-page">
-      <Cutscene scene={scene} doneLabel="To the counter" reduced={save.settings.reduced_motion} onDone={done} />
+      <Cutscene scene={scene} doneLabel="To the counter" reduced={reduced} onDone={done} />
     </main>
   );
 }
@@ -47,18 +50,14 @@ const closing = cutscenes[cutscenes.length - 1];
 export function EndingPage() {
   const progress = useProgress();
   const { save } = useGame();
+  const reduced = useReducedMotion(save.settings.reduced_motion);
   const [talking, setTalking] = useState(true);
   return (
     <main className="story-page ending-page">
       <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
       <StoryScene />
       {talking ? (
-        <Cutscene
-          scene={closing}
-          doneLabel="Read the receipt"
-          reduced={save.settings.reduced_motion}
-          onDone={() => setTalking(false)}
-        />
+        <Cutscene scene={closing} doneLabel="Read the receipt" reduced={reduced} onDone={() => setTalking(false)} />
       ) : (
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
