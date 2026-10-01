@@ -1,27 +1,12 @@
 import { ticketUnits } from './tickets';
-import { STARTS, STATIONS, tableFront } from './layout';
-import type { Point } from './layout';
+import { STARTS } from './layout';
 import type { ActorId, ActorSnapshot, RunResult } from './types';
 import { directionVectors } from './directions';
 import { commandDirection } from './commands';
 import { robotUnlocked } from './robots';
-import {
-  customerApproach,
-  customerExit,
-  customerSeatPath,
-  pathDistance,
-  CUSTOMER_WALK_SPEED,
-  SEAT_CHOICE_SECONDS,
-  SIT_SECONDS,
-  DRINK_SECONDS,
-  samplePath,
-  STREET_APPROACH_SECONDS,
-  STREET_EXIT_SECONDS,
-  SIDEWALK_X,
-} from './street';
+import { DRINK_SECONDS, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
+import { customerCrowd, isToGo } from './sidewalk';
 import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
-/** Where take-away customers stand while their drinks are made. */
-const TO_GO_SPOTS: readonly Point[] = [STATIONS.togo.customer, [-8, 4], [-7, 3], [-8, 3]];
 
 /** Sample immutable execution records; presentation never invents a robot route. */
 export function sampleReplay(result: RunResult, time: number) {
@@ -124,38 +109,19 @@ export function sampleReplay(result: RunResult, time: number) {
   );
   // Intake is serial: later arrivals line up behind customers still at the counter.
   const intakeEvents = result.events.filter((event) => event.seed_id === seed?.seed_id);
+  const globalIndex = new Map(result.events.map((event, index) => [event, index]));
+  const crowd = customerCrowd(intakeEvents, (event) => globalIndex.get(event)!);
   const customers = result.events
-    .map((event, index) => ({ event, index }))
     .filter(
-      ({ event }) =>
+      (event) =>
         event.seed_id === seed?.seed_id &&
         local >= event.timing.arrival - STREET_APPROACH_SECONDS &&
         local < event.timing.left + STREET_EXIT_SECONDS,
     )
-    .map(({ event, index }) => {
-      const side = (index % 2) as 0 | 1,
-        timing = event.timing;
-      const hasSeat = Number.isFinite(timing.seated) && event.table > 0;
-      // Take-away customers wait beside the to-go shelf, side by side when there are several.
-      const toGo = !!event.tickets.length && !event.table && Number.isFinite(timing.seated);
-      const waiting = intakeEvents
-        .slice(0, intakeEvents.indexOf(event))
-        .filter((previous) => !previous.table && previous.tickets.length && local < previous.timing.left).length;
-      const spot = TO_GO_SPOTS[waiting % TO_GO_SPOTS.length];
-      const seating = timing.seating ?? timing.created;
-      const leaving = local >= timing.left;
-      let path = customerApproach(index),
-        progress = (local - (timing.arrival - STREET_APPROACH_SECONDS)) / STREET_APPROACH_SECONDS;
-      const queueIndex = intakeEvents
-        .slice(0, intakeEvents.indexOf(event))
-        .filter(
-          (previous) => local < Math.min(previous.timing.seating ?? previous.timing.created, previous.timing.left),
-        ).length;
-      if (queueIndex > 0 && local < seating && !leaving) {
-        const queuePath: Point[] = [STATIONS.orders.floor, [-8, 5], [SIDEWALK_X, 5], [SIDEWALK_X, 5 - queueIndex]];
-        const slot = samplePath(queuePath, queueIndex / pathDistance(queuePath));
-        path = [customerApproach(index)[0], [SIDEWALK_X, slot[1]], slot];
-      }
+    .map((event) => {
+      const timing = event.timing;
+      const { position, facing, walking, sit, leaving } = crowd.sample(event, local);
+      const toGo = isToGo(event);
       // The order bubble stays with the customer until they head out.
       const showOrder =
         !leaving &&
@@ -163,34 +129,6 @@ export function sampleReplay(result: RunResult, time: number) {
           (log) => log.customerId === event.customer.customer_id && log.role === 'query' && log.start <= local,
         ) ||
           local >= timing.created);
-      let sit = 0;
-      if (toGo && local >= seating && !leaving) {
-        path = [STATIONS.orders.floor, spot];
-        progress = (local - seating) / (pathDistance(path) / CUSTOMER_WALK_SPEED);
-      }
-      if (hasSeat && local >= seating) {
-        path = customerSeatPath(event.table - 1, side);
-        progress = (local - seating - SEAT_CHOICE_SECONDS) / (pathDistance(path) / CUSTOMER_WALK_SPEED);
-        sit = Math.max(0, Math.min(1, (local - (timing.seated - SIT_SECONDS)) / SIT_SECONDS));
-      }
-      if (leaving) {
-        const front = hasSeat ? tableFront(event.table - 1) : toGo ? spot : STATIONS.orders.floor;
-        const seatPath = hasSeat ? customerSeatPath(event.table - 1, side) : [];
-        path = hasSeat ? [...seatPath.slice(-2).reverse(), ...customerExit(front, index)] : customerExit(front, index);
-        const stand = hasSeat ? SIT_SECONDS : 0;
-        progress = (local - timing.left - stand) / (STREET_EXIT_SECONDS - stand);
-        sit = hasSeat ? Math.max(0, 1 - (local - timing.left) / SIT_SECONDS) : 0;
-      }
-      const position = samplePath(path, progress),
-        ahead = samplePath(path, progress + 0.001);
-      const walking = progress > 0 && progress < 1;
-      const facing = walking
-        ? Math.atan2(ahead[0] - position[0], ahead[1] - position[1])
-        : hasSeat && local >= timing.seated - SIT_SECONDS
-          ? side === 0
-            ? Math.PI / 2
-            : -Math.PI / 2
-          : Math.PI / 2;
       const drinks = event.tickets
         .flatMap(ticketUnits)
         .filter((ticket) => servedTimes.has(ticket.ticket_id) && !collected.has(ticket.ticket_id));
@@ -206,7 +144,7 @@ export function sampleReplay(result: RunResult, time: number) {
         sit,
         walking,
         facing,
-        side,
+        side: (globalIndex.get(event)! % 2) as 0 | 1,
         drinking: takeaway || (!!sipping && !leaving),
         drink: takeaway ? event.tickets[0].item : sipping?.item,
         sippingId: !leaving ? sipping?.ticket_id : undefined,
