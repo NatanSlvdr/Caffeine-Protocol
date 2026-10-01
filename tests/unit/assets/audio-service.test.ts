@@ -6,7 +6,6 @@ const settings: Settings = {
   music: 0.4,
   reduced_motion: false,
   pixel_art: true,
-  fullscreen: false,
   text_editor: false,
 };
 

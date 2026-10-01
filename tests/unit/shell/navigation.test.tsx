@@ -58,7 +58,7 @@ describe('shift entry navigation', () => {
 
   it('counts only rated shifts, so stars never total past the maximum', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
-    const settings = { music: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
+    const settings = { music: 0, reduced_motion: true, pixel_art: false };
     const save = {
       version: 4,
       selected: 20,
@@ -88,7 +88,7 @@ describe('shift entry navigation', () => {
 
   it('closes the campaign by saying how many shifts still have stars to win', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 || i === 9 ? 2 : 3]));
-    const settings = { music: 0, reduced_motion: true, pixel_art: false, fullscreen: false };
+    const settings = { music: 0, reduced_motion: true, pixel_art: false };
     const save = {
       version: 4,
       selected: 20,

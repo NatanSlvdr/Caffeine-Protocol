@@ -13,7 +13,6 @@ const defaultSettings: Settings = {
   reduced_motion: false,
   pixel_art: true,
   text_editor: false,
-  fullscreen: false,
 };
 export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSave => ({
   version: 4,

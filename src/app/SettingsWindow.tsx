@@ -26,13 +26,8 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   }, []);
   const fullscreen = async () => {
     try {
-      if (document.fullscreenElement) {
-        await document.exitFullscreen();
-        setting('fullscreen', false);
-      } else {
-        await document.documentElement.requestFullscreen();
-        setting('fullscreen', true);
-      }
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await document.documentElement.requestFullscreen();
     } catch {
       setError('Fullscreen is not available in this browser window.');
     }

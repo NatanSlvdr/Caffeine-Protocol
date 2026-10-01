@@ -99,8 +99,8 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
     throw new Error('Invalid audio setting.');
   // Older saves kept a master volume over the music; with music the only sound, the two fold into one.
   const music = Math.round((settings.music as number) * ((settings.volume as number | undefined) ?? 1) * 100) / 100;
-  for (const k of ['reduced_motion', 'fullscreen'])
-    if (typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
+  if (typeof settings.reduced_motion !== 'boolean') throw new Error('Invalid display setting.');
+  // Older saves also kept a fullscreen flag. The browser decides that on every visit, so it is dropped.
   for (const k of ['pixel_art', 'text_editor'])
     if (settings[k] !== undefined && typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
   return {
@@ -108,7 +108,6 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
     reduced_motion: settings.reduced_motion as boolean,
     pixel_art: (settings.pixel_art as boolean | undefined) ?? true,
     text_editor: (settings.text_editor as boolean | undefined) ?? false,
-    fullscreen: settings.fullscreen as boolean,
   };
 }
 

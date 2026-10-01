@@ -167,7 +167,6 @@ export interface Settings {
   pixel_art: boolean;
   /** Edit programs as plain text instead of blocks. */
   text_editor: boolean;
-  fullscreen: boolean;
 }
 export interface ProgressSaveV1 {
   version: 1;
