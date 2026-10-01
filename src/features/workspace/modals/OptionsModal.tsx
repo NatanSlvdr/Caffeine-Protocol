@@ -34,7 +34,7 @@ export function OptionsModal({
       />
       <SettingRow
         title="Text editor"
-        hint="The same program, in a plain-text view."
+        hint="The same program, in a plain-text view. Kept for every shift."
         checked={textMode}
         disabled={observation}
         onChange={(e) => onToggleTextMode(e.target.checked)}

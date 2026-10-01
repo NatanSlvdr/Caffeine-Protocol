@@ -35,8 +35,7 @@ const entries: Entry[] = [
 export function CampaignPage() {
   const { save, select, launch } = useGame();
   const progress = useProgress();
-  const prefersReducedMotion = useReducedMotion();
-  const reducedMotion = save.settings.reduced_motion || prefersReducedMotion;
+  const reducedMotion = useReducedMotion(save.settings.reduced_motion);
   const rail = useRef<HTMLDivElement>(null);
   const orderTimer = useRef<number | undefined>(undefined);
   const [ordering, setOrdering] = useState<number | null>(null);

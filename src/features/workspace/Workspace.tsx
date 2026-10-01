@@ -3,9 +3,10 @@ import { ArrowLeft, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS } from '@/domain';
 import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
-import { incomingRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
+import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
@@ -35,7 +36,8 @@ export interface WorkspaceProps {
   update: (updater: (save: ProgressSave) => ProgressSave) => void;
   lessons: LessonCatalog;
   shift: WorkspaceShift;
-  isLastShift: boolean;
+  /** The next shift's title, or nothing on the last shift. */
+  nextShift?: string;
   onNext: () => void;
   onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
   onSound: (passed: boolean) => void;
@@ -48,15 +50,16 @@ export function Workspace({
   update,
   lessons,
   shift,
-  isLastShift,
+  nextShift,
   onNext,
   onComplete,
   onSound,
 }: WorkspaceProps) {
   const { level, lesson, brief, intro } = shift;
+  const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
+  const textMode = save.settings.text_editor;
   const [modal, setModal] = useState(''),
-    [textMode, setTextMode] = useState(false),
     [showSolution, setShowSolution] = useState(false);
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
   // A finished service pulls back to the whole café before the crew cheers and the receipt comes.
@@ -100,7 +103,7 @@ export function Workspace({
   }, [running]);
   useEffect(() => {
     if (!wrapUp) return;
-    const timer = setTimeout(() => setScene('success'), save.settings.reduced_motion ? 0 : 900);
+    const timer = setTimeout(() => setScene('success'), reduced ? 0 : 900);
     return () => clearTimeout(timer);
   }, [wrapUp]);
   useEffect(() => {
@@ -111,7 +114,11 @@ export function Workspace({
         run();
       }
       // Menus and drags claim their own Escape; only an unclaimed one leaves the shift.
-      if (e.key === 'Escape' && !modal && !e.defaultPrevented) go('/campaign');
+      if (e.key === 'Escape' && !modal && !e.defaultPrevented) {
+        // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
+        if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
+        else go('/campaign');
+      }
     };
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
@@ -152,7 +159,7 @@ export function Workspace({
               evening={index > 10}
               result={result ?? undefined}
               time={time}
-              reduced={save.settings.reduced_motion}
+              reduced={reduced}
               pixelArt={save.settings.pixel_art}
               showLabels={!running && !modal && !observation}
               moving={running && !paused}
@@ -165,7 +172,7 @@ export function Workspace({
                 key={`${scene}-${result?.first_failure?.reason}`}
                 variant="aside"
                 lines={reaction}
-                instant={save.settings.reduced_motion}
+                instant={reduced}
                 doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
                 onDone={() => {
                   if (scene === 'success') setModal('receipt');
@@ -220,7 +227,7 @@ export function Workspace({
           lines={intro}
           kicker={`Shift ${pad2(index + 1)} · ${shift.title}`}
           doneLabel="Start the shift"
-          instant={save.settings.reduced_motion}
+          instant={reduced}
           onDone={() => setScene('')}
         />
       )}
@@ -254,7 +261,7 @@ export function Workspace({
           observation={observation}
           running={running}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
-          onToggleTextMode={(value) => setTextMode(value)}
+          onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
           onRequestReset={() => setModal('reset')}
           onClose={() => setModal('')}
         />
@@ -263,7 +270,7 @@ export function Workspace({
         <ResetModal
           onClose={() => setModal('')}
           onConfirm={() => {
-            change(incomingRobotPrograms(save, index, lessons)[role]);
+            change(resetRobotPrograms(save, index, lessons)[role]);
             setModal('');
           }}
         />
@@ -274,7 +281,7 @@ export function Workspace({
           level={level}
           result={result}
           observation={observation}
-          isLastShift={isLastShift}
+          nextShift={nextShift}
           onNext={onNext}
           onClose={() => setModal('')}
         />

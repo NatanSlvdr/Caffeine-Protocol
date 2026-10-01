@@ -12,6 +12,7 @@ import * as v from 'valibot';
 import { LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
 import { ROBOT_UNLOCK_LEVELS } from '../../domain/robots.ts';
+import { UNLOCKS } from '../../domain/unlocks.ts';
 import type { Customer, LevelDefinition, ServiceConfig, ValidationSeed } from '../../domain/types.ts';
 import { extensionShiftConfig, shiftId } from './extension-config.ts';
 
@@ -36,7 +37,8 @@ export function extensionServiceForLevel(levelNumber: number): ServiceConfig {
   return {
     prepCapacity: config.prepBatch,
     floorCapacity: config.floorBatch,
-    clearing: true,
+    // Porter's first shift leaves the tables to Pip; Porter clears them from the next one.
+    clearing: levelNumber < ROBOT_UNLOCK_LEVELS.floor || levelNumber >= UNLOCKS.clearing,
     objective: 'serve',
     minLoad: config.minLoad,
     ...(config.cups ? { cups: config.cups } : {}),
@@ -478,7 +480,8 @@ export function collectBuiltExtensionErrors(inputs: BuiltExtensionInputs): strin
       errors.push(
         `${seed.id}: floorCapacity ${service.floorCapacity} differs from derived ${expectedService.floorCapacity}`,
       );
-    if (service.clearing !== true) errors.push(`${seed.id}: extension clearing must be true`);
+    if (service.clearing !== expectedService.clearing)
+      errors.push(`${seed.id}: clearing ${service.clearing} differs from derived ${expectedService.clearing}`);
     if (service.objective !== 'serve') errors.push(`${seed.id}: extension objective must be serve`);
     if ((service.minLoad ?? 0) !== expectedService.minLoad)
       errors.push(`${seed.id}: minLoad ${service.minLoad} differs from derived ${expectedService.minLoad}`);

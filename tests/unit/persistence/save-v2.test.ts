@@ -5,6 +5,7 @@ import {
   newSave,
   parseSave,
   readSave,
+  resetRobotPrograms,
   saveRobotDraft,
   writeSave,
 } from '../../../src/features/campaign/save/persistence';
@@ -143,6 +144,13 @@ describe('version 4 campaign saves', () => {
     expect(restored).toEqual(save);
     expect(incomingRobotPrograms(restored, PORTER + 1, lessons)).toEqual(save.robotSolutions[PORTER]);
   });
+  it('remembers the text editor choice and keeps blocks for saves made before it', () => {
+    const oldSave = newSave();
+    delete (oldSave.settings as Partial<typeof oldSave.settings>).text_editor;
+    expect(parseSave(JSON.stringify(oldSave), lessons).settings.text_editor).toBe(false);
+    const textSave = { ...newSave(), settings: { ...newSave().settings, text_editor: true } };
+    expect(parseSave(JSON.stringify(textSave), lessons).settings.text_editor).toBe(true);
+  });
   it('enables pixel art when loading saves created before the display option existed', () => {
     const oldSave = newSave();
     delete (oldSave.settings as Partial<typeof oldSave.settings>).pixel_art;
@@ -158,6 +166,12 @@ describe('version 4 campaign saves', () => {
     expect(next.query).toBe('# custom Query');
     expect(next.prep).toBe('# custom Brew');
     expect(next.floor).toContain('TODO');
+  });
+  it('resets the Query program past its own draft to the incoming one', () => {
+    const save = saveRobotDraft(newSave(), PORTER, { query: '# edited', prep: '# edited', floor: '# edited' });
+    const fresh = incomingRobotPrograms(newSave(), PORTER, lessons);
+    expect(incomingRobotPrograms(save, PORTER, lessons).query).toBe('# edited');
+    expect(resetRobotPrograms(save, PORTER, lessons)).toEqual(fresh);
   });
   it(`unlocks the new acts and completes only at shift ${lessons.length}`, () => {
     expect(completeLevel(newSave(), BREW - 1, 3, '', lessons).complete).toBe(false);
