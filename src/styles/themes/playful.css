@@ -2354,6 +2354,8 @@ html[data-motion='reduced'] .drop-projection {
   --bubble-paper: #fffaf0;
   --bubble-well: #f5ecdc;
   --bubble-well-line: #e8d9bf;
+  --bubble-quiet: #8a7564;
+  --bubble-font: 'Avenir Next', 'Nunito', ui-rounded, sans-serif;
   position: relative;
   transform: translateY(-50%);
   border: 1.5px solid var(--bubble-line);
@@ -2391,16 +2393,12 @@ html[data-motion='reduced'] .drop-projection {
    * The speaker's own colour, named in paper-light letters. A faint deep shade under the letters
    * keeps them legible on the paler colours, and the edge is a touch deeper than the fill.
    */
-  border: 1px solid color-mix(in srgb, var(--pill, #d4ac6b) 82%, #3d2e25);
+  border: 1px solid color-mix(in srgb, var(--pill, #d4ac6b) 82%, var(--bubble-ink));
   border-radius: 999px;
   background: var(--pill, #d4ac6b);
   color: #fffcf5;
   text-shadow: 0 0.5px 1px color-mix(in srgb, var(--pill, #d4ac6b) 40%, #2a1d15);
-  font:
-    800 9.5px/1 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 800 9.5px/1 var(--bubble-font);
   letter-spacing: 0.03em;
   white-space: nowrap;
 }
@@ -2426,11 +2424,7 @@ html[data-motion='reduced'] .drop-projection {
 }
 .customer-speech blockquote {
   margin: 0;
-  font:
-    650 12px/1.35 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 650 12px/1.35 var(--bubble-font);
   overflow-wrap: anywhere;
 }
 .customer-speech .order-icons {
@@ -2453,11 +2447,7 @@ html[data-motion='reduced'] .drop-projection {
   background: var(--bubble-well);
   box-shadow: inset 0 0 0 1px var(--bubble-well-line);
   color: var(--umber);
-  font:
-    700 10.5px/1.3 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 700 10.5px/1.3 var(--bubble-font);
   overflow-wrap: anywhere;
 }
 .customer-speech .order-icons .model-thumbnail {
@@ -2471,12 +2461,8 @@ html[data-motion='reduced'] .drop-projection {
 .customer-speech small {
   display: block;
   margin-top: 4px;
-  color: #8a7564;
-  font:
-    italic 600 10px/1.3 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  color: var(--bubble-quiet);
+  font: italic 600 10px/1.3 var(--bubble-font);
 }
 /*
  * The queue stands up and to the left of the paper stack, pointing down at it so the tickets stay in
@@ -2528,11 +2514,7 @@ html[data-motion='reduced'] .drop-projection {
   background: var(--tile);
   box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--edge) 45%, transparent);
   color: var(--tile-ink);
-  font:
-    750 10px/1.15 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 750 10px/1.15 var(--bubble-font);
 }
 .robot-action-icon {
   position: relative;
@@ -2657,11 +2639,7 @@ html[data-motion='reduced'] .drop-projection {
   gap: 2px;
   min-height: 13px;
   white-space: nowrap;
-  font:
-    750 9.5px/1.2 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 750 9.5px/1.2 var(--bubble-font);
 }
 .robot-holding .holding-sugar .model-thumbnail {
   width: 13px;
@@ -2684,11 +2662,7 @@ html[data-motion='reduced'] .drop-projection {
   background: #efe8fb;
   box-shadow: inset 0 0 0 1px #d4c6ee;
   color: #45336b;
-  font:
-    750 9px/1.2 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
+  font: 750 9px/1.2 var(--bubble-font);
   white-space: nowrap;
 }
 
