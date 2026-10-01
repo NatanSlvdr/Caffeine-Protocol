@@ -25,7 +25,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     title: 'Hello, World Roast',
     story: 'Query is awake and ready to say hello to the world. The very first guest would like a coffee. No pressure.',
     objective:
-      'A customer wants a coffee, but the kitchen can only make drinks from a written ticket handed over from the counter.',
+      'A customer wants a coffee, but the kitchen can only make drinks from a written ticket handed over from the counter. Get a coffee ticket to the kitchen.',
     hint: 'Take paper, write it, hand it over.',
     lessonNote:
       'Wait for Orders, Take up a sheet from the paper stack, and Write Coffee on it. Move right 1, Deposit right at the kitchen handoff, then Move left 1 back to the register. Checkout is automatic.',
@@ -78,7 +78,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'One sugar? Two? None at all, thank you very much? Our guests are getting specific, and “some sugar” won’t cut it anymore.',
     objective:
-      'Customers now ask for an exact number of sugars, including zero. A simple yes or no is no longer enough.',
+      'Customers now ask for an exact number of sugars, including zero. A simple yes or no is no longer enough: every ticket must carry the exact count.',
     hint: 'Count the sugars exactly.',
     lessonNote:
       'If Number IN item checks for a count. Store Var A = Number in item, then Write Var A Sugar writes the exact amount, including zero. Keep the sugar and negation checks for orders without numbers.',
@@ -89,7 +89,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'A guest asks for “the usual”. Query has never met them before. Better to ask Niko than to guess. Get this right and there’s a badge in it.',
     objective:
-      'Some customers order “the usual”, which Query can’t interpret. Guessing would send the wrong drink to the kitchen.',
+      'Some customers order “the usual”, which Query can’t interpret. Guessing would send the wrong drink to the kitchen, so an unclear order must be cleared up before anything is written.',
     hint: 'When unsure, ask Niko.',
     lessonNote:
       'An unclear request contains Ambiguous. Before taking paper or starting For item in order, use If Ambiguous IN Orders and Help. Niko replaces the heard orders with a clarification.',
@@ -100,7 +100,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Brew rolls into the kitchen, eager and a little squeaky. Moka watches from the doorway, arms crossed, while Pip keeps the drinks moving.',
     objective:
-      'Brew’s coffee recipe is almost complete, but it never runs the coffee machine, so the beans are never ground.',
+      'Brew’s coffee recipe is almost complete, but it never runs the coffee machine, so the beans are never ground. Every coffee must be ground, brewed and left at pickup.',
     hint: 'Beans, grind, water, brew.',
     lessonNote:
       'Brew waits for Query’s tickets at the order handoff and makes each drink: Take up the beans at storage, Use up the coffee machine to grind them, Take up water at the sink, Use up the machine again to brew, then Deposit up at pickup. Pip still serves the room.',
@@ -129,7 +129,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     level: 12,
     title: 'Call Me Maybe',
     story: 'Brew has made the same recipes all morning. Let’s give those familiar steps a name, and just call them.',
-    objective: 'Brew’s program repeats the same recipe steps for every ticket, which makes it long and hard to change.',
+    objective:
+      'Brew’s program repeats the same recipe steps for every ticket, which makes it long and hard to change. Serve every ticket as before, with the recipe written in one place.',
     hint: 'Name the recipe, then call it.',
     lessonNote:
       'Move the recipe into Function recipe. Call recipe makes the drink on the oldest ticket Brew is holding.',
@@ -150,7 +151,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Meet Porter, the brand-new floor robot. Pip points at a finished drink and the guest waiting for it, and keeps clearing the tables, just for today.',
     objective:
-      'Finished drinks wait at pickup, and each ticket names the table that ordered it. Porter walks off without reading it.',
+      'Finished drinks wait at pickup, and each ticket names the table that ordered it. Porter walks off without reading it. Every drink must reach the table on its ticket.',
     hint: 'The ticket names the table.',
     lessonNote:
       'Porter takes over the room. Wait for Orders claims a ready drink and Take down picks it up from pickup. Store the order’s table in Var A: Move to Var A walks Porter there by itself, and Deposit up serves it.',
@@ -172,7 +173,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Pip’s last shift before school starts. Porter’s new tray carries two items: two guests, one trip, zero spills. Hopefully.',
     objective:
-      'Porter’s tray now holds two items, and one-at-a-time trips are too slow for this service. Anything beyond two won’t fit.',
+      'Porter’s tray now holds two items, and one-at-a-time trips are too slow for this service. Porter must carry two at a time to keep up, and anything beyond two won’t fit.',
     hint: 'Fill the tray before you go.',
     lessonNote:
       'Porter now holds two items. Take two drinks before serving, then clear both tables. The tray empties in the order it was filled.',
@@ -183,7 +184,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'Pip is back at school, and the robots run the café on their own. The morning commuters want their coffee to go.',
     objective:
-      'Some customers order their drink to go. They don’t sit down: they wait by the door for a drink with a lid.',
+      'Some customers order their drink to go. They don’t sit down: they wait by the door. Every to-go drink must reach the to-go shelf with a lid on.',
     hint: 'To-go drinks never reach a table.',
     lessonNote:
       'Some customers order to go. Query writes To go on their ticket: If To go IN item, then Write To go. Brew puts a lid on those drinks: Take up at the lids, between the sugar and pickup. Porter leaves them on the to-go shelf by the door: walk there and Deposit down. They go in paper cups, so there’s nothing to clear.',
@@ -194,7 +195,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     story:
       'The cup delivery is late, and there are only four cups in the whole café. Every cup has to come back and be washed before it can be used again.',
     objective:
-      'Only four cups go round. When they run out, the next drink has to wait until a used cup is cleared and washed.',
+      'Only four cups go round. When they run out, the next drink has to wait until a used cup is cleared and washed. Keep the cups coming back so every guest is served.',
     hint: 'A cup has to come back before it can go out again.',
     lessonNote:
       'There are only four café cups. Taking beans or leaves at storage uses a clean cup, and Porter drops the used ones in the sink. Use up at the sink washes them. When no clean cup is left, Brew waits at the sink until a used one comes back.',
