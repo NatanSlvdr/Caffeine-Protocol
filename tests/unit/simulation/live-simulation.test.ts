@@ -186,7 +186,7 @@ describe('live service', () => {
     expect(sampleReplay(writing.result, writing.time).actors.query?.heldPaper?.item).toBe('coffee');
     const failed = finish(run);
     expect(failed.result.first_failure?.error_line).toBe(4);
-    expect(failed.result.first_failure?.reason).toBe('The submitted order does not match the customer’s request.');
+    expect(failed.result.first_failure?.reason).toBe('Ticket 1 has the wrong item: they asked for tea, not coffee.');
     expect(failed.result.events[0].trace.map((e) => e.command)).toEqual([
       'LISTEN',
       'TAKE UP',
@@ -196,6 +196,19 @@ describe('live service', () => {
     ]);
     expect(failed.result.tickets).toEqual([]);
     expect(Number.isFinite(failed.result.average_satisfaction)).toBe(true);
+  });
+  it('says which part of the ticket is wrong when it reaches the kitchen', () => {
+    const customer = {
+      ...levels[4].seeds[0].customers[0],
+      arrival: 0,
+      heard_orders: [{ tokens: ['coffee', 'sugar'] }],
+      expected: { item: 'coffee' as const, with_sugar: true },
+    };
+    const level = { ...levels[4], seeds: [{ id: 'no-sugar', customers: [customer] }] };
+    const failed = finish(
+      createLiveRun(level, { query: 'LISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT', prep: '', floor: '' }),
+    );
+    expect(failed.result.first_failure?.reason).toBe('Ticket 1 needs sugar: they asked for some.');
   });
   it('uses every required scenario and produces the same outcome regardless of playback speed', () => {
     const slow = createLiveRun(levels[3], programs(3)),

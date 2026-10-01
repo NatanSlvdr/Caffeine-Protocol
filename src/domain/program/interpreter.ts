@@ -3,7 +3,7 @@ import { orderTotal } from '../pricing';
 import type { Customer, CustomerExecution, OrderTicket, Program, RuntimeState, HeardOrder } from '../types';
 import { samePoint, STARTS, STATIONS } from '../layout';
 import { interactionTarget, isOrderDeposit, isPaperPickup, moveQuery, queryPosition } from '../queryMovement';
-import { CLOSING_TICKET_ERROR, createTicket } from '../tickets';
+import { CLOSING_TICKET_ERROR, createTicket, ticketMismatch } from '../tickets';
 import { QUERY_INSTRUCTION_LIMIT } from '../constants';
 import { evaluateConditionExpression, parseConditionExpression } from './conditions';
 import { collectionSelectors, parseFor, parseMarkWrite, parseStore, parseSugarWrite } from './vars';
@@ -268,15 +268,9 @@ export function* streamCustomerEvent(
               );
             if (!moreLoopItems && !morePaper && offset + count < expected.length)
               return fail('The submitted order has too few items.');
-            for (const request of expected.slice(offset, offset + count)) {
-              if (
-                (request.item !== undefined && ticket.item !== request.item) ||
-                (request.with_sugar !== undefined && ticket.with_sugar !== request.with_sugar) ||
-                (request.sugar_count !== undefined && ticket.sugar_count !== request.sugar_count) ||
-                (request.to_go ?? false) !== (ticket.to_go ?? false) ||
-                (request.rush ?? false) !== (ticket.rush ?? false)
-              )
-                return fail('The submitted order does not match the customer’s request.');
+            for (const [k, request] of expected.slice(offset, offset + count).entries()) {
+              const mismatch = ticketMismatch(offset + k, request, ticket);
+              if (mismatch) return fail(mismatch);
             }
           }
           out.tickets.push(ticket);
