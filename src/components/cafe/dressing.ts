@@ -1,4 +1,4 @@
-import { BOUNDS, QUERY_TILES, STATIONS, type Point } from '@/domain';
+import { BOUNDS, QUERY_TILES, STATIONS, TABLE_LAYOUT, type Point } from '@/domain';
 
 /** A floor area in tile edges: x from `left` to `right`, z from `back` to `front`. */
 export interface FloorPatch {
@@ -32,3 +32,13 @@ export const STREET_WALL_FACE = BOUNDS.minX - 0.5;
 export const STREET_WINDOWS = [-4, 0, 2.3] as const;
 /** Wainscot height: just under the window sills, so the panelling runs unbroken beneath them. */
 export const WAINSCOT_HEIGHT = 0.78;
+
+/** Each table row and column has its own x or z, so a table's place in the grid is its rank along both. */
+const TABLE_COLUMNS = [...new Set(TABLE_LAYOUT.map((t) => t.x))].sort((a, b) => a - b);
+const TABLE_ROWS = [...new Set(TABLE_LAYOUT.map((t) => t.z))].sort((a, b) => a - b);
+
+/** Chair cushions alternate clay and sage across the dining room like a checkerboard. */
+export function cushionIsSage(tableIndex: number): boolean {
+  const table = TABLE_LAYOUT[tableIndex];
+  return (TABLE_COLUMNS.indexOf(table.x) + TABLE_ROWS.indexOf(table.z)) % 2 === 1;
+}

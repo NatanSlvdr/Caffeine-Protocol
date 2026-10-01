@@ -11,7 +11,7 @@ import {
   tableSeat,
   type StationId,
 } from '@/domain';
-import { STREET_WINDOWS } from './dressing';
+import { STREET_WINDOWS, cushionIsSage } from './dressing';
 import { WallDressing, KitchenFloor } from './WallDressing';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
 
@@ -92,8 +92,14 @@ export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gate
       {TABLE_LAYOUT.map((t, i) => (
         <group key={t.id}>
           <Table point={[t.x, t.z + (t.depth - 1) / 2]} depth={t.depth} />
-          <Chair at={[tableSeat(i, 0)[0], 0, tableSeat(i, 0)[1]]} rotation={Math.PI / 2} />
-          <Chair at={[tableSeat(i, 1)[0], 0, tableSeat(i, 1)[1]]} rotation={-Math.PI / 2} />
+          {([0, 1] as const).map((side) => (
+            <Chair
+              key={side}
+              at={[tableSeat(i, side)[0], 0, tableSeat(i, side)[1]]}
+              rotation={side === 0 ? Math.PI / 2 : -Math.PI / 2}
+              color={cushionIsSage(i) ? CAFE_COLORS.sage : CAFE_COLORS.clay}
+            />
+          ))}
         </group>
       ))}
     </group>
