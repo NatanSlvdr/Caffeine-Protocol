@@ -173,6 +173,7 @@ it('names the robot on a tab in its crew colour and tints the action like its co
   );
   expect(screen.getByLabelText('Brew is holding').classList).toContain('crew-prep');
   expect(document.querySelector('.robot-name')?.textContent).toBe('Brew');
+  expect(document.querySelector('.robot-name .lucide-chef-hat')).toBeTruthy();
   expect(document.querySelector('.robot-action')?.classList).toContain('function');
   expect(document.querySelector<HTMLElement>('.robot-action-progress')?.style.getPropertyValue('--progress')).toBe(
     '0.25',

@@ -1875,118 +1875,6 @@ html[data-motion='reduced'] .execution-line-highlight {
   transition-timing-function: inherit;
 }
 
-/* A robot's bubble: its name on a tab in its body colour, over a lifted paper card. */
-.robot-holding {
-  --crew: var(--yellow);
-  --crew-ink: var(--ink);
-  --bubble-edge: #dccbad;
-  position: relative;
-  transform: translateY(-50%);
-  width: max-content;
-  max-width: 160px;
-  padding: 4px;
-  border: 1px solid var(--bubble-edge);
-  border-radius: 14px;
-  background: var(--paper);
-  color: var(--umber);
-  box-shadow:
-    0 3px 0 #b4a28b66,
-    0 12px 18px -10px #2a1a1080;
-  pointer-events: auto;
-}
-.robot-holding.crew-query {
-  --crew: #80a889;
-  --crew-ink: #1d3825;
-}
-.robot-holding.crew-prep {
-  --crew: #7d9eae;
-  --crew-ink: #18303c;
-}
-.robot-holding.crew-floor {
-  --crew: #d8b163;
-  --crew-ink: #463210;
-}
-.robot-holding.crew-niko {
-  --crew: #d6a77a;
-  --crew-ink: #4a2e1d;
-}
-.robot-holding:after {
-  content: '';
-  position: absolute;
-  left: calc(50% - 5px);
-  bottom: -6px;
-  width: 9px;
-  height: 9px;
-  transform: rotate(45deg);
-  background: var(--paper);
-  border-right: 1px solid var(--bubble-edge);
-  border-bottom: 1px solid var(--bubble-edge);
-}
-.robot-name {
-  position: absolute;
-  top: -9px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--crew);
-  color: var(--crew-ink);
-  box-shadow: 0 0 0 2px var(--paper);
-  font:
-    800 9px/1.2 'Avenir Next',
-    'Nunito',
-    ui-rounded,
-    sans-serif;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.robot-holding ul {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px;
-  align-items: flex-start;
-}
-.robot-holding li {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  width: 42px;
-}
-.holding-item-icon {
-  position: relative;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-}
-.robot-holding .model-thumbnail {
-  width: 36px;
-  height: 36px;
-}
-.robot-holding .holding-badge {
-  position: absolute;
-  right: 0;
-  bottom: 0;
-  background: var(--paper);
-  border-radius: 3px;
-}
-.holding-sugar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 2px;
-  min-height: 14px;
-  white-space: nowrap;
-  font:
-    700 10px/1.2 Inter,
-    sans-serif;
-}
 .view-controls button {
   gap: 6px;
   padding: 8px 12px;
@@ -2546,152 +2434,148 @@ html[data-motion='reduced'] .drop-projection {
   border: 0;
   box-shadow: none;
 }
-/* The action tile is a small copy of the code block running, with how far through it the robot is. */
-.robot-action {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 4px 6px;
-  padding: 6px 2px 2px;
-  color: #493e33;
-  font:
-    650 10px/1.25 ui-monospace,
-    monospace;
-}
-.robot-action-icon .block-icon {
-  width: 20px;
-  height: 20px;
-}
-.robot-action-progress {
-  grid-column: 1 / -1;
-  height: 3px;
-  border-radius: 999px;
-  background: #ece2cf;
-  overflow: hidden;
-}
-.robot-action-progress:before {
-  content: '';
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--edge);
-  transform: scaleX(var(--progress, 0));
-  transform-origin: left;
-}
-/* A wait with no end in sight yet keeps a slow pulse sweeping through instead of an empty bar. */
-.robot-action-progress.idle:before {
-  width: 35%;
-  transform: none;
-  animation: wait-sweep 1.6s ease-in-out infinite alternate;
-  animation-play-state: inherit;
-}
-@keyframes wait-sweep {
-  from {
-    margin-left: 0;
-  }
-  to {
-    margin-left: 65%;
-  }
-}
-/* Held things sit on a little tray, memory on chips shaped like the Store block. */
-.robot-holding ul {
-  padding: 3px;
-  border-radius: 10px;
-  background: #f4ead6;
-  box-shadow: inset 0 1px 2px #8a6d4a2e;
-}
-.robot-holding-content > ul:first-of-type:nth-child(2) {
-  margin-top: 6px;
-}
-.robot-action + ul {
-  margin-top: 5px;
-}
-.robot-holding .holding-sugar .model-thumbnail {
-  width: 14px;
-  height: 14px;
-}
-.robot-memory {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 3px;
-  padding-top: 6px;
-  font:
-    650 9.5px/1.2 ui-monospace,
-    monospace;
-}
-:is(.robot-action, ul) + .robot-memory {
-  padding-top: 5px;
-}
-.robot-memory > span {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-  padding: 2px 6px 2px 3px;
-  border: 1px solid #c3acf0;
-  border-radius: 999px;
-  background: #efe8fc;
-  color: #38274f;
-  white-space: nowrap;
-}
-.robot-holding ul {
-  animation-play-state: inherit;
-}
 
-/* A steady width and two-line labels keep state changes calm. */
+/*
+ * Robot bubbles. A paper card edged in the robot's colour, headed by a band with its icon and name.
+ * Below it, the running action is a small copy of its code block with a progress strip along the
+ * bottom, then held things in slots and memory on Store-coloured chips.
+ */
 .robot-holding {
+  --crew: var(--yellow);
+  --crew-ink: var(--ink);
+  --crew-edge: color-mix(in srgb, var(--crew) 58%, #2b1d12);
+  position: relative;
+  transform: translateY(-50%);
   width: 128px;
+  padding: 0 0 8px;
+  border: 1px solid var(--crew-edge);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--umber);
+  filter: drop-shadow(0 2px 0 color-mix(in srgb, var(--crew-edge) 55%, transparent)) drop-shadow(0 8px 9px #24150b47);
+  pointer-events: auto;
   transition: height 0.24s ease;
-  animation: none;
+}
+.robot-holding.crew-query {
+  --crew: #8db596;
+  --crew-ink: #1b3524;
+}
+.robot-holding.crew-prep {
+  --crew: #8badbd;
+  --crew-ink: #152c38;
+}
+.robot-holding.crew-floor {
+  --crew: #e0bb6c;
+  --crew-ink: #45300c;
+}
+.robot-holding.crew-niko {
+  --crew: #dcad80;
+  --crew-ink: #45291a;
+}
+/* The tail shares the card's paper, edge and shadow, so the two read as one shape. */
+.robot-holding:after {
+  content: '';
+  position: absolute;
+  left: calc(50% - 6px);
+  bottom: -6px;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  border-bottom-right-radius: 2px;
+  background: var(--paper);
+  border-right: 1px solid var(--crew-edge);
+  border-bottom: 1px solid var(--crew-edge);
 }
 .robot-holding-content {
-  width: 118px;
+  width: 100%;
+  padding-bottom: 2px;
   animation-play-state: inherit;
-}
-.robot-action-label {
-  min-height: 26px;
-  display: flex;
-  align-items: center;
-  white-space: normal;
-  overflow-wrap: anywhere;
-  text-wrap: balance;
-}
-.robot-holding ul {
-  justify-content: center;
 }
 .robot-holding-content * {
   animation-play-state: inherit;
 }
+.robot-name {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  height: 19px;
+  padding: 0 8px;
+  border-radius: 11px 11px 0 0;
+  border-bottom: 1px solid var(--crew-edge);
+  background: var(--crew);
+  box-shadow: inset 0 1px 0 #ffffff59;
+  color: var(--crew-ink);
+  font:
+    800 9px/1 'Avenir Next',
+    'Nunito',
+    ui-rounded,
+    sans-serif;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.robot-name svg {
+  flex: none;
+  width: 11px;
+  height: 11px;
+}
+
+/* The action wears its block's colour, edge and lip, exactly as the line does in the editor. */
+.robot-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 34px;
+  margin: 7px 7px 0;
+  padding: 5px 7px 7px 5px;
+  overflow: hidden;
+  border: 1px solid var(--edge);
+  border-radius: 7px 10px 10px 7px;
+  background: var(--tile);
+  box-shadow: 0 2px 0 var(--edge);
+  color: var(--tile-ink);
+  font:
+    750 10.5px/1.15 'Avenir Next',
+    'Nunito',
+    ui-rounded,
+    sans-serif;
+}
 .robot-action-icon {
   position: relative;
+  flex: none;
   display: grid;
   place-items: center;
-  width: 34px;
-  height: 30px;
-  border: 1px solid var(--edge);
-  border-radius: 8px;
-  background: var(--tile);
-  color: var(--tile-ink);
-  box-shadow: 0 2px 0 var(--edge);
+  width: 22px;
+  height: 20px;
+}
+.robot-action-icon .block-icon {
+  width: 17px;
+  height: 17px;
 }
 .robot-action-icon svg {
   transform-origin: center;
 }
+.robot-action-label {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
+}
 .action-thinking .thinking-gear {
   position: absolute;
-  width: 17px;
-  height: 17px;
-  left: 3px;
-  top: 2px;
-  color: var(--tile-ink);
+  left: 0;
+  top: 0;
+  width: 14px;
+  height: 14px;
   animation: action-turn 4s linear infinite;
 }
 .action-thinking .thinking-gear + .thinking-gear {
-  left: 16px;
-  top: 12px;
-  width: 14px;
-  height: 14px;
-  color: var(--tile-ink);
+  left: 10px;
+  top: 8px;
+  width: 12px;
+  height: 12px;
   animation-direction: reverse;
   animation-duration: 3.2s;
 }
@@ -2703,6 +2587,123 @@ html[data-motion='reduced'] .drop-projection {
 .robot-holding .robot-action-icon :is(svg, path, polyline) {
   animation-play-state: inherit;
 }
+.robot-action-progress {
+  position: absolute;
+  inset: auto 0 0;
+  height: 3px;
+  background: color-mix(in srgb, var(--edge) 28%, transparent);
+}
+.robot-action-progress:before {
+  content: '';
+  display: block;
+  height: 100%;
+  background: var(--edge);
+  transform: scaleX(var(--progress, 0));
+  transform-origin: left;
+}
+/* A wait with no end in sight yet keeps a slow pulse sweeping through instead of an empty strip. */
+.robot-action-progress.idle:before {
+  width: 35%;
+  border-radius: 999px;
+  transform: none;
+  animation: wait-sweep 1.6s ease-in-out infinite alternate;
+}
+@keyframes wait-sweep {
+  from {
+    margin-left: 0;
+  }
+  to {
+    margin-left: 65%;
+  }
+}
+
+/* Each held thing sits in its own little slot, with sugar and order tags beneath. */
+.robot-holding ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 5px;
+  margin: 7px 7px 0;
+  padding: 0;
+}
+.robot-holding li {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.holding-item-icon {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 9px;
+  background: #f3e8d2;
+  box-shadow:
+    inset 0 1px 2px #7a5a3a33,
+    inset 0 0 0 1px #e4d4b6;
+}
+.robot-holding .model-thumbnail {
+  width: 34px;
+  height: 34px;
+}
+.robot-holding .holding-badge {
+  position: absolute;
+  right: -3px;
+  bottom: -3px;
+  padding: 1px;
+  border-radius: 4px;
+  background: var(--paper);
+  box-shadow: 0 0 0 1px #e4d4b6;
+}
+.holding-sugar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 14px;
+  white-space: nowrap;
+  font:
+    750 10px/1.2 'Avenir Next',
+    'Nunito',
+    ui-rounded,
+    sans-serif;
+}
+.robot-holding .holding-sugar .model-thumbnail {
+  width: 14px;
+  height: 14px;
+}
+
+/* Memory reads like the Store block that wrote it. */
+.robot-memory {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+  margin: 7px 7px 0;
+}
+.robot-memory > span {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px 2px 3px;
+  border: 1px solid #a993d6;
+  border-radius: 999px;
+  background: #ece4fb;
+  box-shadow: 0 1px 0 #a993d6;
+  color: #38274f;
+  font:
+    750 9.5px/1.2 'Avenir Next',
+    'Nunito',
+    ui-rounded,
+    sans-serif;
+  white-space: nowrap;
+}
+
 .robot-holding[data-motion='reduced'],
 .robot-holding[data-motion='reduced'] * {
   animation: none !important;

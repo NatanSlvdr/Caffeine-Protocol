@@ -2,7 +2,7 @@ import { ChefHat, ConciergeBell, ReceiptText } from 'lucide-react';
 import { splitByUnlock } from '@/domain/robots';
 import type { RobotRole } from '@/domain';
 
-const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
+export const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
 
 /** Keep each robot recognizable in the camera and program selectors. */
 export function RobotChoice({ robot, label }: { robot: RobotRole; label: string }) {

@@ -1,7 +1,8 @@
 import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain';
 import { blockFields, cargoLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
-import { Settings } from 'lucide-react';
+import { Coffee, Settings } from 'lucide-react';
 import { BlockIcon } from '../BlockIcon';
+import { robotIcons } from '../RobotChoice';
 import { category } from '../editor/blockMeta';
 import { OperandIcon } from '../OperandIcon';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
@@ -10,8 +11,8 @@ import { AutoHeight } from '@/shared/ui/AutoHeight';
 import { HoldingIcon } from './HoldingIcon';
 
 /**
- * Show waiting and physical actions, with a shared thinking state for control flow. The bubble wears
- * its robot's colour on a name tab, and the action tile wears the colour of the code block running.
+ * Show waiting and physical actions, with a shared thinking state for control flow. The bubble is
+ * headed in its robot's colour, and the action wears the colour of the code block running.
  */
 export function RobotHolding({
   name,
@@ -67,6 +68,8 @@ export function RobotHolding({
       (paper.to_go ? ' · To go' : '') +
       (paper.rush ? ' · Rush' : '')
     : '';
+  // Robots carry their selector icon; Niko, covering the counter, carries a cup.
+  const CrewIcon = (crew && robotIcons[crew as keyof typeof robotIcons]) || Coffee;
   return (
     <AutoHeight
       className={`robot-holding${crew ? ` crew-${crew}` : ''}`}
@@ -77,6 +80,7 @@ export function RobotHolding({
       extraHeight={10}
     >
       <span className="robot-name" aria-hidden="true">
+        <CrewIcon strokeWidth={2.2} />
         {name}
       </span>
       {visibleAction && (
