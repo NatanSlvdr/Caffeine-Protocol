@@ -4,7 +4,7 @@ import { HelpModal } from '../../../src/features/workspace/modals/HelpModal';
 import { levels } from '../../../src/data';
 
 const lesson = { note: 'Note', solution: 'serve' };
-const help = (source: string) => {
+const help = (source: string, running = false) => {
   const onUseExample = vi.fn();
   render(
     <HelpModal
@@ -17,7 +17,7 @@ const help = (source: string) => {
       source={source}
       opening="take_order"
       observation={false}
-      running={false}
+      running={running}
       showSolution
       onToggleSolution={() => {}}
       onUseExample={onUseExample}
@@ -54,5 +54,17 @@ describe('worked example', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
     fireEvent.click(screen.getByRole('button', { name: /Replace my edits/ }));
     expect(onUseExample).toHaveBeenCalledWith('serve');
+  });
+  it('says why its buttons are greyed out mid-service', () => {
+    expect(help('take_order\n', true)).not.toHaveBeenCalled();
+    const note = 'Stop the service to replay the intro or use the example.';
+    for (const name of ['Replay the intro', 'Use this example']) {
+      const button = screen.getByRole('button', { name });
+      expect(button.hasAttribute('disabled')).toBe(true);
+      expect(document.getElementById(button.getAttribute('aria-describedby')!)?.textContent).toBe(note);
+    }
+    expect(screen.getByRole('button', { name: 'Hide worked example' }).getAttribute('aria-controls')).toBe(
+      'worked-example',
+    );
   });
 });

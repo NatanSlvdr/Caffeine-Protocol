@@ -1344,6 +1344,11 @@ html[data-motion='reduced'] .front-page *::after {
   font-weight: 500;
   line-height: 1.55;
 }
+.settings-window.help-slip p.help-running {
+  margin: 8px 0 0;
+  color: var(--slip-muted);
+  font-size: 12.5px;
+}
 .settings-window.help-slip p strong {
   color: var(--slip-ink);
 }

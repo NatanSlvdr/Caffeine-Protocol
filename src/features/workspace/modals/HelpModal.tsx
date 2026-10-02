@@ -66,9 +66,20 @@ export function HelpModal({
     >
       <div className="lesson-note">{lesson.note}</div>
       <p>{brief.story}</p>
-      <button className="settings-chip help-replay-intro" disabled={running} onClick={onReplayIntro}>
+      <button
+        className="settings-chip help-replay-intro"
+        disabled={running}
+        aria-describedby={running ? 'help-running' : undefined}
+        onClick={onReplayIntro}
+      >
         <MessageCircle size={14} aria-hidden="true" /> Replay the intro
       </button>
+      {/* Greyed-out buttons say why: the café is mid-service. */}
+      {running && (
+        <p id="help-running" className="help-running">
+          Stop the service to replay the intro{!observation && showSolution ? ' or use the example' : ''}.
+        </p>
+      )}
       <p>
         <strong>Your goal:</strong> {brief.objective}
       </p>
@@ -129,6 +140,7 @@ export function HelpModal({
               <button
                 className="settings-chip"
                 aria-expanded={showSolution}
+                aria-controls={showSolution ? 'worked-example' : undefined}
                 onClick={() => {
                   setConfirming(false);
                   onToggleSolution();
@@ -141,6 +153,7 @@ export function HelpModal({
                   ref={useButton}
                   variant="primary"
                   disabled={running}
+                  aria-describedby={running ? 'help-running' : undefined}
                   onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
                 >
                   Use this example <ArrowRight size={15} />
@@ -153,7 +166,9 @@ export function HelpModal({
               {lesson.robotSolution && (
                 <p className="code-example-label">{robot}’s routine · the other robots keep theirs</p>
               )}
-              <pre className="code-example">{indentSource(example)}</pre>
+              <pre className="code-example" id="worked-example">
+                {indentSource(example)}
+              </pre>
             </>
           )}
         </>
