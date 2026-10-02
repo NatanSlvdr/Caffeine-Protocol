@@ -61,6 +61,8 @@ function CountInput({
       max={max}
       step={1}
       aria-label={label}
+      // A number out of range shows as typed but isn't applied, so the field says so; an emptied one is mid-retype.
+      aria-invalid={!disabled && !!draft}
       // A field disabled mid-edit, as a service starts, may never see its blur: it shows the block's number.
       value={disabled ? value : (draft ?? value)}
       disabled={disabled}

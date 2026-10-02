@@ -468,6 +468,10 @@ input[type='checkbox']:checked {
   border: 1px solid var(--edge);
   border-radius: 5px;
 }
+.editor-panel .block .tile-count[aria-invalid='true'] {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1px var(--red);
+}
 .editor-panel .block.selected {
   outline: 2px solid var(--glow);
   outline-offset: 4px;

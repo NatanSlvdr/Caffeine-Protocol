@@ -55,14 +55,16 @@ describe('compact visual code', () => {
     // On the way from 2 to 3, the emptied field stays empty rather than snapping back to 2.
     fireEvent.change(tiles, { target: { value: '' } });
     expect(tiles.value).toBe('');
+    expect(tiles.getAttribute('aria-invalid')).toBe('false');
     expect(source()).toBe('LISTEN\nMOVE RIGHT 2');
     fireEvent.change(tiles, { target: { value: '3' } });
     expect(source()).toBe('LISTEN\nMOVE RIGHT 3');
-    // Out of range shows as typed, isn't applied, and leaving the field shows the block's number again.
+    expect(tiles.getAttribute('aria-invalid')).toBe('false');
+    // Out of range shows as typed, marked invalid and not applied, and leaving the field shows the block's number again.
     fireEvent.change(tiles, { target: { value: '30' } });
-    expect([tiles.value, source()]).toEqual(['30', 'LISTEN\nMOVE RIGHT 3']);
+    expect([tiles.value, source(), tiles.getAttribute('aria-invalid')]).toEqual(['30', 'LISTEN\nMOVE RIGHT 3', 'true']);
     fireEvent.blur(tiles);
-    expect(tiles.value).toBe('3');
+    expect([tiles.value, tiles.getAttribute('aria-invalid')]).toEqual(['3', 'false']);
   });
   it('ignores shop selections and keeps its operands unselected', async () => {
     render(<Harness />);
