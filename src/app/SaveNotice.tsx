@@ -13,7 +13,7 @@ export function SaveNotice() {
     <div className="save-notice" role="alert">
       <TriangleAlert size={18} aria-hidden="true" />
       <p>{saveError}</p>
-      <button className="save-notice-open" onClick={openSettings}>
+      <button className="save-notice-open" aria-haspopup="dialog" onClick={openSettings}>
         Open settings
       </button>
       <button

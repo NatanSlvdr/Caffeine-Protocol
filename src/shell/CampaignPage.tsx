@@ -168,7 +168,13 @@ export function CampaignPage() {
   return (
     <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
       <ShellBar label="Campaign" back="Caffeine Protocol" onBack={() => go('/')}>
-        <button className="shell-icon" aria-label="How to play" title="How to play" onClick={openGuide}>
+        <button
+          className="shell-icon"
+          aria-label="How to play"
+          aria-haspopup="dialog"
+          title="How to play"
+          onClick={openGuide}
+        >
           <CircleHelp size={18} aria-hidden="true" />
         </button>
       </ShellBar>

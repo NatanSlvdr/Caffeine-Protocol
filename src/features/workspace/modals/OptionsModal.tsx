@@ -58,6 +58,7 @@ export function OptionsModal({
         className="settings-chip"
         disabled={running || observation || !edited}
         aria-describedby={note ? 'reset-note' : undefined}
+        aria-haspopup="dialog"
         onClick={onRequestReset}
       >
         <RotateCcw size={15} aria-hidden="true" /> Reset {robot}’s routine

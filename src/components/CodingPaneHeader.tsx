@@ -32,12 +32,12 @@ export function CodingPaneHeader({
           </h2>
           <div className="coding-tools">
             {onHelp && (
-              <button type="button" aria-label="Help" title="Help" onClick={onHelp}>
+              <button type="button" aria-label="Help" aria-haspopup="dialog" title="Help" onClick={onHelp}>
                 <BookOpen size={14} aria-hidden="true" />
               </button>
             )}
             {onOptions && (
-              <button type="button" aria-label="Options" title="Options" onClick={onOptions}>
+              <button type="button" aria-label="Options" aria-haspopup="dialog" title="Options" onClick={onOptions}>
                 <SlidersHorizontal size={14} aria-hidden="true" />
               </button>
             )}

@@ -189,7 +189,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               <Leaf size={16} aria-hidden="true" /> A fresh start
             </h3>
             <p>Open the doors all over again. Progress and routines are cleared; these settings stay.</p>
-            <Button variant="outline-danger" className="settings-chip" onClick={onNew}>
+            <Button variant="outline-danger" className="settings-chip" aria-haspopup="dialog" onClick={onNew}>
               Start a new café
             </Button>
             <small>We’ll ask before clearing anything.</small>

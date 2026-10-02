@@ -36,10 +36,10 @@ export function HomePage() {
               <ArrowRight size={19} aria-hidden="true" />
             </Button>
             <div className="front-links">
-              <button className="front-link" onClick={openGuide}>
+              <button className="front-link" aria-haspopup="dialog" onClick={openGuide}>
                 <CircleHelp size={17} aria-hidden="true" /> How to play
               </button>
-              <button className="front-link" onClick={openSettings}>
+              <button className="front-link" aria-haspopup="dialog" onClick={openSettings}>
                 <Settings2 size={17} aria-hidden="true" /> Settings
               </button>
             </div>

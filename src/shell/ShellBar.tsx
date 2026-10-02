@@ -27,7 +27,13 @@ export function ShellBar({
           <Star size={14} fill="currentColor" aria-hidden="true" /> {progress.stars}
           <small> / {progress.max}</small>
         </span>
-        <button className="shell-icon" aria-label="Settings" title="Settings" onClick={openSettings}>
+        <button
+          className="shell-icon"
+          aria-label="Settings"
+          aria-haspopup="dialog"
+          title="Settings"
+          onClick={openSettings}
+        >
           <Settings2 size={18} aria-hidden="true" />
         </button>
       </div>
