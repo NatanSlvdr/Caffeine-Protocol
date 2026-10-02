@@ -43,6 +43,22 @@ describe('drag announcements', () => {
     );
     expect(say.onDragCancel!({ active: active('library:LISTEN'), over: null })).toBe('Cancelled. Nothing was added.');
   });
+
+  it('says what a drop did: a block let go outside the code is removed, a new one let go nowhere is not added', () => {
+    expect(say.onDragEnd({ active: active('2'), over: null })).toBe('Put block 3 (take) back.');
+    expect(say.onDragEnd({ active: active('library:LISTEN'), over: null })).toBe(
+      'A new wait for orders block wasn’t over a drop spot. Nothing was added.',
+    );
+    const outside = dragAnnouncements(rows, () => true);
+    expect(outside.onDragEnd({ active: active('2'), over: null })).toBe('Removed block 3 (take) from the routine.');
+    expect(outside.onDragEnd({ active: active('2'), over: over('gap:0') })).toBe(
+      'Removed block 3 (take) from the routine.',
+    );
+    // A new block is never removed; outside the code it only isn't added.
+    expect(outside.onDragEnd({ active: active('library:LISTEN'), over: null })).toBe(
+      'A new wait for orders block wasn’t over a drop spot. Nothing was added.',
+    );
+  });
 });
 
 describe('spoken block names', () => {

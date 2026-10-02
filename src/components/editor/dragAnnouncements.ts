@@ -6,8 +6,11 @@ export const dragInstructions: ScreenReaderInstructions = {
     'To move this block, press Space. Use the arrow keys to choose a spot, Space to drop, or Escape to cancel.',
 };
 
-/** What a screen reader hears while moving blocks, using the same numbers the code pane shows. */
-export function dragAnnouncements(rows: VisualBlock[]): Announcements {
+/**
+ * What a screen reader hears while moving blocks, using the same numbers the code pane shows.
+ * `outside` says whether the drag ended outside the code area, where a routine block is removed.
+ */
+export function dragAnnouncements(rows: VisualBlock[], outside: () => boolean = () => false): Announcements {
   const numbered = (row: VisualBlock) => `block ${rows.indexOf(row) + 1} (${spokenBlock(row.command)})`;
   const name = (id: unknown) => {
     const text = String(id);
@@ -36,8 +39,16 @@ export function dragAnnouncements(rows: VisualBlock[]): Announcements {
       sentence(
         over ? `${name(active.id)}: ${place(active.id, over.id)}.` : `${name(active.id)} is not over a drop spot.`,
       ),
-    onDragEnd: ({ active, over }) =>
-      over ? `Dropped ${name(active.id)} ${place(active.id, over.id)}.` : `Put ${name(active.id)} back.`,
+    onDragEnd: ({ active, over }) => {
+      // Said as it turns out: a routine block let go outside the code is gone, and a new one let go nowhere was
+      // never added.
+      if (String(active.id).startsWith('library:'))
+        return over
+          ? `Dropped ${name(active.id)} ${place(active.id, over.id)}.`
+          : `${sentence(name(active.id))} wasn’t over a drop spot. Nothing was added.`;
+      if (outside()) return `Removed ${name(active.id)} from the routine.`;
+      return over ? `Dropped ${name(active.id)} ${place(active.id, over.id)}.` : `Put ${name(active.id)} back.`;
+    },
     onDragCancel: ({ active }) =>
       String(active.id).startsWith('library:')
         ? 'Cancelled. Nothing was added.'

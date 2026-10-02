@@ -14,7 +14,7 @@ import {
 import { BlockPointerSensor } from '@/hooks/useBlockPointerSensor';
 import { useKeyboardCoordinates } from '@/hooks/useKeyboardDropSlot';
 import { useDropCollision } from '@/hooks/useCodeCollision';
-import { useBlockDrag } from '@/hooks/useBlockDrag';
+import { droppedOutside, useBlockDrag } from '@/hooks/useBlockDrag';
 import { previewProgramBlocks, useVisibleProgram } from '@/hooks/useVisibleProgram';
 import { CommandTile } from './editor/CommandTile';
 import { DragPreview, ProjectedBlocks } from './editor/ProjectedBlocks';
@@ -136,7 +136,10 @@ export function Editor({
         canScroll: (element) => element === codeArea.current,
       }}
       collisionDetection={collisionDetection}
-      accessibility={{ announcements: dragAnnouncements(rows), screenReaderInstructions: dragInstructions }}
+      accessibility={{
+        announcements: dragAnnouncements(rows, () => droppedOutside({ codeArea, pointer })),
+        screenReaderInstructions: dragInstructions,
+      }}
       onDragStart={onDragStart}
       onDragCancel={onDragCancel}
       onDragEnd={onDragEnd}

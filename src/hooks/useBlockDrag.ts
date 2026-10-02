@@ -9,6 +9,17 @@ export interface BlockDragRefs {
   lastSlot: RefObject<string | undefined>;
 }
 
+/** Whether a pointer drag ended outside the code area, where letting go of a routine block removes it. */
+export function droppedOutside({ codeArea, pointer }: Pick<BlockDragRefs, 'codeArea' | 'pointer'>): boolean {
+  const bounds = codeArea.current?.getBoundingClientRect(),
+    point = pointer.current;
+  return (
+    !!bounds &&
+    !!point &&
+    (point.x < bounds.left || point.x > bounds.right || point.y < bounds.top || point.y > bounds.bottom)
+  );
+}
+
 /** Drag lifecycle for visual blocks: library inserts, scope moves, and drag-out deletes. */
 export function useBlockDrag(
   source: string,
@@ -62,14 +73,7 @@ export function useBlockDrag(
       const library = String(active.id).startsWith('library:');
       const dataAt = active.data.current?.at,
         line = typeof dataAt === 'number' ? dataAt : Number(active.id);
-      const bounds = refs.codeArea.current?.getBoundingClientRect(),
-        point = refs.pointer.current;
-      if (
-        !library &&
-        bounds &&
-        point &&
-        (point.x < bounds.left || point.x > bounds.right || point.y < bounds.top || point.y > bounds.bottom)
-      ) {
+      if (!library && droppedOutside(refs)) {
         if (Number.isInteger(line)) change(removeVisualBlock(source, line));
         return;
       }
