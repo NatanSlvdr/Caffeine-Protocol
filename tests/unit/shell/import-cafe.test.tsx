@@ -63,7 +63,29 @@ describe('importing a café', () => {
       target: { files: [Object.assign(new File([text], 'cafe.json'), { text: async () => text })] },
     });
     fireEvent.click(await screen.findByRole('button', { name: 'Replace café' }));
-    expect(screen.getByRole('status').textContent).toBe('Café imported: 3 completed shifts and 5 stars.');
+    expect(screen.getByRole('status').textContent).toBe('Café imported: 3 served shifts and 5 stars.');
+  });
+
+  it('counts what an export holds as the New café window counts, and names a fresh café as one', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    const choose = (save: object) => {
+      const text = JSON.stringify(save);
+      fireEvent.change(screen.getByLabelText('Import save file'), {
+        target: { files: [Object.assign(new File([text], 'cafe.json'), { text: async () => text })] },
+      });
+    };
+    choose({ ...newSave(), stars: { 0: 1, 1: 3, 2: 2 } });
+    expect((await screen.findByText(/^This export/)).textContent).toBe(
+      'This export holds 3 served shifts and 5 stars. Importing it will replace your current progress, routines and settings.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Keep current café' }));
+    choose(newSave());
+    expect((await screen.findByText(/^This export/)).textContent).toBe(
+      'This export is a fresh café, with no shifts served yet. Importing it will replace your current progress, routines and settings.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Replace café' }));
+    expect(screen.getByRole('status').textContent).toBe('Café imported: a fresh café, with no shifts served yet.');
   });
 
   it('says where an exported copy went', () => {

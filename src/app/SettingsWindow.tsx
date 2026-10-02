@@ -215,9 +215,8 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
           onClose={() => setPending(null)}
         >
           <p>
-            This export contains {count(Object.keys(pending.stars).length, 'completed shift')} and{' '}
-            {count(starTotal(pending.stars), 'star')}. Importing it will replace your current progress, routines and
-            settings.
+            {holds(pending) ? `This export holds ${holds(pending)}.` : `This export is ${FRESH}.`} Importing it will
+            replace your current progress, routines and settings.
           </p>
           <div className="modal-buttons">
             <button className="settings-chip" data-autofocus onClick={() => setPending(null)}>
@@ -228,9 +227,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               onClick={() => {
                 importCafe(pending);
                 setPending(null);
-                setStatus(
-                  `Café imported: ${count(Object.keys(pending.stars).length, 'completed shift')} and ${count(starTotal(pending.stars), 'star')}.`,
-                );
+                setStatus(`Café imported: ${holds(pending) || FRESH}.`);
               }}
             >
               Replace café
@@ -240,6 +237,14 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
       )}
     </>
   );
+}
+
+const FRESH = 'a fresh café, with no shifts served yet';
+
+/** What an export holds, counted as the New café window counts what it clears; empty for a café never opened. */
+function holds(save: ProgressSave): string {
+  const done = Object.keys(save.stars).length;
+  return done ? `${count(done, 'served shift')} and ${count(starTotal(save.stars), 'star')}` : '';
 }
 
 /** Why a chosen file was not imported, said in full, and that nothing was replaced. */

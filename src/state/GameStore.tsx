@@ -150,7 +150,7 @@ export function starTotal(stars: ProgressSave['stars']): number {
   return Object.entries(stars).reduce((a, [i, b]) => a + (isRated(Number(i)) ? b : 0), 0);
 }
 
-/** Campaign progress: completed shifts, star totals, and maxima. */
+/** Campaign progress: served shifts, star totals, and maxima. */
 export function useProgress(): { done: number; total: number; stars: number; max: number } {
   const { save } = useGame();
   return {
