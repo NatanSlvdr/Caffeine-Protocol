@@ -3,6 +3,8 @@ import { useEffect, useRef } from 'react';
 /**
  * Fixed-step playback clock. Resubscribes when enabled flips or restartKey
  * changes (speed, shift, level, or programs), mirroring the original loop deps.
+ * While the page is hidden the clock holds: a background tab's throttled timer would
+ * otherwise play the time away back in a few jumps, and the service would end unseen.
  */
 export function usePlaybackClock(enabled: boolean, onTick: (elapsed: number) => void, restartKey: unknown[]): void {
   const saved = useRef(onTick);
@@ -14,8 +16,16 @@ export function usePlaybackClock(enabled: boolean, onTick: (elapsed: number) => 
       const now = Date.now(),
         elapsed = (now - last) / 1000;
       last = now;
-      saved.current(elapsed);
+      if (!document.hidden) saved.current(elapsed);
     }, 33);
-    return () => clearInterval(id);
+    // Coming back starts the clock afresh, so the gap since the last hidden tick isn't counted either.
+    const onVisibility = () => {
+      if (!document.hidden) last = Date.now();
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => {
+      clearInterval(id);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
   }, [enabled, ...restartKey]);
 }
