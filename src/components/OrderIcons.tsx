@@ -32,9 +32,11 @@ export function OrderIcons({ orders, label }: { orders: IconOrder[]; label: stri
     <ul className="order-icons" aria-label={label}>
       {groupOrders(orders).map((order) => {
         const key = `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}`;
-        const description = order.item
-          ? `${order.item} ×${order.quantity}${order.sugar ? ` + ${order.sugar} sugar` : ''}${order.toGo ? ', to go' : ''}${order.rush ? ', in a rush' : ''}`
-          : 'Ambiguous order';
+        // An unclear order still reads out the count, sugar and marks its icon shows.
+        const drink = order.item
+          ? `${order.item} ×${order.quantity}`
+          : `Unclear order${order.quantity > 1 ? ` ×${order.quantity}` : ''}`;
+        const description = `${drink}${order.sugar ? ` + ${order.sugar} sugar` : ''}${order.toGo ? ', to go' : ''}${order.rush ? ', in a rush' : ''}`;
         return (
           <li key={key} title={description} aria-label={description}>
             {order.item === 'coffee' || order.item === 'tea' ? (
