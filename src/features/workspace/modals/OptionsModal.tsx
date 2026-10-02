@@ -30,6 +30,12 @@ export function OptionsModal({
   onRequestReset,
   onClose,
 }: OptionsModalProps) {
+  // Says why the reset is greyed out, when nothing else in the window does.
+  const note = observation
+    ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.'
+    : edited
+      ? ''
+      : `${robot}’s routine is just as the shift opened it.`;
   return (
     <Modal className="settings-window confirm-slip" kicker="This shift" title="Workspace options" onClose={onClose}>
       <SettingRow
@@ -49,12 +55,12 @@ export function OptionsModal({
       <button
         className="settings-chip"
         disabled={running || observation || !edited}
-        aria-describedby={edited ? undefined : 'reset-untouched'}
+        aria-describedby={note ? 'reset-note' : undefined}
         onClick={onRequestReset}
       >
         <RotateCcw size={15} /> Reset {robot}’s routine
       </button>
-      {!edited && !observation && <p id="reset-untouched">{robot}’s routine is just as the shift opened it.</p>}
+      {note && <p id="reset-note">{note}</p>}
     </Modal>
   );
 }

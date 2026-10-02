@@ -129,8 +129,19 @@ describe('live workspace lifecycle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
     const reset = screen.getByRole('button', { name: /Reset Query’s routine/ });
     expect(reset.hasAttribute('disabled')).toBe(true);
-    expect(reset.getAttribute('aria-describedby')).toBe('reset-untouched');
+    expect(reset.getAttribute('aria-describedby')).toBe('reset-note');
     expect(screen.getByText('Query’s routine is just as the shift opened it.')).toBeTruthy();
+  });
+  it('says why the watch-only shift has nothing to reset', () => {
+    window.location.hash = '/shift/1';
+    seedLocalStorage(makeSave());
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    const reset = screen.getByRole('button', { name: /Reset Query’s routine/ });
+    expect(reset.hasAttribute('disabled')).toBe(true);
+    expect(document.getElementById(reset.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.',
+    );
   });
   it('opens each shift at the playback speed the player last chose', () => {
     const save = makeSave();
