@@ -60,6 +60,20 @@ describe('DialogueBox', () => {
     expect(outer).not.toHaveBeenCalled();
   });
 
+  it('moves on one line for a held key, never through the scene', () => {
+    const onDone = vi.fn();
+    render(<DialogueBox lines={lines} onDone={onDone} instant />);
+    fireEvent.keyDown(window, { key: 'Enter' });
+    for (const key of ['Enter', ' ', 'Enter', ' ']) fireEvent.keyDown(window, { key, repeat: true });
+    expect(screen.getByText('Niko')).toBeTruthy();
+    // The focused button doesn't take the repeat as a click either.
+    expect(fireEvent.keyDown(screen.getByRole('button', { name: 'Next' }), { key: 'Enter', repeat: true })).toBe(false);
+    fireEvent.keyDown(window, { key: ' ' });
+    fireEvent.keyDown(window, { key: 'Enter', repeat: true });
+    expect(screen.getByText('Query')).toBeTruthy();
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
   it('leaves the keyboard alone for an aside unless focus is inside it', () => {
     const onDone = vi.fn();
     render(<DialogueBox lines={lines} onDone={onDone} variant="aside" instant />);

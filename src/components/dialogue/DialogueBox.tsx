@@ -95,8 +95,12 @@ export function DialogueBox({
       if (!scene && !box.current?.contains(document.activeElement)) return;
       if (e.key === 'Escape') handlers.current.onDone();
       else if ((e.key === 'Enter' || e.key === ' ') && !e.metaKey && !e.ctrlKey) {
-        if (e.target instanceof HTMLButtonElement && box.current?.contains(e.target)) return;
-        handlers.current.advance();
+        // A held key moves on one line, not through the rest of the scene and past its last button.
+        // Its repeats are swallowed, so a focused button doesn't click on them either.
+        if (!e.repeat) {
+          if (e.target instanceof HTMLButtonElement && box.current?.contains(e.target)) return;
+          handlers.current.advance();
+        }
       } else return;
       e.preventDefault();
       e.stopPropagation();
