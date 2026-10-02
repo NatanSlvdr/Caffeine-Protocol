@@ -1,5 +1,6 @@
 import type { Program, RobotRole } from './types';
 import {
+  EVERY_UNLOCK,
   VARIABLES,
   availableCommands,
   compileProgram,
@@ -8,6 +9,7 @@ import {
   parseStore,
   parseTimes,
   retireRepeat,
+  unreadable,
 } from './program';
 import { comparisonUnlocked, parseWorkerComparison } from './robotConditions';
 import { DIRECTIONS } from './directions';
@@ -99,6 +101,21 @@ export function robotCommands(role: RobotRole, level: number): string[] {
   if (role === 'query') return availableCommands(level);
   return role === 'prep' ? prepCommands(level) : floorCommands(level);
 }
+/** Whether Brew or Porter reads a line at a level, given that level's library of commands. */
+function recognised(c: string, role: Exclude<RobotRole, 'query'>, level: number): boolean {
+  return (
+    robotCommands(role, level).includes(c) ||
+    MOVE_RE.test(c) ||
+    TAKE_RE.test(c) ||
+    DEPOSIT_RE.test(c) ||
+    /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c) ||
+    robotCondition(c, level) ||
+    memoryInstruction(c, role, level) ||
+    // Porter's older saves still route by table checks; new routines store the order's table instead.
+    (role === 'floor' && /^IF TABLE ([1-9]|1[0-6])$/.test(c)) ||
+    comparisonUnlocked(c, level)
+  );
+}
 export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAND_IN_LEVEL): Program {
   if (role === 'query') return compileProgram(source, level);
   const p: Program = {
@@ -113,8 +130,7 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
     error_line: 0,
     block_count: 0,
   };
-  const stack: number[] = [],
-    allowed = robotCommands(role, level);
+  const stack: number[] = [];
   const fail = (message: string, line: number) => {
     p.compile_error = message;
     p.error_line = line;
@@ -123,19 +139,8 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
   for (const [line, raw] of source.split('\n').entries()) {
     const c = raw.trim();
     if (!c || c.startsWith('#')) continue;
-    if (
-      !allowed.includes(c) &&
-      !MOVE_RE.test(c) &&
-      !TAKE_RE.test(c) &&
-      !DEPOSIT_RE.test(c) &&
-      !/^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c) &&
-      !robotCondition(c, level) &&
-      !memoryInstruction(c, role, level) &&
-      // Porter's older saves still route by table checks; new programs store the order's table instead.
-      !(role === 'floor' && /^IF TABLE ([1-9]|1[0-6])$/.test(c)) &&
-      !comparisonUnlocked(c, level)
-    )
-      return fail(`Unknown or locked instruction for ${ROBOT_DISPLAY_NAMES[role]}: ${c}`, line);
+    if (!recognised(c, role, level))
+      return fail(unreadable(ROBOT_DISPLAY_NAMES[role], c, recognised(c, role, EVERY_UNLOCK)), line);
     const i = p.instructions.length;
     p.instructions.push(c);
     p.source_lines.push(line);

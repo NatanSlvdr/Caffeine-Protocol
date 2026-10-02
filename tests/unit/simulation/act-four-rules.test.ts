@@ -31,7 +31,7 @@ describe('Act IV unlocks', () => {
       expect(robotCommands(role, UNLOCKS.toGo)).toContain('IF togo IN CUSTOMER SPEECH');
       expect(robotCommands(role, UNLOCKS.rush)).toContain('IF rush IN CUSTOMER SPEECH');
       expect(robotCommands(role, UNLOCKS.closing - 1)).not.toContain('STOP');
-      expect(compileRobot('LISTEN\nSTOP', role, UNLOCKS.closing - 1).compile_error).toContain('Unknown');
+      expect(compileRobot('LISTEN\nSTOP', role, UNLOCKS.closing - 1).compile_error).toContain('can’t use “STOP” yet');
       expect(compileRobot('LISTEN\nSTOP', role, UNLOCKS.closing).compile_error).toBe('');
     }
   });

@@ -39,12 +39,13 @@ describe('token interpreter and physical order handling', () => {
     expect(result.tickets[0].item).toBe(yes ? 'coffee' : 'tea');
   });
   it('rejects incomplete or locked compound clauses', () => {
-    for (const condition of [
-      'coffee IN CUSTOMER SPEECH AND',
-      'coffee IN CUSTOMER SPEECH OR OR tea IN CUSTOMER SPEECH',
-      'coffee IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH',
+    // A malformed clause is no block at all; a well-formed one waits for its word to unlock.
+    for (const [condition, why] of [
+      ['coffee IN CUSTOMER SPEECH AND', 'doesn’t know'],
+      ['coffee IN CUSTOMER SPEECH OR OR tea IN CUSTOMER SPEECH', 'doesn’t know'],
+      ['coffee IN CUSTOMER SPEECH AND sugar IN CUSTOMER SPEECH', 'can’t use'],
     ])
-      expect(compileProgram(`LISTEN\nIF ${condition}\nEND`, UNLOCKS.choices).compile_error).toContain('locked');
+      expect(compileProgram(`LISTEN\nIF ${condition}\nEND`, UNLOCKS.choices).compile_error).toContain(why);
   });
   it('does not read solved intent or expected output to choose a drink', () => {
     const customer = {

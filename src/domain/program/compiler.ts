@@ -61,6 +61,44 @@ export function availableCommands(level: number): string[] {
   if (level >= UNLOCKS.closing) c.push('STOP');
   return c;
 }
+/** Whether Query reads a line at a level, given that level's library of commands. */
+function recognised(c: string, level: number, allowed: readonly string[]): boolean {
+  const sugar = parseSugarWrite(c);
+  const stored = parseStore(c);
+  const dataInstruction =
+    (level >= UNLOCKS.numbers &&
+      !!stored &&
+      VARIABLES.some((variable) => variable === stored.variable) &&
+      !(ROBOT_STORE_VALUES as readonly string[]).includes(stored.value)) ||
+    (level >= UNLOCKS.sugar &&
+      sugar !== undefined &&
+      (/^\d+$/.test(sugar) || (level >= UNLOCKS.numbers && VARIABLES.some((variable) => variable === sugar)))) ||
+    (level >= UNLOCKS.sugar && /^SUGAR (true|false)$/.test(c)) ||
+    (level >= UNLOCKS.numbers && ['READ number', 'SUGAR number'].includes(c));
+  return (
+    dataInstruction ||
+    allowed.includes(c) ||
+    !!legacyQueryAction(c) ||
+    (level >= UNLOCKS.loop && /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)) ||
+    (level >= UNLOCKS.query && (TAKE_RE.test(c) || DEPOSIT_RE.test(c) || MOVE_RE.test(c))) ||
+    (level >= UNLOCKS.query && writePattern.test(c) && (level >= UNLOCKS.choices || c.endsWith('coffee'))) ||
+    comparisonUnlocked(c, level)
+  );
+}
+
+/** Every block unlocked, to tell a block the player meets later apart from a line no robot reads. */
+export const EVERY_UNLOCK = Infinity;
+
+/**
+ * Why a robot can't read a line: either its block joins the library on a later shift, or the line is
+ * no block at all, most often a typo in the text editor.
+ */
+export function unreadable(robot: string, c: string, later: boolean): string {
+  return later
+    ? `${robot} can’t use “${c}” yet: that block joins the library on a later shift.`
+    : `${robot} doesn’t know “${c}”. Check it against the block library.`;
+}
+
 /** Compile the finite instruction language; player text is never evaluated as JavaScript. */
 export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Program {
   const p: Program = {
@@ -85,28 +123,8 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
     const c = raw.trim();
     p.error_line = line;
     if (!c || c.startsWith('#')) continue;
-    const sugar = parseSugarWrite(c);
-    const stored = parseStore(c);
-    const dataInstruction =
-      (level >= UNLOCKS.numbers &&
-        !!stored &&
-        VARIABLES.some((variable) => variable === stored.variable) &&
-        !(ROBOT_STORE_VALUES as readonly string[]).includes(stored.value)) ||
-      (level >= UNLOCKS.sugar &&
-        sugar !== undefined &&
-        (/^\d+$/.test(sugar) || (level >= UNLOCKS.numbers && VARIABLES.some((variable) => variable === sugar)))) ||
-      (level >= UNLOCKS.sugar && /^SUGAR (true|false)$/.test(c)) ||
-      (level >= UNLOCKS.numbers && ['READ number', 'SUGAR number'].includes(c));
-    if (
-      !dataInstruction &&
-      !allowed.includes(c) &&
-      !legacyQueryAction(c) &&
-      !(level >= UNLOCKS.loop && /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c)) &&
-      !(level >= UNLOCKS.query && (TAKE_RE.test(c) || DEPOSIT_RE.test(c) || MOVE_RE.test(c))) &&
-      !(level >= UNLOCKS.query && writePattern.test(c) && (level >= UNLOCKS.choices || c.endsWith('coffee'))) &&
-      !comparisonUnlocked(c, level)
-    )
-      return fail('Unknown or locked instruction: ' + c);
+    if (!recognised(c, level, allowed))
+      return fail(unreadable('Query', c, recognised(c, EVERY_UNLOCK, availableCommands(EVERY_UNLOCK))));
     if (
       parseConditionExpression(c)?.conditions.some((condition) => condition.right === 'item') &&
       !stack.some((i) => p.instructions[i].startsWith('FOR '))

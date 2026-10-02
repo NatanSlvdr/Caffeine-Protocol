@@ -38,7 +38,7 @@ describe('Brew and Porter speak Query’s language', () => {
       'BREW',
       'STEEP',
     ])
-      expect(compileRobot(command, 'prep', UNLOCKS.floor).compile_error).toContain('Unknown');
+      expect(compileRobot(command, 'prep', UNLOCKS.floor).compile_error).toContain('doesn’t know');
     for (const command of [
       'WAIT DRINK',
       'PICKUP',
@@ -48,13 +48,29 @@ describe('Brew and Porter speak Query’s language', () => {
       'USE UP',
       'STORE var1 FROM sugar',
     ])
-      expect(compileRobot(command, 'floor', UNLOCKS.floor).compile_error).toContain('Unknown');
+      expect(compileRobot(command, 'floor', UNLOCKS.floor).compile_error).toContain('doesn’t know');
     expect(
       compileRobot('IF tea NOT IN CUSTOMER SPEECH OR sugar IN CUSTOMER SPEECH\nEND', 'prep', UNLOCKS.functions)
         .compile_error,
     ).toBe('');
     expect(compileRobot('IF negation IN CUSTOMER SPEECH\nEND', 'prep', UNLOCKS.functions).compile_error).toContain(
-      'Unknown',
+      'doesn’t know',
+    );
+  });
+
+  it('tells a block from a later shift apart from a line no robot reads', () => {
+    const early = compileRobot('LISTEN\nSTOP', 'prep', UNLOCKS.closing - 1);
+    expect([early.compile_error, early.error_line]).toEqual([
+      'Brew can’t use “STOP” yet: that block joins the library on a later shift.',
+      1,
+    ]);
+    const typo = compileRobot('LISTEN\nMOVE UPP 1', 'floor', UNLOCKS.floor);
+    expect([typo.compile_error, typo.error_line]).toEqual([
+      'Porter doesn’t know “MOVE UPP 1”. Check it against the block library.',
+      1,
+    ]);
+    expect(compileRobot('LISTEN\nWRITE rush', 'query', UNLOCKS.rush - 1).compile_error).toBe(
+      'Query can’t use “WRITE rush” yet: that block joins the library on a later shift.',
     );
   });
 

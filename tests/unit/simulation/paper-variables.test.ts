@@ -77,10 +77,10 @@ describe('stored values and paper writes', () => {
     expect(migrateQuerySource(next)).toBe(next);
   });
   it('unlocks fixed sugar writes before named variables', () => {
-    expect(compileProgram('LISTEN\nWRITE 1 sugar', UNLOCKS.sugar - 1).compile_error).toContain('locked');
+    expect(compileProgram('LISTEN\nWRITE 1 sugar', UNLOCKS.sugar - 1).compile_error).toContain('can’t use');
     expect(compileProgram('LISTEN\nWRITE 1 sugar', UNLOCKS.sugar).compile_error).toBe('');
-    expect(compileProgram('LISTEN\nSTORE var2 FROM number', UNLOCKS.numbers - 1).compile_error).toContain('locked');
-    expect(compileProgram('LISTEN\nWRITE var2 sugar', UNLOCKS.numbers - 1).compile_error).toContain('locked');
+    expect(compileProgram('LISTEN\nSTORE var2 FROM number', UNLOCKS.numbers - 1).compile_error).toContain('can’t use');
+    expect(compileProgram('LISTEN\nWRITE var2 sugar', UNLOCKS.numbers - 1).compile_error).toContain('can’t use');
     expect(compileProgram('LISTEN\nSTORE var2 FROM number\nWRITE var2 sugar', UNLOCKS.numbers).compile_error).toBe('');
   });
 });
@@ -89,8 +89,8 @@ it('assigns constants and copies values between fixed slots', () => {
   const result = execute(source.replace('STORE var2 FROM number', 'STORE var1 FROM 3\nSTORE var2 FROM var1'));
   expect(result.error).toBe('');
   expect(result.tickets[0].sugar_count).toBe(3);
-  expect(compileProgram('LISTEN\nSTORE custom FROM number', UNLOCKS.numbers).compile_error).toContain('locked');
-  expect(compileProgram('LISTEN\nWRITE custom sugar', UNLOCKS.numbers).compile_error).toContain('locked');
+  expect(compileProgram('LISTEN\nSTORE custom FROM number', UNLOCKS.numbers).compile_error).toContain('doesn’t know');
+  expect(compileProgram('LISTEN\nWRITE custom sugar', UNLOCKS.numbers).compile_error).toContain('doesn’t know');
 });
 it('maps old names to fixed slots without colliding with existing variables', () => {
   expect(migrateQuerySource('LISTEN\nSTORE var1 FROM 1\nSTORE sugars FROM number\nWRITE sugars sugar')).toBe(

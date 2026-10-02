@@ -62,6 +62,6 @@ describe('redesigned Act I campaign', () => {
       'RETURN',
       'IF tea',
     ])
-      expect(compileProgram(`LISTEN\n${command}`).compile_error).toContain('locked');
+      expect(compileProgram(`LISTEN\n${command}`).compile_error).toContain('doesn’t know');
   });
 });
