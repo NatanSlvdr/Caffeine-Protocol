@@ -209,6 +209,22 @@ describe('reactions', () => {
     expect(niko('Ticket 1 is to go: Write To go on it.')).toContain('If To go IN item, then Write To go');
     expect(niko('This coffee is for table 2, not the to-go shelf.')).toContain('goes to the table on its ticket');
     expect(niko('Finish brewing before putting a lid on.')).toContain('putting a lid on');
+    expect(niko('Deposit the current paper before taking another.')).toContain('Deposit right, then take a fresh one');
+    expect(niko('Deposit this item’s paper before the For loop moves on.')).toContain('Deposit right');
+    expect(niko('Query isn’t holding a ticket to hand over: Take up a sheet and write on it first.')).toContain(
+      'only write on paper it’s holding',
+    );
+    for (const reason of [
+      'Move left 1 tile to the register before Wait for Orders.',
+      'Return to the register after depositing the order.',
+      'Move right to the handoff tile, then Deposit right into the order counter.',
+      'No paper in that direction. At the register, use Take up: the paper stack is above it.',
+    ])
+      expect(niko(reason)).toContain('the paper stack just above it');
+    expect(niko('Finish the function before jumping back.')).toContain('let it reach its End');
+    expect(niko('This For loop’s End was reached without its For: jump to the For line, not into the loop.')).toContain(
+      'let it reach its End',
+    );
     // A slip that only mentions sugar is the robot's, so the guest doesn't complain about their sugar.
     const [query, paper] = failureLines(failure('Take the order paper before writing sugar.'), 'query');
     expect(query.who).toBe('query');

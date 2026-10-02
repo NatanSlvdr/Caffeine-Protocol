@@ -177,10 +177,28 @@ const kinds: FailureKind[] = [
   },
   // These name sugar too, so they come before the guest's sugar complaint: the slip is the robot's, not the order's.
   {
-    match: /^Take the order paper before/,
+    match: /^Take the order paper before|isn’t holding a ticket to hand over/,
     by: 'robot',
     react: () => '*bip?* Write on… the counter?',
     hint: 'Take up a sheet from the paper stack first: Query can only write on paper it’s holding.',
+  },
+  {
+    match: /^Deposit (the current|this item’s) paper before/,
+    by: 'robot',
+    react: () => '*rustle rustle* One sheet at a time!',
+    hint: 'Each sheet goes to the kitchen handoff before Query starts on anything else: Deposit right, then take a fresh one.',
+  },
+  {
+    match: /to the register|to the handoff tile|No paper in that direction/,
+    by: 'robot',
+    react: () => '*bonk* Wrong spot. Recalculating.',
+    hint: 'Query listens and takes paper at the register, with the paper stack just above it. Tickets go one tile to the right, Deposit right at the kitchen handoff, and then it’s back to the register.',
+  },
+  {
+    match: /before jumping back|by jumping into it|not into the loop/,
+    by: 'robot',
+    react: () => '*whirr?* Where was I?',
+    hint: 'A Jump can’t cut into or out of a For loop or a function: let it reach its End, then jump.',
   },
   {
     match: /already brewed|^It’s brewed/,
