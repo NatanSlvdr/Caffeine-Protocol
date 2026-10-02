@@ -32,14 +32,23 @@ interface GameStore {
 
 const GameContext = createContext<GameStore | null>(null);
 
+const STORAGE_BLOCKED =
+  'This browser isn’t letting the café save here, so progress made now won’t be kept. Export your café from Settings to keep it.';
+
+/** With site data blocked, even reading `localStorage` throws, so every use goes through here. */
+function siteStorage(): Storage | undefined {
+  try {
+    return localStorage;
+  } catch {
+    return undefined;
+  }
+}
+
 /** Owns persisted game state, the route, and campaign actions; view-local UI state stays in components. */
 export function GameProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => {
-    try {
-      return readSave(localStorage, lessons);
-    } catch {
-      return { save: newSave(), error: 'Local storage is unavailable. Export your café to preserve progress.' };
-    }
+    const storage = siteStorage();
+    return storage ? readSave(storage, lessons) : { save: newSave(), error: STORAGE_BLOCKED };
   });
   const [save, setSave] = useState(initial.save),
     [saveError, setSaveError] = useState(initial.error),
@@ -48,7 +57,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (!recovery) {
       // Only a change of error re-renders: every keystroke saves, and a no-op update per save piles up during fast typing.
-      const error = writeSave(localStorage, save);
+      const storage = siteStorage();
+      const error = storage ? writeSave(storage, save) : STORAGE_BLOCKED;
       if (error !== saveError) setSaveError(error);
     }
     configureAudio(save.settings);

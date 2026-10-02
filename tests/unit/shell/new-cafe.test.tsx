@@ -40,4 +40,26 @@ describe('starting a new café', () => {
     expect(download).toHaveBeenCalledWith(expect.stringContaining('"version": 4'), expect.stringMatching(/\.json$/));
     expect(screen.getByRole('status').textContent).toMatch(/^Saved a copy as caffeine-protocol-save-.+\.json\.$/);
   });
+
+  it('keeps warning, without crashing, when the browser blocks storage outright', () => {
+    const storage = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+    Object.defineProperty(globalThis, 'localStorage', {
+      configurable: true,
+      get: () => {
+        throw new DOMException('Site data is blocked.', 'SecurityError');
+      },
+    });
+    try {
+      render(<App />);
+      const warning = 'This browser isn’t letting the café save here';
+      expect(screen.getByRole('alert').textContent).toContain(warning);
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start a new café' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start new café' }));
+      expect(screen.getByRole('heading', { name: 'Caffeine Protocol' })).toBeTruthy();
+      expect(screen.getAllByRole('alert').some((a) => a.textContent?.includes(warning))).toBe(true);
+    } finally {
+      if (storage) Object.defineProperty(globalThis, 'localStorage', storage);
+    }
+  });
 });
