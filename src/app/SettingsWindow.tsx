@@ -14,7 +14,8 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const { save, recovery, saveError, importCafe } = useGame();
   const cafe = useCafeName();
   const [pending, setPending] = useState<ProgressSave | null>(null),
-    [error, setError] = useState('');
+    [error, setError] = useState(''),
+    [imported, setImported] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const [settings, setting] = useSettings();
   // Track the browser's own state, so leaving with Esc relabels the button too.
@@ -132,6 +133,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               accept="application/json,.json"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
+                setImported('');
                 if (file) {
                   try {
                     if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
@@ -144,6 +146,10 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 e.target.value = '';
               }}
             />
+            {/* Present before anything is imported, so the confirmation is announced when it lands. */}
+            <p className="settings-status" role="status">
+              {imported}
+            </p>
             {(error || saveError) && (
               <p role="alert" className="error-text">
                 {error || saveError}
@@ -187,6 +193,9 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               onClick={() => {
                 importCafe(pending);
                 setPending(null);
+                setImported(
+                  `Café imported: ${count(Object.keys(pending.stars).length, 'completed shift')} and ${count(starTotal(pending.stars), 'star')}.`,
+                );
               }}
             >
               Replace café

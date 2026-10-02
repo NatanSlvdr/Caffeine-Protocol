@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../../src/App';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
@@ -35,10 +35,12 @@ describe('starting a new café', () => {
       ),
     ).toBeTruthy();
     const dialog = screen.getByRole('dialog', { name: 'Start a new café?' });
-    expect(screen.getByRole('status').textContent).toBe('');
+    expect(within(dialog).getByRole('status').textContent).toBe('');
     fireEvent.click(screen.getAllByRole('button', { name: 'Export café' }).find((b) => dialog.contains(b))!);
     expect(download).toHaveBeenCalledWith(expect.stringContaining('"version": 4'), expect.stringMatching(/\.json$/));
-    expect(screen.getByRole('status').textContent).toMatch(/^Saved a copy as caffeine-protocol-save-.+\.json\.$/);
+    expect(within(dialog).getByRole('status').textContent).toMatch(
+      /^Saved a copy as caffeine-protocol-save-.+\.json\.$/,
+    );
   });
 
   it('keeps warning, without crashing, when the browser blocks storage outright', () => {

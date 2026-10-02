@@ -1152,6 +1152,13 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-window .settings-block p {
   margin: 0 0 14px;
 }
+.settings-window .settings-block p.settings-status {
+  margin: 10px 0 0;
+  color: var(--slip-ink);
+}
+.settings-window .settings-block p.settings-status:empty {
+  margin: 0;
+}
 .settings-block > small {
   display: block;
   margin-top: 10px;

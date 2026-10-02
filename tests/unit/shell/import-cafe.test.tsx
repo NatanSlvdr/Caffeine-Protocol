@@ -55,6 +55,17 @@ describe('importing a café', () => {
     );
   });
 
+  it('says so once a café has been imported', async () => {
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    const text = JSON.stringify({ ...newSave(), stars: { 0: 1, 1: 3, 2: 2 } });
+    fireEvent.change(screen.getByLabelText('Import save file'), {
+      target: { files: [Object.assign(new File([text], 'cafe.json'), { text: async () => text })] },
+    });
+    fireEvent.click(await screen.findByRole('button', { name: 'Replace café' }));
+    expect(screen.getByRole('status').textContent).toBe('Café imported: 3 completed shifts and 5 stars.');
+  });
+
   it('offers a recovery copy only when there is a stored café it could not read', () => {
     localStorage.setItem('caffeine-protocol.v1', '{bad');
     render(<App />);
