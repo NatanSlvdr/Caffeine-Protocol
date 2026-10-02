@@ -15,13 +15,13 @@ Open the URL printed by Vite. The production build is fully static and supports 
 
 ## Play
 
-1. Choose a shift on the **Campaign** screen. The first shift uses an automatic-service block; observe the complete service to unlock the next shift.
-2. From shift 2, add and arrange instructions in the program workspace. Choosing a library block appends it to the end of the program; drag a block (or its grip) to a drop position to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END.
-3. Select **Run service** (Ctrl/⌘ + Enter) to validate every required seed. Every seed must pass before the next shift unlocks.
+1. Choose a shift on the **Campaign** screen. The first shift is watch-only: Niko, Moka and Pip serve it by hand. Watch the whole service to unlock the next shift.
+2. From shift 2, add and arrange blocks in Query's routine. Choosing a library block appends it to the end of the routine; drag a block (or its grip) to a drop position to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END.
+3. Select **Run service** (Ctrl/⌘ + Enter) to run the routine against each of the shift's seeds, its fixed lines of customers. Every seed must pass before the next shift unlocks. **Esc** stops a run.
 4. Use the café toolbar to stop, pause, and change playback speed. From shift 9, program Brew's kitchen routines; from shift 14, Porter's floor routines.
 5. **Help** explains the lesson and provides a worked example. **Options** contains the workspace pixel-art shader, text-editor toggle, and routine reset; sound, display, save import/export, and progress-reset controls live in **Settings**.
 
-One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, programs, and settings are stored in the browser. Save files can be exported and imported from **Settings**.
+One star rewards correctness, two reward the block target, and three add the executed-step target. Progress, routines, and settings are stored in the browser. Save files can be exported and imported from **Settings**.
 
 ## Campaign and scope
 
@@ -39,12 +39,16 @@ Query takes orders from shift 2; Brew takes over the kitchen at shift 9; Porter 
 
 ## Verification
 
-Run the focused test suite and production build from the project root:
+Run the checks from the project root:
 
 ```sh
+npm run typecheck
+npx eslint src tests
+npm run knip
+npm run validate:data
 npm test
-npm run build
-npm run test:e2e
 ```
+
+`npm run build` makes the production build. `npm run test:e2e` builds first and then drives Chrome through Playwright. It is the slowest suite.
 
 Generated dependencies, build output, test reports, screenshots, caches, and local environment files are intentionally excluded from Git.
