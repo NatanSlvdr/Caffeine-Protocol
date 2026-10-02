@@ -23,6 +23,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   // Some tablet browsers, and a café saved to the home screen, can't go fullscreen; offer it only where it works.
   const canFullscreen = !!document.fullscreenEnabled;
   const [fullscreenError, setFullscreenError] = useState('');
+  const systemReducedMotion = !!window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
   useEffect(() => {
     const sync = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', sync);
@@ -76,10 +77,16 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <h3>
               <Sparkles size={16} aria-hidden="true" /> Display & motion
             </h3>
+            {/* The device's own setting already calms the café, so the box shows it on rather than doing nothing. */}
             <SettingRow
               title="Reduced motion"
-              hint="Keep the movement, skip the extra animation."
-              checked={settings.reduced_motion}
+              hint={
+                systemReducedMotion
+                  ? 'On, because your device asks for less motion.'
+                  : 'Keep the movement, skip the extra animation.'
+              }
+              checked={settings.reduced_motion || systemReducedMotion}
+              disabled={systemReducedMotion}
               onChange={(e) => setting('reduced_motion', e.target.checked)}
             />
             <SettingRow
