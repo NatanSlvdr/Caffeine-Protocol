@@ -56,6 +56,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
   // A finished service pulls back to the whole café before the crew cheers and the receipt comes.
   const [wrapUp, setWrapUp] = useState(false);
+  // The cheer waits on its own, so picking a robot's camera during the pull-back doesn't call it off.
+  const [cheer, setCheer] = useState(false);
   const focused = zoomToRobot && !observation && !wrapUp;
   // The shift opens on its scene; a finished run answers with the crew's reaction.
   const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
@@ -76,8 +78,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     onDraft: (updated) => update((s) => saveRobotDraft(s, index, updated)),
     onComplete,
     onFinish: (passed) => {
-      if (passed) setWrapUp(true);
-      else setScene('failure');
+      if (passed) {
+        setWrapUp(true);
+        setCheer(true);
+      } else setScene('failure');
     },
   });
   const {
@@ -103,13 +107,20 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   useEffect(() => {
     if (!running) return;
     setWrapUp(false);
+    setCheer(false);
     setScene((current) => (current === 'intro' ? current : ''));
   }, [running]);
   useEffect(() => {
-    if (!wrapUp) return;
-    const timer = setTimeout(() => setScene('success'), reduced ? 0 : 900);
+    if (!cheer) return;
+    const timer = setTimeout(
+      () => {
+        setCheer(false);
+        setScene('success');
+      },
+      reduced ? 0 : 900,
+    );
     return () => clearTimeout(timer);
-  }, [wrapUp]);
+  }, [cheer]);
   const closeReaction = () => {
     if (scene === 'success') setModal('receipt');
     setScene('');

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../../../src/App';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
@@ -373,6 +373,21 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
     expect(screen.queryByText('Service complete')).toBeNull();
+  });
+  it('keeps the crew’s cheer when a robot’s camera is picked during the pull-back', () => {
+    open();
+    fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });
+    for (let i = 0; i < 1200 && !screen.queryByRole('button', { name: /Run service/ }); i++)
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+    expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
+    const cameras = within(screen.getByRole('group', { name: 'Camera view' }));
+    fireEvent.click(cameras.getByRole('button', { name: /Query’s counter/ }));
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
+    expect(screen.getByRole('dialog', { name: 'Dialogue' })).toBeTruthy();
   });
   it('pauses without advancing and cancels an unfinished run without awarding progress', () => {
     open();
