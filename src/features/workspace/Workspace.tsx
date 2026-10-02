@@ -148,10 +148,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
         <section className="cafe-panel">
           <div className="workspace-heading">
-            {/* Esc stands in for this button whenever it isn't stopping a service. */}
+            {/* Esc stands in for this button whenever it isn't stopping a service or closing the crew's reaction. */}
             <button
               className="breadcrumb"
-              aria-keyshortcuts={running ? undefined : 'Escape'}
+              aria-keyshortcuts={running || reaction ? undefined : 'Escape'}
               onClick={() => go('/campaign')}
             >
               {/* Read as "Campaign Shift 03": the arrow and the slash are only drawn. */}

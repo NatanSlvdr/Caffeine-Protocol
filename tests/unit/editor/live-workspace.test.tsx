@@ -343,9 +343,13 @@ describe('live workspace lifecycle', () => {
       });
     // Focus back in the code, outside the reaction.
     screen.getByRole('button', { name: /^Drag block 1 / }).focus();
+    // Only one button claims Escape at a time: the reaction's Skip, then the way back to the campaign.
+    const back = screen.getByRole('button', { name: /^Campaign/ });
+    expect(back.hasAttribute('aria-keyshortcuts')).toBe(false);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull();
     expect(window.location.hash).toBe('#/shift/3');
+    expect(back.getAttribute('aria-keyshortcuts')).toBe('Escape');
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(window.location.hash).toBe('#/campaign');
   });
