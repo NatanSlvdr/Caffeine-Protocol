@@ -58,8 +58,12 @@ describe('shift entry navigation', () => {
     localStorage.setItem('caffeine-protocol.v1', '{bad');
     render(<App />);
     expect(screen.getByRole('alert').textContent).toContain('new progress isn’t being saved');
-    fireEvent.click(screen.getByRole('button', { name: 'Dismiss' }));
+    const dismiss = screen.getByRole('button', { name: 'Dismiss' });
+    dismiss.focus();
+    fireEvent.click(dismiss);
     expect(screen.queryByRole('alert')).toBeNull();
+    // The button went with the notice; focus carries on from the screen's title.
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Caffeine Protocol' }));
   });
 
   it('counts only rated shifts, so stars never total past the maximum', () => {
