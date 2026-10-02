@@ -134,11 +134,11 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 const file = e.target.files?.[0];
                 if (file) {
                   try {
-                    if (file.size > 2_000_000) throw new Error('This file is too large.');
+                    if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
                     setPending(parseSave(await file.text(), lessons));
                     setError('');
                   } catch (err) {
-                    setError(err instanceof Error ? err.message : 'This file could not be read.');
+                    setError(importProblem(file.name, err));
                   }
                 }
                 e.target.value = '';
@@ -196,4 +196,18 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
       )}
     </>
   );
+}
+
+/** Why a chosen file was not imported, said in full, and that nothing was replaced. */
+function importProblem(name: string, err: unknown): string {
+  // Only the save checks' own errors are worded for players; anything else is just unreadable.
+  const message = err instanceof Error && err.constructor === Error ? err.message : '';
+  const why =
+    err instanceof SyntaxError
+      ? 'It isn’t a Caffeine Protocol café export.'
+      : // The save checks name the exact field that failed; say that much, as damage.
+        /^(Invalid|Missing) /.test(message)
+        ? `Part of it is damaged: ${message.charAt(0).toLowerCase()}${message.slice(1)}`
+        : message || 'It could not be read.';
+  return `${name} wasn’t imported. ${why} Your current café has been kept.`;
 }

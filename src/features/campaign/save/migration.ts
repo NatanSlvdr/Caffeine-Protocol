@@ -207,8 +207,10 @@ function migrateLegacyShifts(v: Record<string, unknown>, robotMaps: RobotMaps, l
 export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   if (text.length > 2_000_000) throw new Error('This save is too large. Choose a Caffeine Protocol JSON export.');
   const v: unknown = JSON.parse(text);
+  if (isRecord(v) && typeof v.version === 'number' && v.version > 4)
+    throw new Error('It comes from a newer version of Caffeine Protocol.');
   if (!isRecord(v) || (v.version !== 1 && v.version !== 2 && v.version !== 3 && v.version !== 4))
-    throw new Error('Unsupported save version. Your current café has been kept.');
+    throw new Error('It isn’t a Caffeine Protocol café export.');
   const legacy = v.version !== 4,
     shifts = legacy ? LEGACY_SHIFTS : lessons.length;
   validateProgress(v, shifts);
