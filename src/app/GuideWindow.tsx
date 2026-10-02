@@ -45,8 +45,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Puzzle size={16} /> Writing a routine
           </h3>
           <p>
-            Click a block’s name in the library to add it to the end, or drag it exactly where it belongs. Set its
-            values right in the code pane.
+            Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. Set
+            its values right in the code pane.
           </p>
           <p>
             Drag a grip to move a whole branch, loop or function. From the keyboard: <kbd>Space</kbd> to lift, arrow
@@ -71,8 +71,9 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Star size={16} /> Service & stars
           </h3>
           <p>
-            Run service with <kbd>{RUN_MODIFIER} + Enter</kbd>, and stop it with <kbd>Esc</kbd>. If an instruction
-            fails, its line lights up and you can fix it straight away.
+            <strong>Run service</strong> (or <kbd>{RUN_MODIFIER} + Enter</kbd>) sets the crew to work, and{' '}
+            <strong>Stop &amp; edit</strong> (or <kbd>Esc</kbd>) takes you back to the code. If an instruction fails,
+            its line lights up and you can fix it straight away.
           </p>
           <p>
             <Stars n={1} /> serves every order correctly, <Stars n={2} /> also meets the block target, and{' '}

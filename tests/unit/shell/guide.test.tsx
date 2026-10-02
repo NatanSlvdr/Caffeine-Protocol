@@ -22,6 +22,9 @@ describe('how to play', () => {
     );
     const guide = screen.getByRole('dialog', { name: 'How the café runs.' });
     expect(guide.textContent).toContain('Move counts whole tiles');
+    // The toolbar's own buttons come first, so a tablet without a keyboard can follow along.
+    expect(guide.textContent).toContain('Run service (or');
+    expect(guide.textContent).toContain('Stop & edit (or Esc)');
     // The run shortcut names this keyboard's modifier only.
     const run = [...guide.querySelectorAll('kbd')].find((k) => k.textContent.includes('Enter'));
     expect(run?.textContent).toMatch(/^(Ctrl|⌘) \+ Enter$/);
