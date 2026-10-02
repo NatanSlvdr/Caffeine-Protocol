@@ -1,5 +1,6 @@
+import type { KeyboardEvent } from 'react';
 import { ChefHat, ConciergeBell, ReceiptText } from 'lucide-react';
-import { splitByUnlock } from '@/domain/robots';
+import { ROBOT_UNLOCK_LEVELS, splitByUnlock } from '@/domain/robots';
 import type { RobotRole } from '@/domain';
 
 export const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
@@ -25,16 +26,34 @@ interface RobotListProps {
 
 function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) {
   const { unlocked, locked } = splitByUnlock(level);
+  const current = selected && unlocked.includes(selected) ? selected : unlocked[0];
+  // Tabs follow the arrow keys, Home and End, wrapping round the robots already running.
+  const step = (e: KeyboardEvent<HTMLButtonElement>, robot: RobotRole) => {
+    const at = unlocked.indexOf(robot);
+    const to = ({ ArrowLeft: at - 1, ArrowRight: at + 1, Home: 0, End: unlocked.length - 1 } as Record<string, number>)[
+      e.key
+    ];
+    if (to === undefined) return;
+    e.preventDefault();
+    const next = unlocked[(to + unlocked.length) % unlocked.length];
+    onSelect(next);
+    e.currentTarget.closest('[role="tablist"]')?.querySelector<HTMLElement>(`[data-robot="${next}"]`)?.focus();
+  };
   const button = (robot: RobotRole, disabled: boolean) => (
     <button
       key={robot}
       type="button"
+      data-robot={robot}
       role={tabs ? 'tab' : undefined}
       aria-selected={tabs ? !disabled && selected === robot : undefined}
       aria-pressed={tabs ? undefined : !disabled && selected === robot}
+      aria-description={disabled ? `Joins the crew at shift ${ROBOT_UNLOCK_LEVELS[robot]}` : undefined}
+      // Only the open tab sits in the Tab order; the arrows reach the others.
+      tabIndex={tabs && !disabled ? (robot === current ? 0 : -1) : undefined}
       title={tabs ? undefined : labels[robot]}
       disabled={disabled}
       onClick={() => onSelect(robot)}
+      onKeyDown={tabs ? (e) => step(e, robot) : undefined}
     >
       <RobotChoice robot={robot} label={labels[robot]} />
     </button>

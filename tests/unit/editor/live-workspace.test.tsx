@@ -75,6 +75,24 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByTestId('cafe').getAttribute('data-focus-role')).toBe('prep');
     expect(screen.getByRole('tab', { name: 'Brew' }).getAttribute('aria-selected')).toBe('true');
   });
+  it('moves between robot tabs with the arrow keys, Home and End', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
+    window.location.hash = '/shift/14';
+    render(<App />);
+    const tab = (name: string) => screen.getByRole('tab', { name });
+    // Only the open tab is in the Tab order.
+    expect(['Query', 'Brew', 'Porter'].map((name) => tab(name).tabIndex)).toEqual([-1, -1, 0]);
+    fireEvent.keyDown(tab('Porter'), { key: 'ArrowLeft' });
+    expect(tab('Brew').getAttribute('aria-selected')).toBe('true');
+    expect(document.activeElement).toBe(tab('Brew'));
+    fireEvent.keyDown(tab('Brew'), { key: 'Home' });
+    expect(document.activeElement).toBe(tab('Query'));
+    fireEvent.keyDown(tab('Query'), { key: 'ArrowLeft' });
+    expect(document.activeElement).toBe(tab('Porter'));
+    fireEvent.keyDown(tab('Porter'), { key: 'ArrowRight' });
+    expect(tab('Query').getAttribute('aria-selected')).toBe('true');
+    expect(tab('Query').tabIndex).toBe(0);
+  });
   it('shows locked robot areas and code tabs before their unlock shifts', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
     render(<App />);
@@ -82,6 +100,9 @@ describe('live workspace lifecycle', () => {
       expect(screen.getByRole('button', { name }).hasAttribute('disabled')).toBe(true);
     for (const name of ['Brew', 'Porter'])
       expect(screen.getByRole('tab', { name }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByRole('tab', { name: 'Brew' }).getAttribute('aria-description')).toBe(
+      'Joins the crew at shift 9',
+    );
     // Greyed out is enough; there is no separate Locked badge.
     expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Query' }).hasAttribute('disabled')).toBe(false);
