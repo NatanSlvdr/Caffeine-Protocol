@@ -15,14 +15,14 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page.getByRole('checkbox', { name: 'Text editor' }).check();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   const text = '# my café\n\nLISTEN\nTAKE UP\nITEM coffee\n';
-  await page.getByRole('textbox', { name: 'Program source' }).fill(text);
+  await page.getByRole('textbox', { name: 'Routine text' }).fill(text);
   await page.getByRole('button', { name: 'Options', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Text editor' }).uncheck();
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await page.getByRole('button', { name: 'Options', exact: true }).click();
   await page.getByRole('checkbox', { name: 'Text editor' }).check();
   await page.getByRole('button', { name: 'Close dialog' }).click();
-  await expect(page.getByRole('textbox', { name: 'Program source' })).toHaveValue(text);
+  await expect(page.getByRole('textbox', { name: 'Routine text' })).toHaveValue(text);
   // The workspace hides the app header; return to the campaign and open settings over it.
   await page.getByRole('button', { name: /Campaign \/ Shift/ }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();

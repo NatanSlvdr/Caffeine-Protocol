@@ -130,7 +130,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     title: 'Call Me Maybe',
     story: 'Brew has made the same recipes all morning. Let’s give those familiar steps a name, and just call them.',
     objective:
-      'Brew’s program repeats the same recipe steps for every ticket, which makes it long and hard to change. Serve every ticket as before, with the recipe written in one place.',
+      'Brew’s routine repeats the same recipe steps for every ticket, which makes it long and hard to change. Serve every ticket as before, with the recipe written in one place.',
     hint: 'Name the recipe, then call it.',
     lessonNote:
       'Move the recipe into Function recipe. Call recipe makes the drink on the oldest ticket Brew is holding.',

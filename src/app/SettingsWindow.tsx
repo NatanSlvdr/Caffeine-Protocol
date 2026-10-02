@@ -154,7 +154,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <h3>
               <Leaf size={16} /> A fresh start
             </h3>
-            <p>Open the doors all over again. Progress and programs are cleared; these settings stay.</p>
+            <p>Open the doors all over again. Progress and routines are cleared; these settings stay.</p>
             <Button variant="outline-danger" className="settings-chip" onClick={onNew}>
               Start a new café
             </Button>
@@ -175,7 +175,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
         >
           <p>
             This export contains {count(Object.keys(pending.stars).length, 'completed shift')} and{' '}
-            {count(starTotal(pending.stars), 'star')}. Importing it will replace your current progress, programs and
+            {count(starTotal(pending.stars), 'star')}. Importing it will replace your current progress, routines and
             settings.
           </p>
           <div className="modal-buttons">

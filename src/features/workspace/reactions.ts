@@ -95,13 +95,13 @@ const kinds: FailureKind[] = [
     match: /is still holding .+ waiting for/,
     by: 'robot',
     react: () => '*whirr* Still holding this. Forgot?',
-    hint: 'A robot that picks something up has to see it through. Make sure every path through its program puts it down where it belongs.',
+    hint: 'A robot that picks something up has to see it through. Make sure every path through its routine puts it down where it belongs.',
   },
   {
-    match: /reached the end of its program/,
+    match: /reached the end of its routine/,
     by: 'robot',
     react: () => '*whirr… click* All done? Not all done.',
-    hint: 'A robot runs its program from top to bottom once. A Jump back to a Position marker at the top sends it round again for the next job.',
+    hint: 'A robot runs its routine from top to bottom once. A Jump back to a jump destination at the top sends it round again for the next job.',
   },
   {
     match: /recipe isn’t in a function yet/,

@@ -47,7 +47,7 @@ export function CodingPaneHeader({
           {objective}
         </p>
       </header>
-      <div className="robot-tabs" role="tablist" aria-label="Robot programs">
+      <div className="robot-tabs" role="tablist" aria-label="Robot routines">
         <RobotOptions level={level} selected={role} labels={ROBOT_DISPLAY_NAMES} onSelect={onRole} tabs />
       </div>
     </section>

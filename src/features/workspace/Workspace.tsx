@@ -193,7 +193,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             }}
           />
         </section>
-        <section className="editor-panel" aria-label={`${ROBOT_DISPLAY_NAMES[role]} program editor`}>
+        <section className="editor-panel" aria-label={`${ROBOT_DISPLAY_NAMES[role]}’s routine`}>
           <CodingPaneHeader
             shift={shift.title}
             objective={brief.objective}

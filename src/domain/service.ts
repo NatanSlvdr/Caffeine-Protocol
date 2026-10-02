@@ -1289,7 +1289,7 @@ export function* streamService(
         fail(
           stuck,
           ranOut
-            ? `${name} reached the end of its program with work still to do: put a Position marker at the top and a Jump back to it at the end, so ${name} goes back for the next ${stuck.role === 'prep' ? 'ticket' : 'job'}.`
+            ? `${name} reached the end of its routine with work still to do: put a jump destination at the top and a Jump back to it at the end, so ${name} goes back for the next ${stuck.role === 'prep' ? 'ticket' : 'job'}.`
             : !holding
               ? `${name} is waiting here, but nothing more is coming its way, and the service isn’t finished. Check where the work it’s waiting for got stuck.`
               : cargo.stage === 'dirty'

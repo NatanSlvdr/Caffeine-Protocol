@@ -277,7 +277,7 @@ describe('compact visual code', () => {
   it('indents with Tab in the text view instead of leaving the editor', async () => {
     const onChange = vi.fn();
     render(<Editor source="LISTEN" onChange={onChange} level={8} locked={false} observation={false} textMode />);
-    const text = screen.getByLabelText<HTMLTextAreaElement>('Program source');
+    const text = screen.getByLabelText<HTMLTextAreaElement>('Routine text');
     text.focus();
     text.setSelectionRange(0, 0);
     await userEvent.keyboard('{Tab}');

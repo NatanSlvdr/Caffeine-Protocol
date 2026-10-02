@@ -164,7 +164,7 @@ export function Editor({
                 onClick={failureLine >= 0 ? onDismissFailure : undefined}
                 spellCheck={false}
                 ref={textInput}
-                aria-label="Program source"
+                aria-label="Routine text"
                 aria-description="Tab indents, Shift+Tab outdents, Escape leaves the editor."
                 onKeyDown={onTextKey}
                 value={source}

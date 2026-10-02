@@ -78,7 +78,7 @@ describe('movement language and execution', () => {
     expect(log.some((e) => e.command === 'MOVE RIGHT 1' && samePoint(e.to, [STARTS.prep[0] + 1, STARTS.prep[1]]))).toBe(
       true,
     );
-    expect(r.failure?.reason).toContain('Brew reached the end of its program');
+    expect(r.failure?.reason).toContain('Brew reached the end of its routine');
   });
   it('does not enter another worker area or leave the room', () => {
     const r = physical('MOVE RIGHT 19\nMOVE DOWN 19');
