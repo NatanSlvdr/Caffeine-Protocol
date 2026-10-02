@@ -141,7 +141,12 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
     const c = raw.trim();
     if (!c || c.startsWith('#')) continue;
     if (!recognised(c, role, level))
-      return fail(unreadable(ROBOT_DISPLAY_NAMES[role], c, recognised(c, role, EVERY_UNLOCK)), line);
+      return fail(
+        unreadable(ROBOT_DISPLAY_NAMES[role], c, recognised(c, role, EVERY_UNLOCK), (fixed) =>
+          recognised(fixed, role, EVERY_UNLOCK),
+        ),
+        line,
+      );
     const i = p.instructions.length;
     p.instructions.push(c);
     p.source_lines.push(line);

@@ -91,12 +91,26 @@ export const EVERY_UNLOCK = Infinity;
 
 /**
  * Why a robot can't read a line: either its block joins the library on a later shift, or the line is
- * no block at all, most often a typo in the text editor.
+ * no block at all, most often a typo in the text editor. A line that only has its letters in the wrong case
+ * ("move right 1", "ITEM 1 TEA") says so, with the line it means; `known` is whether the robot ever reads a line.
  */
-export function unreadable(robot: string, c: string, later: boolean): string {
-  return later
-    ? `${robot} can’t use “${c}” yet: that block joins the library on a later shift.`
+export function unreadable(robot: string, c: string, later: boolean, known: (line: string) => boolean): string {
+  if (later) return `${robot} can’t use “${c}” yet: that block joins the library on a later shift.`;
+  const recased = recase(c, known);
+  return recased
+    ? `${robot} doesn’t know “${c}”. Block words go in capitals and values in small letters: try “${recased}”.`
     : `${robot} doesn’t know “${c}”. Check it against the block library.`;
+}
+
+/** The one way of casing a line's words that a robot reads, trying each word in capitals and in small letters. */
+function recase(c: string, known: (line: string) => boolean): string | undefined {
+  const words = c.split(/\s+/);
+  if (words.length > 8) return undefined;
+  for (let mask = 0; mask < 2 ** words.length; mask++) {
+    const line = words.map((word, i) => (mask & (1 << i) ? word.toUpperCase() : word.toLowerCase())).join(' ');
+    if (line !== c && known(line)) return line;
+  }
+  return undefined;
 }
 
 /** Structure errors shared by every robot, naming blocks as their tiles do ("If", not "IF"). */
@@ -126,7 +140,8 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
     block_count: 0,
   };
   const stack: number[] = [],
-    allowed = availableCommands(level);
+    allowed = availableCommands(level),
+    everyCommand = availableCommands(EVERY_UNLOCK);
   const fail = (message: string) => {
     p.compile_error = message;
     return p;
@@ -136,7 +151,11 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
     p.error_line = line;
     if (!c || c.startsWith('#')) continue;
     if (!recognised(c, level, allowed))
-      return fail(unreadable('Query', c, recognised(c, EVERY_UNLOCK, availableCommands(EVERY_UNLOCK))));
+      return fail(
+        unreadable('Query', c, recognised(c, EVERY_UNLOCK, everyCommand), (line) =>
+          recognised(line, EVERY_UNLOCK, everyCommand),
+        ),
+      );
     if (
       parseConditionExpression(c)?.conditions.some((condition) => condition.right === 'item') &&
       !stack.some((i) => p.instructions[i].startsWith('FOR '))

@@ -74,6 +74,22 @@ describe('Brew and Porter speak Query’s language', () => {
     );
   });
 
+  it('names a line typed in the wrong case, with the line it means', () => {
+    const typed = (source: string, role: 'query' | 'prep' | 'floor') => compileRobot(source, role, UNLOCKS.floor);
+    expect(typed('listen', 'query').compile_error).toBe(
+      'Query doesn’t know “listen”. Block words go in capitals and values in small letters: try “LISTEN”.',
+    );
+    expect(typed('LISTEN\nif tea in customer speech\nEND', 'query').compile_error).toBe(
+      'Query doesn’t know “if tea in customer speech”. Block words go in capitals and values in small letters: try “IF tea IN CUSTOMER SPEECH”.',
+    );
+    expect(typed('LISTEN\nItem 1 TEA', 'query').compile_error).toContain('try “ITEM 1 tea”.');
+    expect(typed('LISTEN\nmove up 1', 'floor').compile_error).toContain('try “MOVE UP 1”.');
+    // A line no casing fixes keeps the plain message.
+    expect(typed('LISTEN\nmove upp 1', 'floor').compile_error).toBe(
+      'Porter doesn’t know “move upp 1”. Check it against the block library.',
+    );
+  });
+
   it('points an open Function at its own line, and names an empty routine', () => {
     const open = compileRobot('LISTEN\nFUNCTION recipe\nRETURN', 'prep', UNLOCKS.functions);
     expect([open.compile_error, open.error_line]).toEqual(['This Function needs an End to close it.', 1]);
