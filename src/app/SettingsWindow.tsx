@@ -133,8 +133,12 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 <button
                   className="settings-chip"
                   onClick={() => {
+                    setStatus('');
                     try {
-                      download(localStorage.getItem(SAVE_KEY) ?? '', 'caffeine-recovery.json');
+                      const name = saveFileName(new Date(), 'recovery');
+                      download(localStorage.getItem(SAVE_KEY) ?? '', name);
+                      setError('');
+                      setStatus(`Recovery copy exported as ${name}. Look for it with your downloads.`);
                     } catch {
                       setError('The original storage could not be accessed.');
                     }

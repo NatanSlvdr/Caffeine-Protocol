@@ -91,4 +91,24 @@ describe('importing a café', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
     expect(screen.getByRole('button', { name: 'Export recovery copy' })).toBeTruthy();
   });
+
+  it('says where a recovery copy went, under a name of its own', () => {
+    localStorage.setItem('caffeine-protocol.v1', '{bad');
+    URL.createObjectURL = vi.fn(() => 'blob:recovery');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    vi.useFakeTimers({ now: new Date(2026, 9, 2) });
+    try {
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Export recovery copy' }));
+      expect(click).toHaveBeenCalledOnce();
+      expect(screen.getByRole('status').textContent).toBe(
+        'Recovery copy exported as caffeine-protocol-recovery-2026-10-02.json. Look for it with your downloads.',
+      );
+    } finally {
+      vi.useRealTimers();
+      click.mockRestore();
+    }
+  });
 });
