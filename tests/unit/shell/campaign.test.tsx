@@ -77,12 +77,20 @@ describe('campaign order rail', () => {
     fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
     expect(document.activeElement).toBe(selectedShift());
-    // From anywhere else on the page, the arrows browse without moving focus.
+    // The lines run down the ticket, so up and down step along it too.
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowUp' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
+    expect(document.activeElement).toBe(selectedShift());
+    // From anywhere else on the page, the arrows browse without moving focus, and up and down are left to scroll.
     const start = screen.getByRole('button', { name: 'Start shift' });
     start.focus();
     fireEvent.keyDown(start, { key: 'ArrowLeft' });
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
     expect(document.activeElement).toBe(start);
+    expect(fireEvent.keyDown(start, { key: 'ArrowDown' })).toBe(true);
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
   });
 
   it('leaves arrows to editable fields and modified shortcuts', () => {

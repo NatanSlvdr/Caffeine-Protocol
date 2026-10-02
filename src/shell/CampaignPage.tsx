@@ -129,8 +129,9 @@ export function CampaignPage() {
     orderTimer.current = window.setTimeout(() => launch(index), ORDER_UP_MS);
   };
 
-  // Arrow keys move down the order unless focus is in a text field.
-  // Pressed from a line on the ticket, the arrows carry focus along, so the focus ring stays on the chosen line.
+  // Left and right move along the order unless focus is in a text field.
+  // Pressed from a line on the ticket, the arrows carry focus along, so the focus ring stays on the chosen line; there
+  // up and down work too, as the lines run down the ticket. Elsewhere up and down are left to scroll the page.
   const followFocus = useRef(false);
   const step = (direction: -1 | 1, fromLine: boolean) => {
     const entry = neighbour(direction);
@@ -156,9 +157,15 @@ export function CampaignPage() {
         )
       )
         return;
-      const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+      const onLine = target instanceof Element && !!target.closest('.shift-card');
+      const direction =
+        event.key === 'ArrowLeft' || (onLine && event.key === 'ArrowUp')
+          ? -1
+          : event.key === 'ArrowRight' || (onLine && event.key === 'ArrowDown')
+            ? 1
+            : 0;
       if (!direction) return;
-      keys.current(direction, target instanceof Element && !!target.closest('.shift-card'));
+      keys.current(direction, onLine);
       event.preventDefault();
     };
     window.addEventListener('keydown', onKey);
