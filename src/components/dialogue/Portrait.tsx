@@ -1,8 +1,11 @@
 import { cast } from '@/data/campaign/cast';
 import type { CastId, Mood } from '@/domain';
 
-/** `python3 tools/portraits.py` writes src/assets/portraits/<character>/<mood>.webp; each one is picked up, bundled and precached. */
-const files = import.meta.glob<string>('../../assets/portraits/*/*.webp', {
+/**
+ * `python3 tools/portraits.py` writes src/assets/portraits/<character>/<mood>.webp; each one is picked up, bundled and precached.
+ * Sync conflict copies ("happy 2.webp") are left out, so they never ship.
+ */
+const files = import.meta.glob<string>(['../../assets/portraits/*/*.webp', '!**/* [0-9].webp'], {
   eager: true,
   query: '?url',
   import: 'default',

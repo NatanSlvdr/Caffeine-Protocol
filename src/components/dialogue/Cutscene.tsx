@@ -3,8 +3,11 @@ import { Clapperboard } from 'lucide-react';
 import { sceneLines, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import { DialogueBox } from './DialogueBox';
 
-/** `python3 tools/cutscenes.py` writes src/assets/cutscenes/<scene>/<nn>.webp; each one is picked up, bundled and precached. */
-const files = import.meta.glob<string>('../../assets/cutscenes/*/*.webp', {
+/**
+ * `python3 tools/cutscenes.py` writes src/assets/cutscenes/<scene>/<nn>.webp; each one is picked up, bundled and precached.
+ * Sync conflict copies ("01 2.webp") are left out, so they never ship.
+ */
+const files = import.meta.glob<string>(['../../assets/cutscenes/*/*.webp', '!**/* [0-9].webp'], {
   eager: true,
   query: '?url',
   import: 'default',
