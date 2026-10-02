@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
-import { Modal } from '@/components';
-import { Button } from '@/shared/ui/Button';
 import { Workspace } from '@/features/workspace/Workspace';
 import { GuideWindow } from '@/app/GuideWindow';
+import { NewCafeModal } from '@/app/NewCafeModal';
 import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
@@ -101,30 +100,14 @@ function Shell() {
         />
       )}
       {modal === 'new' && (
-        <Modal
-          className="settings-window confirm-slip"
-          kicker="A fresh start"
-          title="Start a new café?"
+        <NewCafeModal
           onClose={() => setModal('')}
-        >
-          <p>This clears all shifts, stars, programs and story progress. Your audio and display settings will stay.</p>
-          <p>Export your current café first if you want to return to it.</p>
-          <div className="modal-buttons">
-            <button className="settings-chip" onClick={() => setModal('')}>
-              Keep my café
-            </button>
-            <Button
-              variant="danger"
-              onClick={() => {
-                resetCafe();
-                setModal('');
-                setSettingsOpen(false);
-              }}
-            >
-              Start new café
-            </Button>
-          </div>
-        </Modal>
+          onConfirm={() => {
+            resetCafe();
+            setModal('');
+            setSettingsOpen(false);
+          }}
+        />
       )}
       {guideOpen && <GuideWindow onClose={() => setGuideOpen(false)} />}
     </div>
