@@ -56,7 +56,7 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
                 <img src={url} alt="" draggable={false} />
               ) : (
                 <figcaption className="cutscene-placeholder">
-                  <Clapperboard size={28} strokeWidth={1.8} />
+                  <Clapperboard size={28} strokeWidth={1.8} aria-hidden="true" />
                   <span>
                     {scene.id}/{String(index + 1).padStart(2, '0')}
                   </span>

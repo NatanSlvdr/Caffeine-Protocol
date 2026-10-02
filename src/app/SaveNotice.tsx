@@ -22,7 +22,7 @@ export function SaveNotice() {
         title="Dismiss"
         onClick={() => setDismissed(saveError)}
       >
-        <X size={16} />
+        <X size={16} aria-hidden="true" />
       </button>
     </div>
   );

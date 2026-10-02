@@ -100,7 +100,7 @@ export function EndingPage() {
           </dl>
           <div className="story-actions">
             <Button variant="primary" className="story-start" onClick={() => go('/')}>
-              Back to the café <ArrowRight size={18} />
+              Back to the café <ArrowRight size={18} aria-hidden="true" />
             </Button>
             <button
               className="story-link"

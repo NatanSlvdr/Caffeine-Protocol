@@ -31,16 +31,16 @@ export function HomePage() {
           </p>
           <div className="front-actions">
             <Button variant="primary" className="front-start" onClick={() => go('/campaign')}>
-              <BookOpen size={18} />
+              <BookOpen size={18} aria-hidden="true" />
               Choose a shift
-              <ArrowRight size={19} />
+              <ArrowRight size={19} aria-hidden="true" />
             </Button>
             <div className="front-links">
               <button className="front-link" onClick={openGuide}>
-                <CircleHelp size={17} /> How to play
+                <CircleHelp size={17} aria-hidden="true" /> How to play
               </button>
               <button className="front-link" onClick={openSettings}>
-                <Settings2 size={17} /> Settings
+                <Settings2 size={17} aria-hidden="true" /> Settings
               </button>
             </div>
           </div>

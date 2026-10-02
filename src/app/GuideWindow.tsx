@@ -31,7 +31,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
       <div className="settings-sheet">
         <section className="settings-block">
           <h3>
-            <Bot size={16} /> The crew
+            <Bot size={16} aria-hidden="true" /> The crew
           </h3>
           <p>
             The café has more guests than one pair of hands can serve. Over {CAMPAIGN_LENGTH} shifts, you program three
@@ -42,7 +42,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
         </section>
         <section className="settings-block">
           <h3>
-            <Puzzle size={16} /> Writing a routine
+            <Puzzle size={16} aria-hidden="true" /> Writing a routine
           </h3>
           <p>
             Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. Set
@@ -59,7 +59,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
         </section>
         <section className="settings-block">
           <h3>
-            <Map size={16} /> Around the café
+            <Map size={16} aria-hidden="true" /> Around the café
           </h3>
           <p>
             Move counts whole tiles in screen directions. A blocked move stops early, and customers never block the way.
@@ -72,7 +72,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
         </section>
         <section className="settings-block">
           <h3>
-            <Star size={16} /> Service & stars
+            <Star size={16} aria-hidden="true" /> Service & stars
           </h3>
           <p>
             <strong>Run service</strong> (or <kbd>{RUN_MODIFIER} + Enter</kbd>) sets the crew to work, and{' '}

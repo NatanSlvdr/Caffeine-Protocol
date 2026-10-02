@@ -26,7 +26,7 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
           setExported(name);
         }}
       >
-        <Download size={15} /> Export café
+        <Download size={15} aria-hidden="true" /> Export café
       </button>
       <p className="export-status" role="status">
         {exported && `Café exported as ${exported}. Look for it with your downloads.`}

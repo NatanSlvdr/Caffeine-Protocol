@@ -48,7 +48,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
         <div className="settings-sheet">
           <section className="settings-block">
             <h3>
-              <Volume2 size={16} /> Sound
+              <Volume2 size={16} aria-hidden="true" /> Sound
             </h3>
             <label className="settings-volume">
               <span>
@@ -69,7 +69,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
           </section>
           <section className="settings-block">
             <h3>
-              <Sparkles size={16} /> Display & motion
+              <Sparkles size={16} aria-hidden="true" /> Display & motion
             </h3>
             <SettingRow
               title="Reduced motion"
@@ -92,11 +92,11 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 <button className="settings-chip" onClick={() => void fullscreen()}>
                   {isFullscreen ? (
                     <>
-                      <Minimize size={15} /> Exit fullscreen
+                      <Minimize size={15} aria-hidden="true" /> Exit fullscreen
                     </>
                   ) : (
                     <>
-                      <Maximize size={15} /> Go fullscreen
+                      <Maximize size={15} aria-hidden="true" /> Go fullscreen
                     </>
                   )}
                 </button>
@@ -110,7 +110,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
           </section>
           <section className="settings-block">
             <h3>
-              <FolderHeart size={16} /> Your café, saved
+              <FolderHeart size={16} aria-hidden="true" /> Your café, saved
             </h3>
             <p>Progress stays in this browser. Export a copy to keep it safe or carry it to another computer.</p>
             <div className="settings-actions">
@@ -124,10 +124,10 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                   setStatus(`Café exported as ${name}. Look for it with your downloads.`);
                 }}
               >
-                <Download size={15} /> Export café
+                <Download size={15} aria-hidden="true" /> Export café
               </button>
               <button className="settings-chip" onClick={() => input.current?.click()}>
-                <Upload size={15} /> Import café
+                <Upload size={15} aria-hidden="true" /> Import café
               </button>
               {recovery && (
                 <button
@@ -177,7 +177,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
           </section>
           <section className="settings-block">
             <h3>
-              <Leaf size={16} /> A fresh start
+              <Leaf size={16} aria-hidden="true" /> A fresh start
             </h3>
             <p>Open the doors all over again. Progress and routines are cleared; these settings stay.</p>
             <Button variant="outline-danger" className="settings-chip" onClick={onNew}>

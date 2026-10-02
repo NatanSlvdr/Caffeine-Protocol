@@ -61,7 +61,7 @@ export function Modal({
           <h2>{title}</h2>
         )}
         <button aria-label="Close dialog" onClick={onClose}>
-          <X size={20} />
+          <X size={20} aria-hidden="true" />
         </button>
       </div>
       {description && <p className="modal-description">{description}</p>}

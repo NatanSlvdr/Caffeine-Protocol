@@ -169,7 +169,7 @@ export function CampaignPage() {
     <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
       <ShellBar label="Campaign" back="Caffeine Protocol" onBack={() => go('/')}>
         <button className="shell-icon" aria-label="How to play" title="How to play" onClick={openGuide}>
-          <CircleHelp size={18} />
+          <CircleHelp size={18} aria-hidden="true" />
         </button>
       </ShellBar>
 
@@ -296,7 +296,7 @@ export function CampaignPage() {
                 onClick={() => start(selected)}
                 disabled={ordering !== null}
               >
-                <Play size={17} fill="currentColor" />{' '}
+                <Play size={17} fill="currentColor" aria-hidden="true" />{' '}
                 {ordering !== null
                   ? 'Order up…'
                   : isComplete(selected)
@@ -355,7 +355,7 @@ function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; 
         </div>
         <div className="board-launch">
           <Button className="recipe-start" variant="primary" onClick={onWatch}>
-            <Clapperboard size={17} /> {seen ? 'Watch again' : 'Watch scene'}
+            <Clapperboard size={17} aria-hidden="true" /> {seen ? 'Watch again' : 'Watch scene'}
           </Button>
           <p className="board-hint" aria-hidden="true">
             <kbd>←</kbd> <kbd>→</kbd> browse · double-click to watch

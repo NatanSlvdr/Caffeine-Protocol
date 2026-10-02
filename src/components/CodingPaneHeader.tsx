@@ -33,12 +33,12 @@ export function CodingPaneHeader({
           <div className="coding-tools">
             {onHelp && (
               <button type="button" aria-label="Help" title="Help" onClick={onHelp}>
-                <BookOpen size={14} />
+                <BookOpen size={14} aria-hidden="true" />
               </button>
             )}
             {onOptions && (
               <button type="button" aria-label="Options" title="Options" onClick={onOptions}>
-                <SlidersHorizontal size={14} />
+                <SlidersHorizontal size={14} aria-hidden="true" />
               </button>
             )}
           </div>

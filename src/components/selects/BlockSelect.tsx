@@ -126,7 +126,7 @@ export function BlockSelect({
       >
         {selected?.icon}
         {selected?.label ?? value}
-        <ChevronDown size={12} />
+        <ChevronDown size={12} aria-hidden="true" />
       </button>
       {open &&
         createPortal(

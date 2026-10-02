@@ -19,7 +19,7 @@ export function ShellBar({
   return (
     <nav className="shell-bar" aria-label={label}>
       <button className="shell-back" onClick={onBack}>
-        <ArrowLeft size={16} /> {back}
+        <ArrowLeft size={16} aria-hidden="true" /> {back}
       </button>
       <div className="shell-bar-actions">
         {children}
@@ -28,7 +28,7 @@ export function ShellBar({
           <small> / {progress.max}</small>
         </span>
         <button className="shell-icon" aria-label="Settings" title="Settings" onClick={openSettings}>
-          <Settings2 size={18} />
+          <Settings2 size={18} aria-hidden="true" />
         </button>
       </div>
     </nav>

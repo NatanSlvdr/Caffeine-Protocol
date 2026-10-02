@@ -133,7 +133,7 @@ export function HelpModal({
                   Keep my edits
                 </button>
                 <Button variant="primary" disabled={running} onClick={() => onUseExample(example)}>
-                  Replace my edits <ArrowRight size={15} />
+                  Replace my edits <ArrowRight size={15} aria-hidden="true" />
                 </Button>
               </div>
             </>
@@ -163,7 +163,7 @@ export function HelpModal({
                     aria-describedby={running ? 'help-running' : undefined}
                     onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
                   >
-                    Use this example <ArrowRight size={15} />
+                    Use this example <ArrowRight size={15} aria-hidden="true" />
                   </Button>
                 ))}
             </div>

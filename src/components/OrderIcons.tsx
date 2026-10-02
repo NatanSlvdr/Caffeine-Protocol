@@ -42,7 +42,7 @@ export function OrderIcons({ orders, label }: { orders: IconOrder[]; label: stri
             {order.item === 'coffee' || order.item === 'tea' ? (
               <ModelThumbnail model={order.item} />
             ) : (
-              <CircleHelp size={22} />
+              <CircleHelp size={22} aria-hidden="true" />
             )}
             {order.quantity > 1 && <span>×{order.quantity}</span>}
             {!!order.sugar && <SugarBadge sugar={order.sugar} />}

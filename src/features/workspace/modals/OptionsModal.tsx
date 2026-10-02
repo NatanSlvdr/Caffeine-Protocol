@@ -60,7 +60,7 @@ export function OptionsModal({
         aria-describedby={note ? 'reset-note' : undefined}
         onClick={onRequestReset}
       >
-        <RotateCcw size={15} /> Reset {robot}’s routine
+        <RotateCcw size={15} aria-hidden="true" /> Reset {robot}’s routine
       </button>
       {note && <p id="reset-note">{note}</p>}
     </Modal>

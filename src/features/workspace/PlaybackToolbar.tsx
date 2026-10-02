@@ -31,13 +31,14 @@ export function PlaybackToolbar({
         aria-keyshortcuts={`Control+Enter Meta+Enter${running ? ' Escape' : ''}`}
         onClick={onRun}
       >
-        {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}
+        {running ? <Square size={15} aria-hidden="true" /> : <Play size={15} fill="currentColor" aria-hidden="true" />}
         {/* The watch-only shift has no routine to go back to. */}
         {running ? (observation ? 'Stop watching' : 'Stop & edit') : observation ? 'Watch service' : 'Run service'}
         <kbd aria-hidden="true">{RUN_MODIFIER} ↵</kbd>
       </button>
       <button aria-label={paused ? 'Resume playback' : 'Pause playback'} disabled={!pausable} onClick={onTogglePause}>
-        {paused ? <Play size={15} /> : <Pause size={15} />} {paused ? 'Resume' : 'Pause'}
+        {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}{' '}
+        {paused ? 'Resume' : 'Pause'}
       </button>
       <label className="playback-speed">
         <span>

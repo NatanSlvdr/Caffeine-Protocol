@@ -113,7 +113,7 @@ export function ReceiptModal({
           }}
         >
           {nextShift ? 'Next shift' : 'Closing time'}
-          <ArrowRight size={16} />
+          <ArrowRight size={16} aria-hidden="true" />
         </Button>
       </div>
     </Modal>
