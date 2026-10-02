@@ -203,6 +203,12 @@ describe('reactions', () => {
     // Brew's sugar slip is about counting it in, not reading the order.
     expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
     expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
+    // A mark written where it doesn't belong is the opposite slip to a missing one.
+    expect(niko('Ticket 1 isn’t in a rush, but it says Rush.')).toContain('only for guests who say they’re in a hurry');
+    expect(niko('Ticket 1 is staying in, but it says To go.')).toContain('Only write To go when the order says so');
+    expect(niko('Ticket 1 is to go: Write To go on it.')).toContain('If To go IN item, then Write To go');
+    expect(niko('This coffee is for table 2, not the to-go shelf.')).toContain('goes to the table on its ticket');
+    expect(niko('Finish brewing before putting a lid on.')).toContain('putting a lid on');
     // A slip that only mentions sugar is the robot's, so the guest doesn't complain about their sugar.
     const [query, paper] = failureLines(failure('Take the order paper before writing sugar.'), 'query');
     expect(query.who).toBe('query');

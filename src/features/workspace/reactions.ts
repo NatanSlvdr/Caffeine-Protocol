@@ -14,16 +14,40 @@ interface FailureKind {
 /** Failure reasons are the simulator's own sentences; each family gets a voice and a nudge. */
 const kinds: FailureKind[] = [
   {
-    match: /is to go: Write To go|says To go/,
+    match: /is to go: Write To go/,
     by: 'guest',
     react: (p) => `I said “${p}”. I’m taking it with me!`,
     hint: 'To-go orders say so: If To go IN item, then Write To go.',
   },
   {
-    match: /in a rush: Write Rush|says Rush/,
+    match: /staying in, but it says To go/,
+    by: 'guest',
+    react: (p) => `I said “${p}”. I’m staying for this one.`,
+    hint: 'Only write To go when the order says so: check If To go IN item first.',
+  },
+  {
+    match: /in a rush: Write Rush/,
     by: 'guest',
     react: (p) => `“${p}”… and I really am in a hurry.`,
     hint: 'Write Rush on their ticket, so the kitchen and the floor know.',
+  },
+  {
+    match: /isn’t in a rush, but it says Rush/,
+    by: 'guest',
+    react: (p) => `“${p}”. No hurry, really. I’ve got all afternoon.`,
+    hint: 'Rush jumps the queue, so it’s only for guests who say they’re in a hurry: check If Rush IN item first.',
+  },
+  {
+    match: /Finish brewing/,
+    by: 'robot',
+    react: () => '*beep beep* Wait! Drink not ready!',
+    hint: 'Finish the recipe before adding sugar, putting a lid on, or sending the drink out.',
+  },
+  {
+    match: /not the to-go shelf/,
+    by: 'guest',
+    react: () => 'Hey, I’m sitting right here!',
+    hint: 'Only to-go drinks go on the shelf by the door. This one goes to the table on its ticket.',
   },
   {
     match: /lid/,
@@ -163,12 +187,6 @@ const kinds: FailureKind[] = [
     by: 'robot',
     react: () => '*hiss* Machine says: done already!',
     hint: 'A brewed drink is finished with the machine. Give it its sugar, or Deposit it up at pickup.',
-  },
-  {
-    match: /Finish brewing/,
-    by: 'robot',
-    react: () => '*beep beep* Wait! Drink not ready!',
-    hint: 'Finish the recipe before adding sugar or sending the drink out.',
   },
   {
     match: /takes .+, but it has \d+/,
