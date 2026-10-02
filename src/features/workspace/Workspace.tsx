@@ -59,9 +59,14 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const focused = zoomToRobot && !observation && !wrapUp;
   // The shift opens on its scene; a finished run answers with the crew's reaction.
   const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
-  // A finished scene takes its focused button with it; carry on from the shift's title.
+  // A finished scene takes its focused button with it; carry on from the shift's title. After the crew's reaction
+  // to a failed run, the block where the service stopped is the place to carry on from, ready to fix. The text
+  // view stays on the title: focusing its textarea would raise a tablet's keyboard.
   useEffect(() => {
-    if (!scene) reclaimFocus();
+    if (scene) return;
+    if (document.activeElement === document.body)
+      (document.getElementsByClassName('block failure')[0] as HTMLElement | undefined)?.focus();
+    reclaimFocus();
   }, [scene]);
   const live = useLiveRun({
     index,

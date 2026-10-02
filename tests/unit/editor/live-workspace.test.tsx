@@ -321,6 +321,20 @@ describe('live workspace lifecycle', () => {
     });
     expect(savedStars()['2']).toBeUndefined();
   });
+  it('carries on from the block where the service stopped once the crew has had its say', () => {
+    open('LISTEN\nITEM coffee');
+    for (let i = 0; i < 30 && !screen.queryByRole('button', { name: 'Skip' }); i++)
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+    // Tabbed to and pressed, the button goes with the reaction.
+    const skip = screen.getByRole('button', { name: 'Skip' });
+    skip.focus();
+    fireEvent.click(skip);
+    expect(document.activeElement?.getAttribute('aria-label')).toBe(
+      'Drag block 2 (write coffee), where the service stopped',
+    );
+  });
   it('stops service on an error, holding the failed frame and error cursor until the code changes', () => {
     open('LISTEN\nITEM coffee');
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
