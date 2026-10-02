@@ -60,6 +60,11 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(window.location.hash).toBe('#/campaign');
   });
+  it('names the way back without reading out the drawn arrow and slash', () => {
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Campaign Shift 03' }));
+    expect(window.location.hash).toBe('#/campaign');
+  });
   it('stops a running service on Escape, and only then leaves the shift', () => {
     open();
     expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();

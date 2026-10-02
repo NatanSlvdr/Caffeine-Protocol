@@ -135,7 +135,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
         <section className="cafe-panel">
           <div className="workspace-heading">
             <button className="breadcrumb" onClick={() => go('/campaign')}>
-              <ArrowLeft size={14} /> Campaign <span>/</span> Shift {pad2(index + 1)}
+              {/* Read as "Campaign Shift 03": the arrow and the slash are only drawn. */}
+              <ArrowLeft size={14} aria-hidden="true" /> Campaign <span aria-hidden="true">/</span> Shift{' '}
+              {pad2(index + 1)}
             </button>
             <div className="view-controls" role="group" aria-label="Camera view">
               <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>

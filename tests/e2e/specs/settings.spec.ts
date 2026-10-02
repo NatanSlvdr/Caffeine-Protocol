@@ -24,7 +24,7 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await page.getByRole('button', { name: 'Close dialog' }).click();
   await expect(page.getByRole('textbox', { name: 'Routine text' })).toHaveValue(text);
   // The workspace hides the app header; return to the campaign and open settings over it.
-  await page.getByRole('button', { name: /Campaign \/ Shift/ }).click();
+  await page.getByRole('button', { name: /Campaign Shift/ }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'The little things.' })).toBeVisible();
   // Settings survive a reload.
