@@ -5,6 +5,7 @@ import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
+import { OptionsModal } from '../../../src/features/workspace/modals/OptionsModal';
 
 vi.mock('../../../src/components/Cafe', () => ({
   Cafe: ({ serviceView, focusRole }: { serviceView?: boolean; focusRole?: string }) => (
@@ -134,6 +135,27 @@ describe('live workspace lifecycle', () => {
     expect(reset.hasAttribute('disabled')).toBe(true);
     expect(reset.getAttribute('aria-describedby')).toBe('reset-note');
     expect(screen.getByText('Query’s routine is just as the shift opened it.')).toBeTruthy();
+  });
+  it('says to stop the service before resetting an edited routine', () => {
+    render(
+      <OptionsModal
+        robot="Brew"
+        pixelArt={false}
+        textMode={false}
+        observation={false}
+        running
+        edited
+        onTogglePixelArt={() => {}}
+        onToggleTextMode={() => {}}
+        onRequestReset={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    const reset = screen.getByRole('button', { name: /Reset Brew’s routine/ });
+    expect(reset.hasAttribute('disabled')).toBe(true);
+    expect(document.getElementById(reset.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'Stop the service to reset Brew’s routine.',
+    );
   });
   it('says why the watch-only shift has nothing to reset', () => {
     window.location.hash = '/shift/1';

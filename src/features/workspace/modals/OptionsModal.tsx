@@ -33,9 +33,11 @@ export function OptionsModal({
   // Says why the reset is greyed out, when nothing else in the window does.
   const note = observation
     ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.'
-    : edited
-      ? ''
-      : `${robot}’s routine is just as the shift opened it.`;
+    : !edited
+      ? `${robot}’s routine is just as the shift opened it.`
+      : running
+        ? `Stop the service to reset ${robot}’s routine.`
+        : '';
   return (
     <Modal className="settings-window confirm-slip" kicker="This shift" title="Workspace options" onClose={onClose}>
       <SettingRow
