@@ -128,6 +128,12 @@ describe('compact visual code', () => {
     await user.keyboard('l{Enter}');
     expect(source()).toBe('MOVE LEFT 1');
   });
+  it('names both ways to add a first block to an empty routine', () => {
+    render(<Harness initial="" />);
+    expect(document.querySelector('.code-insertion.with-hint')?.textContent).toBe(
+      'Tap or click a block in the library, or drag one here',
+    );
+  });
   it('scrolls the option the arrow keys reach into sight in a long menu', async () => {
     const user = userEvent.setup();
     const scrolled: string[] = [];

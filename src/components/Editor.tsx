@@ -219,7 +219,7 @@ export function Editor({
                 autoComplete="off"
                 ref={textInput}
                 aria-label="Routine text"
-                // The text view's own "Drop your first block": an empty routine says what goes here.
+                // The text view's own empty-routine hint: it says what goes here.
                 placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
                 aria-description={
                   (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
@@ -239,7 +239,12 @@ export function Editor({
                 line={failureLine >= 0 ? visibleFailureLine : markerLine}
                 stepSeconds={stepSeconds}
               />
-              <Insertion at={0} disabled={disabled} hint={rows.length ? '' : 'Drop your first block'} />
+              {/* An empty routine names both ways in, as the Guide does: a tablet player may never think to drag. */}
+              <Insertion
+                at={0}
+                disabled={disabled}
+                hint={rows.length ? '' : 'Tap or click a block in the library, or drag one here'}
+              />
               <ProgramRows
                 tree={tree}
                 rows={rows}
