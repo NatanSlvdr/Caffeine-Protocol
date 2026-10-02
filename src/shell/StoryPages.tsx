@@ -50,10 +50,12 @@ const rated = Array.from({ length: CAMPAIGN_LENGTH }, (_, index) => index).filte
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
   const progress = useProgress();
-  const { save } = useGame();
+  const { save, select } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const [talking, setTalking] = useState(true);
   const perfect = rated.filter((index) => save.stars[index] === 3).length;
+  // Going back for stars starts at the first shift still short of three.
+  const missing = rated.find((index) => (save.stars[index] ?? 0) < 3);
   return (
     <main className="story-page ending-page">
       <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
@@ -64,7 +66,10 @@ export function EndingPage() {
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
           <p className="story-kicker">Café Niko · Under new management</p>
-          <h1>Closing time.</h1>
+          {/* The receipt replaces the scene that held focus, so focus lands on its heading. */}
+          <h1 tabIndex={-1} ref={(h) => h?.focus()}>
+            Closing time.
+          </h1>
           <p className="story-narration">
             Lou’s card hangs on the wall by the register. Niko sits down with a warm coffee: the café runs itself now,
             and the name over the door is his.
@@ -93,8 +98,14 @@ export function EndingPage() {
             <Button variant="primary" className="story-start" onClick={() => go('/')}>
               Back to the café <ArrowRight size={18} />
             </Button>
-            <button className="story-link" onClick={() => go('/campaign')}>
-              {perfect < rated.length ? 'Go back for the missing stars' : 'Keep tinkering'}
+            <button
+              className="story-link"
+              onClick={() => {
+                if (missing !== undefined) select(missing);
+                go('/campaign');
+              }}
+            >
+              {missing !== undefined ? 'Go back for the missing stars' : 'Keep tinkering'}
             </button>
           </div>
           <footer className="story-foot story-thanks">

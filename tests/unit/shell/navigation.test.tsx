@@ -91,7 +91,7 @@ describe('shift entry navigation', () => {
     expect(screen.getByText('Café Niko · Order rail')).toBeTruthy();
   });
 
-  it('closes the campaign by saying how many shifts still have stars to win', () => {
+  it('closes the campaign by saying how many shifts still have stars to win', async () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 || i === 9 ? 2 : 3]));
     const settings = { music: 0, reduced_motion: true, pixel_art: false };
     const save = {
@@ -115,7 +115,11 @@ describe('shift entry navigation', () => {
     const perfect = screen.getByText('Three-star shifts').nextElementSibling!;
     expect(perfect.querySelector('[aria-hidden="true"]')?.textContent).toBe('18/20');
     expect(perfect.querySelector('.sr-only')?.textContent).toBe('18 of 20');
-    expect(screen.getByRole('button', { name: 'Go back for the missing stars' })).toBeTruthy();
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Closing time.' }));
+    // Going back for stars opens the board on the first shift still short of three.
+    fireEvent.click(screen.getByRole('button', { name: 'Go back for the missing stars' }));
+    await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
+    expect(await screen.findByText('No. 05')).toBeTruthy();
   });
 
   it('labels the next and locked shifts on the rail', () => {

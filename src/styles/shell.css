@@ -1559,6 +1559,10 @@ html[data-motion='reduced'] .modal.settings-window {
   letter-spacing: 2px;
   text-transform: uppercase;
 }
+/* Focus is moved to the heading for screen readers; it isn't a control, so it draws no ring. */
+.story-note h1:focus {
+  outline: none;
+}
 .story-note h1 {
   margin: clamp(10px, 1.8dvh, 18px) 0 clamp(16px, 2.6dvh, 26px);
   color: var(--story-ink);
