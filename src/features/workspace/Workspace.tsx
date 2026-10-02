@@ -99,8 +99,11 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     run,
   } = live;
 
+  // A new service puts the last one's reaction away: run again from under it, and it would talk over the new run.
   useEffect(() => {
-    if (running) setWrapUp(false);
+    if (!running) return;
+    setWrapUp(false);
+    setScene((current) => (current === 'intro' ? current : ''));
   }, [running]);
   useEffect(() => {
     if (!wrapUp) return;

@@ -355,6 +355,25 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByRole('button', { name: /Next shift/ })).toBeTruthy();
     expect(screen.getByText('Coffee or Tea?')).toBeTruthy();
   });
+  it('puts the crew’s reaction away when the service runs again from under it', () => {
+    open();
+    fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });
+    for (let i = 0; i < 120 && !screen.queryByRole('dialog', { name: 'Dialogue' }); i++)
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+    expect(screen.getByRole('dialog', { name: 'Dialogue' })).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    act(() => {
+      vi.advanceTimersByTime(3000);
+    });
+    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+    expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
+    // Escape stops the new run; it doesn't reach for the old run's receipt.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
+    expect(screen.queryByText('Service complete')).toBeNull();
+  });
   it('pauses without advancing and cancels an unfinished run without awarding progress', () => {
     open();
     act(() => {
