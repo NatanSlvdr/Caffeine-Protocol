@@ -73,7 +73,8 @@ export const STORE_SOURCE_LABELS: Record<string, string> = {
 
 /** A block as a screen reader hears it, in the words its tile shows. */
 export function spokenBlock(command: string): string {
-  if (command.startsWith('POSITION ')) return 'jump destination';
+  // Named, so a routine with several destinations tells them apart: "jump destination listen".
+  if (command.startsWith('POSITION ')) return `jump destination ${command.slice(9).toLowerCase()}`;
   const store = parseStore(command);
   const { verb, value } = labelFor(command);
   // Directions and sugar counts sit in the tile's fields, so the command itself says them best.

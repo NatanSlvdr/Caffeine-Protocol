@@ -279,7 +279,7 @@ describe('compact visual code', () => {
     render(<Harness />);
     await userEvent.click(screen.getByRole('button', { name: 'Insert jump listen' }));
     expect(source()).toBe('POSITION listen\nLISTEN\nJUMP listen');
-    expect(screen.getByLabelText('Drag jump destination')).toBeTruthy();
+    expect(screen.getByLabelText('Drag jump destination listen')).toBeTruthy();
     expect(document.querySelector('[data-target] .block-verb')).toBeNull();
     expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
   });
@@ -365,7 +365,7 @@ describe('compact visual code', () => {
     const user = userEvent.setup();
     render(<Harness initial={initial} />);
     const path = document.querySelector('.jump-arrows > path')?.getAttribute('d');
-    screen.getByLabelText('Drag jump destination').focus();
+    screen.getByLabelText('Drag jump destination listen').focus();
     await user.keyboard(' {ArrowDown}{ArrowDown}');
     await waitFor(() => expect(document.querySelector('.drop-projection [data-target="listen"]')).toBeTruthy());
     expect(source()).toBe(initial);

@@ -49,7 +49,7 @@ export function Row({
         {...listeners}
         aria-label={
           target
-            ? 'Drag jump destination'
+            ? `Drag ${spokenBlock(command)}`
             : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`
         }
         aria-disabled={locked}

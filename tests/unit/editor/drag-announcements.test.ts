@@ -62,6 +62,6 @@ describe('spoken block names', () => {
     ['FOR var1 TIMES', 'for var a times'],
     ['STORE var2 FROM here', 'store var b = here'],
     ['STORE var1 FROM sugar', 'store var a = sugar on order'],
-    ['POSITION listen', 'jump destination'],
+    ['POSITION listen', 'jump destination listen'],
   ])('says %s as "%s"', (command, spoken) => expect(spokenBlock(command)).toBe(spoken));
 });
