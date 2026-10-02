@@ -28,6 +28,20 @@ describe('service receipt', () => {
       this.removeAttribute('open');
     };
   });
+  it('counts guests, not the tickets their drinks needed', () => {
+    // Shift 06's guests order several drinks each: 12 guests, 21 tickets.
+    render(
+      <ReceiptModal
+        index={5}
+        level={levels[5]}
+        result={result(3)}
+        observation={false}
+        onNext={() => {}}
+        onClose={() => {}}
+      />,
+    );
+    expect(screen.getByText('Guests served').nextElementSibling?.textContent).toBe('12');
+  });
   it('says whether a replay beat the shift’s best', () => {
     receipt(3, 1);
     expect(screen.getByText('New best, up from 1 star!')).toBeTruthy();

@@ -29,6 +29,11 @@ export function ReceiptModal({
   onClose,
 }: ReceiptModalProps) {
   const blocks = result.block_count ?? 0;
+  // A passed service served every guest. Tickets count drinks, so a two-drink order would count twice.
+  const guests = level.seeds.reduce(
+    (sum, seed) => sum + seed.customers.filter((customer) => !customer.expected.closing).length,
+    0,
+  );
   const blocksMet = blocks <= level.block_target;
   const stepsMet = result.executed_instructions <= level.instruction_target;
   // Stars climb in order, so a step target beaten over the block target earns nothing yet: say so.
@@ -61,8 +66,8 @@ export function ReceiptModal({
       {replay && <p className="receipt-best">{replay}</p>}
       <dl className="receipt-totals">
         <div>
-          <dt>Orders served</dt>
-          <dd>{result.tickets.length}</dd>
+          <dt>Guests served</dt>
+          <dd>{guests}</dd>
         </div>
         {!observation && (
           <>
