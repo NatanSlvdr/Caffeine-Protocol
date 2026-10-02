@@ -105,6 +105,9 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(tab('Porter'), { key: 'ArrowRight' });
     expect(tab('Query').getAttribute('aria-selected')).toBe('true');
     expect(tab('Query').tabIndex).toBe(0);
+    // The code zone is the panel the tabs switch, named after the open one.
+    const panel = screen.getByRole('tabpanel', { name: 'Query' });
+    expect(tab('Query').getAttribute('aria-controls')).toBe(panel.id);
   });
   it('shows locked robot areas and code tabs before their unlock shifts', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });

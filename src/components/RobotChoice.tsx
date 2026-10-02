@@ -5,6 +5,10 @@ import type { RobotRole } from '@/domain';
 
 export const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
 
+/** The robot tabs control the code zone below them, labelled by whichever tab is open. */
+export const ROUTINE_PANEL = 'robot-routine';
+export const routineTab = (robot: RobotRole) => `robot-tab-${robot}`;
+
 /** Keep each robot recognizable in the camera and program selectors. */
 export function RobotChoice({ robot, label }: { robot: RobotRole; label: string }) {
   const Icon = robotIcons[robot];
@@ -44,7 +48,9 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
       key={robot}
       type="button"
       data-robot={robot}
+      id={tabs ? routineTab(robot) : undefined}
       role={tabs ? 'tab' : undefined}
+      aria-controls={tabs && !disabled ? ROUTINE_PANEL : undefined}
       aria-selected={tabs ? !disabled && selected === robot : undefined}
       aria-pressed={tabs ? undefined : !disabled && selected === robot}
       aria-description={disabled ? `Joins the crew at shift ${ROBOT_UNLOCK_LEVELS[robot]}` : undefined}

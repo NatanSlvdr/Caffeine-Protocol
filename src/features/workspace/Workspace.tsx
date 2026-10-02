@@ -223,6 +223,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             stepSeconds={BLOCK_SECONDS / speed}
             failureLine={failureLine}
             textMode={textMode}
+            tabbed
           />
         </section>
       </div>

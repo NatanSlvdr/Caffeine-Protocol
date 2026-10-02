@@ -24,6 +24,7 @@ import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
 import { ExecutionCursor } from './ExecutionCursor';
+import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 
 export function Editor({
   role = 'query',
@@ -38,6 +39,7 @@ export function Editor({
   textMode,
   onDismissFailure,
   stepSeconds = 1.5,
+  tabbed = false,
 }: {
   role?: RobotRole;
   source: string;
@@ -51,6 +53,8 @@ export function Editor({
   textMode: boolean;
   stepSeconds?: number;
   onDismissFailure?: () => void;
+  /** Under the robot tabs, the code zone is the panel they switch. */
+  tabbed?: boolean;
 }) {
   const root = useRef<HTMLDivElement>(null),
     codeArea = useRef<HTMLDivElement>(null),
@@ -149,7 +153,13 @@ export function Editor({
             ))}
           </div>
         </section>
-        <div className="editor-body" role="group" aria-label="Code zone" ref={codeArea}>
+        <div
+          className="editor-body"
+          ref={codeArea}
+          {...(tabbed
+            ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
+            : { role: 'group', 'aria-label': 'Code zone' })}
+        >
           {observation ? null : textMode ? (
             <div className="code-text">
               {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
