@@ -107,6 +107,15 @@ describe('live workspace lifecycle', () => {
     expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Query' }).hasAttribute('disabled')).toBe(false);
   });
+  it('offers a reset only once the open routine has been edited', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    const reset = screen.getByRole('button', { name: /Reset Query’s routine/ });
+    expect(reset.hasAttribute('disabled')).toBe(true);
+    expect(reset.getAttribute('aria-describedby')).toBe('reset-untouched');
+    expect(screen.getByText('Query’s routine is just as the shift opened it.')).toBeTruthy();
+  });
   it('opens each shift at the playback speed the player last chose', () => {
     const save = makeSave();
     seedLocalStorage({ ...save, unlocked: 2, selected: 2, settings: { ...save.settings, speed: 4 } });

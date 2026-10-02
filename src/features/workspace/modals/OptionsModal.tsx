@@ -9,6 +9,8 @@ export interface OptionsModalProps {
   textMode: boolean;
   observation: boolean;
   running: boolean;
+  /** Whether the open routine differs from how the shift opened it; a reset of an untouched one does nothing. */
+  edited: boolean;
   onTogglePixelArt: (value: boolean) => void;
   onToggleTextMode: (value: boolean) => void;
   onRequestReset: () => void;
@@ -22,6 +24,7 @@ export function OptionsModal({
   textMode,
   observation,
   running,
+  edited,
   onTogglePixelArt,
   onToggleTextMode,
   onRequestReset,
@@ -43,9 +46,15 @@ export function OptionsModal({
         onChange={(e) => onToggleTextMode(e.target.checked)}
       />
       <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
-      <button className="settings-chip" disabled={running || observation} onClick={onRequestReset}>
+      <button
+        className="settings-chip"
+        disabled={running || observation || !edited}
+        aria-describedby={edited ? undefined : 'reset-untouched'}
+        onClick={onRequestReset}
+      >
         <RotateCcw size={15} /> Reset {robot}’s routine
       </button>
+      {!edited && !observation && <p id="reset-untouched">{robot}’s routine is just as the shift opened it.</p>}
     </Modal>
   );
 }

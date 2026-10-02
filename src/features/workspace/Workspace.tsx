@@ -260,6 +260,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           textMode={textMode}
           observation={observation}
           running={running}
+          edited={source.trim() !== resetRobotPrograms(save, index, lessons)[role].trim()}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
           onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
           onRequestReset={() => setModal('reset')}
