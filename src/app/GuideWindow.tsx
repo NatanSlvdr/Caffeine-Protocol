@@ -52,6 +52,10 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             Drag a grip to move a whole branch, loop or function. From the keyboard: <kbd>Space</kbd> to lift, arrow
             keys to move, <kbd>Space</kbd> to drop.
           </p>
+          <p>
+            Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per
+            line.
+          </p>
         </section>
         <section className="settings-block">
           <h3>

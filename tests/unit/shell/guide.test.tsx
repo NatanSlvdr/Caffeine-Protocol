@@ -22,6 +22,7 @@ describe('how to play', () => {
     );
     const guide = screen.getByRole('dialog', { name: 'How the café runs.' });
     expect(guide.textContent).toContain('Move counts whole tiles');
+    expect(guide.textContent).toContain('Turn on the Text editor in a shift’s Options');
     // Shift numbers read as they do on the campaign rail and in the workspace.
     expect(guide.textContent).toContain(
       'Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',
