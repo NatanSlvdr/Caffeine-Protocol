@@ -1,6 +1,7 @@
 import type { Program, RobotRole } from './types';
 import {
   EVERY_UNLOCK,
+  STRUCTURE,
   VARIABLES,
   availableCommands,
   compileProgram,
@@ -158,18 +159,18 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
       stack.push(i);
     } else if (c === 'ELSE') {
       const opening = stack.at(-1);
-      if (opening === undefined || !p.instructions[opening].startsWith('IF ') || opening in p.alternatives)
-        return fail('ELSE belongs inside one IF block.', line);
+      if (opening === undefined || !p.instructions[opening].startsWith('IF ')) return fail(STRUCTURE.strayElse, line);
+      if (opening in p.alternatives) return fail(STRUCTURE.secondElse, line);
       p.alternatives[opening] = i;
     } else if (c === 'END') {
       const opening = stack.pop();
-      if (opening === undefined) return fail('END needs an IF, FOR or FUNCTION above it.', line);
+      if (opening === undefined) return fail(STRUCTURE.strayEnd, line);
       p.ends[opening] = i;
       p.ends[i] = opening;
       if (opening in p.alternatives) p.ends[p.alternatives[opening]] = i;
     }
   }
-  if (stack.length) return fail('Close each IF, FOR and FUNCTION with END.', p.source_lines[stack.at(-1)!]);
+  if (stack.length) return fail(STRUCTURE.unclosed(p.instructions[stack.at(-1)!]), p.source_lines[stack.at(-1)!]);
   for (const [i, c] of p.instructions.entries()) {
     const missing = missingTarget(c, p);
     if (missing) return fail(missing, p.source_lines[i]);
@@ -180,7 +181,7 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
       `${ROBOT_DISPLAY_NAMES[role]} has room for at most ${ROBOT_MAX_BLOCKS} blocks.`,
       p.source_lines[ROBOT_MAX_BLOCKS],
     );
-  if (!p.block_count) return fail('Add instructions for this robot.', 0);
+  if (!p.block_count) return fail(`${ROBOT_DISPLAY_NAMES[role]}’s routine is empty. Add a block from the library.`, 0);
   return p;
 }
 

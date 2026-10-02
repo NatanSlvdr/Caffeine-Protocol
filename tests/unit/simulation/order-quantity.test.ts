@@ -56,7 +56,7 @@ describe('condition source scope', () => {
   it('allows speech everywhere and item only inside FOR', () => {
     expect(compileProgram('LISTEN\nIF coffee IN CUSTOMER SPEECH\nEND', UNLOCKS.choices).compile_error).toBe('');
     expect(compileProgram('LISTEN\nIF coffee IN item\nEND', UNLOCKS.help).compile_error).toContain(
-      'only inside For item in order',
+      'inside For item in order can check the item',
     );
     expect(
       compileProgram('LISTEN\nFOR item IN heard orders\nIF coffee IN item\nEND\nEND', UNLOCKS.forEach).compile_error,

@@ -74,6 +74,14 @@ describe('Brew and Porter speak Query’s language', () => {
     );
   });
 
+  it('points an open Function at its own line, and names an empty routine', () => {
+    const open = compileRobot('LISTEN\nFUNCTION recipe\nRETURN', 'prep', UNLOCKS.functions);
+    expect([open.compile_error, open.error_line]).toEqual(['This Function needs an End to close it.', 1]);
+    expect(compileRobot('', 'floor', UNLOCKS.floor).compile_error).toBe(
+      'Porter’s routine is empty. Add a block from the library.',
+    );
+  });
+
   it('checks that every Jump has its Position', () => {
     expect(compileRobot('LISTEN\nJUMP listen', 'prep', UNLOCKS.functions).compile_error).toBe(
       'Jump listen needs a jump destination named listen.',

@@ -164,6 +164,17 @@ describe('token interpreter and physical order handling', () => {
       'Two jump destinations are named again; give each its own name.',
     );
   });
+  it('names a misplaced Else or End, and points an open block at the line that needs its End', () => {
+    const error = (source: string) => {
+      const p = compileProgram(source, UNLOCKS.choices);
+      return [p.compile_error, p.error_line];
+    };
+    const IF = 'IF coffee IN CUSTOMER SPEECH';
+    expect(error('LISTEN\nELSE')).toEqual(['Else needs an If above it.', 1]);
+    expect(error(`LISTEN\n${IF}\nELSE\nELSE\nEND`)).toEqual(['An If takes only one Else.', 3]);
+    expect(error('LISTEN\nEND')).toEqual(['End needs an If, For or Function above it.', 1]);
+    expect(error(`LISTEN\n${IF}\nITEM coffee`)).toEqual(['This If needs an End to close it.', 1]);
+  });
   it('enforces 128 blocks', () => {
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(127)).compile_error).toBe('');
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(128)).compile_error).toContain('128');

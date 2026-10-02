@@ -99,6 +99,18 @@ export function unreadable(robot: string, c: string, later: boolean): string {
     : `${robot} doesn’t know “${c}”. Check it against the block library.`;
 }
 
+/** Structure errors shared by every robot, naming blocks as their tiles do ("If", not "IF"). */
+export const STRUCTURE = {
+  strayElse: 'Else needs an If above it.',
+  secondElse: 'An If takes only one Else.',
+  strayEnd: 'End needs an If, For or Function above it.',
+  /** An If, For or Function left open, by its opening command. */
+  unclosed: (opening: string) => {
+    const verb = opening.slice(0, opening.indexOf(' '));
+    return `This ${verb[0]}${verb.slice(1).toLowerCase()} needs an End to close it.`;
+  },
+};
+
 /** Compile the finite instruction language; player text is never evaluated as JavaScript. */
 export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Program {
   const p: Program = {
@@ -129,7 +141,7 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
       parseConditionExpression(c)?.conditions.some((condition) => condition.right === 'item') &&
       !stack.some((i) => p.instructions[i].startsWith('FOR '))
     )
-      return fail('IN item works only inside For item in order. Use IN Orders here.');
+      return fail('Only an If inside For item in order can check the item. Out here, check Orders.');
     const at = p.instructions.length;
     p.instructions.push(c);
     p.source_lines.push(line);
@@ -150,19 +162,21 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
       stack.push(at);
     } else if (c === 'ELSE') {
       const start = stack.at(-1);
-      if (start === undefined || !p.instructions[start].startsWith('IF ') || start in p.alternatives)
-        return fail('ELSE belongs inside one IF block.');
+      if (start === undefined || !p.instructions[start].startsWith('IF ')) return fail(STRUCTURE.strayElse);
+      if (start in p.alternatives) return fail(STRUCTURE.secondElse);
       p.alternatives[start] = at;
     } else if (c === 'END') {
       const start = stack.pop();
-      if (start === undefined) return fail('END needs an IF, FOR or FUNCTION above it.');
+      if (start === undefined) return fail(STRUCTURE.strayEnd);
       p.ends[start] = at;
       p.ends[at] = start;
       if (start in p.alternatives) p.ends[p.alternatives[start]] = at;
     }
   }
-  if (stack.length) p.compile_error = 'Close each IF, FOR and FUNCTION with END.';
-  else if (p.instructions[0] !== 'LISTEN' && !p.instructions[0]?.startsWith('POSITION '))
+  if (stack.length) {
+    p.compile_error = STRUCTURE.unclosed(p.instructions[stack.at(-1)!]);
+    p.error_line = p.source_lines[stack.at(-1)!];
+  } else if (p.instructions[0] !== 'LISTEN' && !p.instructions[0]?.startsWith('POSITION '))
     p.compile_error = 'Start with Wait for Orders, or a jump destination.';
   else if (p.instructions.filter((c) => c === 'LISTEN').length !== 1)
     p.compile_error = 'Use one Wait for Orders; jump back to it for continuous service.';
