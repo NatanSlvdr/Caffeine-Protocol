@@ -226,6 +226,12 @@
     monospace;
   opacity: 0.85;
 }
+/* Without a keyboard the shortcut chip names keys the player doesn't have. */
+@media (hover: none) and (pointer: coarse) {
+  .workspace-main .playback-toolbar .run-button kbd {
+    display: none;
+  }
+}
 .workspace-main .playback-toolbar > button:not(.run-button) {
   display: inline-flex;
   align-items: center;

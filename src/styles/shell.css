@@ -1040,6 +1040,12 @@ html[data-motion='reduced'] .front-page *::after {
     display: none;
   }
 }
+/* A touch-only tablet has no arrow keys or double-click, so the board leaves those hints out. */
+@media (hover: none) and (pointer: coarse) {
+  .board-hint {
+    display: none;
+  }
+}
 /* On short screens the board closes up and drops its keyboard hint so it still fits beside the rail. */
 @media (max-height: 820px) {
   /* Starred shift names wrap onto two lines, so Act I's rows close up to keep its torn edge on screen. */
