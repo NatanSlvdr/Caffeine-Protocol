@@ -8,6 +8,7 @@ import {
   SIM_DURATION_SECONDS,
 } from './constants';
 import { compileRobot } from './robotProgram';
+import { FUNCTION_END_OUTSIDE_CALL, RETURN_OUTSIDE_CALL } from './program/interpreter';
 import { floorSource, preparationSource } from './defaultPrograms';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, TABLE_LAYOUT, tableFront } from './layout';
 import type { Point } from './layout';
@@ -756,7 +757,8 @@ export function* streamService(
     if (c === 'RETURN' || (c === 'END' && p.instructions[p.ends[w.pc]]?.startsWith('FUNCTION '))) {
       const back = w.stack.pop();
       if (back === undefined) {
-        fail(w, 'Return only works inside a function that was called.');
+        // An End is only reached without a Call when a Jump landed inside the function.
+        fail(w, c === 'RETURN' ? RETURN_OUTSIDE_CALL : FUNCTION_END_OUTSIDE_CALL);
         return false;
       }
       return control(() => {

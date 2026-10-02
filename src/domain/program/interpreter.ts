@@ -8,6 +8,13 @@ import { QUERY_INSTRUCTION_LIMIT } from '../constants';
 import { evaluateConditionExpression, parseConditionExpression } from './conditions';
 import { collectionSelectors, parseFor, parseMarkWrite, parseStore, parseSugarWrite } from './vars';
 
+/** Every robot words a stray Return or End the same way. An End without its opener means a Jump landed inside it. */
+export const RETURN_OUTSIDE_CALL = 'Return only works inside a function that was called.';
+export const FUNCTION_END_OUTSIDE_CALL =
+  'This function’s End was reached without a Call: run a function with Call, not by jumping into it.';
+const FOR_END_OUTSIDE_LOOP =
+  'This For loop’s End was reached without its For: jump to the For line, not into the loop.';
+
 /** Resume at the next speech event, returning a new state without mutating inputs. */
 export function* streamCustomerEvent(
   p: Program,
@@ -190,7 +197,7 @@ export function* streamCustomerEvent(
           const open = p.instructions[p.ends[pc]];
           if (open.startsWith('FOR ')) {
             const loop = loops.at(-1);
-            if (!loop) return fail('No For loop is running.');
+            if (!loop) return fail(FOR_END_OUTSIDE_LOOP);
             if (ticket) return fail('Deposit this item’s paper before the For loop moves on.');
             loop.index++;
             vars = {};
@@ -203,7 +210,7 @@ export function* streamCustomerEvent(
             }
           } else if (open.startsWith('FUNCTION ')) {
             const frame = calls.pop();
-            if (!frame) return fail('Function ended outside a call.');
+            if (!frame) return fail(FUNCTION_END_OUTSIDE_CALL);
             next = frame.return;
             vars = frame.variables;
           }
@@ -211,7 +218,7 @@ export function* streamCustomerEvent(
         }
         case 'RETURN': {
           const frame = calls.pop();
-          if (!frame) return fail('Return belongs inside a called function.');
+          if (!frame) return fail(RETURN_OUTSIDE_CALL);
           next = frame.return;
           vars = frame.variables;
           loops.length = frame.loop_depth;

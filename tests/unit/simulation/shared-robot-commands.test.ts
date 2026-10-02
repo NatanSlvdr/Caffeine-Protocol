@@ -88,6 +88,16 @@ describe('Brew and Porter speak Query’s language', () => {
     );
   });
 
+  it('tells a Jump into a function apart from a stray Return', () => {
+    const jumpedIn = service({ prep: 'LISTEN\nJUMP in\nFUNCTION recipe\nPOSITION in\nEND' }, UNLOCKS.functions);
+    expect(jumpedIn.first_failure?.reason).toBe(
+      'This function’s End was reached without a Call: run a function with Call, not by jumping into it.',
+    );
+    expect(service({ prep: 'LISTEN\nRETURN' }, UNLOCKS.functions).first_failure?.reason).toBe(
+      'Return only works inside a function that was called.',
+    );
+  });
+
   it('names what is wrong with a Call or a Function, and where', () => {
     const compile = (source: string) => compileRobot(source, 'prep', UNLOCKS.functions);
     // A function may sit below the Call that runs it.

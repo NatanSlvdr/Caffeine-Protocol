@@ -97,6 +97,11 @@ describe('token interpreter and physical order handling', () => {
     const result = exec(lessons[UNLOCKS.numbers - 1].solution, customer);
     expect(validate(customer, result)).toBe('');
   });
+  it('says a Jump into a For loop skipped its For', () => {
+    expect(exec('LISTEN\nJUMP in\nFOR item IN heard orders\nPOSITION in\nEND', coffee).error).toBe(
+      'This For loop’s End was reached without its For: jump to the For line, not into the loop.',
+    );
+  });
   it('does not retain a number from the previous loop item', () => {
     const customer = request([{ tokens: ['coffee', 'sugar', 'number'], number: 2 }, { tokens: ['tea'] }]);
     const source =
