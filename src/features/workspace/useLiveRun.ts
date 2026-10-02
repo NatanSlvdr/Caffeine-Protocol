@@ -26,7 +26,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const [result, setResult] = useState<RunResult | null>(null),
     [running, setRunning] = useState(false),
     [paused, setPaused] = useState(false),
-    [speed, setSpeed] = useState(1),
+    [speed, setSpeed] = useState(save.settings.speed),
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
   const [showFailure, setShowFailure] = useState(false);

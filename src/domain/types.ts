@@ -167,6 +167,8 @@ export interface Settings {
   pixel_art: boolean;
   /** Edit programs as plain text instead of blocks. */
   text_editor: boolean;
+  /** How fast service plays back, carried from shift to shift. */
+  speed: number;
 }
 export interface ProgressSaveV1 {
   version: 1;

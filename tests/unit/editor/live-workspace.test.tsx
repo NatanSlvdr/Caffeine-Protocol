@@ -86,6 +86,16 @@ describe('live workspace lifecycle', () => {
     expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Query' }).hasAttribute('disabled')).toBe(false);
   });
+  it('opens each shift at the playback speed the player last chose', () => {
+    const save = makeSave();
+    seedLocalStorage({ ...save, unlocked: 2, selected: 2, settings: { ...save.settings, speed: 4 } });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const speed = screen.getByRole<HTMLInputElement>('slider', { name: 'Playback speed' });
+    expect(speed.value).toBe('4');
+    fireEvent.change(speed, { target: { value: '6' } });
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!).settings.speed).toBe(6);
+  });
   it('awards progress and opens the receipt only after the live service finishes', () => {
     open();
     expect(savedStars()['2']).toBeUndefined();

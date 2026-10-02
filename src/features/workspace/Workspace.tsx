@@ -184,7 +184,11 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             onTogglePause={() => {
               setPaused((p) => !p);
             }}
-            onSpeed={(value) => setSpeed(Number(value))}
+            onSpeed={(value) => {
+              setSpeed(value);
+              // The next shift opens at the same pace.
+              update((s) => ({ ...s, settings: { ...s.settings, speed: value } }));
+            }}
           />
         </section>
         <section className="editor-panel" aria-label={`${ROBOT_DISPLAY_NAMES[role]} program editor`}>

@@ -1,4 +1,5 @@
 import type { ProgressSave, RobotPrograms, Settings } from '@/domain/types';
+import { MAX_PLAYBACK_SPEED } from '@/domain/constants';
 import { migrateQuerySource } from '@/domain/program';
 import { migrateRobotSource } from '@/domain/robotProgram';
 import { isRecord, isShiftIndex } from './validate';
@@ -103,11 +104,16 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
   // Older saves also kept a fullscreen flag. The browser decides that on every visit, so it is dropped.
   for (const k of ['pixel_art', 'text_editor'])
     if (settings[k] !== undefined && typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
+  // Saves from before the speed was kept play at 1×, as every shift used to open.
+  const speed = settings.speed ?? 1;
+  if (typeof speed !== 'number' || !(speed >= 1 && speed <= MAX_PLAYBACK_SPEED))
+    throw new Error('Invalid playback speed.');
   return {
     music,
     reduced_motion: settings.reduced_motion as boolean,
     pixel_art: (settings.pixel_art as boolean | undefined) ?? true,
     text_editor: (settings.text_editor as boolean | undefined) ?? false,
+    speed,
   };
 }
 

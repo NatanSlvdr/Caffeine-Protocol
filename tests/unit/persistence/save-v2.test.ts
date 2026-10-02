@@ -151,6 +151,17 @@ describe('version 4 campaign saves', () => {
     const textSave = { ...newSave(), settings: { ...newSave().settings, text_editor: true } };
     expect(parseSave(JSON.stringify(textSave), lessons).settings.text_editor).toBe(true);
   });
+  it('keeps the playback speed, opening older saves at 1×', () => {
+    const oldSave = newSave();
+    delete (oldSave.settings as Partial<typeof oldSave.settings>).speed;
+    expect(parseSave(JSON.stringify(oldSave), lessons).settings.speed).toBe(1);
+    const fast = { ...newSave(), settings: { ...newSave().settings, speed: 4.5 } };
+    expect(parseSave(JSON.stringify(fast), lessons).settings.speed).toBe(4.5);
+    for (const speed of [0, 99, '4'])
+      expect(() =>
+        parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, speed } }), lessons),
+      ).toThrow('Invalid playback speed.');
+  });
   it('enables pixel art when loading saves created before the display option existed', () => {
     const oldSave = newSave();
     delete (oldSave.settings as Partial<typeof oldSave.settings>).pixel_art;

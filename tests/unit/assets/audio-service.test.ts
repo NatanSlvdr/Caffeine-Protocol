@@ -7,6 +7,7 @@ const settings: Settings = {
   reduced_motion: false,
   pixel_art: true,
   text_editor: false,
+  speed: 1,
 };
 
 class FakeParam {
