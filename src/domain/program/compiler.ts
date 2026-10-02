@@ -173,22 +173,24 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
       if (start in p.alternatives) p.ends[p.alternatives[start]] = at;
     }
   }
-  if (stack.length) {
-    p.compile_error = STRUCTURE.unclosed(p.instructions[stack.at(-1)!]);
-    p.error_line = p.source_lines[stack.at(-1)!];
-  } else if (p.instructions[0] !== 'LISTEN' && !p.instructions[0]?.startsWith('POSITION '))
-    p.compile_error = 'Start with Wait for Orders, or a jump destination.';
-  else if (p.instructions.filter((c) => c === 'LISTEN').length !== 1)
-    p.compile_error = 'Use one Wait for Orders; jump back to it for continuous service.';
-  p.instructions.forEach((c, i) => {
-    const missing = missingTarget(c, p);
-    if (missing) {
-      p.compile_error = missing;
-      p.error_line = p.source_lines[i];
-    }
-  });
+  // Whole-routine checks report the first problem, on the line of the block it concerns.
   p.block_count = p.instructions.length;
-  if (p.block_count > QUERY_MAX_BLOCKS) p.compile_error = `Query has room for at most ${QUERY_MAX_BLOCKS} blocks.`;
+  const failAt = (message: string, index: number) => {
+    p.error_line = p.source_lines[index] ?? 0;
+    return fail(message);
+  };
+  if (stack.length) return failAt(STRUCTURE.unclosed(p.instructions[stack.at(-1)!]), stack.at(-1)!);
+  if (p.instructions[0] !== 'LISTEN' && !p.instructions[0]?.startsWith('POSITION '))
+    return failAt('Start with Wait for Orders, or a jump destination.', 0);
+  const listens = p.instructions.flatMap((c, i) => (c === 'LISTEN' ? [i] : []));
+  if (listens.length !== 1)
+    return failAt('Use one Wait for Orders; jump back to it for continuous service.', listens[1] ?? 0);
+  for (const [i, c] of p.instructions.entries()) {
+    const missing = missingTarget(c, p);
+    if (missing) return failAt(missing, i);
+  }
+  if (p.block_count > QUERY_MAX_BLOCKS)
+    return failAt(`Query has room for at most ${QUERY_MAX_BLOCKS} blocks.`, QUERY_MAX_BLOCKS);
   return p;
 }
 

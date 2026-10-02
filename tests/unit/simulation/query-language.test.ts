@@ -175,6 +175,20 @@ describe('token interpreter and physical order handling', () => {
     expect(error('LISTEN\nEND')).toEqual(['End needs an If, For or Function above it.', 1]);
     expect(error(`LISTEN\n${IF}\nITEM coffee`)).toEqual(['This If needs an End to close it.', 1]);
   });
+  it('lights the line each whole-routine problem is about, reporting the first one found', () => {
+    const error = (source: string) => {
+      const p = compileProgram(source, UNLOCKS.loop);
+      return [p.compile_error, p.error_line];
+    };
+    expect(error('# opening\nTAKE UP\nLISTEN')).toEqual(['Start with Wait for Orders, or a jump destination.', 1]);
+    expect(error('LISTEN\nTAKE UP\nLISTEN\nLISTEN')).toEqual([
+      'Use one Wait for Orders; jump back to it for continuous service.',
+      2,
+    ]);
+    // Both Jumps are lost: the first one is named.
+    expect(error('LISTEN\nJUMP a\nJUMP b')).toEqual(['Jump a needs a jump destination named a.', 1]);
+    expect(error('LISTEN\n' + 'TAKE UP\n'.repeat(128))).toEqual(['Query has room for at most 128 blocks.', 128]);
+  });
   it('enforces 128 blocks', () => {
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(127)).compile_error).toBe('');
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(128)).compile_error).toContain('128');
