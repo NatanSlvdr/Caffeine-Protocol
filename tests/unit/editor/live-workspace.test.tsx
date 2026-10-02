@@ -335,6 +335,20 @@ describe('live workspace lifecycle', () => {
       'Drag block 2 (write coffee), where the service stopped',
     );
   });
+  it('closes the crew’s reaction on Escape, as its Skip button says, before leaving the shift', () => {
+    open('LISTEN\nITEM coffee');
+    for (let i = 0; i < 30 && !screen.queryByRole('button', { name: 'Skip' }); i++)
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+    // Focus back in the code, outside the reaction.
+    screen.getByRole('button', { name: /^Drag block 1 / }).focus();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull();
+    expect(window.location.hash).toBe('#/shift/3');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/campaign');
+  });
   it('stops service on an error, holding the failed frame and error cursor until the code changes', () => {
     open('LISTEN\nITEM coffee');
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();

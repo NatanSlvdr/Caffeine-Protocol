@@ -107,6 +107,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     const timer = setTimeout(() => setScene('success'), reduced ? 0 : 900);
     return () => clearTimeout(timer);
   }, [wrapUp]);
+  const closeReaction = () => {
+    if (scene === 'success') setModal('receipt');
+    setScene('');
+  };
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
@@ -121,6 +125,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       if (e.key === 'Escape' && !e.repeat && !modal && !e.defaultPrevented) {
         // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
         if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
+        // The crew's reaction closes first, the way its Skip button does, even with focus back in the code.
+        else if (reaction) closeReaction();
         // A running service stops first, the way Stop & edit does, rather than dropping the player on the menu.
         else if (running) run();
         else go('/campaign');
@@ -189,10 +195,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 lines={reaction}
                 instant={reduced}
                 doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
-                onDone={() => {
-                  if (scene === 'success') setModal('receipt');
-                  setScene('');
-                }}
+                onDone={closeReaction}
               />
             )}
           </div>
