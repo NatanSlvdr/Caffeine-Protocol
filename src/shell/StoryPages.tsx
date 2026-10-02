@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_LENGTH, isRated } from '@/data';
 import { Cafe, Cutscene } from '@/components';
@@ -28,7 +28,7 @@ function StoryScene() {
   );
 }
 
-/** A story scene between shifts. Finishing or skipping it opens the shift it leads to. */
+/** A story scene between shifts. Finishing or skipping it goes back to the rail, on the shift it leads to. */
 export function ScenePage({ scene }: { scene: CutsceneData }) {
   const { save, finishScene } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
@@ -53,6 +53,11 @@ export function EndingPage() {
   const { save, select } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const [talking, setTalking] = useState(true);
+  // The receipt replaces the scene that held focus, so focus lands on its heading, once, as it appears.
+  const heading = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (!talking) heading.current?.focus();
+  }, [talking]);
   const perfect = rated.filter((index) => save.stars[index] === 3).length;
   // Going back for stars starts at the first shift still short of three.
   const missing = rated.find((index) => (save.stars[index] ?? 0) < 3);
@@ -66,8 +71,7 @@ export function EndingPage() {
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
           <p className="story-kicker">Café Niko · Under new management</p>
-          {/* The receipt replaces the scene that held focus, so focus lands on its heading. */}
-          <h1 tabIndex={-1} ref={(h) => h?.focus()}>
+          <h1 tabIndex={-1} ref={heading}>
             Closing time.
           </h1>
           <p className="story-narration">

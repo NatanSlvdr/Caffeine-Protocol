@@ -117,6 +117,19 @@ describe('shift entry navigation', () => {
     expect(perfect.querySelector('[aria-hidden="true"]')?.textContent).toBe('18/20');
     expect(perfect.querySelector('.sr-only')?.textContent).toBe('18 of 20');
     expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Closing time.' }));
+    // Later redraws leave focus where the player put it.
+    HTMLDialogElement.prototype.showModal = function () {
+      this.setAttribute('open', '');
+    };
+    HTMLDialogElement.prototype.close = function () {
+      this.removeAttribute('open');
+    };
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    const motion = screen.getByRole('checkbox', { name: /Reduced motion/ });
+    motion.focus();
+    fireEvent.click(motion);
+    expect(document.activeElement).toBe(motion);
+    fireEvent.click(screen.getByRole('button', { name: /Close/ }));
     // Going back for stars opens the board on the first shift still short of three.
     fireEvent.click(screen.getByRole('button', { name: 'Go back for the missing stars' }));
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
