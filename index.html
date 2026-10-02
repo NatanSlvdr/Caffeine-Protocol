@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="./icon.png" />
+    <link rel="apple-touch-icon" href="./icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#183d35" />
     <meta
@@ -10,9 +11,24 @@
       content="A cozy café programming game. Teach a little robot to listen, one cup at a time."
     />
     <title>Caffeine Protocol</title>
+    <style>
+      .noscript {
+        max-width: 32em;
+        margin: 4em auto;
+        font:
+          16px/1.6 system-ui,
+          sans-serif;
+        text-align: center;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p class="noscript">
+        Caffeine Protocol runs in your browser with JavaScript. Turn JavaScript on for this page to open the café.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
