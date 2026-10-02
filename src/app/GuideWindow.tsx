@@ -71,8 +71,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Star size={16} /> Service & stars
           </h3>
           <p>
-            Run service with <kbd>{RUN_MODIFIER} + Enter</kbd>. If an instruction fails, its line lights up and you can
-            fix it straight away.
+            Run service with <kbd>{RUN_MODIFIER} + Enter</kbd>, and stop it with <kbd>Esc</kbd>. If an instruction
+            fails, its line lights up and you can fix it straight away.
           </p>
           <p>
             <Stars n={1} /> serves every order correctly, <Stars n={2} /> also meets the block target, and{' '}

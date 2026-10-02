@@ -108,6 +108,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       if (e.key === 'Escape' && !modal && !e.defaultPrevented) {
         // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
         if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
+        // A running service stops first, the way Stop & edit does, rather than dropping the player on the menu.
+        else if (running) run();
         else go('/campaign');
       }
     };

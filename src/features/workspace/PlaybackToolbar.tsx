@@ -28,7 +28,7 @@ export function PlaybackToolbar({
     <div className="playback-toolbar" role="group" aria-label="Simulation controls">
       <button
         className={`primary run-button ${running ? 'stop-button' : ''}`}
-        aria-keyshortcuts="Control+Enter Meta+Enter"
+        aria-keyshortcuts={`Control+Enter Meta+Enter${running ? ' Escape' : ''}`}
         onClick={onRun}
       >
         {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}

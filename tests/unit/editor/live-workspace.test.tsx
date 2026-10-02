@@ -54,6 +54,15 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(window.location.hash).toBe('#/campaign');
   });
+  it('stops a running service on Escape, and only then leaves the shift', () => {
+    open();
+    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/shift/3');
+    expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/campaign');
+  });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
     window.location.hash = '/shift/14';
