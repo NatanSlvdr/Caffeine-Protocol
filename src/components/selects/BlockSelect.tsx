@@ -90,7 +90,12 @@ export function BlockSelect({
         aria-haspopup="listbox"
         disabled={disabled}
         onClick={() => {
-          setFocused(Math.max(0, options.findIndex((o) => o.value === value)));
+          setFocused(
+            Math.max(
+              0,
+              options.findIndex((o) => o.value === value),
+            ),
+          );
           setOpen(!open);
         }}
         onKeyDown={(e) => {
@@ -98,8 +103,16 @@ export function BlockSelect({
           if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
             e.preventDefault();
             setOpen(true);
-            setFocused((i) =>
-              e.key === 'Home' ? 0 : e.key === 'End' ? options.length - 1 : (i + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length,
+            // A closed menu steps from the current choice, not from wherever it was last left.
+            const from = open ? focused : options.findIndex((o) => o.value === value);
+            setFocused(
+              e.key === 'Home'
+                ? 0
+                : e.key === 'End'
+                  ? options.length - 1
+                  : from < 0
+                    ? 0
+                    : (from + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length,
             );
           } else if (e.key === 'Escape') {
             e.preventDefault();
@@ -117,7 +130,14 @@ export function BlockSelect({
       </button>
       {open &&
         createPortal(
-          <div ref={menu} id={id} role="listbox" aria-label={label} className="operand-menu operand-menu-floating" style={menuStyle}>
+          <div
+            ref={menu}
+            id={id}
+            role="listbox"
+            aria-label={label}
+            className="operand-menu operand-menu-floating"
+            style={menuStyle}
+          >
             {options.map((o, i) => (
               <button
                 type="button"

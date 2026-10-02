@@ -5,7 +5,17 @@ import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
 import { useFloatingMenu } from './useFloatingMenu';
 
-const directionGrid: (Direction | null)[] = ['UP_LEFT', 'UP', 'UP_RIGHT', 'LEFT', null, 'RIGHT', 'DOWN_LEFT', 'DOWN', 'DOWN_RIGHT'];
+const directionGrid: (Direction | null)[] = [
+  'UP_LEFT',
+  'UP',
+  'UP_RIGHT',
+  'LEFT',
+  null,
+  'RIGHT',
+  'DOWN_LEFT',
+  'DOWN',
+  'DOWN_RIGHT',
+];
 
 /** Expand the same grid around its own center, without changing the tile's layout. */
 export function DirectionSelect({
@@ -127,7 +137,12 @@ export function DirectionSelect({
           if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
             e.preventDefault();
             setPhase('open');
-            setFocused((i) => (i + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + DIRECTIONS.length) % DIRECTIONS.length);
+            // A closed compass steps from the current direction, not from wherever it was last left.
+            const from = open ? focused : Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT'));
+            setFocused(
+              (from + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + DIRECTIONS.length) %
+                DIRECTIONS.length,
+            );
           } else if (e.key === 'Escape') {
             e.preventDefault();
             close();

@@ -61,6 +61,30 @@ describe('compact visual code', () => {
     await user.keyboard('{Enter}');
     expect(source()).toContain('MOVE DOWN_RIGHT 1');
   });
+  it('steps an operand menu by keyboard from its current choice', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial={'LISTEN\nWRITE sugar'} />);
+    const value = screen.getByLabelText('Block 2 value');
+    const active = () => document.getElementById(value.getAttribute('aria-activedescendant')!)?.textContent;
+    value.focus();
+    await user.keyboard('{ArrowDown}');
+    expect(active()).toBe('To go');
+    await user.keyboard('{Escape}{ArrowUp}');
+    expect(active()).toBe('Tea');
+    await user.keyboard('{Enter}');
+    expect(source()).toBe('LISTEN\nITEM tea');
+  });
+  it('steps a reopened compass from its current direction, not from where the pointer last rested', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial="MOVE RIGHT 1" />);
+    const trigger = screen.getByLabelText('Block 1 direction');
+    await user.click(trigger);
+    await user.hover(screen.getByRole('option', { name: 'up left' }));
+    await user.keyboard('{Escape}');
+    trigger.focus();
+    await user.keyboard('{ArrowDown}{Enter}');
+    expect(source()).toBe('MOVE DOWN_RIGHT 1');
+  });
   it('expands the direction grid at the trigger and shrinks it back after selection', async () => {
     const user = userEvent.setup();
     render(<Harness initial="MOVE RIGHT 1" />);
