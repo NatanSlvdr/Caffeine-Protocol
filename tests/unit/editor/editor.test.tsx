@@ -34,6 +34,21 @@ describe('compact visual code', () => {
       'Rush',
     ]);
   });
+  it('lets a block’s number field hand Escape and the run shortcut to the shift, and keep its other keys', () => {
+    render(<Harness initial={'LISTEN\nMOVE RIGHT 2'} />);
+    const heard: string[] = [];
+    const listen = (e: KeyboardEvent) => heard.push(e.key + (e.ctrlKey ? '+ctrl' : ''));
+    window.addEventListener('keydown', listen);
+    try {
+      const tiles = screen.getByLabelText('Block 2 tiles');
+      for (const key of [{ key: ' ' }, { key: 'ArrowUp' }, { key: 'Escape' }, { key: 'Enter', ctrlKey: true }])
+        fireEvent.keyDown(tiles, key);
+      // Escape steps out of the field, as it does from any field in the shift.
+      expect(heard).toEqual(['Escape', 'Enter+ctrl']);
+    } finally {
+      window.removeEventListener('keydown', listen);
+    }
+  });
   it('ignores shop selections and keeps its operands unselected', async () => {
     render(<Harness />);
     for (const name of ['Library Write value', 'Library If value', 'Library If operator', 'Library If source']) {

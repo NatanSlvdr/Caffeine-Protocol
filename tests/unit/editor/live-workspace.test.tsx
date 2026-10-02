@@ -97,6 +97,9 @@ describe('live workspace lifecycle', () => {
     const program = screen.getByRole('region', { name: /routine/i });
     const menu = program.querySelector<HTMLElement>('[role="combobox"]')!;
     menu.focus();
+    // Escape on a closed menu is the menu's own, and never leaves the shift.
+    fireEvent.keyDown(menu, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/shift/3');
     fireEvent.keyDown(menu, { key: 'Enter', ctrlKey: true });
     expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
   });
