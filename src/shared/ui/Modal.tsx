@@ -61,7 +61,8 @@ export function Modal({
         ) : (
           <h2>{title}</h2>
         )}
-        <button aria-label="Close dialog" onClick={onClose}>
+        {/* Icon only, so it names itself on hover like the other icon buttons, with the key that does the same. */}
+        <button aria-label="Close dialog" aria-keyshortcuts="Escape" title="Close · Esc" onClick={onClose}>
           <X size={20} aria-hidden="true" />
         </button>
       </div>

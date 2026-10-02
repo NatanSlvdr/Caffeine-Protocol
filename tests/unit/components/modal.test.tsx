@@ -29,6 +29,12 @@ describe('modal backdrop', () => {
     return { onClose, dialog: screen.getByRole('dialog', { name: 'Field notes' }) };
   };
 
+  it('names its close button on hover, with Escape as its shortcut', () => {
+    open();
+    const close = screen.getByRole('button', { name: 'Close dialog' });
+    expect([close.title, close.getAttribute('aria-keyshortcuts')]).toEqual(['Close · Esc', 'Escape']);
+  });
+
   it('closes on a press outside the window', () => {
     const { onClose, dialog } = open();
     press(dialog, 20, 20);
