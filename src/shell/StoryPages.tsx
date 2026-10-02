@@ -3,6 +3,7 @@ import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_LENGTH, isRated } from '@/data';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
+import { Tally } from '@/shared/ui/Tally';
 import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
@@ -72,19 +73,19 @@ export function EndingPage() {
             <div>
               <dt>Shifts served</dt>
               <dd>
-                {progress.done}/{CAMPAIGN_LENGTH}
+                <Tally n={progress.done} of={CAMPAIGN_LENGTH} />
               </dd>
             </div>
             <div>
               <dt>Stars earned</dt>
               <dd>
-                {progress.stars}/{progress.max} ★
+                <Tally n={progress.stars} of={progress.max} unit="★" />
               </dd>
             </div>
             <div>
               <dt>Three-star shifts</dt>
               <dd>
-                {perfect}/{rated.length}
+                <Tally n={perfect} of={rated.length} />
               </dd>
             </div>
           </dl>

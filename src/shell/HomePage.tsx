@@ -1,5 +1,6 @@
 import { ArrowRight, BookOpen, CircleHelp, Settings2 } from 'lucide-react';
 import { Button } from '@/shared/ui/Button';
+import { Tally } from '@/shared/ui/Tally';
 import { go, openGuide, openSettings } from '@/shared/lib/navigation';
 import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { HomeCafePreview } from './HomeCafePreview';
@@ -47,13 +48,13 @@ export function HomePage() {
             <p>
               <span>Served</span>
               <span>
-                {progress.done}/{progress.total}
+                <Tally n={progress.done} of={progress.total} />
               </span>
             </p>
             <p>
               <span>Stars</span>
               <span>
-                {progress.stars}/{progress.max}
+                <Tally n={progress.stars} of={progress.max} />
               </span>
             </p>
             <span className="front-barcode" aria-hidden="true" />

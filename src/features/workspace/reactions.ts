@@ -246,7 +246,7 @@ type Targets = Pick<LevelDefinition, 'block_target' | 'instruction_target'>;
 /** Niko names the star target that was missed, by how much, and why it matters in the café. */
 function starVerdict(result: RunResult, targets: Targets): string {
   if (result.stars <= 1)
-    return `Every guest served! The routine runs ${result.block_count ?? 0} blocks, though, and ${targets.block_target} would do: fewer blocks means less to fix when the menu changes.`;
+    return `Every guest served! The routine uses ${result.block_count ?? 0} blocks, though, and ${targets.block_target} would do: fewer blocks means less to fix when the menu changes.`;
   if (result.stars === 2)
     return `Every guest served, with a tidy routine too! The robots still took ${result.executed_instructions} steps where ${targets.instruction_target} would do: fewer steps and nobody waits as long.`;
   return 'Three stars. That’s the tidiest routine I’ve ever seen.';

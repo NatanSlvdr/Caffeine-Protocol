@@ -111,7 +111,10 @@ describe('shift entry navigation', () => {
     window.location.hash = '#/ending';
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: /Skip/ }));
-    expect(screen.getByText('Three-star shifts').nextElementSibling?.textContent).toBe('18/20');
+    // The receipt prints "18/20" and reads it aloud as "18 of 20".
+    const perfect = screen.getByText('Three-star shifts').nextElementSibling!;
+    expect(perfect.querySelector('[aria-hidden="true"]')?.textContent).toBe('18/20');
+    expect(perfect.querySelector('.sr-only')?.textContent).toBe('18 of 20');
     expect(screen.getByRole('button', { name: 'Go back for the missing stars' })).toBeTruthy();
   });
 

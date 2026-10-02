@@ -224,7 +224,7 @@ describe('reactions', () => {
   it('says which star target was missed, and by how much', () => {
     const passed = { passed: true, observation: false, first_failure: null } as unknown as RunResult;
     const verdict = (patch: Partial<RunResult>) => successLines({ ...passed, ...patch }, 'query', 0, targets)[1].text;
-    expect(verdict({ stars: 1, block_count: 14 })).toContain('runs 14 blocks, though, and 10 would do');
+    expect(verdict({ stars: 1, block_count: 14 })).toContain('uses 14 blocks, though, and 10 would do');
     expect(verdict({ stars: 2, executed_instructions: 52 })).toContain('took 52 steps where 40 would do');
   });
 
