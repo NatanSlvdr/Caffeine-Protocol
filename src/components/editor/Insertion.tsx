@@ -29,8 +29,8 @@ export function Insertion({
       data-drop-slot={(alternative ? 'else:' : 'gap:') + at}
       className={'insertion-anchor ' + (hint ? 'with-hint ' : '') + (isElse ? 'else-preview' : '')}
     >
+      {/* The hint is printed in the slot, so it reads as it shows; a plain div can't carry a label of its own. */}
       <div
-        aria-label={isElse ? 'Else branch drop target' : hint || undefined}
         className={
           'code-insertion ' +
           (hint ? 'with-hint ' : '') +

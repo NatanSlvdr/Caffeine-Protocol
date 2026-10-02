@@ -36,11 +36,7 @@ export function Cafe({
   cameraAngleDegrees?: number;
 }) {
   return (
-    <div
-      className="cafe-canvas"
-      role="group"
-      aria-label="Nearly overhead café: grid-aligned kitchen, order counter and dining room"
-    >
+    <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
       <SceneCanvas pixelArt={pixelArt}>
         <World
           evening={evening}
