@@ -56,6 +56,18 @@ const LEGACY_COUNTERPARTS: readonly (number | undefined)[] = [
   23, 25, 28, // Act III, Porter
   undefined, undefined, undefined, undefined, undefined, // Act IV
 ];
+/**
+ * What each saved map holds, in the words a damaged import names it with.
+ * importProblem in SettingsWindow shows these messages to the player.
+ */
+const SAVED_PART: Record<string, string> = {
+  drafts: 'routine drafts',
+  solutions: 'served routines',
+  robotDrafts: 'routine drafts',
+  robotSolutions: 'served routines',
+  stars: 'star tally',
+  story: 'story progress',
+};
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
 
@@ -79,15 +91,15 @@ function validateMaps(v: Record<string, unknown>, shifts: number): void {
   const index = (value: unknown): value is number => isShiftIndex(value, shifts);
   for (const key of ['drafts', 'solutions', 'stars', 'story']) {
     const entries = v[key];
-    if (!isRecord(entries)) throw new Error(`Missing ${key} data.`);
+    if (!isRecord(entries)) throw new Error(`Missing ${SAVED_PART[key]}.`);
     for (const [k, value] of Object.entries(entries)) {
       if (!/^(0|[1-9]\d*)$/.test(k) || !index(Number(k)) || (v.version === 1 && Number(k) > 13))
-        throw new Error('Invalid shift in save.');
+        throw new Error('Invalid shift number.');
       if ((key === 'drafts' || key === 'solutions') && (typeof value !== 'string' || value.length > 100_000))
-        throw new Error('Invalid program in save.');
+        throw new Error('Invalid routine.');
       if (key === 'stars' && (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 3))
         throw new Error('Invalid star count.');
-      if (key === 'story' && typeof value !== 'boolean') throw new Error('Invalid story state.');
+      if (key === 'story' && typeof value !== 'boolean') throw new Error('Invalid story progress.');
     }
   }
 }
@@ -97,7 +109,7 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
   if (!isRecord(settings)) throw new Error('Missing settings.');
   const level = (n: unknown) => typeof n === 'number' && Number.isFinite(n) && n >= 0 && n <= 1;
   if (!level(settings.music) || (settings.volume !== undefined && !level(settings.volume)))
-    throw new Error('Invalid audio setting.');
+    throw new Error('Invalid music volume.');
   // Older saves kept a master volume over the music; with music the only sound, the two fold into one.
   const music = Math.round((settings.music as number) * ((settings.volume as number | undefined) ?? 1) * 100) / 100;
   if (typeof settings.reduced_motion !== 'boolean') throw new Error('Invalid display setting.');
@@ -132,13 +144,13 @@ function validateRobotMaps(v: Record<string, unknown>, shifts: number): RobotMap
   else
     for (const key of ['robotDrafts', 'robotSolutions'] as const) {
       const entries = v[key];
-      if (!isRecord(entries)) throw new Error(`Missing ${key} data.`);
+      if (!isRecord(entries)) throw new Error(`Missing ${SAVED_PART[key]}.`);
       for (const [shift, programs] of Object.entries(entries)) {
         if (!/^\d+$/.test(shift) || !index(Number(shift)) || !isRecord(programs))
-          throw new Error('Invalid robot program collection.');
+          throw new Error('Invalid set of robot routines.');
         for (const role of ['query', 'prep', 'floor'])
           if (typeof programs[role] !== 'string' || programs[role].length > 100_000)
-            throw new Error('Invalid robot source.');
+            throw new Error('Invalid routine.');
         robotMaps[key][shift] = {
           query: cleanQuery(programs.query as string),
           prep: migrateRobotSource(programs.prep as string, 'prep'),
@@ -205,7 +217,7 @@ function migrateLegacyShifts(v: Record<string, unknown>, robotMaps: RobotMaps, l
 
 /** Validate an entire import before replacing anything in the active save. */
 export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
-  if (text.length > 2_000_000) throw new Error('This save is too large. Choose a Caffeine Protocol JSON export.');
+  if (text.length > 2_000_000) throw new Error('It is too large to be a café export.');
   const v: unknown = JSON.parse(text);
   if (isRecord(v) && typeof v.version === 'number' && v.version > 4)
     throw new Error('It comes from a newer version of Caffeine Protocol.');
