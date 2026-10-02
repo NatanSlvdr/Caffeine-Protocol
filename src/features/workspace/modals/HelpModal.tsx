@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -49,6 +49,14 @@ export function HelpModal({
   // The opening routine needs none: Reset brings it back.
   const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
   const [confirming, setConfirming] = useState(false);
+  // Backing out of the warning puts focus back on the button that raised it, not on the page.
+  const useButton = useRef<HTMLButtonElement>(null);
+  const backingOut = useRef(false);
+  useEffect(() => {
+    if (confirming || !backingOut.current) return;
+    backingOut.current = false;
+    useButton.current?.focus();
+  }, [confirming]);
   return (
     <Modal
       className="settings-window confirm-slip help-slip"
@@ -101,7 +109,14 @@ export function HelpModal({
                 The example replaces {robot}’s routine, and your edits to it are lost.
               </p>
               <div className="modal-buttons help-example-actions">
-                <button className="settings-chip" autoFocus onClick={() => setConfirming(false)}>
+                <button
+                  className="settings-chip"
+                  autoFocus
+                  onClick={() => {
+                    backingOut.current = true;
+                    setConfirming(false);
+                  }}
+                >
                   Keep my edits
                 </button>
                 <Button variant="primary" disabled={running} onClick={() => onUseExample(example)}>
@@ -123,6 +138,7 @@ export function HelpModal({
               </button>
               {showSolution && (
                 <Button
+                  ref={useButton}
                   variant="primary"
                   disabled={running}
                   onClick={() => (edited ? setConfirming(true) : onUseExample(example))}

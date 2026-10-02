@@ -50,6 +50,7 @@ describe('worked example', () => {
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep my edits' }));
     fireEvent.click(screen.getByRole('button', { name: 'Keep my edits' }));
     expect(screen.queryByRole('alert')).toBeNull();
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Use this example' }));
     fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
     fireEvent.click(screen.getByRole('button', { name: /Replace my edits/ }));
     expect(onUseExample).toHaveBeenCalledWith('serve');
