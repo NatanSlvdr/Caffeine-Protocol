@@ -1,6 +1,7 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../../src/App';
+import { newSave } from '../../../src/features/campaign/save/persistence';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
 vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div /> }));
@@ -142,6 +143,36 @@ describe('shift entry navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Go back for the missing stars' }));
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
     expect(await screen.findByText('No. 05')).toBeTruthy();
+  });
+
+  it('goes back a screen on Escape, once the open window or story scene has had it', async () => {
+    HTMLDialogElement.prototype.showModal = function () {
+      this.setAttribute('open', '');
+    };
+    HTMLDialogElement.prototype.close = function () {
+      this.removeAttribute('open');
+    };
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
+    const save = { ...newSave(), selected: 20, unlocked: 20, complete: true, stars };
+    localStorage.setItem('caffeine-protocol.v1', JSON.stringify(save));
+    window.location.hash = '#/ending';
+    render(<App />);
+    expect(screen.getByRole('button', { name: /^Campaign/ }).getAttribute('aria-keyshortcuts')).toBe('Escape');
+    // The closing scene takes the first Escape as Skip.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(await screen.findByRole('heading', { name: 'Closing time.' })).toBeTruthy();
+    expect(window.location.hash).toBe('#/ending');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
+    // An open window keeps its Escape to itself.
+    fireEvent.click(await screen.findByRole('button', { name: 'Settings' }));
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(window.location.hash).toBe('#/campaign');
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+    fireEvent.keyDown(window, { key: 'Escape', repeat: true });
+    expect(window.location.hash).toBe('#/campaign');
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(window.location.hash).toBe('#/'));
   });
 
   it('labels the next and locked shifts on the rail', () => {
