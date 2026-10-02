@@ -48,6 +48,15 @@ describe('service receipt', () => {
     receipt(2, 2);
     expect(screen.queryByText(/best/)).toBeNull();
   });
+  it('reads each total against its target, without the printed slash', () => {
+    const { block_target, instruction_target } = levels[2];
+    receipt(1, undefined, false, result(1, block_target + 1, instruction_target));
+    const blocks = screen.getByText('Blocks used').nextElementSibling!;
+    expect(blocks.querySelector('small')?.getAttribute('aria-hidden')).toBe('true');
+    expect(blocks.querySelector('.sr-only')?.textContent).toBe(`, star target ${block_target}, missed`);
+    const steps = screen.getByText('Steps run').nextElementSibling!;
+    expect(steps.querySelector('.sr-only')?.textContent).toBe(`, star target ${instruction_target}, met`);
+  });
   it('explains a step target met while the block target is still missed', () => {
     const { unmount } = receipt(1, undefined, false, result(1, levels[2].block_target + 1, 1));
     expect(screen.getByText(/stars climb in order: trim the blocks first/)).toBeTruthy();

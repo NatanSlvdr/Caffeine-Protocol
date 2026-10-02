@@ -69,15 +69,15 @@ export function ReceiptModal({
             <div className={blocksMet ? 'met' : ''}>
               <dt>Blocks used</dt>
               <dd>
-                {blocks} <small>/ {level.block_target}</small>
-                <TargetMet met={blocksMet} />
+                {blocks} <small aria-hidden="true">/ {level.block_target}</small>
+                <TargetMet target={level.block_target} met={blocksMet} />
               </dd>
             </div>
             <div className={stepsHeld ? 'met held' : stepsMet ? 'met' : ''}>
               <dt>Steps run</dt>
               <dd>
-                {result.executed_instructions} <small>/ {level.instruction_target}</small>
-                <TargetMet met={stepsMet} />
+                {result.executed_instructions} <small aria-hidden="true">/ {level.instruction_target}</small>
+                <TargetMet target={level.instruction_target} met={stepsMet} />
               </dd>
             </div>
           </>
@@ -114,7 +114,7 @@ export function ReceiptModal({
   );
 }
 
-/** The ✓ on a met total is drawn in CSS, so screen readers hear the verdict here instead. */
-function TargetMet({ met }: { met: boolean }) {
-  return <span className="sr-only">{met ? ', star target met' : ', over the star target'}</span>;
+/** The "/ 4" and the ✓ are drawn for the eye, so screen readers hear the target and the verdict here instead. */
+function TargetMet({ target, met }: { target: number; met: boolean }) {
+  return <span className="sr-only">{`, star target ${target}, ${met ? 'met' : 'missed'}`}</span>;
 }
