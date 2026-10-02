@@ -60,6 +60,35 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(window.location.hash).toBe('#/campaign');
   });
+  it('keeps the player’s place when Escape steps out of a field', () => {
+    const drafts = { 2: { query: lessons[2].solution, prep: '', floor: '' } };
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2, robotDrafts: drafts });
+    const { unmount } = render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    // A block's number field hands focus back to its block.
+    const tiles = screen.getAllByLabelText(/^Block \d+ tiles$/)[0];
+    tiles.focus();
+    fireEvent.keyDown(tiles, { key: 'Escape' });
+    expect(document.activeElement).toBe(tiles.closest('[data-line]'));
+    expect(window.location.hash).toBe('#/shift/3');
+    unmount();
+    // The text view hands it to the routine's robot tab.
+    const save = makeSave();
+    seedLocalStorage({
+      ...save,
+      unlocked: 2,
+      selected: 2,
+      robotDrafts: drafts,
+      settings: { ...save.settings, text_editor: true },
+    });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const text = screen.getByLabelText('Routine text');
+    text.focus();
+    fireEvent.keyDown(text, { key: 'Escape' });
+    expect(document.activeElement).toBe(screen.getByRole('tab', { selected: true }));
+    expect(window.location.hash).toBe('#/shift/3');
+  });
   it('names the way back without reading out the drawn arrow and slash', () => {
     open();
     fireEvent.click(screen.getByRole('button', { name: 'Campaign Shift 03' }));

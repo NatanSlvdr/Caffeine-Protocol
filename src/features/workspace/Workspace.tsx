@@ -124,7 +124,16 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       // into leaving the shift.
       if (e.key === 'Escape' && !e.repeat && !modal && !e.defaultPrevented) {
         // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
-        if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
+        // Focus stays in place for the keyboard: a block's number field hands it to its block, the text view to the
+        // routine's robot tab.
+        if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) {
+          const field = e.target;
+          const tab = field.closest('[role="tabpanel"]')?.getAttribute('aria-labelledby');
+          const place =
+            field.parentElement?.closest<HTMLElement>('[data-line]') ?? (tab && document.getElementById(tab));
+          field.blur();
+          if (place) place.focus();
+        }
         // The crew's reaction closes first, the way its Skip button does, even with focus back in the code.
         else if (reaction) closeReaction();
         // A running service stops first, the way Stop & edit does, rather than dropping the player on the menu.
