@@ -221,6 +221,10 @@ describe('reactions', () => {
       'No paper in that direction. At the register, use Take up: the paper stack is above it.',
     ])
       expect(niko(reason)).toContain('the paper stack just above it');
+    // Checkout still wins over the register-position rule.
+    expect(
+      niko('Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),
+    ).toContain('so the guest can pay');
     expect(niko('Finish the function before jumping back.')).toContain('let it reach its End');
     expect(niko('This For loop’s End was reached without its For: jump to the For line, not into the loop.')).toContain(
       'let it reach its End',
