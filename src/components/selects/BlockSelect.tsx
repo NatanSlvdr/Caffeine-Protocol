@@ -2,7 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { isRunShortcut, keepKeysInBlock } from './blockKeys';
+import { escapeMenu, isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
 
 export interface BlockOption {
@@ -117,10 +117,8 @@ export function BlockSelect({
                     ? 0
                     : (from + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length,
             );
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            setOpen(false);
-          } else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
+          } else if (e.key === 'Escape') escapeMenu(e, open, () => setOpen(false));
+          else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
             e.preventDefault();
             choose(options[focused].value);
           }

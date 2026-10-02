@@ -136,6 +136,28 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(menu, { key: 'Enter', ctrlKey: true });
     expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
   });
+  it('closes an open block menu on Escape, and steps out of a closed one to its block', () => {
+    const drafts = { 2: { query: lessons[2].solution, prep: '', floor: '' } };
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2, robotDrafts: drafts });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const menus = [...document.querySelectorAll<HTMLElement>('[data-line] [role="combobox"]')];
+    // Both kinds: the drink list on Write and the compass on Move.
+    const compass = (menu: HTMLElement) => !!menu.parentElement?.classList.contains('direction-select');
+    expect(menus.some(compass)).toBe(true);
+    expect(menus.some((menu) => !compass(menu))).toBe(true);
+    for (const menu of menus) {
+      menu.focus();
+      fireEvent.keyDown(menu, { key: 'ArrowDown' });
+      expect(menu.getAttribute('aria-expanded')).toBe('true');
+      fireEvent.keyDown(menu, { key: 'Escape' });
+      expect(menu.getAttribute('aria-expanded')).toBe('false');
+      expect(document.activeElement).toBe(menu);
+      fireEvent.keyDown(menu, { key: 'Escape' });
+      expect(document.activeElement).toBe(menu.closest('[data-line]'));
+      expect(window.location.hash).toBe('#/shift/3');
+    }
+  });
   it('puts a block lifted from the keyboard back on Escape, and stays on the shift', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
     render(<App />);

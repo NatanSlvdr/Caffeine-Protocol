@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '@/domain';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
-import { isRunShortcut, keepKeysInBlock } from './blockKeys';
+import { escapeMenu, isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
 
 const directionGrid: (Direction | null)[] = [
@@ -144,10 +144,8 @@ export function DirectionSelect({
               (from + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + DIRECTIONS.length) %
                 DIRECTIONS.length,
             );
-          } else if (e.key === 'Escape') {
-            e.preventDefault();
-            close();
-          } else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
+          } else if (e.key === 'Escape') escapeMenu(e, open, close);
+          else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
             e.preventDefault();
             choose(DIRECTIONS[focused]);
           }
