@@ -39,7 +39,10 @@ export function JumpArrows({
           const x2 = b.right - bounds.left + 5,
             y2 = b.top - bounds.top + b.height / 2;
           // Short blue routes may pass behind intermediate blocks.
-          const bend = Math.min(bounds.width - 8, Math.max(x1, x2) + 14 + Math.abs(y2 - y1) * 0.32 + Math.min(16, index * 4));
+          const bend = Math.min(
+            bounds.width - 8,
+            Math.max(x1, x2) + 14 + Math.abs(y2 - y1) * 0.32 + Math.min(16, index * 4),
+          );
           const r = Math.min(18, Math.abs(y2 - y1) / 2);
           const s = y2 >= y1 ? 1 : -1;
           const d =
@@ -99,10 +102,18 @@ export function JumpArrows({
     };
   }, [root, source, dragging]);
   return (
-    <svg className="jump-arrows" aria-label="Jump connections">
+    // Drawn for the eye only: the Jump block and its destination already say the same name.
+    <svg className="jump-arrows" aria-hidden="true">
       <defs>
         <marker id={marker} viewBox="0 0 12 12" refX="9" refY="6" markerWidth="6" markerHeight="6" orient="auto">
-          <path d="M3 2 L9 6 L3 10" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <path
+            d="M3 2 L9 6 L3 10"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
         </marker>
       </defs>
       {links.map((l, i) => (

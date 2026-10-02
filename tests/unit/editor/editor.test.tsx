@@ -282,6 +282,8 @@ describe('compact visual code', () => {
     expect(screen.getByLabelText('Drag jump destination listen')).toBeTruthy();
     expect(document.querySelector('[data-target] .block-verb')).toBeNull();
     expect(document.querySelectorAll('.jump-arrows>path')).toHaveLength(1);
+    // The arrow is drawn, not read: the jump and its destination both name listen.
+    expect(document.querySelector('.jump-arrows')?.getAttribute('aria-hidden')).toBe('true');
   });
   it('keeps long and numerous jump connections inside the reserved right gutter', () => {
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
