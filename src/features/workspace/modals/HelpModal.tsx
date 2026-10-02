@@ -48,6 +48,8 @@ export function HelpModal({
   // The example overwrites the routine with no undo, so the player's own edits get a second look first.
   // The opening routine needs none: Reset brings it back.
   const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
+  // Already the routine: using it again would change nothing.
+  const inUse = example.trim() === source.trim();
   const [confirming, setConfirming] = useState(false);
   // Backing out of the warning puts focus back on the button that raised it, not on the page.
   const useButton = useRef<HTMLButtonElement>(null);
@@ -77,7 +79,7 @@ export function HelpModal({
       {/* Greyed-out buttons say why: the café is mid-service. */}
       {running && (
         <p id="help-running" className="help-running">
-          Stop the service to replay the intro{!observation && showSolution ? ' or use the example' : ''}.
+          Stop the service to replay the intro{!observation && showSolution && !inUse ? ' or use the example' : ''}.
         </p>
       )}
       <p>
@@ -148,17 +150,22 @@ export function HelpModal({
               >
                 {showSolution ? 'Hide worked example' : 'Reveal worked example'}
               </button>
-              {showSolution && (
-                <Button
-                  ref={useButton}
-                  variant="primary"
-                  disabled={running}
-                  aria-describedby={running ? 'help-running' : undefined}
-                  onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
-                >
-                  Use this example <ArrowRight size={15} />
-                </Button>
-              )}
+              {showSolution &&
+                (inUse ? (
+                  <Button variant="primary" disabled>
+                    Example in use
+                  </Button>
+                ) : (
+                  <Button
+                    ref={useButton}
+                    variant="primary"
+                    disabled={running}
+                    aria-describedby={running ? 'help-running' : undefined}
+                    onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
+                  >
+                    Use this example <ArrowRight size={15} />
+                  </Button>
+                ))}
             </div>
           )}
           {showSolution && (

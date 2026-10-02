@@ -4,8 +4,7 @@ import { HelpModal } from '../../../src/features/workspace/modals/HelpModal';
 import { levels } from '../../../src/data';
 
 const lesson = { note: 'Note', solution: 'serve' };
-const help = (source: string, running = false) => {
-  const onUseExample = vi.fn();
+const open = (source: string, running = false, onUseExample = vi.fn()) =>
   render(
     <HelpModal
       index={2}
@@ -25,6 +24,9 @@ const help = (source: string, running = false) => {
       onClose={() => {}}
     />,
   );
+const help = (source: string, running = false) => {
+  const onUseExample = vi.fn();
+  open(source, running, onUseExample);
   fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
   return onUseExample;
 };
@@ -54,6 +56,12 @@ describe('worked example', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
     fireEvent.click(screen.getByRole('button', { name: /Replace my edits/ }));
     expect(onUseExample).toHaveBeenCalledWith('serve');
+  });
+  it('says when the routine already is the example', () => {
+    open('serve\n', true);
+    expect(screen.queryByRole('button', { name: 'Use this example' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Example in use' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.getByText('Stop the service to replay the intro.')).toBeTruthy();
   });
   it('says why its buttons are greyed out mid-service', () => {
     expect(help('take_order\n', true)).not.toHaveBeenCalled();
