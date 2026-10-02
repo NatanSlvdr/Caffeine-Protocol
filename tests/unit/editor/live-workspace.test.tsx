@@ -150,6 +150,9 @@ describe('live workspace lifecycle', () => {
     window.location.hash = '/shift/1';
     seedLocalStorage(makeSave());
     render(<App />);
+    expect(document.querySelector('.observation-note')?.textContent).toBe(
+      'No routine to write today: the crew serves this shift by hand. Query joins on Shift 02.',
+    );
     fireEvent.click(screen.getByRole('button', { name: /Watch service/ }));
     expect(screen.queryByRole('button', { name: /Stop & edit/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: /Stop watching/ }));

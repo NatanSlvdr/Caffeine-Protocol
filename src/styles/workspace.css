@@ -285,6 +285,16 @@
 .workspace-main .editor-panel .editor-body {
   border-radius: 0 0 17px 33px / 0 0 17px 17px;
 }
+.editor-body .observation-note {
+  max-width: 34ch;
+  margin: 18px 16px;
+  padding: 10px 14px;
+  border: 1px dashed #bca58b88;
+  border-radius: 10px;
+  color: #6f5a45;
+  font-size: 13px;
+  line-height: 1.45;
+}
 .workspace-main .coding-tools button {
   width: 30px;
   height: 30px;

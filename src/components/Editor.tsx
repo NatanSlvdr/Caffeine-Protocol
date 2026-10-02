@@ -25,6 +25,8 @@ import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
 import { ExecutionCursor } from './ExecutionCursor';
 import { ROUTINE_PANEL, routineTab } from './RobotChoice';
+import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
+import { pad2 } from '@/shared/lib/format';
 
 export function Editor({
   role = 'query',
@@ -160,7 +162,13 @@ export function Editor({
             ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
             : { role: 'group', 'aria-label': 'Code zone' })}
         >
-          {observation ? null : textMode ? (
+          {observation ? (
+            // Without this the watch-only shift's code zone is a blank pane with nothing to say why.
+            <p className="observation-note">
+              No routine to write today: the crew serves this shift by hand. {ROBOT_DISPLAY_NAMES[role]} joins on Shift{' '}
+              {pad2(ROBOT_UNLOCK_LEVELS[role])}.
+            </p>
+          ) : textMode ? (
             <div className="code-text">
               {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
               <div className="code-text-lines" aria-hidden="true">
