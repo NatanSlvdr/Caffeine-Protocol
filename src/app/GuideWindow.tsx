@@ -77,7 +77,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           <p>
             <strong>Run service</strong> (or <kbd>{RUN_MODIFIER} + Enter</kbd>) sets the crew to work, and{' '}
             <strong>Stop &amp; edit</strong> (or <kbd>Esc</kbd>) takes you back to the code. If an instruction fails,
-            its line lights up and you can fix it straight away.
+            its line lights up and you can fix it straight away. With the café idle, <kbd>Esc</kbd> heads back to the
+            campaign.
           </p>
           <p>
             <Stars n={1} /> serves every order correctly, <Stars n={2} /> also meets the block target, and{' '}

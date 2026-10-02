@@ -34,6 +34,8 @@ describe('how to play', () => {
     // The toolbar's own buttons come first, so a tablet without a keyboard can follow along.
     expect(guide.textContent).toContain('Run service (or');
     expect(guide.textContent).toContain('Stop & edit (or Esc)');
+    // Esc's other job, out of service, is spelled out too.
+    expect(guide.textContent).toContain('With the café idle, Esc heads back to the campaign.');
     // The run shortcut names this keyboard's modifier only.
     const run = [...guide.querySelectorAll('kbd')].find((k) => k.textContent.includes('Enter'));
     expect(run?.textContent).toMatch(/^(Ctrl|⌘) \+ Enter$/);

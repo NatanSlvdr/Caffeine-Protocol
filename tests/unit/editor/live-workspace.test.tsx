@@ -81,9 +81,13 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     fireEvent.keyDown(window, { key: 'Escape', repeat: true });
     expect(window.location.hash).toBe('#/shift/3');
+    // Out of service, the way back names Esc as its shortcut; in service, Esc stops instead.
+    const back = screen.getByRole('button', { name: 'Campaign Shift 03' });
+    expect(back.getAttribute('aria-keyshortcuts')).toBe('Escape');
     fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
     fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true, repeat: true });
     expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+    expect(back.hasAttribute('aria-keyshortcuts')).toBe(false);
     // Stopping with a held Escape doesn't carry on out of the shift.
     fireEvent.keyDown(window, { key: 'Escape' });
     fireEvent.keyDown(window, { key: 'Escape', repeat: true });
