@@ -1106,7 +1106,7 @@ export function* streamService(
         role: 'query',
         line: queryFailure.failure_line ?? 0,
         time: now,
-        reason: queryFailure.reason ?? 'Order program failed.',
+        reason: queryFailure.reason ?? 'Query’s routine failed.',
         event: queryFailure,
       };
       log.push({

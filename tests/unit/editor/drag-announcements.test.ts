@@ -29,7 +29,7 @@ describe('drag announcements', () => {
       'Block 1 (wait for orders): at the end, inside block 4 (else).',
     );
     expect(say.onDragEnd({ active: active('2'), over: over('gap:6') })).toBe(
-      'Dropped block 3 (take) at the end of the program.',
+      'Dropped block 3 (take) at the end of the routine.',
     );
     expect(say.onDragOver!({ active: active('0'), over: over('else:4') })).toBe(
       'Block 1 (wait for orders): as a new else branch.',

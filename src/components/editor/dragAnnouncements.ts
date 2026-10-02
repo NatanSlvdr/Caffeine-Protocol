@@ -26,7 +26,7 @@ export function dragAnnouncements(rows: VisualBlock[]): Announcements {
     // An else branch stops a line short of the END it shares with its IF, so its last spot is one further.
     const owner = rows.findLast((r) => r.line < at && at <= r.end + (r.command === 'ELSE' ? 1 : 0) && r.end > r.line);
     const next = rows.find((r) => r.line >= at && (!owner || r.line <= owner.end));
-    const where = next ? `before ${numbered(next)}` : owner ? 'at the end' : 'at the end of the program';
+    const where = next ? `before ${numbered(next)}` : owner ? 'at the end' : 'at the end of the routine';
     return owner ? `${where}, inside ${numbered(owner)}` : where;
   };
   const sentence = (text: string) => text[0].toUpperCase() + text.slice(1);
