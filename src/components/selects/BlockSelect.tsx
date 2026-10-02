@@ -67,6 +67,10 @@ export function BlockSelect({
   useEffect(() => {
     if (disabled) setOpen(false);
   }, [disabled]);
+  // The menu scrolls past a handful of options; the one the arrow keys reach scrolls into sight, as a pointer's would be.
+  useEffect(() => {
+    if (open) document.getElementById(`${id}-${focused}`)?.scrollIntoView?.({ block: 'nearest' });
+  }, [open, focused, id]);
   const choose = (next: string) => {
     onChange(next);
     setOpen(false);

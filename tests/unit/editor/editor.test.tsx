@@ -106,6 +106,24 @@ describe('compact visual code', () => {
     await user.keyboard('{Enter}');
     expect(source()).toBe('LISTEN\nITEM tea');
   });
+  it('scrolls the option the arrow keys reach into sight in a long menu', async () => {
+    const user = userEvent.setup();
+    const scrolled: string[] = [];
+    Element.prototype.scrollIntoView = function () {
+      scrolled.push(this.textContent ?? '');
+    };
+    try {
+      render(<Harness initial={'LISTEN\nWRITE sugar'} />);
+      screen.getByLabelText('Block 2 value').focus();
+      await user.keyboard('{End}');
+      const options = screen.getAllByRole('option');
+      expect(scrolled.at(-1)).toBe(options.at(-1)?.textContent);
+      await user.keyboard('{Home}');
+      expect(scrolled.at(-1)).toBe(options[0].textContent);
+    } finally {
+      delete (Element.prototype as Partial<Element>).scrollIntoView;
+    }
+  });
   it('steps a reopened compass from its current direction, not from where the pointer last rested', async () => {
     const user = userEvent.setup();
     render(<Harness initial="MOVE RIGHT 1" />);
