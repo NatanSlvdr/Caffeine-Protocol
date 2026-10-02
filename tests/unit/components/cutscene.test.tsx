@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { fireEvent, render } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { Cutscene } from '../../../src/components/dialogue/Cutscene';
 import { CAMPAIGN_LENGTH } from '../../../src/data';
 import {
@@ -84,6 +85,16 @@ describe('cutscene progress', () => {
 });
 
 describe('Cutscene', () => {
+  it('reads the first still’s art notes out as it lands', () => {
+    const scene = cutscenes[0];
+    // A live region keeps quiet about what it opens with, so on first paint it must still be empty.
+    const first = renderToStaticMarkup(<Cutscene scene={scene} onDone={() => {}} reduced />);
+    const doc = new DOMParser().parseFromString(first, 'text/html');
+    expect(doc.querySelector('.cutscene > p.sr-only[aria-live]')?.textContent).toBe('');
+    const { container } = render(<Cutscene scene={scene} onDone={() => {}} reduced />);
+    expect(container.querySelector('.cutscene > p.sr-only[aria-live]')?.textContent).toBe(scene.panels[0].art);
+  });
+
   it('changes still as the dialogue moves into the next panel, then finishes', () => {
     const scene = cutscenes[0];
     const onDone = vi.fn();

@@ -33,6 +33,9 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
   const { lines, panels } = useMemo(() => sceneLines(scene), [scene]);
   const [line, setLine] = useState(0);
   const shown = panels[line] ?? 0;
+  // Empty as it mounts, so the first still is read out too: a live region only speaks up when it changes.
+  const [voiced, setVoiced] = useState(false);
+  useEffect(() => setVoiced(true), []);
 
   // Fetch every still up front so the next one never fades in half-loaded.
   useEffect(() => {
@@ -69,7 +72,7 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
       </div>
       {/* The stills are pictures only, so their art notes describe each one aloud as it lands. */}
       <p className="sr-only" aria-live="polite">
-        {scene.panels[shown]?.art}
+        {voiced && scene.panels[shown]?.art}
       </p>
       <DialogueBox
         lines={lines}

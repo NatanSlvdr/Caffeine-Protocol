@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen } from '@testing-library/react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
 import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
@@ -45,6 +46,14 @@ describe('DialogueBox', () => {
     expect(onDone).toHaveBeenCalledOnce();
   });
 
+  it('reads the first line out as it lands, not only the ones after it', () => {
+    // A live region keeps quiet about what it opens with, so on first paint it must still be empty.
+    const first = renderToStaticMarkup(<DialogueBox lines={lines} variant="aside" onDone={() => {}} />);
+    const region = new DOMParser().parseFromString(first, 'text/html').querySelector('[aria-live]');
+    expect(region?.querySelector('.sr-only')?.textContent).toBe('');
+    render(<DialogueBox lines={lines} variant="aside" onDone={() => {}} />);
+    expect(document.querySelector('[aria-live] .sr-only')?.textContent).toBe('The shutters roll up.');
+  });
   it('prints lines whole when instant, and Escape skips a scene', () => {
     const onDone = vi.fn();
     render(<DialogueBox lines={lines} onDone={onDone} instant />);

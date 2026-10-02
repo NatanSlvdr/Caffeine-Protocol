@@ -57,6 +57,10 @@ export function DialogueBox({
   const typing = shown < text.length;
   const last = index >= lines.length - 1;
   const scene = variant === 'scene';
+  // A live region only reads out what changes in it, so it opens empty and the first line arrives a moment later,
+  // like every line after it. Otherwise the crew's reaction would start on a line no screen reader hears.
+  const [voiced, setVoiced] = useState(false);
+  useEffect(() => setVoiced(true), []);
 
   // Fetch every portrait up front so a new speaker or mood never pops in half-loaded.
   useEffect(() => {
@@ -160,7 +164,7 @@ export function DialogueBox({
                 );
               })}
             </span>
-            <span className="sr-only">{speaker ? `${speakerLabel(speaker)}: ${text}` : text}</span>
+            <span className="sr-only">{voiced && (speaker ? `${speakerLabel(speaker)}: ${text}` : text)}</span>
           </p>
           <div className="dialogue-controls">
             <span className="dialogue-count">
