@@ -20,6 +20,9 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const [settings, setting] = useSettings();
   // Track the browser's own state, so leaving with Esc relabels the button too.
   const [isFullscreen, setIsFullscreen] = useState(() => !!document.fullscreenElement);
+  // Some tablet browsers, and a café saved to the home screen, can't go fullscreen; offer it only where it works.
+  const canFullscreen = !!document.fullscreenEnabled;
+  const [fullscreenError, setFullscreenError] = useState('');
   useEffect(() => {
     const sync = () => setIsFullscreen(!!document.fullscreenElement);
     document.addEventListener('fullscreenchange', sync);
@@ -30,7 +33,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
       if (document.fullscreenElement) await document.exitFullscreen();
       else await document.documentElement.requestFullscreen();
     } catch {
-      setError('Fullscreen is not available in this browser window.');
+      setFullscreenError('This browser window didn’t go fullscreen. Try again, or use the browser’s own menu.');
     }
   };
   return (
@@ -80,23 +83,30 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               checked={settings.pixel_art}
               onChange={(e) => setting('pixel_art', e.target.checked)}
             />
-            <div className="setting-row">
-              <span>
-                <strong>Fullscreen</strong>
-                <small>A little more room for your café.</small>
-              </span>
-              <button className="settings-chip" onClick={() => void fullscreen()}>
-                {isFullscreen ? (
-                  <>
-                    <Minimize size={15} /> Exit fullscreen
-                  </>
-                ) : (
-                  <>
-                    <Maximize size={15} /> Go fullscreen
-                  </>
-                )}
-              </button>
-            </div>
+            {canFullscreen && (
+              <div className="setting-row">
+                <span>
+                  <strong>Fullscreen</strong>
+                  <small>A little more room for your café.</small>
+                </span>
+                <button className="settings-chip" onClick={() => void fullscreen()}>
+                  {isFullscreen ? (
+                    <>
+                      <Minimize size={15} /> Exit fullscreen
+                    </>
+                  ) : (
+                    <>
+                      <Maximize size={15} /> Go fullscreen
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+            {fullscreenError && (
+              <p role="alert" className="error-text">
+                {fullscreenError}
+              </p>
+            )}
           </section>
           <section className="settings-block">
             <h3>
