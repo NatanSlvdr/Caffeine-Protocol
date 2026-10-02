@@ -542,6 +542,16 @@ describe('removing blocks from the keyboard', () => {
     expect(screen.getByText('Removed block 2 (if tea in orders) and its group.')).toBeTruthy();
   });
 
+  it('says where a block added from the library went, and keeps focus in the library for the next', () => {
+    render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 2\nEND'} />);
+    const take = screen.getByRole('button', { name: 'Insert take up' });
+    take.focus();
+    fireEvent.click(take);
+    expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\n  MOVE RIGHT 2\nEND\nTAKE UP');
+    expect(screen.getByText('Added block 4 (take up) at the end of the routine.')).toBeTruthy();
+    expect(document.activeElement).toBe(take);
+  });
+
   it('leaves a locked routine alone', () => {
     render(<Harness initial={'LISTEN\nTAKE UP'} locked />);
     const take = screen.getByLabelText('Drag block 2 (take up)');

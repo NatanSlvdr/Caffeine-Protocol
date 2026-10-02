@@ -89,7 +89,6 @@ export function Editor({
   };
   // Block edits keep the source laid out by depth, so the text view reads like the blocks.
   const blockChange = (value: string) => change(indentSource(value));
-  const insert = (command: string) => blockChange(placeBlock(source, command, source ? source.split('\n').length : 0));
   // A program that has never been indented, such as a shift's starting code, opens in the text view laid out too.
   useEffect(() => {
     if (textMode && !disabled && !/^[ \t]/m.test(source) && indentSource(source) !== source)
@@ -125,15 +124,23 @@ export function Editor({
     if (tabbed.source !== source) change(tabbed.source);
     else e.currentTarget.setSelectionRange(tabbed.cursor, tabbed.cursor);
   };
-  // A block removed from the keyboard says so, and focus moves to the block that took its place, or the one
-  // above, or the library once the routine is empty, rather than falling to the page.
-  const [removed, setRemoved] = useState<{ line: number; said: string } | null>(null);
+  // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
+  const [said, setSaid] = useState('');
+  // A library block goes on the end of the routine; focus stays in the library, ready to add the next.
+  const insert = (command: string) => {
+    if (disabled) return;
+    setSaid(`Added block ${rows.length + 1} (${spokenBlock(command)}) at the end of the routine.`);
+    blockChange(placeBlock(source, command, source ? source.split('\n').length : 0));
+  };
+  // Focus moves to the block that took a removed one's place, or the one above, or the library once the routine is
+  // empty, rather than falling to the page.
+  const [removed, setRemoved] = useState<{ line: number } | null>(null);
   const remove = (block: VisualBlock) => {
     const ordinal = rows.findIndex((r) => r.line === block.line) + 1;
-    setRemoved({
-      line: block.line,
-      said: `Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`,
-    });
+    setSaid(
+      `Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`,
+    );
+    setRemoved({ line: block.line });
     blockChange(removeVisualBlock(source, block.line));
   };
   useEffect(() => {
@@ -255,7 +262,7 @@ export function Editor({
           )}
         </div>
         <p className="sr-only" role="status">
-          {removed?.said}
+          {said}
         </p>
         <DragOverlay dropAnimation={null}>
           {dragged && (
