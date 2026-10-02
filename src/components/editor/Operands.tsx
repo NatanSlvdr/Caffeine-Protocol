@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   VARIABLES,
   STORE_VALUES,
@@ -32,6 +33,50 @@ import { BlockSelect, DirectionSelect } from '../BlockSelect';
 import { keepKeysInBlock } from '../selects/blockKeys';
 import { BlockIcon } from '../BlockIcon';
 import { conditionLabels, conditionOption, operandOption } from './blockMeta';
+
+/**
+ * A block's whole-number field. A number in range applies as it's typed; anything else, like the empty field
+ * on the way from 2 to 3, stays as typed instead of snapping back, and leaving the field shows the block's own.
+ */
+function CountInput({
+  value,
+  max,
+  label,
+  disabled,
+  onChange,
+}: {
+  value: string;
+  max: number;
+  label: string;
+  disabled: boolean;
+  onChange: (count: number) => void;
+}) {
+  const [draft, setDraft] = useState<string | null>(null);
+  return (
+    <input
+      className="tile-count"
+      type="number"
+      inputMode="numeric"
+      min={1}
+      max={max}
+      step={1}
+      aria-label={label}
+      // A field disabled mid-edit, as a service starts, may never see its blur: it shows the block's number.
+      value={disabled ? value : (draft ?? value)}
+      disabled={disabled}
+      onKeyDown={keepKeysInBlock}
+      onChange={(event) => {
+        const text = event.target.value,
+          count = Number(text);
+        if (text !== '' && Number.isInteger(count) && count >= 1 && count <= max) {
+          setDraft(null);
+          onChange(count);
+        } else setDraft(text);
+      }}
+      onBlur={() => setDraft(null)}
+    />
+  );
+}
 
 /** Each connector extends the same IF with another editable row, keeping its body intact. */
 export function membershipOperands(
@@ -271,22 +316,12 @@ export function Operands({
             onChange={(value) => select('quantity', write(value))}
           />
         ) : (
-          <input
-            className="tile-count"
-            type="number"
-            inputMode="numeric"
-            min={1}
+          <CountInput
+            label={label + ' quantity'}
             max={MAX_ITEM_QUANTITY}
-            step={1}
-            aria-label={label + ' quantity'}
             value={library ? '' : quantity}
             disabled={disabled}
-            onKeyDown={keepKeysInBlock}
-            onChange={(event) => {
-              const count = Number(event.target.value);
-              if (Number.isInteger(count) && count >= 1 && count <= MAX_ITEM_QUANTITY)
-                select('quantity', write(String(count)));
-            }}
+            onChange={(count) => select('quantity', write(String(count)))}
           />
         )}
         <BlockSelect
@@ -350,22 +385,12 @@ export function Operands({
         />
         {fields.family === 'MOVE' && (
           <>
-            <input
-              onKeyDown={keepKeysInBlock}
-              className="tile-count"
-              type="number"
-              inputMode="numeric"
-              min={1}
+            <CountInput
+              label={label + ' tiles'}
               max={MAX_MOVE_COUNT}
-              step={1}
-              aria-label={label + ' tiles'}
               value={mask('count', count)}
               disabled={disabled}
-              onChange={(e) => {
-                const n = Number(e.target.value);
-                if (Number.isInteger(n) && n >= 1 && n <= MAX_MOVE_COUNT)
-                  select('count', nextCommand(direction, String(n)));
-              }}
+              onChange={(n) => select('count', nextCommand(direction, String(n)))}
             />
             <span className="block-verb block-suffix">tiles</span>
           </>

@@ -49,6 +49,21 @@ describe('compact visual code', () => {
       window.removeEventListener('keydown', listen);
     }
   });
+  it('lets a block’s number field be cleared and retyped, keeping the block’s number until a valid one', () => {
+    render(<Harness initial={'LISTEN\nMOVE RIGHT 2'} />);
+    const tiles = screen.getByLabelText<HTMLInputElement>('Block 2 tiles');
+    // On the way from 2 to 3, the emptied field stays empty rather than snapping back to 2.
+    fireEvent.change(tiles, { target: { value: '' } });
+    expect(tiles.value).toBe('');
+    expect(source()).toBe('LISTEN\nMOVE RIGHT 2');
+    fireEvent.change(tiles, { target: { value: '3' } });
+    expect(source()).toBe('LISTEN\nMOVE RIGHT 3');
+    // Out of range shows as typed, isn't applied, and leaving the field shows the block's number again.
+    fireEvent.change(tiles, { target: { value: '30' } });
+    expect([tiles.value, source()]).toEqual(['30', 'LISTEN\nMOVE RIGHT 3']);
+    fireEvent.blur(tiles);
+    expect(tiles.value).toBe('3');
+  });
   it('ignores shop selections and keeps its operands unselected', async () => {
     render(<Harness />);
     for (const name of ['Library Write value', 'Library If value', 'Library If operator', 'Library If source']) {
