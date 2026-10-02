@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
+import { isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
 
 export interface BlockOption {
@@ -76,7 +77,7 @@ export function BlockSelect({
     <div
       className="block-select"
       ref={root}
-      onKeyDown={(e) => e.stopPropagation()}
+      onKeyDown={keepKeysInBlock}
       onClick={(e) => e.stopPropagation()}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget) && !menu.current?.contains(e.relatedTarget)) setOpen(false);
@@ -119,7 +120,7 @@ export function BlockSelect({
           } else if (e.key === 'Escape') {
             e.preventDefault();
             setOpen(false);
-          } else if (open && (e.key === 'Enter' || e.key === ' ')) {
+          } else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
             e.preventDefault();
             choose(options[focused].value);
           }

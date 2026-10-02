@@ -29,6 +29,7 @@ import {
 } from '@/domain/robotConditions';
 import { MAX_ITEM_QUANTITY, MAX_MOVE_COUNT } from '@/domain/constants';
 import { BlockSelect, DirectionSelect } from '../BlockSelect';
+import { keepKeysInBlock } from '../selects/blockKeys';
 import { BlockIcon } from '../BlockIcon';
 import { conditionLabels, conditionOption, operandOption } from './blockMeta';
 
@@ -280,7 +281,7 @@ export function Operands({
             aria-label={label + ' quantity'}
             value={library ? '' : quantity}
             disabled={disabled}
-            onKeyDown={(event) => event.stopPropagation()}
+            onKeyDown={keepKeysInBlock}
             onChange={(event) => {
               const count = Number(event.target.value);
               if (Number.isInteger(count) && count >= 1 && count <= MAX_ITEM_QUANTITY)
@@ -350,7 +351,7 @@ export function Operands({
         {fields.family === 'MOVE' && (
           <>
             <input
-              onKeyDown={(e) => e.stopPropagation()}
+              onKeyDown={keepKeysInBlock}
               className="tile-count"
               type="number"
               inputMode="numeric"

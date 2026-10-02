@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '@/domain';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
+import { isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
 
 const directionGrid: (Direction | null)[] = [
@@ -111,7 +112,7 @@ export function DirectionSelect({
     <div
       className={'direction-select block-select' + (expanded ? ' is-expanded' : '')}
       ref={root}
-      onKeyDown={(e) => e.stopPropagation()}
+      onKeyDown={keepKeysInBlock}
       onClick={(e) => e.stopPropagation()}
       onBlur={(e) => {
         if (!e.currentTarget.contains(e.relatedTarget) && !menu.current?.contains(e.relatedTarget)) close();
@@ -146,7 +147,7 @@ export function DirectionSelect({
           } else if (e.key === 'Escape') {
             e.preventDefault();
             close();
-          } else if (open && (e.key === 'Enter' || e.key === ' ')) {
+          } else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
             e.preventDefault();
             choose(DIRECTIONS[focused]);
           }

@@ -90,6 +90,16 @@ describe('live workspace lifecycle', () => {
     expect(window.location.hash).toBe('#/shift/3');
     expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
   });
+  it('runs on the shortcut from a block’s own menus too', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
+    render(<App />);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    const program = screen.getByRole('region', { name: /routine/i });
+    const menu = program.querySelector<HTMLElement>('[role="combobox"]')!;
+    menu.focus();
+    fireEvent.keyDown(menu, { key: 'Enter', ctrlKey: true });
+    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+  });
   it('tells a screen reader that service started, paused and locked the code', () => {
     open();
     const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
