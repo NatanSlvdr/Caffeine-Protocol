@@ -24,7 +24,8 @@ describe('shift entry navigation', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Choose a shift' }));
 
     await waitFor(() => expect(window.location.hash).toBe('#/campaign'));
-    expect(screen.getByRole('heading', { name: 'Choose a shift' })).toBeTruthy();
+    // Focus lost with the home page's button picks up on the new screen's title.
+    expect(document.activeElement).toBe(screen.getByRole('heading', { name: 'Choose a shift' }));
     expect(screen.getByText('Lou’s · Order rail')).toBeTruthy();
     expect(document.title).toBe('Choose a shift · Caffeine Protocol');
     expect(screen.queryByRole('button', { name: 'Selected shift' })).toBeNull();

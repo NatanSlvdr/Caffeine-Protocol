@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { Workspace } from '@/features/workspace/Workspace';
 import { GuideWindow } from '@/app/GuideWindow';
@@ -13,6 +13,7 @@ import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
+import { reclaimFocus } from '@/shared/lib/focus';
 
 export default function App() {
   return (
@@ -59,6 +60,13 @@ function Shell() {
   }[screen];
   useEffect(() => {
     document.title = title ? `${title} · Caffeine Protocol` : 'Caffeine Protocol';
+  }, [title]);
+  // The button that changed the screen is gone with the old one; pick focus up on the new screen's title.
+  const shown = useRef(title);
+  useEffect(() => {
+    if (shown.current === title) return;
+    shown.current = title;
+    reclaimFocus();
   }, [title]);
   return (
     <div className={`app ${screen}`}>

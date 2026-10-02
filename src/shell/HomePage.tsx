@@ -20,7 +20,7 @@ export function HomePage() {
         <article className="front-ticket">
           <span className="front-clip" aria-hidden="true" />
           <p className="front-kicker">{cafe} · A cozy coding adventure</p>
-          <h1 aria-label="Caffeine Protocol">
+          <h1 aria-label="Caffeine Protocol" data-screen-title tabIndex={-1}>
             Caffeine
             <br />
             <em>Protocol</em>

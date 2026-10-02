@@ -4,6 +4,7 @@ import App from '../../../src/App';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons } from '../../../src/data';
+import { narrativeFor } from '../../../src/data/campaign/narrative';
 
 vi.mock('../../../src/components/Cafe', () => ({
   Cafe: ({ serviceView, focusRole }: { serviceView?: boolean; focusRole?: string }) => (
@@ -44,7 +45,10 @@ describe('live workspace lifecycle', () => {
   it('steps out of a text field on Escape before leaving the shift', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
     render(<App />);
+    expect(document.activeElement?.textContent).toMatch(/^Next/);
     fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    // The scene took its focused button away; focus carries on from the shift's title.
+    expect(document.activeElement).toBe(screen.getByRole('heading', { level: 2, name: narrativeFor(2).title }));
     const speed = screen.getByRole('slider', { name: 'Playback speed' });
     expect(speed.getAttribute('aria-valuetext')).toMatch(/^[\d.]+× speed$/);
     speed.focus();

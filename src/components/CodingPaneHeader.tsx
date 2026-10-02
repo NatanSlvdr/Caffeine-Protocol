@@ -27,7 +27,9 @@ export function CodingPaneHeader({
     <section className="coding-pane">
       <header className="coding-pane-heading">
         <div className="coding-title-row">
-          <h2>{shift}</h2>
+          <h2 data-screen-title tabIndex={-1}>
+            {shift}
+          </h2>
           <div className="coding-tools">
             {onHelp && (
               <button type="button" aria-label="Help" title="Help" onClick={onHelp}>

@@ -162,7 +162,9 @@ export function CampaignPage() {
 
       <header className="pass-title">
         <p className="pass-kicker">{shop} · Order rail</p>
-        <h1>Choose a shift</h1>
+        <h1 data-screen-title tabIndex={-1}>
+          Choose a shift
+        </h1>
         <p className="pass-progress">
           <strong>{progress.done}</strong> of {progress.total} shifts served
         </p>

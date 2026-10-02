@@ -53,6 +53,10 @@ h3,
 p {
   margin: 0;
 }
+/* Titles take focus only when a screen changes under the player; they aren't controls, so no ring. */
+[data-screen-title]:focus {
+  outline: none;
+}
 h1 {
   font-family: Georgia, 'Times New Roman', serif;
   font-weight: 400;

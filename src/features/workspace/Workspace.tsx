@@ -7,6 +7,7 @@ import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/per
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
@@ -58,6 +59,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const focused = zoomToRobot && !observation && !wrapUp;
   // The shift opens on its scene; a finished run answers with the crew's reaction.
   const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
+  // A finished scene takes its focused button with it; carry on from the shift's title.
+  useEffect(() => {
+    if (!scene) reclaimFocus();
+  }, [scene]);
   const live = useLiveRun({
     index,
     level,
