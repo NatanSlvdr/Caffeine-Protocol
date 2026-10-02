@@ -6,6 +6,7 @@ import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { OptionsModal } from '../../../src/features/workspace/modals/OptionsModal';
+import { ResetModal } from '../../../src/features/workspace/modals/ResetModal';
 
 vi.mock('../../../src/components/Cafe', () => ({
   Cafe: ({ serviceView, focusRole }: { serviceView?: boolean; focusRole?: string }) => (
@@ -157,6 +158,20 @@ describe('live workspace lifecycle', () => {
       'Stop the service to reset Brew’s routine.',
     );
   });
+  it('mentions the other robots’ routines on reset only when there are other robots', () => {
+    const text = (alone: boolean) => {
+      const { unmount } = render(<ResetModal robot="Query" alone={alone} onClose={() => {}} onConfirm={() => {}} />);
+      const said = screen.getByText(/goes back to how it was/).textContent;
+      unmount();
+      return said;
+    };
+    expect(text(true)).toBe(
+      'Query’s routine goes back to how it was when this shift opened. Your edits to it here are lost.',
+    );
+    expect(text(false)).toBe(
+      'Query’s routine goes back to how it was when this shift opened. Your edits to it here are lost; the other robots keep theirs.',
+    );
+  });
   it('says why the watch-only shift has nothing to reset', () => {
     window.location.hash = '/shift/1';
     seedLocalStorage(makeSave());
@@ -275,6 +290,8 @@ describe('live workspace lifecycle', () => {
     ).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
     fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
+    // Query works alone on this shift: no other routines to keep.
+    expect(screen.getByText(/goes back to how it was/).textContent).toMatch(/are lost\.$/);
     fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();

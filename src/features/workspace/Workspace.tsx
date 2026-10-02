@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS } from '@/domain';
+import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
 import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -278,6 +278,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       {modal === 'reset' && (
         <ResetModal
           robot={ROBOT_DISPLAY_NAMES[role]}
+          alone={!robotUnlocked('prep', index + 1)}
           onClose={() => setModal('')}
           onConfirm={() => {
             change(resetRobotPrograms(save, index, lessons)[role]);
