@@ -4,7 +4,6 @@ import { X } from 'lucide-react';
 export function Modal({
   title,
   kicker,
-  description,
   onClose,
   children,
   wide = false,
@@ -12,7 +11,6 @@ export function Modal({
 }: {
   title: string;
   kicker?: ReactNode;
-  description?: ReactNode;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
@@ -64,7 +62,6 @@ export function Modal({
           <X size={20} aria-hidden="true" />
         </button>
       </div>
-      {description && <p className="modal-description">{description}</p>}
       {children}
     </dialog>
   );
