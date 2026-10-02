@@ -93,6 +93,30 @@ describe('campaign order rail', () => {
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
   });
 
+  it('starts the chosen line on Enter, as a double-click does, and only chooses any other', async () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 2, stars: { 0: 0, 1: 3 } }));
+    const served = screen.getByRole('button', { name: /^Shift 2:/ });
+    expect(served.hasAttribute('aria-keyshortcuts')).toBe(false);
+    served.focus();
+    fireEvent.keyDown(served, { key: 'Enter' });
+    fireEvent.click(served);
+    expect(selectedShift()).toBe(served);
+    expect(window.location.hash).toBe('#/campaign');
+    expect(served.getAttribute('aria-keyshortcuts')).toBe('Enter');
+    fireEvent.keyDown(served, { key: 'Enter' });
+    expect(screen.getByRole('button', { name: /Order up/ })).toBeTruthy();
+    await waitFor(() => expect(window.location.hash).toBe('#/shift/2'));
+  });
+
+  it('plays the chosen scene on Enter', () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 0, stars: { 0: 0, 1: 3 } }));
+    fireEvent.keyDown(window, { key: 'ArrowRight' });
+    const scene = selectedShift();
+    expect(scene.getAttribute('aria-keyshortcuts')).toBe('Enter');
+    fireEvent.keyDown(scene, { key: 'Enter' });
+    expect(window.location.hash).toMatch(/^#\/scene\//);
+  });
+
   it('leaves arrows to editable fields and modified shortcuts', () => {
     openCampaign(makeSave({ unlocked: 2, selected: 0 }));
     const field = document.createElement('div');

@@ -324,7 +324,7 @@ export function CampaignPage() {
                     : 'Start shift'}
               </Button>
               <p className="board-hint" aria-hidden="true">
-                <kbd>←</kbd> <kbd>→</kbd> browse · double-click to start
+                <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>↵</kbd> or double-click to start
               </p>
             </div>
             {ordering !== null && (
@@ -376,7 +376,7 @@ function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; 
             <Clapperboard size={17} aria-hidden="true" /> {seen ? 'Watch again' : 'Watch scene'}
           </Button>
           <p className="board-hint" aria-hidden="true">
-            <kbd>←</kbd> <kbd>→</kbd> browse · double-click to watch
+            <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>↵</kbd> or double-click to watch
           </p>
         </div>
       </div>

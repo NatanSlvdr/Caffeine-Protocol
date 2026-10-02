@@ -132,6 +132,13 @@ export function Ticket({
                 className={classes.filter(Boolean).join(' ')}
                 onClick={() => onSelect(shift)}
                 onDoubleClick={() => onStart(shift)}
+                // Enter on the chosen line starts it, as a double-click does; on any other line it only chooses it.
+                onKeyDown={(e) => {
+                  if (e.key !== 'Enter' || selected !== shift) return;
+                  e.preventDefault();
+                  onStart(shift);
+                }}
+                aria-keyshortcuts={!locked && selected === shift ? 'Enter' : undefined}
                 // The marks beside the name are visual only, so the label carries the same status.
                 aria-label={`Shift ${shift + 1}: ${titles[shift]}${
                   shift === gated
@@ -212,6 +219,12 @@ export function Ticket({
         className={classes.filter(Boolean).join(' ')}
         onClick={() => onSelectScene(scene)}
         onDoubleClick={() => onWatch(scene)}
+        onKeyDown={(e) => {
+          if (e.key !== 'Enter' || selectedScene !== scene) return;
+          e.preventDefault();
+          onWatch(scene);
+        }}
+        aria-keyshortcuts={!locked && selectedScene === scene ? 'Enter' : undefined}
         aria-label={`Scene: ${scene.title}${locked ? ', locked' : next ? ', next up' : seen ? ', seen' : ''}`}
         aria-pressed={!locked && selectedScene === scene}
         title={scene.title}
