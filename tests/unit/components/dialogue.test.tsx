@@ -244,6 +244,7 @@ describe('reactions', () => {
       niko('Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),
     ).toContain('so the guest can pay');
     expect(niko('Finish the function before jumping back.')).toContain('let it reach its End');
+    expect(niko('Return only works inside a function that was called.')).toContain('back to the block after its Call');
     expect(niko('This For loop’s End was reached without its For: jump to the For line, not into the loop.')).toContain(
       'let it reach its End',
     );

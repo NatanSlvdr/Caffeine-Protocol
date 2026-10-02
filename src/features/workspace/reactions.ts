@@ -201,6 +201,12 @@ const kinds: FailureKind[] = [
     hint: 'A Jump can’t cut into or out of a For loop or a function: let it reach its End, then jump.',
   },
   {
+    match: /^Return only works inside a function/,
+    by: 'robot',
+    react: () => '*whirr?* Return… to where?',
+    hint: 'Return sends a robot back to the block after its Call, so it belongs inside a Function that a Call runs.',
+  },
+  {
     match: /^Store a (table or a place|number|value) in/,
     by: 'robot',
     react: () => '*bip?* Memory slot… empty.',
