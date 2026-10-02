@@ -44,4 +44,15 @@ describe('modal backdrop', () => {
     fireEvent.click(dialog, { clientX: 20, clientY: 20 });
     expect(onClose).not.toHaveBeenCalled();
   });
+  it('opens on the action the window names, not the close button', () => {
+    render(
+      <Modal title="Start over?" onClose={vi.fn()}>
+        <button type="button">Start over</button>
+        <button type="button" data-autofocus>
+          Keep my café
+        </button>
+      </Modal>,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep my café' }));
+  });
 });

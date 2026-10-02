@@ -26,6 +26,9 @@ export function Modal({
     const dialog = ref.current,
       previous = document.activeElement;
     dialog?.showModal();
+    // showModal lands on the first button, the close X. A window can name a better start: its main
+    // action, or the safe choice in a confirmation.
+    dialog?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     return () => {
       dialog?.close();
       if (previous instanceof HTMLElement) previous.focus();

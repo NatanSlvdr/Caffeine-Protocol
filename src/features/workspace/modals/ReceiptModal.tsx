@@ -101,6 +101,7 @@ export function ReceiptModal({
         </button>
         <Button
           variant="primary"
+          data-autofocus
           onClick={() => {
             onClose();
             onNext();

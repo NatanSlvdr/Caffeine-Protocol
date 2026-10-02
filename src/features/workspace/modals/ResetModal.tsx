@@ -22,7 +22,7 @@ export function ResetModal({ robot, onClose, onConfirm }: ResetModalProps) {
         robots keep theirs.
       </p>
       <div className="modal-buttons">
-        <button className="settings-chip" onClick={onClose}>
+        <button className="settings-chip" data-autofocus onClick={onClose}>
           Keep my edits
         </button>
         <Button variant="primary" onClick={onConfirm}>

@@ -32,7 +32,7 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
         {exported && `Saved a copy as ${exported}.`}
       </p>
       <div className="modal-buttons">
-        <button className="settings-chip" onClick={onClose}>
+        <button className="settings-chip" data-autofocus onClick={onClose}>
           Keep my café
         </button>
         <Button variant="danger" onClick={onConfirm}>

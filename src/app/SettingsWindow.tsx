@@ -179,7 +179,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             settings.
           </p>
           <div className="modal-buttons">
-            <button className="settings-chip" onClick={() => setPending(null)}>
+            <button className="settings-chip" data-autofocus onClick={() => setPending(null)}>
               Keep current café
             </button>
             <Button
