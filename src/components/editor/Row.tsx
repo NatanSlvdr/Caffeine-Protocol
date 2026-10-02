@@ -47,10 +47,12 @@ export function Row({
         }}
         {...attributes}
         {...listeners}
+        // The failure's red is drawn only, so the name says it too, once the crew's dialogue has gone.
         aria-label={
-          target
+          (target
             ? `Drag ${spokenBlock(command)}`
-            : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`
+            : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
+          (failure ? ', where the service stopped' : '')
         }
         aria-disabled={locked}
         tabIndex={locked ? -1 : 0}

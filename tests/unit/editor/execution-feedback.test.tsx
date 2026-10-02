@@ -50,6 +50,18 @@ describe('clear execution feedback', () => {
     rerender(<Editor {...props} instructionProgress={0.5} stepSeconds={0.125} />);
     expect(cursor.style.transform).toContain('-16px, 99px');
   });
+  it('names the block where the service stopped, in either editor', () => {
+    const failed = { ...editor, source: 'LISTEN\nTICKET\nITEM coffee', failureLine: 2 };
+    const { rerender } = render(<Editor {...failed} />);
+    expect(document.querySelector('[data-line="2"]')?.getAttribute('aria-label')).toBe(
+      'Drag block 3 (write coffee), where the service stopped',
+    );
+    expect(document.querySelector('[data-line="1"]')?.getAttribute('aria-label')).not.toContain('stopped');
+    rerender(<Editor {...failed} textMode />);
+    expect(screen.getByLabelText('Routine text').getAttribute('aria-description')).toBe(
+      'The service stopped on line 3. Tab indents, Shift+Tab outdents, Escape leaves the editor.',
+    );
+  });
   it('scrolls in the same coordinate space as the blocks without repositioning', () => {
     let scroll = 0;
     vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {

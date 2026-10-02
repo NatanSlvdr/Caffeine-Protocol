@@ -189,7 +189,10 @@ export function Editor({
                 aria-label="Routine text"
                 // The text view's own "Drop your first block": an empty routine says what goes here.
                 placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
-                aria-description="Tab indents, Shift+Tab outdents, Escape leaves the editor."
+                aria-description={
+                  (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
+                  'Tab indents, Shift+Tab outdents, Escape leaves the editor.'
+                }
                 onKeyDown={onTextKey}
                 value={source}
                 onChange={(e) => change(e.target.value)}
