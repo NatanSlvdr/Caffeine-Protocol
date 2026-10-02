@@ -146,6 +146,15 @@ describe('live workspace lifecycle', () => {
       'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.',
     );
   });
+  it('offers to stop watching, not to edit, on the watch-only shift', () => {
+    window.location.hash = '/shift/1';
+    seedLocalStorage(makeSave());
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /Watch service/ }));
+    expect(screen.queryByRole('button', { name: /Stop & edit/ })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Stop watching/ }));
+    expect(screen.getByRole('button', { name: /Watch service/ })).toBeTruthy();
+  });
   it('opens each shift at the playback speed the player last chose', () => {
     const save = makeSave();
     seedLocalStorage({ ...save, unlocked: 2, selected: 2, settings: { ...save.settings, speed: 4 } });

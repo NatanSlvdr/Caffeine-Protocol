@@ -32,7 +32,8 @@ export function PlaybackToolbar({
         onClick={onRun}
       >
         {running ? <Square size={15} /> : <Play size={15} fill="currentColor" />}
-        {running ? 'Stop & edit' : observation ? 'Watch service' : 'Run service'}
+        {/* The watch-only shift has no routine to go back to. */}
+        {running ? (observation ? 'Stop watching' : 'Stop & edit') : observation ? 'Watch service' : 'Run service'}
         <kbd aria-hidden="true">{RUN_MODIFIER} ↵</kbd>
       </button>
       <button aria-label={paused ? 'Resume playback' : 'Pause playback'} disabled={!pausable} onClick={onTogglePause}>
