@@ -226,7 +226,7 @@ describe('live workspace lifecycle', () => {
         ?.getAttribute('data-line'),
     ).toBe('1');
     const reaction = screen.getByRole('dialog', { name: 'Dialogue' });
-    expect(reaction.textContent).toContain('Instruction unclear');
+    expect(reaction.textContent).toContain('Write on… the counter?');
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     act(() => {

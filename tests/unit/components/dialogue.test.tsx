@@ -203,6 +203,16 @@ describe('reactions', () => {
     // Brew's sugar slip is about counting it in, not reading the order.
     expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
     expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
+    // A slip that only mentions sugar is the robot's, so the guest doesn't complain about their sugar.
+    const [query, paper] = failureLines(failure('Take the order paper before writing sugar.'), 'query');
+    expect(query.who).toBe('query');
+    expect(paper.text).toContain('only write on paper it’s holding');
+    const [brew, brewed] = failureLines(
+      failure('This tea is already brewed: take up sugar or deposit it up at pickup.', { role: 'prep' }),
+      'query',
+    );
+    expect(brew.who).toBe('brew');
+    expect(brewed.text).toContain('finished with the machine');
     expect(niko('Move to the sink first: it’s 2 tiles from here.')).toContain('walk over before using it');
     expect(niko('Carry a ready drink before serving.')).toContain('Pick it up first');
     // A dirty cup has no ticket, so Niko doesn't point at one.

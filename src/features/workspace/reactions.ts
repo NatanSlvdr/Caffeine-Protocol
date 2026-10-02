@@ -151,6 +151,19 @@ const kinds: FailureKind[] = [
     react: (p) => `I said “${p}”. This isn’t what I ordered.`,
     hint: 'Check what the order says before you write the drink.',
   },
+  // These name sugar too, so they come before the guest's sugar complaint: the slip is the robot's, not the order's.
+  {
+    match: /^Take the order paper before/,
+    by: 'robot',
+    react: () => '*bip?* Write on… the counter?',
+    hint: 'Take up a sheet from the paper stack first: Query can only write on paper it’s holding.',
+  },
+  {
+    match: /already brewed|^It’s brewed/,
+    by: 'robot',
+    react: () => '*hiss* Machine says: done already!',
+    hint: 'A brewed drink is finished with the machine. Give it its sugar, or Deposit it up at pickup.',
+  },
   {
     match: /Finish brewing/,
     by: 'robot',
