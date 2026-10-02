@@ -2678,3 +2678,12 @@ html[data-motion='reduced'] .drop-projection {
     transition: none !important;
   }
 }
+
+/* Code blocks and jump destinations are focusable for keyboard dragging (Space lifts, arrows move), and the
+   Store block's operand menus are buttons with their outline reset. Each draws the house focus ring, even on
+   the running or failing line, so the keyboard never loses its place. */
+.editor-panel .code-row .block:focus-visible,
+.editor-panel .assignment-operands .block-select > button:focus-visible {
+  outline: 3px solid var(--coffee);
+  outline-offset: 2px;
+}
