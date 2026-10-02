@@ -48,11 +48,14 @@ function siteStorage(): Storage | undefined {
 export function GameProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => {
     const storage = siteStorage();
-    return storage ? readSave(storage, lessons) : { save: newSave(), error: STORAGE_BLOCKED };
+    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false };
+    const read = readSave(storage, lessons);
+    // Only an unreadable café is held back from saves, so a recovery copy of it can still be exported.
+    return { ...read, recovery: !!read.error };
   });
   const [save, setSave] = useState(initial.save),
     [saveError, setSaveError] = useState(initial.error),
-    [recovery, setRecovery] = useState(!!initial.error);
+    [recovery, setRecovery] = useState(initial.recovery);
   const [route] = useHashRoute();
   useEffect(() => {
     if (!recovery) {

@@ -54,6 +54,8 @@ describe('starting a new café', () => {
       const warning = 'This browser isn’t letting the café save here';
       expect(screen.getByRole('alert').textContent).toContain(warning);
       fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      // Nothing was ever stored, so there is no copy to recover.
+      expect(screen.queryByRole('button', { name: 'Export recovery copy' })).toBeNull();
       fireEvent.click(screen.getByRole('button', { name: 'Start a new café' }));
       fireEvent.click(screen.getByRole('button', { name: 'Start new café' }));
       expect(screen.getByRole('heading', { name: 'Caffeine Protocol' })).toBeTruthy();

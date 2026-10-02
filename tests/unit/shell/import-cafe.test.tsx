@@ -54,4 +54,11 @@ describe('importing a café', () => {
       'later.json wasn’t imported. It comes from a newer version of Caffeine Protocol. Your current café has been kept.',
     );
   });
+
+  it('offers a recovery copy only when there is a stored café it could not read', () => {
+    localStorage.setItem('caffeine-protocol.v1', '{bad');
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    expect(screen.getByRole('button', { name: 'Export recovery copy' })).toBeTruthy();
+  });
 });
