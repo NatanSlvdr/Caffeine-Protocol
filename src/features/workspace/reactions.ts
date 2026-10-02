@@ -86,7 +86,7 @@ const kinds: FailureKind[] = [
     hint: 'A clean table is the next guest’s first impression, and nobody sits at a messy one.',
   },
   {
-    match: /order is unclear|unsupported order/,
+    match: /order is unclear|unsupported order|^Use Help before/,
     by: 'guest',
     react: (p) => `I said “${p}”… I’m not sure that came out right.`,
     hint: 'Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',

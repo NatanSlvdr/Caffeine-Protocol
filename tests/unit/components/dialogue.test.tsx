@@ -231,6 +231,14 @@ describe('reactions', () => {
     expect(niko('There’s nothing for Brew to take there yet.')).toContain('Wait for Orders first');
     expect(niko('Brew isn’t holding anything to deposit.')).toContain('Pick it up first');
     expect(niko('Finish this delivery or cup before waiting for another.')).toContain('before Wait for Orders');
+    const late = failureLines(
+      failure('Use Help before taking paper or starting For item in order.', { role: 'query', phrase: 'a big one' }),
+      'query',
+    );
+    expect(late.map((l) => l.text)).toEqual([
+      'I said “a big one”… I’m not sure that came out right.',
+      'Use Help before taking paper or starting For item in order. Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',
+    ]);
     // Checkout still wins over the register-position rule.
     expect(
       niko('Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),
