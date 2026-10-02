@@ -156,6 +156,13 @@ describe('token interpreter and physical order handling', () => {
   ])
     it(`rejects invalid structure ${JSON.stringify(source)}`, () =>
       expect(compileProgram(source).compile_error).not.toBe(''));
+  it('names a Jump with nowhere to land, and a jump destination named twice', () => {
+    const lost = compileProgram('LISTEN\nJUMP again', UNLOCKS.loop);
+    expect([lost.compile_error, lost.error_line]).toEqual(['Jump again needs a jump destination named again.', 1]);
+    expect(compileProgram('POSITION again\nLISTEN\nPOSITION again', UNLOCKS.loop).compile_error).toBe(
+      'Two jump destinations are named again; give each its own name.',
+    );
+  });
   it('enforces 128 blocks', () => {
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(127)).compile_error).toBe('');
     expect(compileProgram('LISTEN\n' + 'TAKE UP\n'.repeat(128)).compile_error).toContain('128');

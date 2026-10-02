@@ -60,7 +60,22 @@ describe('Brew and Porter speak Query’s language', () => {
 
   it('checks that every Jump has its Position', () => {
     expect(compileRobot('LISTEN\nJUMP listen', 'prep', UNLOCKS.functions).compile_error).toBe(
-      'Jump target has no matching Position block.',
+      'Jump listen needs a jump destination named listen.',
+    );
+  });
+
+  it('names what is wrong with a Call or a Function, and where', () => {
+    const compile = (source: string) => compileRobot(source, 'prep', UNLOCKS.functions);
+    // A function may sit below the Call that runs it.
+    expect(compile('LISTEN\nCALL recipe\nFUNCTION recipe\nEND').compile_error).toBe('');
+    expect(compile('LISTEN\nCALL recipe').compile_error).toBe('Call recipe needs a Function recipe to run.');
+    const twice = compile('LISTEN\nFUNCTION recipe\nEND\nFUNCTION recipe\nEND');
+    expect([twice.compile_error, twice.error_line]).toEqual([
+      'Two functions are named recipe; give each its own name.',
+      3,
+    ]);
+    expect(compile('LISTEN\nFUNCTION recipe\nFUNCTION recipe\nEND\nEND').compile_error).toBe(
+      'A function can’t go inside another block.',
     );
   });
 

@@ -117,7 +117,7 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
     p.source_lines.push(line);
     if (c.startsWith('POSITION ')) {
       const label = c.slice(9);
-      if (label in p.positions) return fail('Duplicate position: ' + label);
+      if (label in p.positions) return fail(`Two jump destinations are named ${label}; give each its own name.`);
       p.positions[label] = at;
     }
     if (isOpening(c)) {
@@ -125,8 +125,8 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
         return fail('A For loop can’t go inside another For loop.');
       if (c.startsWith('FUNCTION ')) {
         const label = c.slice(9);
-        if (stack.length || label in p.functions)
-          return fail('Functions must be unique and placed outside other blocks.');
+        if (stack.length) return fail('A function can’t go inside another block.');
+        if (label in p.functions) return fail(`Two functions are named ${label}; give each its own name.`);
         p.functions[label] = at;
       }
       stack.push(at);
@@ -149,16 +149,21 @@ export function compileProgram(source: string, level = ROBOT_STAND_IN_LEVEL): Pr
   else if (p.instructions.filter((c) => c === 'LISTEN').length !== 1)
     p.compile_error = 'Use one Wait for Orders; jump back to it for continuous service.';
   p.instructions.forEach((c, i) => {
-    if (c.startsWith('JUMP ') && !(c.slice(5) in p.positions)) {
-      p.compile_error = 'Jump target has no matching Position block.';
-      p.error_line = p.source_lines[i];
-    }
-    if (c.startsWith('CALL ') && !(c.slice(5) in p.functions)) {
-      p.compile_error = 'Define the function before calling it.';
+    const missing = missingTarget(c, p);
+    if (missing) {
+      p.compile_error = missing;
       p.error_line = p.source_lines[i];
     }
   });
   p.block_count = p.instructions.length;
-  if (p.block_count > QUERY_MAX_BLOCKS) p.compile_error = 'Query has room for at most 128 blocks.';
+  if (p.block_count > QUERY_MAX_BLOCKS) p.compile_error = `Query has room for at most ${QUERY_MAX_BLOCKS} blocks.`;
   return p;
+}
+
+/** Why a Jump or Call has nowhere to go, or nothing when its destination or function exists. */
+export function missingTarget(command: string, p: Pick<Program, 'positions' | 'functions'>) {
+  const label = command.slice(command.indexOf(' ') + 1);
+  if (command.startsWith('JUMP ') && !(label in p.positions))
+    return `Jump ${label} needs a jump destination named ${label}.`;
+  if (command.startsWith('CALL ') && !(label in p.functions)) return `Call ${label} needs a Function ${label} to run.`;
 }

@@ -3,6 +3,7 @@ import {
   VARIABLES,
   availableCommands,
   compileProgram,
+  missingTarget,
   parseConditionExpression,
   parseStore,
   parseTimes,
@@ -139,23 +140,25 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
     p.instructions.push(c);
     p.source_lines.push(line);
     if (c.startsWith('POSITION ')) {
-      if (c.slice(9) in p.positions) return fail('Duplicate position: ' + c.slice(9), line);
+      if (c.slice(9) in p.positions)
+        return fail(`Two jump destinations are named ${c.slice(9)}; give each its own name.`, line);
       p.positions[c.slice(9)] = i;
     } else if (c.startsWith('IF ') || c.startsWith('FUNCTION ') || parseTimes(c)) {
       if (c.startsWith('FUNCTION ')) {
-        if (stack.length || p.functions[c.slice(9)] !== undefined)
-          return fail('Functions must be unique and outside other blocks.', line);
+        if (stack.length) return fail('A function can’t go inside another block.', line);
+        if (p.functions[c.slice(9)] !== undefined)
+          return fail(`Two functions are named ${c.slice(9)}; give each its own name.`, line);
         p.functions[c.slice(9)] = i;
       }
       stack.push(i);
     } else if (c === 'ELSE') {
       const opening = stack.at(-1);
       if (opening === undefined || !p.instructions[opening].startsWith('IF ') || opening in p.alternatives)
-        return fail('ELSE requires one matching IF.', line);
+        return fail('ELSE belongs inside one IF block.', line);
       p.alternatives[opening] = i;
     } else if (c === 'END') {
       const opening = stack.pop();
-      if (opening === undefined) return fail('END requires an opening block.', line);
+      if (opening === undefined) return fail('END needs an IF, FOR or FUNCTION above it.', line);
       p.ends[opening] = i;
       p.ends[i] = opening;
       if (opening in p.alternatives) p.ends[p.alternatives[opening]] = i;
@@ -163,13 +166,15 @@ export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAN
   }
   if (stack.length) return fail('Close each IF, FOR and FUNCTION with END.', p.source_lines[stack.at(-1)!]);
   for (const [i, c] of p.instructions.entries()) {
-    if (c.startsWith('CALL ') && !(c.slice(5) in p.functions))
-      return fail('Define the called function.', p.source_lines[i]);
-    if (c.startsWith('JUMP ') && !(c.slice(5) in p.positions))
-      return fail('Jump target has no matching Position block.', p.source_lines[i]);
+    const missing = missingTarget(c, p);
+    if (missing) return fail(missing, p.source_lines[i]);
   }
   p.block_count = p.instructions.length;
-  if (p.block_count > ROBOT_MAX_BLOCKS) return fail('Moving robots have room for 512 blocks.', p.source_lines[512]);
+  if (p.block_count > ROBOT_MAX_BLOCKS)
+    return fail(
+      `${ROBOT_DISPLAY_NAMES[role]} has room for at most ${ROBOT_MAX_BLOCKS} blocks.`,
+      p.source_lines[ROBOT_MAX_BLOCKS],
+    );
   if (!p.block_count) return fail('Add instructions for this robot.', 0);
   return p;
 }
