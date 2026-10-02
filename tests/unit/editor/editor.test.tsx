@@ -512,6 +512,45 @@ describe('keyboard dragging', () => {
   });
 });
 
+describe('removing blocks from the keyboard', () => {
+  const block = (name: string) => screen.getByRole('button', { name });
+
+  it('removes the focused block on Delete, says so, and moves focus to the block that took its place', () => {
+    render(<Harness initial={'LISTEN\nMOVE RIGHT 2\nTAKE UP'} />);
+    block('Drag block 2 (move right 2)').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'Delete' });
+    expect(source()).toBe('LISTEN\nTAKE UP');
+    expect(screen.getByText('Removed block 2 (move right 2).')).toBeTruthy();
+    expect(document.activeElement).toBe(block('Drag block 2 (take up)'));
+    // The last block's neighbour is the one above.
+    fireEvent.keyDown(document.activeElement!, { key: 'Backspace' });
+    expect(source()).toBe('LISTEN');
+    expect(document.activeElement).toBe(block('Drag block 1 (wait for orders)'));
+    // With the routine empty, focus goes to the library.
+    fireEvent.keyDown(document.activeElement!, { key: 'Delete' });
+    expect(source()).toBe('');
+    expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^Insert /);
+  });
+
+  it('takes a group whole, and leaves Backspace in a block’s own field alone', () => {
+    render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 2\nEND\nTAKE UP'} />);
+    fireEvent.keyDown(screen.getByLabelText('Block 3 tiles'), { key: 'Backspace' });
+    expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 2\nEND\nTAKE UP');
+    block('Drag block 2 (if tea in orders) and its group').focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'Delete' });
+    expect(source()).toBe('LISTEN\nTAKE UP');
+    expect(screen.getByText('Removed block 2 (if tea in orders) and its group.')).toBeTruthy();
+  });
+
+  it('leaves a locked routine alone', () => {
+    render(<Harness initial={'LISTEN\nTAKE UP'} locked />);
+    const take = screen.getByLabelText('Drag block 2 (take up)');
+    expect(take.getAttribute('aria-keyshortcuts')).toBeNull();
+    fireEvent.keyDown(take, { key: 'Delete' });
+    expect(source()).toBe('LISTEN\nTAKE UP');
+  });
+});
+
 describe('structural editing', () => {
   it('deletes a complete nested IF when dragged out, leaving the surrounding routine intact', () => {
     expect(

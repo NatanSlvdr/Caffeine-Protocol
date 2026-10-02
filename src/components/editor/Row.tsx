@@ -15,6 +15,7 @@ export function Row({
   onDismissFailure,
   options,
   onChange,
+  onRemove,
   inLoop = false,
 }: {
   block: VisualBlock;
@@ -25,6 +26,8 @@ export function Row({
   failure: boolean;
   options: string[];
   onChange: (c: string) => void;
+  /** Delete or Backspace on the focused block takes it, and its group, out of the routine. */
+  onRemove?: () => void;
   inLoop?: boolean;
   onDismissFailure?: () => void;
 }) {
@@ -47,6 +50,15 @@ export function Row({
         }}
         {...attributes}
         {...listeners}
+        onKeyDown={(e) => {
+          listeners?.onKeyDown?.(e);
+          // Only the block itself: its own fields keep Backspace for their text.
+          if ((e.key === 'Delete' || e.key === 'Backspace') && e.target === e.currentTarget && !locked && onRemove) {
+            e.preventDefault();
+            onRemove();
+          }
+        }}
+        aria-keyshortcuts={locked || !onRemove ? undefined : 'Delete Backspace'}
         // The failure's red is drawn only, so the name says it too, once the crew's dialogue has gone.
         aria-label={
           (target

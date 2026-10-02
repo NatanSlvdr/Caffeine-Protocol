@@ -1,15 +1,18 @@
-import { useEffect, useLayoutEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, useSensors } from '@dnd-kit/core';
 import {
   robotCommands,
   blockPrototypes,
   indentSource,
   placeBlock,
+  removeVisualBlock,
+  spokenBlock,
   tabSource,
   DRAG_SCROLL_EDGE,
   DRAG_SCROLL_SPEED,
   type DraggedScope,
   type RobotRole,
+  type VisualBlock,
 } from '@/domain';
 import { BlockPointerSensor } from '@/hooks/useBlockPointerSensor';
 import { useKeyboardCoordinates } from '@/hooks/useKeyboardDropSlot';
@@ -122,6 +125,26 @@ export function Editor({
     if (tabbed.source !== source) change(tabbed.source);
     else e.currentTarget.setSelectionRange(tabbed.cursor, tabbed.cursor);
   };
+  // A block removed from the keyboard says so, and focus moves to the block that took its place, or the one
+  // above, or the library once the routine is empty, rather than falling to the page.
+  const [removed, setRemoved] = useState<{ line: number; said: string } | null>(null);
+  const remove = (block: VisualBlock) => {
+    const ordinal = rows.findIndex((r) => r.line === block.line) + 1;
+    setRemoved({
+      line: block.line,
+      said: `Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`,
+    });
+    blockChange(removeVisualBlock(source, block.line));
+  };
+  useEffect(() => {
+    if (!removed) return;
+    const blocks = [...(root.current?.querySelectorAll<HTMLElement>('.block[data-line]') ?? [])];
+    const next =
+      blocks.find((b) => Number(b.dataset.line) >= removed.line) ??
+      blocks.at(-1) ??
+      codeArea.current?.parentElement?.querySelector<HTMLElement>('.command-library button:not(:disabled)');
+    next?.focus();
+  }, [removed]);
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
   const lines = source.split('\n');
 
@@ -225,11 +248,15 @@ export function Editor({
                 dragged={dragged}
                 draggedLine={draggedLine}
                 change={blockChange}
+                remove={remove}
               />
               <JumpArrows root={root} source={source} dragging={!!dragged} />
             </ProgramSurface>
           )}
         </div>
+        <p className="sr-only" role="status">
+          {removed?.said}
+        </p>
         <DragOverlay dropAnimation={null}>
           {dragged && (
             <div className={'drag-preview floating-code-preview' + (draggedLine === null ? ' from-shop' : '')}>

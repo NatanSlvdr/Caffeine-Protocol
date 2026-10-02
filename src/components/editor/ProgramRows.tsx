@@ -18,6 +18,7 @@ export interface ProgramRowsProps {
   dragged: string;
   draggedLine: number | null;
   change: (value: string) => void;
+  remove: (block: VisualBlock) => void;
 }
 
 /** Recursive visual rows with insertion anchors, else branches, and jump slots. */
@@ -35,6 +36,7 @@ export function ProgramRows({
   dragged,
   draggedLine,
   change,
+  remove,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -68,6 +70,7 @@ export function ProgramRows({
             lines[block.line] = c;
             change(lines.join('\n'));
           }}
+          onRemove={() => remove(block)}
         />
         {block.children && (
           <div className="scope-body">
@@ -91,6 +94,7 @@ export function ProgramRows({
               failure={visibleFailureLine === block.elseLine}
               onDismissFailure={onDismissFailure}
               onChange={() => {}}
+              onRemove={() => remove(elseBlock(block))}
             />
             <div className="scope-body">
               <Insertion at={block.elseLine! + 1} disabled={disabled} />

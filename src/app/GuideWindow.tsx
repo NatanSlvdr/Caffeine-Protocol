@@ -49,8 +49,9 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             its values right in the code pane.
           </p>
           <p>
-            Drag a branch, loop or function by its first block to move it whole. From the keyboard: <kbd>Space</kbd> to
-            lift, arrow keys to move, <kbd>Space</kbd> to drop, <kbd>Esc</kbd> to put it back.
+            Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to
+            remove it. From the keyboard: <kbd>Space</kbd> to lift, arrow keys to move, <kbd>Space</kbd> to drop,{' '}
+            <kbd>Esc</kbd> to put it back, <kbd>Delete</kbd> to remove it.
           </p>
           <p>
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per

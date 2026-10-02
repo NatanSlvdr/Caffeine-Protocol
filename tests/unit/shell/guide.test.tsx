@@ -24,10 +24,14 @@ describe('how to play', () => {
     expect(guide.textContent).toContain('Move counts whole tiles');
     expect(guide.textContent).toContain('Turn on the Text editor in a shift’s Options');
     // Blocks have no grip: a group moves with the block that opens it.
-    expect(guide.textContent).toContain('Drag a branch, loop or function by its first block to move it whole.');
+    expect(guide.textContent).toContain(
+      'Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to remove it.',
+    );
     expect(guide.textContent).not.toContain('grip');
     // The keyboard way to move a block names every key the editor's own instructions do.
-    expect(guide.textContent).toContain('Space to lift, arrow keys to move, Space to drop, Esc to put it back.');
+    expect(guide.textContent).toContain(
+      'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it.',
+    );
     // Shift numbers read as they do on the campaign rail and in the workspace.
     expect(guide.textContent).toContain(
       'Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',
