@@ -125,7 +125,11 @@ describe('shift entry navigation', () => {
       this.removeAttribute('open');
     };
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-    const motion = screen.getByRole('checkbox', { name: /Reduced motion/ });
+    const motion = screen.getByRole('checkbox', { name: 'Reduced motion' });
+    // Named by its title alone, with the hint read after it as a description.
+    expect(document.getElementById(motion.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'Keep the movement, skip the extra animation.',
+    );
     motion.focus();
     fireEvent.click(motion);
     expect(document.activeElement).toBe(motion);
