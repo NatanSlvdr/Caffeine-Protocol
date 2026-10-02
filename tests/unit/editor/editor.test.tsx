@@ -483,6 +483,20 @@ describe('compact visual code', () => {
     expect(document.querySelector('.block.failure')?.getAttribute('data-line')).toBe('1');
   });
 });
+describe('keyboard dragging', () => {
+  it('gives library and routine blocks instructions that fit both adding and moving', () => {
+    render(<Harness initial={'LISTEN\nMOVE RIGHT 2'} />);
+    const described = (name: string) => {
+      const button = screen.getByRole('button', { name });
+      return document.getElementById(button.getAttribute('aria-describedby')!)?.textContent;
+    };
+    const instructions =
+      'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel.';
+    expect(described('Insert take up')).toBe(instructions);
+    expect(described('Drag block 2 (move right 2)')).toBe(instructions);
+  });
+});
+
 describe('structural editing', () => {
   it('deletes a complete nested IF when dragged out, leaving the surrounding routine intact', () => {
     expect(

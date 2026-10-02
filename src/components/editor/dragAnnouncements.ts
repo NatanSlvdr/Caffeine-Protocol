@@ -1,9 +1,10 @@
 import type { Announcements, ScreenReaderInstructions } from '@dnd-kit/core';
 import { spokenBlock, type VisualBlock } from '@/domain';
 
+/** Read with every draggable block, so it fits a library block being added as well as one being moved. */
 export const dragInstructions: ScreenReaderInstructions = {
   draggable:
-    'To move this block, press Space. Use the arrow keys to choose a spot, Space to drop, or Escape to cancel.',
+    'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel.',
 };
 
 /**
