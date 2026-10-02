@@ -215,6 +215,13 @@ describe('live workspace lifecycle', () => {
     expect(document.getElementById(reset.getAttribute('aria-describedby')!)?.textContent).toBe(
       'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.',
     );
+    // The greyed-out text editor switch says why too.
+    const text = screen.getByRole('checkbox', { name: 'Text editor' });
+    expect(text.hasAttribute('disabled')).toBe(true);
+    expect(text.getAttribute('aria-describedby')).toBeTruthy();
+    expect(document.getElementById(text.getAttribute('aria-describedby')!)?.textContent).toBe(
+      'Not on this shift: it’s watch-only, so there’s no routine to show.',
+    );
   });
   it('offers to stop watching, not to edit, on the watch-only shift', () => {
     window.location.hash = '/shift/1';

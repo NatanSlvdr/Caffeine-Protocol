@@ -48,7 +48,12 @@ export function OptionsModal({
       />
       <SettingRow
         title="Text editor"
-        hint="The same routine, in a plain-text view. Kept for every shift."
+        // A greyed-out switch says why in its own hint, which is what a screen reader reads with it.
+        hint={
+          observation
+            ? 'Not on this shift: it’s watch-only, so there’s no routine to show.'
+            : 'The same routine, in a plain-text view. Kept for every shift.'
+        }
         checked={textMode}
         disabled={observation}
         onChange={(e) => onToggleTextMode(e.target.checked)}
