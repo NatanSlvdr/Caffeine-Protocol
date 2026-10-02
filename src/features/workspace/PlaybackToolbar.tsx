@@ -56,6 +56,15 @@ export function PlaybackToolbar({
           onChange={(e) => onSpeed(Number(e.target.value))}
         />
       </label>
+      {/* The café is drawn, so a screen reader hears from here that service started, paused, or locked the code. */}
+      <p className="sr-only" role="status">
+        {running &&
+          (paused
+            ? 'Service paused.'
+            : observation
+              ? 'Service running.'
+              : 'Service running. The routines are locked until it stops.')}
+      </p>
     </div>
   );
 }

@@ -90,6 +90,18 @@ describe('live workspace lifecycle', () => {
     expect(window.location.hash).toBe('#/shift/3');
     expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
   });
+  it('tells a screen reader that service started, paused and locked the code', () => {
+    open();
+    const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
+    expect(status.textContent).toBe('Service running. The routines are locked until it stops.');
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    expect(status.textContent).toBe('Service paused.');
+    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    expect(status.textContent).toBe('');
+  });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
     window.location.hash = '/shift/14';
