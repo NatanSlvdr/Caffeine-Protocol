@@ -208,7 +208,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               Keep current café
             </button>
             <Button
-              variant="primary"
+              variant="danger"
               onClick={() => {
                 importCafe(pending);
                 setPending(null);

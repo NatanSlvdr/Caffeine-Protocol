@@ -39,7 +39,7 @@ describe('starting a new café', () => {
     fireEvent.click(screen.getAllByRole('button', { name: 'Export café' }).find((b) => dialog.contains(b))!);
     expect(download).toHaveBeenCalledWith(expect.stringContaining('"version": 4'), expect.stringMatching(/\.json$/));
     expect(within(dialog).getByRole('status').textContent).toMatch(
-      /^Saved a copy as caffeine-protocol-save-.+\.json\.$/,
+      /^Café exported as caffeine-protocol-save-.+\.json\. Look for it with your downloads\.$/,
     );
   });
 

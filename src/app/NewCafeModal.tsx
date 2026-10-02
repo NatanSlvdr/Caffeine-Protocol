@@ -29,7 +29,7 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
         <Download size={15} /> Export café
       </button>
       <p className="export-status" role="status">
-        {exported && `Saved a copy as ${exported}.`}
+        {exported && `Café exported as ${exported}. Look for it with your downloads.`}
       </p>
       <div className="modal-buttons">
         <button className="settings-chip" data-autofocus onClick={onClose}>

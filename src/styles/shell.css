@@ -1317,6 +1317,9 @@ html[data-motion='reduced'] .front-page *::after {
   box-shadow: 0 1px 0 #4e3023;
   transform: translateY(2px);
 }
+.confirm-slip .modal-buttons > button.danger:last-child:active:not(:disabled) {
+  box-shadow: 0 1px 0 #7c3a22;
+}
 .settings-window button:focus-visible {
   outline: 2px solid var(--slip-ink);
   outline-offset: 3px;
