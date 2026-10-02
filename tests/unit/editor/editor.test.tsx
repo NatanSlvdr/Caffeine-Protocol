@@ -121,6 +121,13 @@ describe('compact visual code', () => {
     await user.keyboard('{Enter}');
     expect(source()).toBe('LISTEN\nITEM tea');
   });
+  it('picks out a compass direction by typing its name', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial="MOVE RIGHT 1" />);
+    screen.getByLabelText('Block 1 direction').focus();
+    await user.keyboard('l{Enter}');
+    expect(source()).toBe('MOVE LEFT 1');
+  });
   it('scrolls the option the arrow keys reach into sight in a long menu', async () => {
     const user = userEvent.setup();
     const scrolled: string[] = [];

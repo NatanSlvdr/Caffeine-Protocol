@@ -5,6 +5,7 @@ import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
 import { escapeMenu, isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
+import { useTypeAhead } from './useTypeAhead';
 
 const directionGrid: (Direction | null)[] = [
   'UP_LEFT',
@@ -37,6 +38,7 @@ export function DirectionSelect({
     expanded = phase !== 'closed';
   const trigger = useRef<HTMLButtonElement>(null),
     id = useId();
+  const typeAhead = useTypeAhead();
   const close = () => setPhase((current) => (current === 'open' ? 'closing' : current));
   const { root, menu, menuStyle, setMenuStyle } = useFloatingMenu({ active: open, onOutside: close });
   useLayoutEffect(() => {
@@ -135,17 +137,22 @@ export function DirectionSelect({
           else setPhase('open');
         }}
         onKeyDown={(e) => {
+          // A closed compass steps from the current direction, not from wherever it was last left.
+          const from = open ? focused : Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT'));
+          const match = typeAhead(e, DIRECTIONS.map(directionLabel), from);
           if (['ArrowDown', 'ArrowRight', 'ArrowUp', 'ArrowLeft'].includes(e.key)) {
             e.preventDefault();
             setPhase('open');
-            // A closed compass steps from the current direction, not from wherever it was last left.
-            const from = open ? focused : Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT'));
             setFocused(
               (from + (e.key === 'ArrowDown' || e.key === 'ArrowRight' ? 1 : -1) + DIRECTIONS.length) %
                 DIRECTIONS.length,
             );
           } else if (e.key === 'Escape') escapeMenu(e, open, close);
-          else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
+          else if (match !== undefined) {
+            e.preventDefault();
+            setPhase('open');
+            setFocused(match);
+          } else if (open && (e.key === 'Enter' || e.key === ' ') && !isRunShortcut(e)) {
             e.preventDefault();
             choose(DIRECTIONS[focused]);
           }

@@ -4,6 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { escapeMenu, isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
+import { useTypeAhead } from './useTypeAhead';
 
 export interface BlockOption {
   value: string;
@@ -77,21 +78,7 @@ export function BlockSelect({
     trigger.current?.focus();
   };
   const selected = options.find((o) => o.value === value);
-  // Typing picks out an option by its first letters, as in a native select; a pause starts the word over.
-  const typed = useRef({ text: '', at: -Infinity });
-  const typeAhead = (key: string, at: number) => {
-    const text = (at - typed.current.at < 700 ? typed.current.text : '') + key.toLowerCase();
-    typed.current = { text, at };
-    const from = open ? focused : options.findIndex((o) => o.value === value);
-    // One letter, or the same one pressed again, looks past the current option, stepping through every option it
-    // starts; a longer word keeps to the current option while it still fits.
-    const repeated = [...text].every((letter) => letter === text[0]);
-    const prefix = repeated ? text[0] : text;
-    const start = repeated ? from + 1 : Math.max(from, 0);
-    return options
-      .map((_, i) => (start + i) % options.length)
-      .find((i) => (options[i].spoken ?? options[i].label).toLowerCase().startsWith(prefix));
-  };
+  const typeAhead = useTypeAhead();
   return (
     <div
       className="block-select"
@@ -122,6 +109,11 @@ export function BlockSelect({
         }}
         onKeyDown={(e) => {
           if (!options.length) return;
+          const match = typeAhead(
+            e,
+            options.map((o) => o.spoken ?? o.label),
+            open ? focused : options.findIndex((o) => o.value === value),
+          );
           if (['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) {
             e.preventDefault();
             setOpen(true);
@@ -137,9 +129,7 @@ export function BlockSelect({
                     : (from + (e.key === 'ArrowDown' ? 1 : -1) + options.length) % options.length,
             );
           } else if (e.key === 'Escape') escapeMenu(e, open, () => setOpen(false));
-          else if (e.key.length === 1 && e.key !== ' ' && !e.ctrlKey && !e.metaKey && !e.altKey) {
-            const match = typeAhead(e.key, e.timeStamp);
-            if (match === undefined) return;
+          else if (match !== undefined) {
             e.preventDefault();
             setOpen(true);
             setFocused(match);

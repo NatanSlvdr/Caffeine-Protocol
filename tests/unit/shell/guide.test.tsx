@@ -32,6 +32,10 @@ describe('how to play', () => {
     expect(guide.textContent).toContain(
       'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it.',
     );
+    // A block's values can be set without a pointer too, both ways its menus answer the keys.
+    expect(guide.textContent).toContain(
+      'From the keyboard, a value’s menu opens with the arrow keys, or by typing the first letters of the one you want.',
+    );
     // Shift numbers read as they do on the campaign rail and in the workspace.
     expect(guide.textContent).toContain(
       'Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',

@@ -46,7 +46,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </h3>
           <p>
             Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. Set
-            its values right in the code pane.
+            its values right in the code pane. From the keyboard, a value’s menu opens with the arrow keys, or by typing
+            the first letters of the one you want.
           </p>
           <p>
             Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to
