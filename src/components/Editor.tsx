@@ -187,6 +187,8 @@ export function Editor({
                 autoComplete="off"
                 ref={textInput}
                 aria-label="Routine text"
+                // The text view's own "Drop your first block": an empty routine says what goes here.
+                placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
                 aria-description="Tab indents, Shift+Tab outdents, Escape leaves the editor."
                 onKeyDown={onTextKey}
                 value={source}

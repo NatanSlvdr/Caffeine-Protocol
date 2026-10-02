@@ -519,6 +519,10 @@ input[type='checkbox']:checked {
     12px/1.85 ui-monospace,
     monospace;
 }
+.editor-panel .code-input::placeholder {
+  color: #b8a98f;
+  opacity: 1;
+}
 .editor-panel .palette {
   background: var(--draft-deep);
   border-color: var(--draft-line);

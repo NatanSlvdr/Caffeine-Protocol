@@ -308,6 +308,12 @@ describe('compact visual code', () => {
     expect(onChange).toHaveBeenLastCalledWith('  LISTEN');
     expect(document.activeElement).toBe(text);
   });
+  it('says what an empty routine’s text view takes', () => {
+    render(<Editor source="" onChange={vi.fn()} level={8} locked={false} observation={false} textMode />);
+    expect(screen.getByLabelText('Routine text').getAttribute('placeholder')).toBe(
+      'One block per line, like LISTEN or MOVE RIGHT 1',
+    );
+  });
   it('keeps a touch keyboard from capitalising or correcting routine words', () => {
     render(<Editor source="LISTEN" onChange={vi.fn()} level={8} locked={false} observation={false} textMode />);
     const text = screen.getByLabelText('Routine text');
