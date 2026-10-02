@@ -116,8 +116,11 @@ describe('live workspace lifecycle', () => {
       expect(screen.getByRole('button', { name }).hasAttribute('disabled')).toBe(true);
     for (const name of ['Brew', 'Porter'])
       expect(screen.getByRole('tab', { name }).hasAttribute('disabled')).toBe(true);
-    expect(screen.getByRole('tab', { name: 'Brew' }).getAttribute('aria-description')).toBe(
-      'Joins the crew at shift 9',
+    const brew = screen.getByRole('tab', { name: 'Brew' });
+    expect(brew.getAttribute('aria-description')).toBe('Joins the crew on Shift 09');
+    expect(brew.getAttribute('title')).toBe('Brew · Joins the crew on Shift 09');
+    expect(screen.getByRole('button', { name: 'Porter’s dining room' }).getAttribute('title')).toBe(
+      'Porter’s dining room · Joins the crew on Shift 14',
     );
     // Greyed out is enough; there is no separate Locked badge.
     expect(screen.queryByText('Locked')).toBeNull();

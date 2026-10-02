@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { ChefHat, ConciergeBell, ReceiptText } from 'lucide-react';
 import { ROBOT_UNLOCK_LEVELS, splitByUnlock } from '@/domain/robots';
 import type { RobotRole } from '@/domain';
+import { pad2 } from '@/shared/lib/format';
 
 export const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
 
@@ -19,6 +20,8 @@ export function RobotChoice({ robot, label }: { robot: RobotRole; label: string 
     </span>
   );
 }
+
+const joins = (robot: RobotRole) => `Joins the crew on Shift ${pad2(ROBOT_UNLOCK_LEVELS[robot])}`;
 
 interface RobotListProps {
   level: number;
@@ -53,10 +56,11 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
       aria-controls={tabs && !disabled ? ROUTINE_PANEL : undefined}
       aria-selected={tabs ? !disabled && selected === robot : undefined}
       aria-pressed={tabs ? undefined : !disabled && selected === robot}
-      aria-description={disabled ? `Joins the crew at shift ${ROBOT_UNLOCK_LEVELS[robot]}` : undefined}
+      aria-description={disabled ? joins(robot) : undefined}
       // Only the open tab sits in the Tab order; the arrows reach the others.
       tabIndex={tabs && !disabled ? (robot === current ? 0 : -1) : undefined}
-      title={tabs ? undefined : labels[robot]}
+      // A greyed-out robot says on hover when it arrives, not just to screen readers.
+      title={disabled ? `${labels[robot]} · ${joins(robot)}` : tabs ? undefined : labels[robot]}
       disabled={disabled}
       onClick={() => onSelect(robot)}
       onKeyDown={tabs ? (e) => step(e, robot) : undefined}
