@@ -107,6 +107,25 @@ describe('importing a café', () => {
     }
   });
 
+  it('says so again when the same export is made twice', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:cafe');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      const status = screen.getByRole('status');
+      fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
+      const first = status.textContent;
+      fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
+      // A live region only speaks when its text changes: the second export must change it, reading the same.
+      expect(status.textContent).not.toBe(first);
+      expect(status.textContent?.trim()).toBe(first);
+    } finally {
+      click.mockRestore();
+    }
+  });
+
   it('offers a recovery copy only when there is a stored café it could not read', () => {
     localStorage.setItem('caffeine-protocol.v1', '{bad');
     render(<App />);

@@ -1,16 +1,16 @@
-import { useState } from 'react';
 import { Download } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { count } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { useGame, useProgress } from '@/state/GameStore';
+import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Confirm a fresh start: name what it clears, and offer the export the warning recommends right here. */
 export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
   const { save } = useGame();
   const { done, stars } = useProgress();
-  const [exported, setExported] = useState('');
+  const [exported, announce] = useAnnouncement();
   return (
     <Modal className="settings-window confirm-slip" kicker="A fresh start" title="Start a new café?" onClose={onClose}>
       <p>
@@ -23,13 +23,13 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
         onClick={() => {
           const name = saveFileName();
           download(JSON.stringify(save, null, 2), name);
-          setExported(name);
+          announce(`Café exported as ${name}. Look for it with your downloads.`);
         }}
       >
         <Download size={15} aria-hidden="true" /> Export café
       </button>
       <p className="export-status" role="status">
-        {exported && `Café exported as ${exported}. Look for it with your downloads.`}
+        {exported}
       </p>
       <div className="modal-buttons">
         <button className="settings-chip" data-autofocus onClick={onClose}>

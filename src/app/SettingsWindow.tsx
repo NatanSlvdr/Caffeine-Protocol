@@ -8,6 +8,7 @@ import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
 import { count, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
+import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
@@ -15,7 +16,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const cafe = useCafeName();
   const [pending, setPending] = useState<ProgressSave | null>(null),
     [error, setError] = useState(''),
-    [status, setStatus] = useState('');
+    [status, setStatus] = useAnnouncement();
   const input = useRef<HTMLInputElement>(null);
   const [settings, setting] = useSettings();
   // Track the browser's own state, so leaving with Esc relabels the button too.

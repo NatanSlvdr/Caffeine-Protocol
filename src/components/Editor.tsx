@@ -15,6 +15,7 @@ import {
   type VisualBlock,
 } from '@/domain';
 import { BlockPointerSensor } from '@/hooks/useBlockPointerSensor';
+import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { useKeyboardCoordinates } from '@/hooks/useKeyboardDropSlot';
 import { useDropCollision } from '@/hooks/useCodeCollision';
 import { droppedOutside, useBlockDrag } from '@/hooks/useBlockDrag';
@@ -125,10 +126,7 @@ export function Editor({
     else e.currentTarget.setSelectionRange(tabbed.cursor, tabbed.cursor);
   };
   // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
-  const [said, setSaid] = useState('');
-  // A live region only speaks when its text changes, so a repeat (two identical blocks removed in a row) takes a
-  // trailing no-break space, and the next repeat drops it again.
-  const say = (text: string) => setSaid((last) => (last === text ? `${text}\u00a0` : text));
+  const [said, say] = useAnnouncement();
   // A library block goes on the end of the routine; focus stays in the library, ready to add the next.
   const insert = (command: string) => {
     if (disabled) return;
