@@ -221,6 +221,16 @@ describe('reactions', () => {
       'No paper in that direction. At the register, use Take up: the paper stack is above it.',
     ])
       expect(niko(reason)).toContain('the paper stack just above it');
+    expect(niko('Store a table or a place in var3 before moving to it.')).toBe(
+      'Store a table or a place in Var C before moving to it. A variable stays empty until a Store fills it: put the Store above the block that reads it.',
+    );
+    expect(niko('Store a number in var2 before looping on it.')).toContain('until a Store fills it');
+    expect(niko('This item has no number to store. Check If Number IN item first.')).toContain('inside an If');
+    expect(niko('A function can’t call itself.')).toContain('a Call outside it');
+    expect(niko('The coffee machine can’t work on this coffee yet. Next step: Grind.')).toContain('one step at a time');
+    expect(niko('There’s nothing for Brew to take there yet.')).toContain('Wait for Orders first');
+    expect(niko('Brew isn’t holding anything to deposit.')).toContain('Pick it up first');
+    expect(niko('Finish this delivery or cup before waiting for another.')).toContain('before Wait for Orders');
     // Checkout still wins over the register-position rule.
     expect(
       niko('Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),

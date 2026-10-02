@@ -201,6 +201,42 @@ const kinds: FailureKind[] = [
     hint: 'A Jump can’t cut into or out of a For loop or a function: let it reach its End, then jump.',
   },
   {
+    match: /^Store a (table or a place|number|value) in/,
+    by: 'robot',
+    react: () => '*bip?* Memory slot… empty.',
+    hint: 'A variable stays empty until a Store fills it: put the Store above the block that reads it.',
+  },
+  {
+    match: /no number to store/,
+    by: 'robot',
+    react: () => '*bip?* No number on this one.',
+    hint: 'Not every item carries a number, so only Store from one inside an If that checks for it.',
+  },
+  {
+    match: /can’t call itself/,
+    by: 'robot',
+    react: () => '*ring ring* …Calling myself?',
+    hint: 'A function runs when a Call outside it asks: inside the function, finish its steps and let it reach End.',
+  },
+  {
+    match: /coffee machine can’t work on/,
+    by: 'robot',
+    react: () => '*grrr-click* Machine not ready for that.',
+    hint: 'The recipe goes one step at a time, in order: do the next step before using the machine again.',
+  },
+  {
+    match: /^There’s nothing for .+ to take there yet/,
+    by: 'robot',
+    react: () => '*grab grab* …Nothing there yet.',
+    hint: 'A robot only knows what to take once it has a job: Wait for Orders first.',
+  },
+  {
+    match: /^Finish this delivery or cup before waiting/,
+    by: 'robot',
+    react: () => '*whirr* One job at a time!',
+    hint: 'Put down what it’s carrying where it belongs before Wait for Orders brings the next job.',
+  },
+  {
     match: /already brewed|^It’s brewed/,
     by: 'robot',
     react: () => '*hiss* Machine says: done already!',
@@ -231,7 +267,7 @@ const kinds: FailureKind[] = [
     hint: 'Used cups don’t come with a ticket: Wait for Dirty cups names the table one was left on. Store its table and walk there before you Take it up.',
   },
   {
-    match: /not table|no table|Store a table/,
+    match: /not table|no table/,
     by: 'guest',
     react: () => 'Sorry, I don’t think that one’s mine.',
     hint: 'The ticket names the table. Keep it and go there.',
@@ -249,7 +285,7 @@ const kinds: FailureKind[] = [
     hint: 'A robot only reaches what’s right beside it: walk over before using it.',
   },
   {
-    match: /^Carry a .+ before/,
+    match: /^Carry a .+ before|isn’t holding anything to deposit/,
     by: 'robot',
     react: () => '*whirr* Hands empty. Nothing to put down.',
     hint: 'Pick it up first: a robot can only put down what it’s holding.',
