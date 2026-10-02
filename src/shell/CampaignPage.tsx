@@ -289,7 +289,12 @@ export function CampaignPage() {
                 {observation ? (
                   <span className="board-scene">{isComplete(selected) ? 'Watched' : 'Sit back and watch'}</span>
                 ) : (
-                  <span className="board-stars" role="img" aria-label={`${save.stars[selected] ?? 0} of 3 stars`}>
+                  <span
+                    className="board-stars"
+                    role="img"
+                    // Every pass earns a star, so none means the shift hasn't been served yet.
+                    aria-label={save.stars[selected] ? `${save.stars[selected]} of 3 stars` : 'No stars yet'}
+                  >
                     {starRow(save.stars[selected] ?? 0)}
                   </span>
                 )}

@@ -162,6 +162,14 @@ describe('campaign order rail', () => {
     expect(window.location.hash).toBe('#/scene/the-scrapyard');
   });
 
+  it('says a rated shift not yet served has no stars yet, and a served one how many it won', () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 2, stars: { 0: 0, 1: 2 }, story: { 0: true, 1: true } }));
+    const board = () => within(screen.getByRole('complementary', { name: 'Selected shift' }));
+    expect(board().getByRole('img', { name: 'No stars yet' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /^Shift 2:/ }));
+    expect(board().getByRole('img', { name: '2 of 3 stars' })).toBeTruthy();
+  });
+
   it('unrolls every reached act and lands on its next unfinished part', () => {
     openCampaign(makeSave({ unlocked: 4, selected: 0, stars: { 0: 0, 1: 3, 2: 2 } }));
     expect(screen.getByRole('button', { name: /^Shift 1:/ })).toBeTruthy();
