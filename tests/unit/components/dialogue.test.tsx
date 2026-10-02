@@ -22,6 +22,10 @@ describe('DialogueBox', () => {
     // The whole line is readable to screen readers while it types.
     expect(dialog.querySelector('.sr-only')?.textContent).toBe('The shutters roll up.');
     expect(dialog.querySelector('.dialogue-unread')?.textContent).toBe('The shutters roll up.');
+    // The keys that drive a scene are named on the buttons they stand in for.
+    expect(screen.getByRole('button', { name: 'Next' }).getAttribute('aria-keyshortcuts')).toBe('Enter Space');
+    expect(screen.getByRole('button', { name: 'Skip' }).getAttribute('aria-keyshortcuts')).toBe('Escape');
+    expect(screen.getByText('Line 1 of 3')).toBeTruthy();
     act(() => {
       vi.advanceTimersByTime(5000);
     });

@@ -159,13 +159,20 @@ export function DialogueBox({
             <span className="sr-only">{speaker ? `${speakerLabel(speaker)}: ${text}` : text}</span>
           </p>
           <div className="dialogue-controls">
-            <span className="dialogue-count" aria-hidden="true">
-              {index + 1}/{lines.length}
+            <span className="dialogue-count">
+              <span aria-hidden="true">
+                {index + 1}/{lines.length}
+              </span>
+              <span className="sr-only">
+                Line {index + 1} of {lines.length}
+              </span>
             </span>
             {!last && (
               <button
                 type="button"
                 className="dialogue-skip"
+                aria-keyshortcuts="Escape"
+                title="Skip the rest · Esc"
                 onClick={(e) => {
                   e.stopPropagation();
                   onDone();
@@ -178,6 +185,8 @@ export function DialogueBox({
               type="button"
               className="dialogue-next"
               ref={next}
+              aria-keyshortcuts="Enter Space"
+              title="Enter or Space"
               onClick={(e) => {
                 e.stopPropagation();
                 advance();
