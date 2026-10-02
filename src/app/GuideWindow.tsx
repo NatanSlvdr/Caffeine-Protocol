@@ -2,7 +2,7 @@ import { Bot, Map, Puzzle, Star } from 'lucide-react';
 import { Modal } from '@/components';
 import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
-import { RUN_MODIFIER } from '@/shared/lib/format';
+import { pad2, RUN_MODIFIER } from '@/shared/lib/format';
 import { useCafeName } from '@/state/GameStore';
 
 /** A star count drawn as glyphs and read aloud in words. */
@@ -35,10 +35,10 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </h3>
           <p>
             The café has more guests than one pair of hands can serve. Over {CAMPAIGN_LENGTH} shifts, you program three
-            secondhand robots until it runs by itself: Query takes orders from shift {UNLOCKS.query}, Brew runs the
-            kitchen from shift {UNLOCKS.prep}, and Porter works the floor from shift {UNLOCKS.floor}.
+            secondhand robots until it runs by itself: Query takes orders from Shift {pad2(UNLOCKS.query)}, Brew runs
+            the kitchen from Shift {pad2(UNLOCKS.prep)}, and Porter works the floor from Shift {pad2(UNLOCKS.floor)}.
           </p>
-          <p>Until you program those roles, Moka brews and Pip serves on their own.</p>
+          <p>Until a robot takes over, its job is done by hand: Niko writes the tickets, Moka brews and Pip serves.</p>
         </section>
         <section className="settings-block">
           <h3>

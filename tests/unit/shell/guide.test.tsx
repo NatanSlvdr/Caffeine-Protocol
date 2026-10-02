@@ -22,6 +22,11 @@ describe('how to play', () => {
     );
     const guide = screen.getByRole('dialog', { name: 'How the café runs.' });
     expect(guide.textContent).toContain('Move counts whole tiles');
+    // Shift numbers read as they do on the campaign rail and in the workspace.
+    expect(guide.textContent).toContain(
+      'Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',
+    );
+    expect(guide.textContent).toContain('Niko writes the tickets, Moka brews and Pip serves.');
     // The toolbar's own buttons come first, so a tablet without a keyboard can follow along.
     expect(guide.textContent).toContain('Run service (or');
     expect(guide.textContent).toContain('Stop & edit (or Esc)');
