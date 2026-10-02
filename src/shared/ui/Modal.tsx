@@ -29,7 +29,10 @@ export function Modal({
     dialog?.querySelector<HTMLElement>('[data-autofocus]')?.focus();
     return () => {
       dialog?.close();
-      if (previous instanceof HTMLElement) previous.focus();
+      // A window opened as its button went away (the receipt, after the crew's last line) has nothing to go back
+      // to, so focus carries on from the screen's title rather than the top of the page, as reclaimFocus does.
+      if (previous instanceof HTMLElement && previous !== document.body && previous.isConnected) previous.focus();
+      else document.querySelector<HTMLElement>('[data-screen-title]')?.focus({ preventScroll: true });
     };
   }, []);
   return (

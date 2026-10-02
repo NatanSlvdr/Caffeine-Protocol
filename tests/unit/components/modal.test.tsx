@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { Modal } from '../../../src/shared/ui/Modal';
@@ -54,5 +55,36 @@ describe('modal backdrop', () => {
       </Modal>,
     );
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep my café' }));
+  });
+  it('hands focus back to its button, or to the screen’s title when the button went away with it', () => {
+    function Shift({ replaces }: { replaces: boolean }) {
+      const [open, setOpen] = useState(false);
+      return (
+        <>
+          <h2 data-screen-title tabIndex={-1}>
+            Shift 03
+          </h2>
+          {(!open || !replaces) && <button onClick={() => setOpen(true)}>See the receipt</button>}
+          {open && (
+            <Modal title="Service complete" onClose={() => setOpen(false)}>
+              <p>Receipt</p>
+            </Modal>
+          )}
+        </>
+      );
+    }
+    for (const replaces of [false, true]) {
+      const { unmount } = render(<Shift replaces={replaces} />);
+      const opener = screen.getByRole('button', { name: 'See the receipt' });
+      opener.focus();
+      fireEvent.click(opener);
+      fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+      expect(document.activeElement).toBe(
+        replaces
+          ? screen.getByRole('heading', { name: 'Shift 03' })
+          : screen.getByRole('button', { name: 'See the receipt' }),
+      );
+      unmount();
+    }
   });
 });
