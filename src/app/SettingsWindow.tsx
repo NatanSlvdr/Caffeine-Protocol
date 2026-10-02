@@ -28,12 +28,17 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
     document.addEventListener('fullscreenchange', sync);
     return () => document.removeEventListener('fullscreenchange', sync);
   }, []);
+  // Each attempt clears the last one's error, so a retry that works doesn't leave it showing.
   const fullscreen = async () => {
+    const leaving = !!document.fullscreenElement;
+    setFullscreenError('');
     try {
-      if (document.fullscreenElement) await document.exitFullscreen();
+      if (leaving) await document.exitFullscreen();
       else await document.documentElement.requestFullscreen();
     } catch {
-      setFullscreenError('This browser window didn’t go fullscreen. Try again, or use the browser’s own menu.');
+      setFullscreenError(
+        `This browser window didn’t ${leaving ? 'leave' : 'go'} fullscreen. Try again, or use the browser’s own menu.`,
+      );
     }
   };
   return (

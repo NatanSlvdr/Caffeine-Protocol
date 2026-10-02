@@ -43,4 +43,31 @@ describe('fullscreen setting', () => {
     );
     expect(alert.closest('section')?.querySelector('h3')?.textContent).toContain('Display & motion');
   });
+
+  it('clears the error once a retry works, and names a refused exit as one', async () => {
+    Object.defineProperty(document, 'fullscreenEnabled', { value: true, configurable: true });
+    let refuse = true;
+    document.documentElement.requestFullscreen = () => {
+      if (refuse) return Promise.reject(new Error('denied'));
+      Object.defineProperty(document, 'fullscreenElement', { value: document.documentElement, configurable: true });
+      document.dispatchEvent(new Event('fullscreenchange'));
+      return Promise.resolve();
+    };
+    document.exitFullscreen = () => Promise.reject(new Error('denied'));
+    const dialog = settings();
+    try {
+      await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Go fullscreen' })));
+      expect(within(dialog).getByRole('alert')).toBeTruthy();
+      refuse = false;
+      await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Go fullscreen' })));
+      expect(within(dialog).queryByRole('alert')).toBeNull();
+      await act(async () => fireEvent.click(within(dialog).getByRole('button', { name: 'Exit fullscreen' })));
+      expect(within(dialog).getByRole('alert').textContent).toBe(
+        'This browser window didn’t leave fullscreen. Try again, or use the browser’s own menu.',
+      );
+    } finally {
+      delete (document as { fullscreenElement?: unknown }).fullscreenElement;
+      delete (document as { exitFullscreen?: unknown }).exitFullscreen;
+    }
+  });
 });
