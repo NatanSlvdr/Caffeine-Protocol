@@ -303,16 +303,6 @@ button.primary:hover:not(:disabled) {
   opacity: 1;
   cursor: default;
 }
-.grip {
-  padding: 5px 4px;
-  gap: 0;
-  border: 0;
-  background: transparent;
-  color: inherit;
-  border-radius: 0;
-  cursor: grab;
-  touch-action: none;
-}
 .palette {
   padding: 14px 14px 13px;
   border-top: 1px solid #e7e9dd;
