@@ -172,7 +172,11 @@ export function Editor({
               </div>
               <textarea
                 onClick={failureLine >= 0 ? onDismissFailure : undefined}
+                // Routine words aren't English: a touch keyboard must not capitalise or "correct" them.
                 spellCheck={false}
+                autoCapitalize="off"
+                autoCorrect="off"
+                autoComplete="off"
                 ref={textInput}
                 aria-label="Routine text"
                 aria-description="Tab indents, Shift+Tab outdents, Escape leaves the editor."

@@ -270,6 +270,7 @@ export function Operands({
           <input
             className="tile-count"
             type="number"
+            inputMode="numeric"
             min={1}
             max={MAX_ITEM_QUANTITY}
             step={1}
@@ -279,7 +280,8 @@ export function Operands({
             onKeyDown={(event) => event.stopPropagation()}
             onChange={(event) => {
               const count = Number(event.target.value);
-              if (Number.isInteger(count) && count >= 1 && count <= 19) select('quantity', write(String(count)));
+              if (Number.isInteger(count) && count >= 1 && count <= MAX_ITEM_QUANTITY)
+                select('quantity', write(String(count)));
             }}
           />
         )}
@@ -348,6 +350,7 @@ export function Operands({
               onKeyDown={(e) => e.stopPropagation()}
               className="tile-count"
               type="number"
+              inputMode="numeric"
               min={1}
               max={MAX_MOVE_COUNT}
               step={1}
@@ -356,7 +359,8 @@ export function Operands({
               disabled={disabled}
               onChange={(e) => {
                 const n = Number(e.target.value);
-                if (Number.isInteger(n) && n >= 1 && n <= 19) select('count', nextCommand(direction, String(n)));
+                if (Number.isInteger(n) && n >= 1 && n <= MAX_MOVE_COUNT)
+                  select('count', nextCommand(direction, String(n)));
               }}
             />
             <span className="block-verb block-suffix">tiles</span>

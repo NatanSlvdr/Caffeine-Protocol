@@ -308,6 +308,16 @@ describe('compact visual code', () => {
     expect(onChange).toHaveBeenLastCalledWith('  LISTEN');
     expect(document.activeElement).toBe(text);
   });
+  it('keeps a touch keyboard from capitalising or correcting routine words', () => {
+    render(<Editor source="LISTEN" onChange={vi.fn()} level={8} locked={false} observation={false} textMode />);
+    const text = screen.getByLabelText('Routine text');
+    expect(['autocapitalize', 'autocorrect', 'autocomplete', 'spellcheck'].map((a) => text.getAttribute(a))).toEqual([
+      'off',
+      'off',
+      'off',
+      'false',
+    ]);
+  });
   it('draws saved jump connections on first mount and after returning from text mode', () => {
     const props = {
       source: 'POSITION listen\nLISTEN\nJUMP listen',
