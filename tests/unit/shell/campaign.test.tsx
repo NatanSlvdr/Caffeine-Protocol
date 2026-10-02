@@ -71,6 +71,20 @@ describe('campaign order rail', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/shift/2'));
   });
 
+  it('carries focus along the ticket when the arrows are pressed on a line', () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 1, stars: { 0: 0, 1: 3 } }));
+    selectedShift().focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowRight' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
+    expect(document.activeElement).toBe(selectedShift());
+    // From anywhere else on the page, the arrows browse without moving focus.
+    const start = screen.getByRole('button', { name: 'Start shift' });
+    start.focus();
+    fireEvent.keyDown(start, { key: 'ArrowLeft' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
+    expect(document.activeElement).toBe(start);
+  });
+
   it('leaves arrows to editable fields and modified shortcuts', () => {
     openCampaign(makeSave({ unlocked: 2, selected: 0 }));
     const field = document.createElement('div');

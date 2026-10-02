@@ -130,8 +130,21 @@ export function CampaignPage() {
   };
 
   // Arrow keys move down the order unless focus is in a text field.
-  const keys = useRef((direction: -1 | 1) => turnToEntry(neighbour(direction)));
-  keys.current = (direction) => turnToEntry(neighbour(direction));
+  // Pressed from a line on the ticket, the arrows carry focus along, so the focus ring stays on the chosen line.
+  const followFocus = useRef(false);
+  const step = (direction: -1 | 1, fromLine: boolean) => {
+    const entry = neighbour(direction);
+    if (!entry || ordering !== null) return;
+    followFocus.current = fromLine;
+    turnToEntry(entry);
+  };
+  const keys = useRef(step);
+  keys.current = step;
+  useEffect(() => {
+    if (!followFocus.current) return;
+    followFocus.current = false;
+    rail.current?.querySelector<HTMLElement>('.shift-card[aria-pressed="true"]')?.focus();
+  }, [selected, scene]);
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.defaultPrevented || event.altKey || event.metaKey || event.ctrlKey) return;
@@ -143,9 +156,9 @@ export function CampaignPage() {
         )
       )
         return;
-      if (event.key === 'ArrowLeft') keys.current(-1);
-      else if (event.key === 'ArrowRight') keys.current(1);
-      else return;
+      const direction = event.key === 'ArrowLeft' ? -1 : event.key === 'ArrowRight' ? 1 : 0;
+      if (!direction) return;
+      keys.current(direction, target instanceof Element && !!target.closest('.shift-card'));
       event.preventDefault();
     };
     window.addEventListener('keydown', onKey);
