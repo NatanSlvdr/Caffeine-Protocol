@@ -126,10 +126,13 @@ export function Editor({
   };
   // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
   const [said, setSaid] = useState('');
+  // A live region only speaks when its text changes, so a repeat (two identical blocks removed in a row) takes a
+  // trailing no-break space, and the next repeat drops it again.
+  const say = (text: string) => setSaid((last) => (last === text ? `${text}\u00a0` : text));
   // A library block goes on the end of the routine; focus stays in the library, ready to add the next.
   const insert = (command: string) => {
     if (disabled) return;
-    setSaid(`Added block ${rows.length + 1} (${spokenBlock(command)}) at the end of the routine.`);
+    say(`Added block ${rows.length + 1} (${spokenBlock(command)}) at the end of the routine.`);
     blockChange(placeBlock(source, command, source ? source.split('\n').length : 0));
   };
   // Focus moves to the block that took a removed one's place, or the one above, or the library once the routine is
@@ -137,9 +140,7 @@ export function Editor({
   const [removed, setRemoved] = useState<{ line: number } | null>(null);
   const remove = (block: VisualBlock) => {
     const ordinal = rows.findIndex((r) => r.line === block.line) + 1;
-    setSaid(
-      `Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`,
-    );
+    say(`Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`);
     setRemoved({ line: block.line });
     blockChange(removeVisualBlock(source, block.line));
   };

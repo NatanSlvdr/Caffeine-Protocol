@@ -534,6 +534,21 @@ describe('removing blocks from the keyboard', () => {
     expect(document.activeElement?.getAttribute('aria-label')).toMatch(/^Insert /);
   });
 
+  it('says so again when the next block removed reads the same as the last', () => {
+    render(<Harness initial={'LISTEN\nTAKE UP\nTAKE UP\nTAKE UP'} />);
+    const status = document.querySelector('[role="status"]')!;
+    block('Drag block 2 (take up)').focus();
+    const removals = [1, 2, 3].map(() => {
+      fireEvent.keyDown(document.activeElement!, { key: 'Delete' });
+      return status.textContent;
+    });
+    expect(source()).toBe('LISTEN');
+    // Each removal changes what the status holds, or a screen reader would hear only the first.
+    expect(removals.map((said) => said?.trim())).toEqual(Array(3).fill('Removed block 2 (take up).'));
+    expect(removals[1]).not.toBe(removals[0]);
+    expect(removals[2]).not.toBe(removals[1]);
+  });
+
   it('takes a group whole, and leaves Backspace in a block’s own field alone', () => {
     render(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nMOVE RIGHT 2\nEND\nTAKE UP'} />);
     fireEvent.keyDown(screen.getByLabelText('Block 3 tiles'), { key: 'Backspace' });
