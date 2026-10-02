@@ -74,6 +74,22 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(window.location.hash).toBe('#/campaign');
   });
+  it('acts once on a held Escape or Run shortcut', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
+    render(<App />);
+    // Skipping the intro with a held Escape stays on the shift.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(window, { key: 'Escape', repeat: true });
+    expect(window.location.hash).toBe('#/shift/3');
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true });
+    fireEvent.keyDown(window, { key: 'Enter', ctrlKey: true, repeat: true });
+    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+    // Stopping with a held Escape doesn't carry on out of the shift.
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.keyDown(window, { key: 'Escape', repeat: true });
+    expect(window.location.hash).toBe('#/shift/3');
+    expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
+  });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });
     window.location.hash = '/shift/14';

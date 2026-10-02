@@ -107,10 +107,13 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         if (modal || scene === 'intro') return;
         e.preventDefault();
-        run();
+        // A held shortcut runs once, rather than starting and stopping the service on every repeat.
+        if (!e.repeat) run();
       }
       // Menus and drags claim their own Escape; only an unclaimed one leaves the shift.
-      if (e.key === 'Escape' && !modal && !e.defaultPrevented) {
+      // A held Escape acts once too: skipping the intro, stopping a service or stepping out of a field never runs on
+      // into leaving the shift.
+      if (e.key === 'Escape' && !e.repeat && !modal && !e.defaultPrevented) {
         // In a text field it only steps out of the field, so typing code never drops the player back to the menu.
         if (e.target instanceof HTMLTextAreaElement || e.target instanceof HTMLInputElement) e.target.blur();
         // A running service stops first, the way Stop & edit does, rather than dropping the player on the menu.
