@@ -106,6 +106,21 @@ describe('compact visual code', () => {
     await user.keyboard('{Enter}');
     expect(source()).toBe('LISTEN\nITEM tea');
   });
+  it('picks out an operand menu’s option by typing its first letters', async () => {
+    const user = userEvent.setup();
+    render(<Harness initial={'LISTEN\nWRITE sugar'} />);
+    const value = screen.getByLabelText('Block 2 value');
+    const active = () => document.getElementById(value.getAttribute('aria-activedescendant')!)?.textContent;
+    value.focus();
+    await user.keyboard('t');
+    expect(value.getAttribute('aria-expanded')).toBe('true');
+    expect(active()).toBe('To go');
+    // The same letter again steps on to the next option it starts.
+    await user.keyboard('t');
+    expect(active()).toBe('Tea');
+    await user.keyboard('{Enter}');
+    expect(source()).toBe('LISTEN\nITEM tea');
+  });
   it('scrolls the option the arrow keys reach into sight in a long menu', async () => {
     const user = userEvent.setup();
     const scrolled: string[] = [];
