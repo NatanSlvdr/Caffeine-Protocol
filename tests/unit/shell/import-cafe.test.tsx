@@ -66,6 +66,25 @@ describe('importing a café', () => {
     expect(screen.getByRole('status').textContent).toBe('Café imported: 3 completed shifts and 5 stars.');
   });
 
+  it('says where an exported copy went', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:cafe');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    vi.useFakeTimers({ now: new Date(2026, 9, 2) });
+    try {
+      render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
+      expect(click).toHaveBeenCalledOnce();
+      expect(screen.getByRole('status').textContent).toBe(
+        'Café exported as caffeine-protocol-save-2026-10-02.json. Look for it with your downloads.',
+      );
+    } finally {
+      vi.useRealTimers();
+      click.mockRestore();
+    }
+  });
+
   it('offers a recovery copy only when there is a stored café it could not read', () => {
     localStorage.setItem('caffeine-protocol.v1', '{bad');
     render(<App />);

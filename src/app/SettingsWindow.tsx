@@ -15,7 +15,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const cafe = useCafeName();
   const [pending, setPending] = useState<ProgressSave | null>(null),
     [error, setError] = useState(''),
-    [imported, setImported] = useState('');
+    [status, setStatus] = useState('');
   const input = useRef<HTMLInputElement>(null);
   const [settings, setting] = useSettings();
   // Track the browser's own state, so leaving with Esc relabels the button too.
@@ -114,7 +114,16 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             </h3>
             <p>Progress stays in this browser. Export a copy to keep it safe or carry it to another computer.</p>
             <div className="settings-actions">
-              <button className="settings-chip" onClick={() => download(JSON.stringify(save, null, 2), saveFileName())}>
+              <button
+                className="settings-chip"
+                onClick={() => {
+                  const name = saveFileName();
+                  download(JSON.stringify(save, null, 2), name);
+                  // Some browsers save without a word, so the slip says where the copy went.
+                  setError('');
+                  setStatus(`Café exported as ${name}. Look for it with your downloads.`);
+                }}
+              >
                 <Download size={15} /> Export café
               </button>
               <button className="settings-chip" onClick={() => input.current?.click()}>
@@ -143,7 +152,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               accept="application/json,.json"
               onChange={async (e) => {
                 const file = e.target.files?.[0];
-                setImported('');
+                setStatus('');
                 if (file) {
                   try {
                     if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
@@ -156,9 +165,9 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 e.target.value = '';
               }}
             />
-            {/* Present before anything is imported, so the confirmation is announced when it lands. */}
+            {/* Present before any export or import, so the confirmation is announced when it lands. */}
             <p className="settings-status" role="status">
-              {imported}
+              {status}
             </p>
             {(error || saveError) && (
               <p role="alert" className="error-text">
@@ -203,7 +212,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               onClick={() => {
                 importCafe(pending);
                 setPending(null);
-                setImported(
+                setStatus(
                   `Café imported: ${count(Object.keys(pending.stars).length, 'completed shift')} and ${count(starTotal(pending.stars), 'star')}.`,
                 );
               }}
