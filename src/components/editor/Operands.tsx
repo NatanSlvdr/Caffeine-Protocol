@@ -88,12 +88,15 @@ export function membershipOperands(
                 className={connector ? 'condition-connector' : 'condition-connector optional-connector'}
                 title={connector ? undefined : 'Optional: add another condition'}
               >
+                {/* The title only reaches a pointer, so the unset menu names what it's for in its own label. */}
                 <BlockSelect
-                  label={rowLabel + ' connector'}
+                  label={rowLabel + (connector ? ' connector' : ' add another condition')}
                   value={connector}
                   disabled={disabled}
                   options={[
-                    { value: '', label: connector ? 'Remove following condition' : '+' },
+                    connector
+                      ? { value: '', label: 'Remove following condition' }
+                      : { value: '', label: '+', spoken: 'No other condition' },
                     ...CONDITION_CONNECTORS.map(conditionOption),
                   ]}
                   onChange={(value) => {

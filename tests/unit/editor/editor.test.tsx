@@ -194,7 +194,11 @@ describe('compact visual code', () => {
   it('adds, edits, switches and removes logical rows within the same IF', async () => {
     render(<Harness level={7} initial={'LISTEN\nIF sugar IN CUSTOMER SPEECH\nSUGAR true\nEND'} />);
     expect(screen.getByLabelText('Block 2 value').querySelector('.model-sugar')).toBeTruthy();
-    await choose('Block 2 connector', 'AND');
+    // Unset, the connector is a bare "+": its label and its empty option say what it does.
+    await userEvent.click(screen.getByRole('combobox', { name: 'Block 2 add another condition' }));
+    expect(screen.getByRole('option', { name: 'No other condition' }).getAttribute('aria-selected')).toBe('true');
+    await userEvent.keyboard('{Escape}');
+    await choose('Block 2 add another condition', 'AND');
     await choose('Block 2 condition 2 value', 'Negation');
     await choose('Block 2 condition 2 operator', 'NOT IN');
     expect(source()).toBe('LISTEN\nIF sugar IN CUSTOMER SPEECH AND negation NOT IN CUSTOMER SPEECH\n  SUGAR true\nEND');

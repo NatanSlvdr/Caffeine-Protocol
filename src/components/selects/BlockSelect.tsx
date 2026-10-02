@@ -7,6 +7,8 @@ import { useFloatingMenu } from './useFloatingMenu';
 export interface BlockOption {
   value: string;
   label: string;
+  /** What a screen reader hears for the option, when its printed label is only a symbol. */
+  spoken?: string;
   icon?: ReactNode;
 }
 
@@ -145,6 +147,7 @@ export function BlockSelect({
                 id={`${id}-${i}`}
                 key={o.value}
                 role="option"
+                aria-label={o.spoken}
                 aria-selected={o.value === value}
                 className={i === focused ? 'focused' : ''}
                 onPointerEnter={() => setFocused(i)}
