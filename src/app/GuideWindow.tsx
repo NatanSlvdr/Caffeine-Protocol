@@ -50,7 +50,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </p>
           <p>
             Drag a branch, loop or function by its first block to move it whole. From the keyboard: <kbd>Space</kbd> to
-            lift, arrow keys to move, <kbd>Space</kbd> to drop.
+            lift, arrow keys to move, <kbd>Space</kbd> to drop, <kbd>Esc</kbd> to put it back.
           </p>
           <p>
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per

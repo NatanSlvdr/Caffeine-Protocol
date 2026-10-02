@@ -107,6 +107,24 @@ describe('live workspace lifecycle', () => {
     fireEvent.keyDown(menu, { key: 'Enter', ctrlKey: true });
     expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
   });
+  it('puts a block lifted from the keyboard back on Escape, and stays on the shift', () => {
+    seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
+    render(<App />);
+    fireEvent.keyDown(window, { key: 'Escape' });
+    const row = document.querySelector<HTMLElement>('[data-line="1"]')!;
+    row.focus();
+    fireEvent.keyDown(row, { key: ' ', code: 'Space' });
+    // The drag listens for its keys a moment after the lift.
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    fireEvent.keyDown(row, { key: 'Escape', code: 'Escape' });
+    act(() => {
+      vi.advanceTimersByTime(20);
+    });
+    expect(screen.getByText('Cancelled. Block 2 (take up) stays where it was.')).toBeTruthy();
+    expect(window.location.hash).toBe('#/shift/3');
+  });
   it('tells a screen reader that service started, paused and locked the code', () => {
     open();
     const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
