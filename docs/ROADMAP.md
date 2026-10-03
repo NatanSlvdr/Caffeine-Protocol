@@ -1,0 +1,315 @@
+# Caffeine Protocol roadmap
+
+Drafted 2026-10-03 from the current repository. This is a proposed backlog, not a commitment to build every idea. No gameplay changes accompany this document.
+
+## Direction
+
+Make a cozy programming game where a player can understand a café problem, teach the robots, see why their program works or fails, and feel the café becoming their own.
+
+The strongest next investment is the edit → run → understand → improve loop. More shifts should follow evidence that the existing 21 shifts teach well and remain interesting. Preserve the short solo acts and the cooperation problems that motivated [ADR 005](adr/005-21-shifts.md).
+
+**Recommended first batch:** edit history, a persistent failure explanation, progressive hints, and a clearly labeled practice retry. Together these make experimentation less costly without adding another simulation system.
+
+## What exists today
+
+These are code/document observations, not findings from a fresh playtest or performance benchmark.
+
+| Area | Current foundation | Opportunity |
+| --- | --- | --- |
+| Campaign | 21 shifts; Query, Brew, Porter; Act IV includes take-away, limited cups, rush orders, and closing time. | Improve teaching and mastery before extending the campaign. |
+| Programming | Scoped visual blocks, keyboard drag, text editing, execution highlighting, deterministic simulation, reference programs. | Add reversible editing and inspectable execution state. |
+| Feedback | Automatic focus on the failing robot, highlighted source line, character reactions with contextual advice, help and worked examples. | Keep structured failure evidence visible and offer hints before the answer. |
+| Playback | Run/stop, pause, adjustable speed, shared live/offline interpreter. | Add explicit practice runs, event stepping, and replay navigation. |
+| Progress | Stars, carried routines, save v4, historical migration, import/export, corrupt-save protection. | Protect experiments, recover prior versions, handle competing tabs. |
+| Presentation | Three.js café, robot cameras, pixel shader, portraits, cutscenes, original music. | Improve service readability and make restoration emotionally visible. |
+| Accessibility | Reduced motion, keyboard controls, focus management, announcements, WebGL fallback. | Make the simulation understandable without relying on the 3D scene. |
+| Engineering | Layer boundaries, data validation, parity tests, asset tools, static offline build. | Add release automation, complete art checks, and measured performance budgets. |
+
+Source entry points: [README](../README.md), [architecture](ARCHITECTURE.md), [campaign](campaign/README.md), [workspace](../src/features/workspace/Workspace.tsx), [editor](../src/components/Editor.tsx), [save layer](../src/features/campaign/save/), [audio](../src/shared/lib/audio.ts), and [offline build](../vite/plugins/offline-cafe.ts).
+
+Some original design pages still describe Godot, two observation shifts, or old unlock numbers. The current code, generated campaign pages, and accepted ADRs take precedence. Historical art-generation notes were used only to identify audit areas; current art completeness and visual consistency still need verification.
+
+## How to use this roadmap
+
+- **P1:** strongest next work or necessary release preparation.
+- **P2:** valuable after the core loop is clear and reliable.
+- **P3:** optional experiment; promote only after a small prototype or playtest supports it.
+- **S / M / L:** relative scope: localized change / several cooperating pieces / substantial feature or content pass. These are not calendar estimates.
+- Each row describes a proposed change and its completion criterion. Items are open unless explicitly marked otherwise later.
+- Milestones are ordered by value, but release foundations can proceed alongside gameplay work. Do not wait for every optional feature to ship.
+
+## 1. Make experimentation safe and failures clear
+
+**Outcome:** a new player can make a mistake, understand it, recover their code, and try again without revealing the full solution.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| E01 | P1 / M | **Undo and redo.** Maintain bounded history per shift and robot across block edits, text edits, reset, and applying an example. Group typing sensibly; canceled drags create no history. Keyboard shortcuts and visible controls restore the exact routine. |
+| E02 | P1 / M | **Persistent failure card.** After the reaction dialogue, keep the failed seed/customer, robot, source line, reason, and next useful action available beside the code. Fixing or rerunning clearly invalidates old evidence. |
+| E03 | P1 / M | **Expected versus actual.** Explain differences in drink, quantity, sugar, destination, and missing/extra tickets; use plain text alongside icons. Compilation and movement failures get their own relevant details rather than an empty ticket comparison. |
+| E04 | P1 / M | **Progressive hints.** Extend existing contextual advice with a concept reminder, a location/clue, then the worked example. Let players request each tier; retain control over replacing their routine. |
+| E05 | P1 / M | **Retry the failed case.** Offer a quick practice run of the failing seed using edited routines. Label it as practice; only the complete required seed suite awards stars or unlocks a shift. Preserve any prefix state needed to reproduce the case. |
+| E06 | P1 / S | **Visible run progress.** Show current seed and passed/required counts, active robot, and whether the run is practice or certification. Distinguish a waiting robot from a stalled simulation. |
+| E07 | P1 / M | **First-program onboarding.** Guide the player through placing, configuring, running, and correcting a short routine with optional prompts. Resume or dismiss guidance without making it replay every attempt. |
+| E08 | P2 / S | **Gentler repeat attempts.** Offer a remembered option to shorten already-seen reactions and service introductions. Preserve first-time story beats and an obvious replay path. |
+| E09 | P2 / M | **Return to a working version.** Compare the draft with the last successful routine and restore it as an undoable edit. Clearly distinguish shift starter, previous-shift routine, and last passing solution. |
+| E10 | P2 / S | **Better star guidance.** Explain which target is missing and show the gap from the current or best result. Correctness remains enough to progress; optimization remains optional. |
+
+**Dependencies:** E02/E03 should use structured failure data (T04), not add more matching against error strings. E05 needs the recorded run identity and shared simulation path described in D01. E09 builds on E01.
+
+**Exit check:** observe a first-time player diagnose an incorrect order and fix it using evidence or hints; verify undo restores both a deleted scope and a routine replaced by an example. No star/unlock can come from practice alone.
+
+## 2. Turn the café into a readable debugger
+
+**Outcome:** players can explain what every robot knows, carries, and waits for at the moment a run goes wrong.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| D01 | P1 / M | **Immutable run record.** Bind each result to its exact routines, seed, and content/rules version. Replays show recorded evidence; editing cannot silently change the run being inspected. Bound retained history. |
+| D02 | P1 / L | **Step by instruction or service event.** Pause and advance the shared simulation predictably, including worker actions. Define how simultaneous events appear; stepped and continuous runs produce identical results. |
+| D03 | P1 / M | **Robot state inspector.** Show selected order/ticket, carried paper/cups, numeric locals, loop item, and wait reason at the selected event. Unavailable data says “not set,” never a guessed value. |
+| D04 | P2 / M | **Condition explanations.** On an IF, show the tested tokens/values and why the branch was true or false. Display combined AND/OR evaluation without exposing the expected answer as robot knowledge. |
+| D05 | P2 / L | **Replay timeline.** Jump to an order, handoff, failure, or robot event; scrub backward through recorded state. Start with event boundaries rather than building a second reversible interpreter. |
+| D06 | P2 / M | **Breakpoints and pause conditions.** Pause at a chosen instruction, ticket handoff, or error. Bind breakpoints to the run snapshot so source edits cannot point them at unrelated code. |
+| D07 | P2 / M | **Follow an order end to end.** Select a customer/ticket and highlight its route through Query, Brew, Porter, delivery, and cleanup. Preserve identity for multi-cup tickets. |
+| D08 | P2 / M | **Explain bottlenecks.** Show whether delays come from intake, brewing, pickup, tables, clearing, or cup supply. Derive explanations from recorded timestamps and reservations, not visual animation speed. |
+| D09 | P2 / M | **Explain blocked cooperation.** Identify a worker waiting for a resource or another worker, and show the last relevant event. Separate a legitimate wait from the engine's termination/limit failure. |
+| D10 | P2 / M | **Compare two attempts.** Compare correctness, blocks, executed steps, and service metrics for the same seed suite. Keep the two program versions available to explain the change. |
+| D11 | P2 / M | **Code-to-café connection.** Selecting a movement, pickup, or deposit instruction previews its station/direction; selecting an event focuses its actual source line and robot. Use an optional overlay to avoid clutter. |
+
+**Dependencies:** D01 → D02/D03 → D05/D06/D10. D07–D09 reuse existing service events and timing before adding new instrumentation. Introduce richer traces only where an actual inspection feature needs them.
+
+**Exit check:** a player can trace a wrong delivery back to the responsible instruction, and replay/stepping remains deterministic across all three robots.
+
+## 3. Improve the editor and teach deeper mastery
+
+**Outcome:** the campaign rewards understanding and thoughtful solutions rather than repetitive editing or guessing the author's code.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| C01 | P1 / M | **Audit all 21 shifts.** Record each shift's new concept, prerequisites, likely misconception, expected solution approaches, and reason to exist. Rework repetitions rather than automatically adding levels. |
+| C02 | P1 / M | **Smooth robot handovers.** Add a concise practical introduction when Brew and Porter take ownership. Show what the human helper used to do and what the player's routine must now cover. |
+| C03 | P1 / M | **Audit seed coverage.** Cover meaningful branch combinations, quantity, clarification, finite resources, priority, and closing. Validate alternative correct programs, not only reference solutions. |
+| C04 | P1 / M | **Recalibrate mastery targets.** Evaluate block/step targets against multiple plausible solutions and carried-forward routines. Keep required lesson constraints explicit in the brief; avoid surprise rejection of otherwise valid approaches. |
+| C05 | P2 / M | **Insert at a chosen location.** Let click/keyboard users choose an insertion point instead of always appending. Preserve valid scope boundaries and predictable focus. |
+| C06 | P2 / M | **Duplicate and move scopes.** Copy or move an entire branch, loop, or function through explicit controls as well as drag. Handle labels/functions without silently creating name collisions; make every edit undoable. |
+| C07 | P2 / M | **Collapse and navigate large routines.** Collapse scopes, jump to labels/functions, and reveal the active or failing line automatically. Keep collapsed content discoverable to assistive technology. |
+| C08 | P2 / M | **Helpful diagnostics before Run.** Surface definite syntax, scope, target, and operand errors while preserving unfinished text. Warnings must not reject valid creative solutions. |
+| C09 | P2 / M | **Text editor ergonomics.** Add line numbers, explicit formatting, matching scope cues, and contextual command help. Preserve caret/selection and text/block round-tripping; avoid a large editor dependency unless justified. |
+| C10 | P2 / S | **Contextual block reference.** Explain each unlocked command, operands, and a minimal example at the point of use. Filter help by robot and current unlocks. |
+| C11 | P2 / M | **Optional reinforcement puzzles.** Offer short practice for a specific misunderstood concept outside the main unlock chain. Keep the existing campaign concise. |
+| C12 | P2 / M | **Optional optimization challenges.** Offer goals such as fewer walks, efficient batching, or graceful closing after a normal pass. Explain tradeoffs and avoid implying one universal best program. |
+| C13 | P2 / M | **Routine notebook.** Save named local variants or snippets with robot and language compatibility. Start with local export/import; no account or hosted snippet service required. |
+| C14 | P2 / M | **Clear session resumption.** A returning player sees their current objective, last result, and draft status. Reopen the appropriate robot without forcing a recap on every visit. |
+
+**Dependencies:** use playtest observations from milestone 1 to prioritize C01/C02/C11. E01 precedes C05/C06/C13. D10 supports C04/C12. Adding commands or seeds requires compatible saves and generated documentation.
+
+**Exit check:** players can explain each robot handover, multiple valid approaches pass, and optimization targets remain achievable with routines legitimately carried from earlier shifts.
+
+## 4. Make restoration and relationships tangible
+
+**Outcome:** completing shifts changes how the café feels, and the story supports the programming rather than interrupting it.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| P01 | P1 / M | **Complete the art audit.** Compare current cutscene/portrait references with source and runtime inventories; check filenames, dimensions, alpha requirements, missing images, and duplicates. Report gaps before regenerating anything. |
+| P02 | P1 / L | **Visual continuity pass.** Review café geometry, divider/counter placement, characters, clothing, props, and lighting across approved references and story panels. Use eye-level cinematic cutscenes where specified; approve previews before replacing project art. |
+| P03 | P2 / L | **Visible café restoration.** Add a few authored milestone changes: repaired signage, warmer lighting, plants, restored fixtures, or postcards. Keep puzzle stations/routes stable unless a shift explicitly teaches a layout change. |
+| P04 | P2 / M | **Recurring regulars.** Give existing customers recognizable preferences and short recurring conversations. Preferences enrich characterization; spoken/recognized orders remain the authoritative puzzle input. |
+| P05 | P2 / M | **Character payoff pass.** Give Niko, Moka, Pip, and the robots distinct reactions to genuine milestones and setbacks. Keep advice accurate for quantity tickets and current mechanics. |
+| P06 | P2 / M | **Story pacing and replay.** Review intro length, repetition, transition timing, and spoiler boundaries. Make unlocked scenes easy to revisit and preserve skip/reduced-motion behavior. |
+| P07 | P2 / M | **Café readability pass.** Improve ticket queues, held objects, sugar/quantity marks, station labels, and crowded-table readability. Test clarity at the smallest supported layout and with the shader both on and off. |
+| P08 | P2 / M | **Purposeful robot animation.** Improve anticipation, handoffs, working/waiting poses, and failure reactions. Animation must remain consistent with simulation state and readable at faster playback. |
+| P09 | P2 / M | **A more personal ending.** Reflect restored café milestones and earned accomplishments without shaming one-star completion. Provide a satisfying final scene and a clear route back to optional mastery. |
+| P10 | P3 / M | **Cosmetic café choices.** Prototype a small set of décor choices earned through progress. Avoid turning a programming puzzle into an economy or furniture-placement simulation. |
+| P11 | P3 / M | **More musical variety.** Consider a small number of act or time-of-day arrangements with gentle transitions. Evaluate against the deliberately simple single-track design before producing a soundtrack expansion. |
+
+**Dependencies:** P01/P02 before any bulk art replacement; C01 before rewriting narrative around shifts; P03 before personalized restoration payoffs. Art approval is part of future asset work, not authorization to replace assets in this planning task.
+
+**Exit check:** a player recognizes how the café and relationships have progressed, visual assets match their intended scenes, and story/presentation changes preserve deterministic puzzle behavior.
+
+## 5. Make the whole game comfortable and resilient
+
+**Outcome:** players can understand and finish the game with their preferred input, reduced visual demands, and reliable local progress.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| A01 | P1 / M | **Complete keyboard journey.** Audit campaign → editor → run → failure → help → next shift without a pointer. Extend existing keyboard support only where gaps are demonstrated. |
+| A02 | P1 / L | **Accessible service summary.** Provide a textual view of orders, robot state, queues, and failures so the 3D scene is not the only source of evidence. Announce useful state changes without speaking every animation frame. |
+| A03 | P1 / M | **Readable scaling and contrast.** Verify zoom, larger text, focus visibility, and error distinctions that do not rely on color. Add a contrast/text option only where baseline styling cannot meet the need. |
+| A04 | P2 / M | **Touch and small-screen editing.** Improve tap targets, nested-scope selection, long routines, and virtual-keyboard behavior. Choose and document supported viewport sizes; consider a scene/code toggle for narrow layouts. |
+| A05 | P2 / S | **Separate dialogue speed from motion.** Offer instant or adjustable dialogue without requiring reduced motion. Respect the existing system motion preference. |
+| A06 | P1 / M | **Recoverable saves.** Keep a bounded last-known-good backup before import, reset, or migration; offer clear recovery. Preserve the stable storage key and existing corrupt-data protection. |
+| A07 | P1 / M | **Competing-tab protection.** Detect newer progress saved by another tab and resolve explicitly instead of silently overwriting it. Document whether the chosen behavior is reload, takeover, or read-only. |
+| A08 | P2 / M | **Backup and migration visibility.** Show whether saving is healthy and explain meaningful changes after migration. Keep export readily available on storage failure; avoid repetitive reminder popups. |
+| A09 | P1 / M | **Graphics recovery.** Extend the existing WebGL fallback with useful service evidence; handle context loss without losing edits. Evaluate a retry action before requiring reload. |
+| A10 | P2 / L | **French localization.** Start with interface and tutorial text, then story. Translate presentation separately from programming tokens and authored order semantics; verify layouts and lesson meaning in both languages. |
+| A11 | P2 / M | **Background and resume behavior.** Check tab suspension, long frame gaps, pause state, audio resume, and navigation during service. Progress and playback must not race ahead unexpectedly. |
+
+**Dependencies:** A02/A09 reuse D03 and E02; A06/A07 need focused persistence scenarios, not a new backend. A10 follows stable UI copy and the campaign audit.
+
+**Exit check:** complete a representative shift without relying on color or the rendered café; demonstrate recovery from a rejected import, interrupted graphics, and competing save writers without losing a known-good routine.
+
+## 6. Prepare a reproducible, measured release
+
+**Outcome:** a clean checkout builds the complete game, updates safely, and has a clear support and testing baseline.
+
+| ID | Priority / size | Improvement and completion criterion |
+| --- | --- | --- |
+| T01 | P1 / M | **Current documentation map.** Mark historical Godot/old-campaign documents clearly; reconcile active gameplay/UI/programming guides with 21 shifts and current unlocks. Link this roadmap and keep generated shift pages authoritative. |
+| T02 | P1 / M | **Release checks in automation.** Add the standard type, lint, unused-code, data, unit, and production-build checks to repository automation. Verify a clean checkout includes all required runtime assets. No `.github` workflow was present in this review. |
+| T03 | P1 / M | **Art validation alongside audio validation.** Extend checks to expected cutscene/portrait manifests, runtime dimensions, transparency where required, missing references, and conversion drift. A successful generation command alone is not acceptance. |
+| T04 | P1 / M | **Structured failure identifiers.** Separate stable failure codes and context from player wording. Migrate existing reaction dispatch incrementally; changing punctuation or translating copy must not change the selected hint. |
+| T05 | P1 / M | **Measure performance first.** Record startup payload, readiness, frame time, memory, and worst-case service execution on named target devices/scenarios. Set budgets from those measurements; this roadmap does not claim current performance defects. |
+| T06 | P2 / M | **Graphics quality controls.** If T05 warrants it, tune shadows, pixel ratio, postprocessing, and decorative animation with a simple quality setting. Gameplay, timing, and readable order markers stay identical. |
+| T07 | P2 / M | **Reduce loading cost.** Investigate image/audio encoding, scene initialization, and content loading only after profiling. Preserve the offline contract or explicitly explain which content is ready offline. |
+| T08 | P1 / M | **Safe offline updates.** Verify installing a new version during a run, multiple open tabs, interrupted cache population, stale assets, and offline reload. Surface update readiness and avoid changing versions mid-session. |
+| T09 | P2 / M | **Bound expensive work.** Profile traces, replay history, large routines, and repeated runs for memory growth. Move validation to a worker only if measured blocking justifies the added message protocol. |
+| T10 | P1 / M | **Focused behavioral coverage.** Extend existing parity and save tests for new features; add invariants such as cup conservation, exactly-once delivery, and deterministic event ordering where they catch real failure modes. |
+| T11 | P1 / M | **Release playtest matrix.** Define supported browsers, devices, viewports, offline behavior, input methods, and accessibility paths. Schedule human/browser QA explicitly; existing unit tests do not establish visual usability. |
+| T12 | P2 / S | **Useful bug-report export.** Export a user-reviewed bundle with game version, shift/seed, routines, and failure information sufficient to reproduce an issue. Keep it local until the player chooses to share it. |
+| T13 | P1 / S | **Release materials and provenance.** Prepare controls, credits, asset/music provenance, version notes, known limitations, and a small set of representative screenshots. Produce captures only when browser work is requested. |
+
+**Dependencies:** T04 enables durable hints/debugging; T05 precedes optimization; T03 precedes asserting art completeness; T08 must be revisited if T07 changes caching. T01/T02 can start immediately alongside milestone 1.
+
+**Exit check:** a clean checkout passes standard checks and the production build, runtime assets are accounted for, and the agreed release matrix has actual recorded results rather than assumed support.
+
+## 7. New features and playable expansions
+
+Added 2026-10-03. These **25 additional feature proposals** sit alongside all 70 improvement items and the 11 experiments below. They add new things to play, create, or personalize. Related existing items are named where a feature builds on them; those items retain their original scope.
+
+**Outcome:** extend the game with fresh programming decisions and personal investment while keeping the 21-shift campaign a complete, coherent experience.
+
+P2 features are candidates after their prerequisites; P3 mechanics need a small playable prototype before becoming campaign commitments. None of these proposals is an implemented feature or a release requirement.
+
+### New café problems to program
+
+Introduce each mechanic in one optional authored shift, with one new rule and explicit failure feedback. Use simulation time and fixed events; retries must reproduce the same problem.
+
+| ID | Priority / size | Feature and completion criterion |
+| --- | --- | --- |
+| F01 | P3 / L | **Customers amend an order.** A customer changes one part of an accepted order before a clearly defined preparation cutoff. Teach revision handling: update the right ticket exactly once and prevent the old version from being delivered. The player can inspect original and revised requests. |
+| F02 | P3 / L | **Cancellations and cleanup.** A scheduled cancellation arrives while a drink is queued or being prepared. Robots must release the job and account for paper, cups, and reserved resources. Define what happens to work already completed; no vanished cups or orphaned jobs. |
+| F03 | P2 / L | **Serve a table together.** A group wants its drinks delivered within a stated time window. Teach coordination and buffering across Brew and Porter, with table-level completion feedback. The window is visible before the run and evaluated on simulation timestamps. |
+| F04 | P3 / L | **Scheduled pickup orders.** An order is known in advance but its customer arrives later. Teach scheduling against preparation and pickup windows; early preparation is allowed only under the published freshness rule. Start with one scheduled pickup rather than a second full ordering system. |
+| F05 | P3 / L | **A sold-out special with an approved alternative.** A finite ingredient runs out and the customer has an authored acceptable substitute or decline response. Teach resource checks and explicit fallback branches. Query must obtain the response before Brew substitutes; the validator never silently accepts an unrequested drink. |
+| F06 | P3 / L | **Shared electrical capacity.** Two appliances share a clearly displayed power allowance. Teach mutual exclusion and scheduling without random breakdowns. Waiting, acquiring capacity, and releasing it appear in the trace; a blocked run names the resource owner. |
+| F07 | P3 / L | **Drinks have a serving window.** A bonus shift introduces a visible freshness window from preparation to delivery. Teach batching tradeoffs and bounded waiting. Show remaining simulation time in inspection, provide attainable reference solutions, and keep the base campaign free of this extra rule. |
+| F08 | P3 / L | **Planned machine maintenance.** A machine becomes unavailable during an announced interval, allowing players to schedule preparation around it. Teach availability checks and recovery. No random failures or real-time reactions; the timetable stays identical across retries. |
+
+**Dependencies:** C03/C04 for fair seeds and targets; T04 + D01–D03 for inspectable new failures and state. F01/F02 require stable ticket identity and explicit lifecycle transitions. F04 should be evaluated after F07 if it uses freshness. F06 needs D09 before adding resource contention. Additional commands remain behind the language-expansion gate in “Deliberately defer.”
+
+**Prototype gate:** a player can explain the new rule and a strategy for handling it before seeing the solution. The feature must create a different decision, not merely increase the queue or routine length.
+
+### New ways to play and learn
+
+| ID | Priority / size | Feature and completion criterion |
+| --- | --- | --- |
+| F09 | P2 / M | **Predict the next move.** Pause a short authored routine and ask which branch, ticket, or robot action comes next. Reveal the actual execution with a concise explanation. Make these optional interludes with separate completion, not extra gates on campaign progress. |
+| F10 | P2 / M | **Limited-kit puzzles.** Solve a small café scenario using a supplied set of block types or a published block allowance. Teach alternative formulations with existing commands. Constraints are visible before editing, and normal campaign routines remain untouched. |
+| F11 | P2 / L | **Build your own test cases.** In a local test bench, assemble supported order groups, modifiers, quantities, and arrivals, then run a routine against them. Keep inputs separate from expected outcomes and reject malformed cases. This extends the sandbox idea with player-authored cases; custom passes never award campaign stars. |
+| F12 | P2 / M | **Practice playlists.** Choose a concept such as negation, batching, or robot coordination and play a short sequence of compatible existing or authored practice scenarios. Show prerequisites and maintain separate practice progress. This packages C11's exercises into a repeatable learning mode. |
+| F13 | P3 / L | **Endurance service.** Run the same routines through a deterministic sequence of increasingly demanding waves, with edit breaks between waves and a voluntary stop after each one. Record the best completed wave locally; retries reproduce its seed. Begin with a bounded set of authored waves. |
+| F14 | P3 / L | **Plan the day's menu.** Choose between a few authored menu cards before a bonus shift, then program the resulting workload. Each card has explicit recipes, demand, and constraints with its own achievable targets. This adds planning without introducing pricing, purchasing, or a full economy. |
+
+**Dependencies:** F09 reuses D02/D04; F10 uses current command availability and C04; F11 needs C03, D01, input validation, and a small authoring interface; F12 follows C01/C11. F13/F14 should wait until normal optimization challenges demonstrate replay interest.
+
+**Exit check:** each mode has a clear entry point, explains how it differs from campaign certification, and can be left without replacing campaign drafts or progress.
+
+### New stories and café activities
+
+| ID | Priority / size | Feature and completion criterion |
+| --- | --- | --- |
+| F15 | P2 / L | **Character commissions.** A regular asks for a small optional service challenge, such as preparing drinks for a reading group. Give each commission a brief setup, one meaningful rule, and a character payoff. Build on P04's recurring regulars without inserting required side quests into the campaign. |
+| F16 | P2 / M | **Small dialogue choices.** Let Niko choose a response in selected conversations, with a visible immediate reaction and a later callback. Keep branches bounded; no hidden relationship score blocks puzzles or makes a correct program fail. Choices and scene replay have defined save behavior. |
+| F17 | P3 / L | **Playable memories of Lou's café.** Add a short optional flashback episode showing an earlier café routine or the origin of a familiar robot. Give it its own temporary programs and limited vocabulary. Completing or replaying it never overwrites present-day routines. |
+| F18 | P3 / L | **Robot repair bench.** Reconnect a small fixed set of sensors and actions in an optional logic puzzle before a cosmetic repair scene. Reuse existing condition concepts and give clear simulated input/output examples. Avoid introducing a separate physics or electronics simulator. |
+| F19 | P2 / M | **A café guestbook.** Fictional regulars leave authored notes after specific service or story milestones. Notes refer to events that actually happened and do not shame players for hints or retries. Distinct from the scrapbook experiment: this is new reactive writing, not a gallery of existing scenes. |
+| F20 | P2 / M | **Photo mode.** Pause a café moment, hide the editing interface, choose from a few bounded camera views, and save an image locally. Restore the prior playback state on exit. This adds a player-facing capture tool beyond the result-receipt sharing experiment. |
+
+**Dependencies:** P04/P05 establish the character voice for F15/F16/F19; P01/P02 establish asset continuity before F17/F18 add art. F16 needs save migration if choices persist. F20 builds on existing cameras and pause handling; testing its visuals still requires explicitly requested browser work.
+
+**Exit check:** activities enrich the café and characters, remain optional, and preserve the main campaign's pacing and saved solutions. Approve one complete episode or interaction before writing a large content batch.
+
+### Features for a longer relationship with the game
+
+| ID | Priority / size | Feature and completion criterion |
+| --- | --- | --- |
+| F21 | P2 / M | **Multiple local cafés.** Create named local profiles with independent progress, routines, and settings. Existing single-café saves migrate into the first profile; switching profiles and importing an export cannot silently replace another café. No account is required. |
+| F22 | P2 / M | **An achievement shelf.** Award a small set of visible badges for distinct accomplishments such as finishing an act, solving a published optional challenge, or completing a full crew service. Define criteria from durable results; avoid grind, daily streaks, and rewards for refusing accessibility options. |
+| F23 | P2 / M | **Practice modifiers.** Offer explicit practice-only options such as a smaller customer set, extra clean cups, or relaxed patience where relevant. Show which rules changed and keep results separate from standard certification. This extends E05's faithful retry with intentionally altered conditions. |
+| F24 | P2 / M | **Annotated routine lessons.** Attach short explanations to saved routines and export an ordered walkthrough that highlights selected blocks. Extend C13's notebook into a teaching artifact, with plain-text notes, compatible command versions, and no executable embedded content. |
+| F25 | P3 / L | **Suspend and resume a service.** Save a checkpoint of the current run so a longer optional session can resume after closing the tab. Include the exact program, seed, simulation state, and rules version. Resume deterministically; an incompatible update must preserve the draft and clearly offer a restart. |
+
+**Dependencies:** A06/A07 before F21; define profile identity before supporting cross-profile imports. C01/C12 supply worthwhile accomplishments for F22. F23 reuses E05's practice/certification boundary. F24 follows C13. F25 follows D01 and T08 and is worthwhile only if longer sessions justify serializing execution state.
+
+**Exit check:** new progress records migrate safely and have understandable export/reset behavior. None of these features requires a hosted service.
+
+### Recommended feature sequence
+
+1. **First additions:** prototype F09 (prediction puzzles) and F19 (guestbook) after the relevant debugging and narrative foundations. They offer fresh interaction and emotional payoff with limited new simulation rules.
+2. **Creative tools:** add F11 (test bench), then F24 (annotated lessons) if players use saved routines to experiment or teach. F21 (multiple cafés) can join this batch when separate playthroughs are useful.
+3. **First mechanical expansion:** prototype F03 (serve a table together) as one optional shift. It makes the existing three robots cooperate in a new way.
+4. **First content expansion:** build one F15 commission or F17 flashback, then assess whether the episode earns the writing and art cost.
+5. **Later systems:** select one of F01/F02/F04–F08 rather than combining them all. Reassess the need for F13 endurance and F25 suspension after observing session length.
+
+The roadmap now contains **95 identified items plus 11 larger experiments**. Preserve the original first batch; choose a small feature batch once its foundations work rather than making every new proposal a prerequisite for release.
+
+## Bigger experiments to keep outside the main commitment
+
+These are P3 proposals. Pick at most one prototype at a time and define the question it should answer before expanding it.
+
+| Idea | Smallest useful experiment | Promote only if… |
+| --- | --- | --- |
+| **After-hours sandbox** | Let players choose a seed and the existing café rules without awarding campaign progress. | Players use it to explore programs after finishing normal shifts. |
+| **Weekly specials** | A handful of authored combinations of existing rules, playable offline with no server or login. | Existing mechanics support fresh strategies rather than longer queues. |
+| **Café as a living program** | Optional colored trails show one ticket moving between robots, with each handoff naming its instruction. | It teaches cooperation better than the simpler D07 inspection view. |
+| **A customer's scrapbook** | A small album of unlocked postcards, scenes, and regulars linked to actual milestones. | It deepens attachment without adding mandatory collectibles. |
+| **Local challenge sharing** | Export a bounded, validated seed/rule file and compatible routines. | There is demand for making puzzles and the validator can keep imports deterministic and safe. |
+| **Shareable success receipt** | Export an image of a result with café name, stars, and metrics, with optional solution hiding. | Players want to share it and it works without accounts or hosted storage. |
+| **Optional debugging puzzles** | Three side puzzles about meaningful incorrect assumptions in supplied routines. | They improve understanding without replacing the café-first main campaign. |
+| **Controller support** | Navigate and solve one small shift, including editing, entirely with a controller. | Editing is comfortable enough to justify supporting it across the game. |
+| **Audio effects or ambience** | Compare one carefully mixed prototype with the current music-only presentation. | A deliberate design decision reverses the current music-only policy; do not treat missing effects as a bug. |
+| **New drinks or equipment** | Prototype one mechanic that requires a genuinely new decision using current systems. | It creates a readable programming problem, not extra recipe memorization. |
+| **New layouts or route puzzles** | One bonus shift with an explicitly different route constraint. | It adds interesting planning and can keep story art and instruction help consistent. |
+
+## Deliberately defer
+
+- Multiplayer, accounts, cloud saves, global leaderboards, and a backend: local saves and exports already support the current game.
+- A full café economy, staffing simulator, inventory purchasing, or open-ended construction: these would change the game's identity.
+- Procedural campaign generation and an in-game content editor until authored optional challenges prove demand.
+- AI-generated customer dialogue or an LLM interpreting orders: authored token semantics and deterministic tests are part of puzzle fairness.
+- More robots, a larger programming language, or arbitrary JavaScript execution before the existing three-robot experience is proven.
+- Broad engine rewrites, renaming the domain directory, or splitting the deterministic service clock merely to reduce file length.
+- Installable-PWA work, native packaging, or a mobile-first redesign before choosing a distribution target. The current architecture intentionally ships a static page.
+- Always-on analytics or remote error collection. Begin with consented playtest notes and player-controlled reproduction exports.
+
+## Suggested delivery order
+
+1. **First slice:** E01, T04 + E02/E03, E04, D01 + E05, E06. Keep the implementation small; defer the full timeline debugger.
+2. **Learning pass:** E07–E10 and C01–C04, informed by first-time-player sessions. Fix the largest observed misconception first.
+3. **Inspection pass:** D02/D03, then choose the most useful of D04–D11. Build one coherent inspection surface rather than several separate dashboards.
+4. **Comfort and identity:** prioritize A01–A03/A06/A07 and P01/P02; add a restrained P03 restoration prototype alongside the next story pass.
+5. **Release gate:** complete relevant T-items, production-build verification, and explicitly scheduled cross-browser/accessibility playtests. Optional editor/content/presentation items need not block a release.
+6. **Feature track:** use milestone 7's sequence to select a small batch of new activities and one mechanical prototype once their prerequisites work. These additions can ship independently of the full roadmap.
+7. **After release:** use feedback to select editor polish, localization, extra mastery challenges, further feature batches, and one larger experiment.
+
+There is no calendar promise here. Estimate the first slice after agreeing its exact interaction design and failure-data scope; re-estimate later milestones from what it teaches us.
+
+## Validation and maintenance
+
+For implementation changes, use the repository's required default checks:
+
+```sh
+npx tsc --noEmit
+npx eslint src tests
+npx knip
+npm run validate:data
+npx vitest run
+```
+
+Use `npm run build` for release/build/asset changes. Keep tests focused on meaningful behavior: history boundaries, deterministic stepping, practice-versus-certification scoring, state inspection, save recovery, and migration. Browser preview and Playwright/Chrome e2e work require an explicit request under the project instructions; none was performed to create this roadmap.
+
+For playtests, record observable questions rather than inventing success statistics: Can players describe the failing order? Recover their edits? Understand robot handovers? Finish without the full example? Explain a star target? Read the café at the intended viewport? Set numeric targets only after establishing a baseline.
+
+When an item ships, record its implementation reference and validation evidence, then update the current-foundation table. Remove or demote ideas that do not earn their complexity.

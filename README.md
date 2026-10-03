@@ -29,6 +29,8 @@ Act I introduces listening, conditional branches, positions and jumps, sugar and
 
 Query takes orders from shift 2; Brew takes over the kitchen at shift 9; Porter takes over the floor at shift 14. Moka handles the kitchen and Pip handles the floor automatically until you program those roles. Customers progress through order intake, preparation, delivery, departure, and cleaning. Deterministic station and table reservations produce lifecycle timestamps and individual satisfaction. Tables increase from 2 to a full room of 16 across the campaign. The generated shift table lives in `docs/campaign/` (`npm run docs:gen`).
 
+The [improvement roadmap](docs/ROADMAP.md) proposes prioritized milestones for debugging, editing, campaign design, presentation, accessibility, and release preparation.
+
 ## Project structure
 
 - `src/` contains the React application, simulation, editor, and campaign data.
