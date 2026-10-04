@@ -311,6 +311,8 @@ describe('live workspace lifecycle', () => {
         edited
         onTogglePixelArt={() => {}}
         onToggleTextMode={() => {}}
+        shortRepeats={false}
+        onToggleShortRepeats={() => {}}
         onRequestReset={() => {}}
         onClose={() => {}}
       />,

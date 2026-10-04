@@ -49,6 +49,7 @@ describe('historical save fixtures', () => {
       pixel_art: true,
       text_editor: false,
       first_routine_tips: true,
+      short_repeats: false,
       speed: 1,
     });
     // Incompatible Query programs retire: flat maps cleared, Act I scores
@@ -93,6 +94,7 @@ describe('historical save fixtures', () => {
       pixel_art: true,
       text_editor: false,
       first_routine_tips: true,
+      short_repeats: false,
       speed: 1,
     });
     // Flat Query maps retire even when they contain retired payment lines.

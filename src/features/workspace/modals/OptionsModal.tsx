@@ -1,6 +1,6 @@
 import { RotateCcw } from 'lucide-react';
 import { Modal } from '@/components';
-import { SettingRow } from '@/shared/ui/SettingRow';
+import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 
 export interface OptionsModalProps {
   /** The robot whose tab is open, named on the reset button. */
@@ -13,13 +13,18 @@ export interface OptionsModalProps {
   edited: boolean;
   onTogglePixelArt: (value: boolean) => void;
   onToggleTextMode: (value: boolean) => void;
+  shortRepeats: boolean;
+  onToggleShortRepeats: (value: boolean) => void;
   /** The first-routine tips' switch, on the shift that has them; they go once the shift is served. */
   tips?: { on: boolean; onToggle: (value: boolean) => void };
   onRequestReset: () => void;
   onClose: () => void;
 }
 
-/** Workspace options: shader, text editor, the first routine's tips, and resetting the open robot’s routine. */
+/**
+ * Workspace options: shader, text editor, shorter repeats, the first routine's tips, and resetting the open robot’s
+ * routine.
+ */
 export function OptionsModal({
   robot,
   pixelArt,
@@ -29,6 +34,8 @@ export function OptionsModal({
   edited,
   onTogglePixelArt,
   onToggleTextMode,
+  shortRepeats,
+  onToggleShortRepeats,
   tips,
   onRequestReset,
   onClose,
@@ -62,6 +69,12 @@ export function OptionsModal({
         onChange={(e) => onToggleTextMode(e.target.checked)}
       />
       <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
+      <SettingRow
+        title="Shorter repeats"
+        hint={SHORT_REPEATS_HINT}
+        checked={shortRepeats}
+        onChange={(e) => onToggleShortRepeats(e.target.checked)}
+      />
       {tips && (
         <SettingRow
           title="First-routine tips"

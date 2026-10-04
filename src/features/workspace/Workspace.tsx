@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
-import type { DialogueLine, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
+import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
@@ -67,8 +67,14 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   // The cheer waits on its own, so picking a robot's camera during the pull-back doesn't call it off.
   const [cheer, setCheer] = useState(false);
   const focused = zoomToRobot && !observation && !wrapUp;
+  // With shorter repeats on, a shift already served or worked on opens straight on the code; Help replays its intro.
+  const shortRepeats = save.settings.short_repeats;
+  const seen = save.stars[index] !== undefined || save.robotDrafts[index] !== undefined;
   // The shift opens on its scene; a finished run answers with the crew's reaction.
-  const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>('intro');
+  const [scene, setScene] = useState<'intro' | 'failure' | 'success' | ''>(shortRepeats && seen ? '' : 'intro');
+  // Each slip the crew has reacted to on this visit, by the run it first came in: shorter repeats keep any later run's
+  // reaction to the reaction alone.
+  const [heard, setHeard] = useState<ReadonlyMap<FailureCode, number>>(new Map());
   // A finished scene takes its focused button with it; carry on from the shift's title. After the crew's reaction
   // to a failed run, the block where the service stopped is the place to carry on from, ready to fix. The text
   // view stays on the title: focusing its textarea would raise a tablet's keyboard.
@@ -87,6 +93,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     onComplete,
     onFinish: (record) => {
       // Practice that goes right says so beside the code; the cheer and the receipt are for the whole service.
+      const code = record.result.first_failure?.code;
+      if (code) setHeard((codes) => (codes.has(code) ? codes : new Map(codes).set(code, record.id)));
       if (!record.result.passed) setScene('failure');
       else if (record.mode === 'service') {
         setWrapUp(true);
@@ -126,6 +134,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     !running && practised?.mode === 'practice' && practised.result.passed && !isStale(practised, programs)
       ? practised
       : undefined;
+  // A shift served before has had its payoff: shorter repeats keep the cheer to Niko's verdict.
+  const briefSuccess = shortRepeats && live.bestBefore !== undefined;
   // The first shift with a routine to write teaches it step by step, until it's served or the player hides the tips.
   const firstRoutine = index + 1 === UNLOCKS.query && save.stars[index] === undefined;
   const setTips = (on: boolean) => update((s) => ({ ...s, settings: { ...s.settings, first_routine_tips: on } }));
@@ -172,7 +182,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     const timer = setTimeout(
       () => {
         setCheer(false);
-        setScene('success');
+        // A watched shift served before has nothing new to say: its receipt comes straight away.
+        if (briefSuccess && observation) setModal('receipt');
+        else setScene('success');
       },
       reduced ? 0 : 900,
     );
@@ -226,11 +238,12 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   });
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
+  const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
   const reaction =
     scene === 'failure' && failed && result
-      ? failureLines(result, role)
+      ? failureLines(result, role, shortRepeats && firstHeard !== undefined && firstHeard !== records.at(-1)?.id)
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index, level, outro)
+        ? successLines(result, role, index, level, outro, briefSuccess)
         : undefined;
   return (
     <main className="workspace-main">
@@ -432,6 +445,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           edited={source.trim() !== resetRobotPrograms(save, index, lessons)[role].trim()}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
           onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
+          shortRepeats={shortRepeats}
+          onToggleShortRepeats={(value) => update((s) => ({ ...s, settings: { ...s.settings, short_repeats: value } }))}
           tips={firstRoutine ? { on: save.settings.first_routine_tips, onToggle: setTips } : undefined}
           onRequestReset={() => setModal('reset')}
           onClose={() => setModal('')}

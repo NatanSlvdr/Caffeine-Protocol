@@ -302,8 +302,11 @@ const stuck: Record<RobotRole, string> = {
 /** The nudge toward a fix for this kind of failure: the next useful thing to try. */
 export const failureHint = (code: FailureCode): string => kinds[code].hint;
 
-/** A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. */
-export function failureLines(result: RunResult, fallbackRole: RobotRole): DialogueLine[] {
+/**
+ * A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. Told `brief`ly,
+ * for a slip the crew has already reacted to, only the reaction stays: the card under the routine says the rest.
+ */
+export function failureLines(result: RunResult, fallbackRole: RobotRole, brief = false): DialogueLine[] {
   const failure = result.first_failure;
   if (!failure) return [];
   const role = failure.role ?? fallbackRole;
@@ -312,6 +315,7 @@ export function failureLines(result: RunResult, fallbackRole: RobotRole): Dialog
     kind.by === 'guest' && kind.react && failure.phrase
       ? line('guest:worried', kind.react(failure.phrase))
       : line(ROBOT_CAST[role], kind.by === 'robot' && kind.react ? kind.react(failure.phrase) : stuck[role]);
+  if (brief) return [reaction];
   return [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${failureHint(failure.code)}`)];
 }
 
@@ -333,19 +337,27 @@ function starVerdict(result: RunResult, targets: Targets): string {
   return 'Three stars. That’s the tidiest routine I’ve ever seen.';
 }
 
-/** The crew's reaction to a finished service, before the receipt: the shift's payoff scene, then Niko's verdict. */
+/**
+ * The crew's reaction to a finished service, before the receipt: the shift's payoff scene, then Niko's verdict. Told
+ * `brief`ly, for a shift served before, the payoff has been seen: only the verdict stays, and a watched shift goes
+ * straight to its receipt.
+ */
 export function successLines(
   result: RunResult,
   role: RobotRole,
   index: number,
   targets: Targets,
   payoff: DialogueLine[] = [],
+  brief = false,
 ): DialogueLine[] {
   if (result.observation)
-    return payoff.length
-      ? payoff
-      : [line('niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?')];
+    return brief
+      ? []
+      : payoff.length
+        ? payoff
+        : [line('niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?')];
   const pool = cheers[role];
+  if (brief) return [line('niko:happy', starVerdict(result, targets))];
   return [
     ...(payoff.length ? payoff : [line(ROBOT_CAST[role], pool[index % pool.length])]),
     line('niko:happy', starVerdict(result, targets)),

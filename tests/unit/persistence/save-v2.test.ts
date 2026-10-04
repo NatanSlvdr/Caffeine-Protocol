@@ -162,6 +162,16 @@ describe('version 4 campaign saves', () => {
         parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, speed } }), lessons),
       ).toThrow('Invalid playback speed.');
   });
+  it('keeps shorter repeats, with them off for saves made before the option', () => {
+    const oldSave = newSave();
+    delete (oldSave.settings as Partial<typeof oldSave.settings>).short_repeats;
+    expect(parseSave(JSON.stringify(oldSave), lessons).settings.short_repeats).toBe(false);
+    const short = { ...newSave(), settings: { ...newSave().settings, short_repeats: true } };
+    expect(parseSave(JSON.stringify(short), lessons).settings.short_repeats).toBe(true);
+    expect(() =>
+      parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, short_repeats: 1 } }), lessons),
+    ).toThrow('Invalid display setting.');
+  });
   it('keeps the first-routine tips choice, with them on for saves made before it', () => {
     const oldSave = newSave();
     delete (oldSave.settings as Partial<typeof oldSave.settings>).first_routine_tips;

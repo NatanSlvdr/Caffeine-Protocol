@@ -15,6 +15,7 @@ const defaultSettings: Settings = {
   text_editor: false,
   speed: 1,
   first_routine_tips: true,
+  short_repeats: false,
 };
 export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSave => ({
   version: 4,

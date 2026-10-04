@@ -114,7 +114,7 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
   const music = Math.round((settings.music as number) * ((settings.volume as number | undefined) ?? 1) * 100) / 100;
   if (typeof settings.reduced_motion !== 'boolean') throw new Error('Invalid display setting.');
   // Older saves also kept a fullscreen flag. The browser decides that on every visit, so it is dropped.
-  for (const k of ['pixel_art', 'text_editor', 'first_routine_tips'])
+  for (const k of ['pixel_art', 'text_editor', 'first_routine_tips', 'short_repeats'])
     if (settings[k] !== undefined && typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
   // Saves from before the speed was kept play at 1×, as every shift used to open.
   const speed = settings.speed ?? 1;
@@ -128,6 +128,8 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
     speed,
     // Saves from before the tips had them on; a café past its first routine never sees them anyway.
     first_routine_tips: (settings.first_routine_tips as boolean | undefined) ?? true,
+    // Every scene played in full before the option existed.
+    short_repeats: (settings.short_repeats as boolean | undefined) ?? false,
   };
 }
 

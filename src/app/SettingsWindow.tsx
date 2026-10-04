@@ -3,7 +3,7 @@ import { Download, FolderHeart, Leaf, Maximize, Minimize, RotateCcw, Sparkles, U
 import { lessons } from '@/data';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { SettingRow } from '@/shared/ui/SettingRow';
+import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave, untouched, type BackupReason } from '@/features/campaign/save/persistence';
 import { count, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
@@ -96,6 +96,12 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               hint="Crisp pixels and outlined edges."
               checked={settings.pixel_art}
               onChange={(e) => setting('pixel_art', e.target.checked)}
+            />
+            <SettingRow
+              title="Shorter repeats"
+              hint={SHORT_REPEATS_HINT}
+              checked={settings.short_repeats}
+              onChange={(e) => setting('short_repeats', e.target.checked)}
             />
             {canFullscreen && (
               <div className="setting-row">

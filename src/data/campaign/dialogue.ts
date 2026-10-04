@@ -7,7 +7,7 @@ type ScriptLine = readonly [Speaker, string];
 
 const script = (lines: readonly ScriptLine[]): DialogueLine[] => lines.map(([speaker, text]) => line(speaker, text));
 
-/** Shift intros, keyed by 1-based level. They play every time a shift opens. */
+/** Shift intros, keyed by 1-based level. They play every time a shift opens, unless shorter repeats skips one already worked on. */
 const intros: Record<number, readonly ScriptLine[]> = {
   1: [
     ['', 'The shutters of the old café roll up for the first time in years.'],

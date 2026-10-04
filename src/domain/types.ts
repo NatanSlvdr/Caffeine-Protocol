@@ -182,6 +182,8 @@ export interface Settings {
   speed: number;
   /** Show the step-by-step tips on the first shift with a routine to write, until it's served or they're hidden. */
   first_routine_tips: boolean;
+  /** Skip the intro of a shift already worked on, and keep the crew's reactions already heard to one line. */
+  short_repeats: boolean;
 }
 export interface ProgressSaveV1 {
   version: 1;
