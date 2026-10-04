@@ -23,6 +23,7 @@ import {
   variableLabels,
 } from './program';
 import {
+  commandDirection,
   parseDepositCommand,
   parseMoveCommand,
   parseMoveTo,
@@ -436,12 +437,14 @@ export function* streamService(
     const [stand, cell, name] = goal;
     if (!samePoint(w.position, stand))
       return { code: 'out-of-reach', reason: `Move to ${name} first: it’s ${tilesAway(w.position, stand)} from here.` };
-    const direction = DIRECTIONS.find((d) => samePoint(interactionTarget(stand, d)!, cell))!;
+    const direction = DIRECTIONS.find((d) => samePoint(interactionTarget(stand, d)!, cell))!,
+      used = commandDirection(c);
     return {
       code: 'wrong-direction',
       reason: `${name[0].toUpperCase() + name.slice(1)} is ${direction === 'UP' ? 'above' : 'below'} ${
         ROBOT_DISPLAY_NAMES[w.role]
       }: use ${verb} ${directionLabel(direction)}.`,
+      context: { expected: directionLabel(direction), ...(used && { actual: directionLabel(used) }) },
     };
   };
   /** What Store reads: Brew's sugar from the drink it's finishing, Porter's table and place. */
@@ -890,6 +893,11 @@ export function* streamService(
           served.toGo
             ? `This ${cargo.item} is to go: take it to the to-go shelf by the door, and Deposit down onto it.`
             : `This ${cargo.item} is for table ${cargo.table}, not the to-go shelf.`,
+          {
+            context: served.toGo
+              ? { expected: 'shelf', actual: hand.table }
+              : { expected: cargo.table, actual: 'shelf' },
+          },
         );
         return false;
       }
@@ -935,7 +943,9 @@ export function* streamService(
         return false;
       }
       if (hand.table !== w.job.table) {
-        fail(w, 'wrong-dirty-table', `The dirty cup is on table ${w.job.table}, not table ${hand.table}.`);
+        fail(w, 'wrong-dirty-table', `The dirty cup is on table ${w.job.table}, not table ${hand.table}.`, {
+          context: { expected: w.job.table, actual: hand.table },
+        });
         return false;
       }
       if (w.inventory.length >= capacity(w)) {
@@ -1005,7 +1015,9 @@ export function* streamService(
         }
         if (a === 'LID') {
           if (!readyJob.toGo) {
-            fail(w, 'lid-extra', `This ${ready.item} is staying in: it doesn’t need a lid.`);
+            fail(w, 'lid-extra', `This ${ready.item} is staying in: it doesn’t need a lid.`, {
+              context: { expected: false, actual: true },
+            });
             return false;
           }
           if (ready.lid) {
@@ -1061,6 +1073,7 @@ export function* streamService(
               w,
               'lid-missing',
               `This ${ready.item} is to go: put a lid on it first. The lids are between the sugar and pickup.`,
+              { context: { expected: true, actual: false } },
             );
             return false;
           }

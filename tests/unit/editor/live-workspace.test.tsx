@@ -506,6 +506,77 @@ describe('live workspace lifecycle', () => {
   });
 });
 
+describe('the failure card', () => {
+  // Shift 4 brings tea; this routine writes coffee for everyone, so the first guest who wants tea gets the wrong drink.
+  const failing = lessons[3].solution.replace('ITEM tea', 'ITEM coffee');
+  const card = () => screen.queryByRole('region', { name: /^Query stopped/ });
+  const failedBlock = () =>
+    [...document.querySelectorAll<HTMLElement>('.block[data-line]')].find((e) => e.classList.contains('failure'));
+  function failRun() {
+    window.location.hash = '/shift/4';
+    seedLocalStorage({
+      ...makeSave(),
+      unlocked: 3,
+      selected: 3,
+      robotDrafts: { 3: { query: failing, prep: '', floor: '' } },
+    });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    for (let i = 0; i < 60 && !screen.queryByRole('dialog', { name: 'Dialogue' }); i++)
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+  }
+
+  it('keeps the failed guest, the difference, and the next step beside the code once the crew is done', () => {
+    failRun();
+    // The crew tells it first; the card doesn't talk over them.
+    expect(card()).toBeNull();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    const kept = card()!;
+    expect(kept.getAttribute('aria-labelledby')).toBeTruthy();
+    expect(within(kept).getByText('Query stopped').textContent).toBe('Query stopped · Round 1 · Guest 2');
+    expect(kept.textContent).toContain('“tea”');
+    const row = within(kept).getByRole('row', { name: /Drink/ });
+    expect(
+      within(row)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Tea', 'Coffee']);
+    expect(within(kept).getByRole('columnheader', { name: 'Ordered' })).toBeTruthy();
+    expect(within(kept).getByRole('columnheader', { name: 'Handed over' })).toBeTruthy();
+    expect(kept.textContent).toContain('Check what the order says before you write the drink.');
+    // It folds away to its title, and opens again.
+    const toggle = within(kept).getByRole('button', { name: /^Query stopped/ });
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(within(kept).queryByRole('table')).toBeNull();
+    fireEvent.click(toggle);
+    expect(within(kept).getByRole('table')).toBeTruthy();
+  });
+
+  it('shows where it stopped, goes stale on an edit, comes back on undo, and leaves when the next run starts', () => {
+    failRun();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    document.body.focus();
+    fireEvent.click(within(card()!).getByRole('button', { name: 'Show where Query stopped' }));
+    expect(document.activeElement).toBe(failedBlock());
+    const last = [...document.querySelectorAll<HTMLElement>('.block[data-line]')].at(-1)!;
+    last.focus();
+    fireEvent.keyDown(last, { key: 'Delete' });
+    // The routine moved on: the card is a record of the last run now, and nothing in the code is marked.
+    expect(card()!.textContent).toContain('From your last run');
+    expect(within(card()!).queryByRole('button', { name: /Show where/ })).toBeNull();
+    expect(failedBlock()).toBeUndefined();
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(card()!.textContent).not.toContain('From your last run');
+    expect(failedBlock()).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    expect(card()).toBeNull();
+  });
+});
+
 describe('undo and redo', () => {
   const draft = 'LISTEN\nIF tea IN CUSTOMER SPEECH\n  WRITE tea\nEND\nDEPOSIT RIGHT';
   function openDraft(text = false) {

@@ -34,7 +34,12 @@ export function validate(customer: Customer, actual: CustomerExecution): Failure
     return actual.tickets.length
       ? { code: 'guessed-drink', reason: 'Nobody could clear the order up, so Query shouldn’t guess a drink.' }
       : undefined;
-  if (!actual.tickets.length) return { code: 'no-ticket', reason: 'No ticket was written for this order.' };
+  if (!actual.tickets.length)
+    return {
+      code: 'no-ticket',
+      reason: 'No ticket was written for this order.',
+      context: { expected: tickets.length, actual: 0 },
+    };
   const units = actual.tickets.flatMap(ticketUnits);
   if (units.length !== tickets.length)
     return {

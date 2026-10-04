@@ -67,7 +67,10 @@ export function* streamCustomerEvent(
       const count = out.tickets.reduce((sum, paper) => sum + (paper.quantity ?? 1), 0);
       if (count < expected.length) {
         out.error_line = out.trace.findLast((step) => isOrderDeposit(step.command))?.line ?? out.error_line;
-        return fail('ticket-count', 'Query handed over too few tickets: every drink they ordered needs its own.');
+        return fail('ticket-count', 'Query handed over too few tickets: every drink they ordered needs its own.', {
+          expected: expected.length,
+          actual: count,
+        });
       }
     }
     if (!out.error && out.tickets.length && !out.payment) {
@@ -286,6 +289,7 @@ export function* streamCustomerEvent(
               return fail(
                 'ticket-count',
                 'Query handed over too many tickets: one per drink they ordered, and no more.',
+                { expected: expected.length, actual: offset + count },
               );
             const moreLoopItems = loops.some((loop) => loop.index + 1 < loop.values.length);
             const morePaper = p.instructions
@@ -299,7 +303,11 @@ export function* streamCustomerEvent(
                       .find((next) => !next.startsWith('POSITION ')) !== 'LISTEN'),
               );
             if (!moreLoopItems && !morePaper && offset + count < expected.length)
-              return fail('ticket-count', 'Query handed over too few tickets: every drink they ordered needs its own.');
+              return fail(
+                'ticket-count',
+                'Query handed over too few tickets: every drink they ordered needs its own.',
+                { expected: expected.length, actual: offset + count },
+              );
             for (const [k, request] of expected.slice(offset, offset + count).entries()) {
               const mismatch = ticketMismatch(offset + k, request, ticket);
               if (mismatch) return failWith(mismatch);

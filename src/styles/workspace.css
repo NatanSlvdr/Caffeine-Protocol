@@ -292,6 +292,159 @@
 .workspace-main .editor-panel .editor-body {
   border-radius: 0 0 17px 33px / 0 0 17px 17px;
 }
+/* The last failed run, kept under the code: a warm red record while it still describes the routine, quiet once
+   an edit has moved past it. It takes the board's bottom corners, so the code above it squares off. */
+.workspace-main .editor-panel:has(.failure-card) .editor-body {
+  border-radius: 0;
+}
+.failure-card {
+  flex: none;
+  max-height: 45%;
+  overflow: auto;
+  border-top: 1px solid #ff8e7b4d;
+  border-radius: 0 0 17px 17px;
+  background: color-mix(in srgb, var(--draft-deep) 90%, #ff654d);
+  color: var(--draft-text);
+  scrollbar-width: thin;
+  scrollbar-color: var(--draft-line) transparent;
+}
+.failure-card.stale {
+  border-top-color: var(--draft-line);
+  background: var(--draft-deep);
+}
+.failure-card > header > button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 11px 16px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: #ffb4a3;
+  font-size: 12px;
+  font-weight: 750;
+  text-align: left;
+}
+.failure-card > header > button:hover:not(:disabled) {
+  background: #ffffff08;
+}
+.failure-card > header > button:focus-visible {
+  outline: 1px solid #f3e6cf55;
+  outline-offset: -3px;
+}
+.failure-card.stale > header > button {
+  color: var(--draft-muted);
+}
+.failure-card-when {
+  color: var(--draft-muted);
+  font-weight: 600;
+}
+.failure-card-chevron {
+  flex: none;
+  margin-left: auto;
+  transition: rotate 0.18s ease;
+}
+.failure-card [aria-expanded='false'] .failure-card-chevron {
+  rotate: -90deg;
+}
+html[data-motion='reduced'] .failure-card-chevron {
+  transition: none;
+}
+.failure-card-body {
+  display: grid;
+  gap: 9px;
+  padding: 0 16px 14px 39px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.failure-card-body[hidden] {
+  display: none;
+}
+.failure-card-body p,
+.failure-card-body blockquote {
+  margin: 0;
+}
+.failure-card-body blockquote {
+  color: var(--draft-chalk);
+  font-style: italic;
+}
+.failure-card-reason {
+  color: var(--draft-text);
+}
+.failure-card-stale {
+  color: var(--draft-muted);
+  font-size: 11px;
+}
+.failure-card.stale .failure-card-body > :not(.failure-card-stale) {
+  opacity: 0.6;
+}
+.failure-compare {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+.failure-compare th,
+.failure-compare td {
+  padding: 5px 8px 5px 0;
+  text-align: left;
+  vertical-align: middle;
+}
+.failure-compare thead :is(th, td) {
+  color: #d2ae7f;
+  font:
+    750 9px/1.3 ui-monospace,
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.failure-compare tbody :is(th, td) {
+  border-top: 1px solid var(--draft-line);
+}
+.failure-compare tbody th {
+  color: var(--draft-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.failure-compare tbody th svg {
+  margin-right: 6px;
+  vertical-align: -2px;
+}
+.failure-compare-got {
+  color: #ffb4a3;
+  font-weight: 700;
+}
+.failure-card.stale .failure-compare-got {
+  color: inherit;
+}
+.failure-card-next {
+  color: var(--draft-muted);
+}
+.failure-card-next strong {
+  margin-right: 4px;
+  color: #d2ae7f;
+  font:
+    750 9px ui-monospace,
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.failure-card-show {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  padding: 5px 10px;
+  border: 1px solid var(--draft-line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--draft-text);
+  font-size: 11px;
+}
+.failure-card-show:hover:not(:disabled) {
+  border-color: var(--draft-chalk);
+  background: #ffffff0d;
+}
 .editor-body .observation-note {
   max-width: 34ch;
   margin: 18px 16px;

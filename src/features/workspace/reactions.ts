@@ -299,6 +299,9 @@ const stuck: Record<RobotRole, string> = {
   floor: '*bonk* Stuck!',
 };
 
+/** The nudge toward a fix for this kind of failure: the next useful thing to try. */
+export const failureHint = (code: FailureCode): string => kinds[code].hint;
+
 /** A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. */
 export function failureLines(result: RunResult, fallbackRole: RobotRole): DialogueLine[] {
   const failure = result.first_failure;
@@ -309,7 +312,7 @@ export function failureLines(result: RunResult, fallbackRole: RobotRole): Dialog
     kind.by === 'guest' && kind.react && failure.phrase
       ? line('guest:worried', kind.react(failure.phrase))
       : line(ROBOT_CAST[role], kind.by === 'robot' && kind.react ? kind.react(failure.phrase) : stuck[role]);
-  return [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${kind.hint}`)];
+  return [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${failureHint(failure.code)}`)];
 }
 
 /** Stand-in cheers for shifts without a written payoff. */

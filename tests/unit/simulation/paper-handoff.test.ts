@@ -126,14 +126,22 @@ describe('directional worker handoffs', () => {
       ...referencePrograms(UNLOCKS.prep),
       prep: prep.replace('DEPOSIT UP', 'DEPOSIT RIGHT'),
     });
-    expect(wrongPrep.first_failure).toMatchObject({ role: 'prep', code: 'wrong-direction' });
+    expect(wrongPrep.first_failure).toMatchObject({
+      role: 'prep',
+      code: 'wrong-direction',
+      context: { expected: 'up', actual: 'right' },
+    });
     expect(wrongPrep.first_failure?.reason).toBe('The pickup counter is above Brew: use Deposit up.');
 
     const wrongFloor = runLevel(levels[UNLOCKS.floor - 1], compileProgram(referencePrograms(UNLOCKS.floor).query), {
       ...referencePrograms(UNLOCKS.floor),
       floor: floor.replace('TAKE DOWN', 'TAKE LEFT'),
     });
-    expect(wrongFloor.first_failure).toMatchObject({ role: 'floor', code: 'wrong-direction' });
+    expect(wrongFloor.first_failure).toMatchObject({
+      role: 'floor',
+      code: 'wrong-direction',
+      context: { expected: 'down', actual: 'left' },
+    });
     expect(wrongFloor.first_failure?.reason).toBe('The drink pickup is below Porter: use Take down.');
   });
 

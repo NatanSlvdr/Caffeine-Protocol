@@ -12,6 +12,7 @@ import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
+import { FailureCard } from './FailureCard';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { ResetModal } from './modals/ResetModal';
@@ -99,11 +100,31 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     time,
     activeLine,
     failureLine,
+    evidence,
+    stale,
     instructionProgress,
     round,
     change,
     run,
   } = live;
+  // “Show where it stopped” opens the robot that stopped; once its routine is on screen, focus goes to the block,
+  // or in the text view to the start of the line.
+  const [seeking, setSeeking] = useState(false);
+  useEffect(() => {
+    if (!seeking) return;
+    setSeeking(false);
+    const block = document.querySelector<HTMLElement>('.editor-panel .block.failure');
+    if (block) {
+      block.focus();
+      block.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'instant' : 'smooth' });
+      return;
+    }
+    const text = document.querySelector<HTMLTextAreaElement>('.editor-panel .code-input');
+    if (!text || failureLine < 0) return;
+    const at = source.split('\n').slice(0, failureLine).join('\n').length + (failureLine ? 1 : 0);
+    text.focus();
+    text.setSelectionRange(at, at);
+  }, [seeking]);
   // Undo and redo change the code out of sight of whatever has focus, so a screen reader hears what happened.
   const [historySaid, sayHistory] = useAnnouncement();
   const stepHistory = (direction: 'undo' | 'redo') => {
@@ -296,6 +317,18 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             textMode={textMode}
             tabbed
           />
+          {/* The crew tells the failure first; the card keeps it once they're done. */}
+          {evidence && scene !== 'failure' && (
+            <FailureCard
+              evidence={evidence}
+              stale={stale}
+              rounds={level.seeds.length}
+              onShowLine={() => {
+                setRole(evidence.failure.role ?? 'query');
+                setSeeking(true);
+              }}
+            />
+          )}
           <p className="sr-only" role="status">
             {historySaid}
           </p>

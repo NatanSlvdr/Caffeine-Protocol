@@ -7,6 +7,8 @@ import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunResult
 import { usePlaybackClock } from './usePlaybackClock';
 import { keepHistories, keptHistories, record, redo, undo } from './history';
 import type { EditKind } from './history';
+import { evidenceOf, isStale } from './evidence';
+import type { RunEvidence } from './evidence';
 
 export interface LiveRunArgs {
   index: number;
@@ -36,6 +38,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
   const [showFailure, setShowFailure] = useState(false);
+  // The last failed run, kept beside the code while the player fixes it; the next run puts it away.
+  const [evidence, setEvidence] = useState<RunEvidence | null>(null);
+  const stale = !!evidence && isStale(evidence, programs);
   // The shift's stars before this run, so the receipt can tell a new best from a replay.
   const [bestBefore, setBestBefore] = useState<number | undefined>(save.stars[index]);
   const time = replayTime;
@@ -55,7 +60,10 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       : -1;
   // A failed run stops at once so the code can be fixed, but its last frame stays up until the code changes.
   const failed = showFailure && !!result && !result.passed;
-  const failureLine = failed && result.first_failure?.role === role ? (result.first_failure?.error_line ?? -1) : -1;
+  // The block where it stopped stays marked for as long as the routines are the ones that ran: an edit clears it,
+  // and undoing back to them marks it again.
+  const failureLine =
+    evidence && !stale && (evidence.failure.role ?? 'query') === role ? evidence.failure.error_line : -1;
   const instructionProgress =
     displayedTrace && sampled && displayedTrace.end > displayedTrace.start
       ? (sampled.local - displayedTrace.start) / (displayedTrace.end - displayedTrace.start)
@@ -93,6 +101,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setRunning(false);
     setPaused(false);
     setShowFailure(true);
+    setEvidence(evidenceOf(level, failure, programs));
     if (failure.first_failure?.role) setRole(failure.first_failure.role);
     onFinish(false);
   };
@@ -112,6 +121,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     liveRun.current = createLiveRun(level, programs);
     setBestBefore(save.stars[index]);
     setResult(null);
+    setEvidence(null);
     setReplayTime(-STREET_APPROACH_SECONDS);
     setShowFailure(false);
     setPaused(false);
@@ -151,6 +161,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     time,
     activeLine,
     failureLine,
+    evidence,
+    stale,
     instructionProgress,
     round,
     change,
