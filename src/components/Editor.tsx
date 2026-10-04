@@ -21,6 +21,7 @@ import { useDropCollision } from '@/hooks/useCodeCollision';
 import { droppedOutside, useBlockDrag } from '@/hooks/useBlockDrag';
 import { previewProgramBlocks, useVisibleProgram } from '@/hooks/useVisibleProgram';
 import { CommandTile } from './editor/CommandTile';
+import { blockHelp, spokenHelp } from './editor/blockHelp';
 import { DragPreview, ProjectedBlocks } from './editor/ProjectedBlocks';
 import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
@@ -179,6 +180,9 @@ export function Editor({
       codeArea.current?.parentElement?.querySelector<HTMLElement>('.command-library button:not(:disabled)');
     next?.focus();
   }, [removed]);
+  // The library block pointed at or focused, explained in a line over the top of the code.
+  const [explained, explain] = useState<string | null>(null);
+  const help = explained && !dragged ? blockHelp(explained, role, level) : null;
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
   const lines = source.split('\n');
 
@@ -210,10 +214,19 @@ export function Editor({
                 initial={c}
                 options={options}
                 disabled={disabled}
+                help={spokenHelp(blockHelp(c, role, level))}
+                onExplain={explain}
                 onChange={insert}
               />
             ))}
           </div>
+          {/* The buttons already say this to screen readers; this is the same words for the eye. */}
+          {help && (
+            <p className="library-help" aria-hidden="true">
+              <strong>{help.name}</strong> {help.text}
+              {help.example && <span className="library-help-example">For example: {help.example}</span>}
+            </p>
+          )}
         </section>
         <div
           className="editor-body"

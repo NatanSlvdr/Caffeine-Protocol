@@ -304,9 +304,36 @@ button.primary:hover:not(:disabled) {
   cursor: default;
 }
 .palette {
+  position: relative;
   padding: 14px 14px 13px;
   border-top: 1px solid #e7e9dd;
   background: #f7f7ee;
+}
+/* Floats over the top of the code rather than taking room from it, and never catches the pointer. */
+.palette .library-help {
+  position: absolute;
+  z-index: 5;
+  top: 100%;
+  right: 10px;
+  left: 10px;
+  margin: 6px 0 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  color: #f7f1e6;
+  background: #2f2a24f0;
+  box-shadow: 0 6px 18px #2f2a2433;
+  font-size: 12.5px;
+  line-height: 1.45;
+  pointer-events: none;
+}
+.palette .library-help strong {
+  margin-right: 2px;
+  font-weight: 750;
+}
+.palette .library-help-example {
+  display: block;
+  margin-top: 2px;
+  color: #f7f1e6bf;
 }
 .palette > label {
   display: flex;
