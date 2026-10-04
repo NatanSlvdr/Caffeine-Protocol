@@ -59,7 +59,7 @@ describe('clear execution feedback', () => {
     expect(document.querySelector('[data-line="1"]')?.getAttribute('aria-label')).not.toContain('stopped');
     rerender(<Editor {...failed} textMode />);
     expect(screen.getByLabelText('Routine text').getAttribute('aria-description')).toBe(
-      'The service stopped on line 3. Tab indents, Shift+Tab outdents, Escape leaves the editor.',
+      'The service stopped on line 3. Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.',
     );
   });
   it('scrolls in the same coordinate space as the blocks without repositioning', () => {

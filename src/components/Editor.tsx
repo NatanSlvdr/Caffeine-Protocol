@@ -40,7 +40,7 @@ import { ExecutionCursor } from './ExecutionCursor';
 import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { pad2 } from '@/shared/lib/format';
-import { TriangleAlert } from 'lucide-react';
+import { TriangleAlert, WandSparkles } from 'lucide-react';
 
 /** How long typing pauses before the text is checked for what would stop it on Run. */
 const CHECK_PAUSE_MS = 900;
@@ -161,7 +161,27 @@ export function Editor({
   const [caretLine, setCaretLine] = useState<number | null>(null);
   const trackCaret = (input: HTMLTextAreaElement) =>
     setCaretLine(input.value.slice(0, input.selectionStart).split('\n').length - 1);
+  // Tidy up lays the typed routine out by depth again, as one edit that Undo takes back. From the keyboard
+  // (Shift+Alt+F, as in code editors), the caret stays on its line, at the same place in the line's words.
+  const tidy = (caret?: number) => {
+    const tidied = indentSource(source);
+    if (tidied === source) return say('The routine is already laid out.');
+    if (caret !== undefined) {
+      const line = source.slice(0, caret).split('\n').length - 1,
+        before = source.split('\n'),
+        after = tidied.split('\n');
+      const words = Math.max(0, caret - source.lastIndexOf('\n', caret - 1) - 1 - /^\s*/.exec(before[line])![0].length);
+      const start = after.slice(0, line).reduce((at, text) => at + text.length + 1, 0);
+      tabCursor.current = start + Math.min(after[line].length, /^\s*/.exec(after[line])![0].length + words);
+    }
+    change(tidied);
+    say('Laid the routine out by depth.');
+  };
   const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.code === 'KeyF' && e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && !disabled) {
+      e.preventDefault();
+      return tidy(e.currentTarget.selectionStart);
+    }
     if (e.key !== 'Tab' || disabled || e.ctrlKey || e.metaKey || e.altKey) return;
     e.preventDefault();
     const { selectionStart, selectionEnd } = e.currentTarget;
@@ -180,6 +200,10 @@ export function Editor({
   const ordinalOf = (line: number) => rows.findIndex((r) => r.line === line) + 1;
   const lines = source.split('\n');
   const scope = textMode && caretLine !== null ? scopeAround(lines, caretLine) : [];
+  // What the block on the caret's line does, the library's own help, while the text has focus.
+  const caretCommand = caretLine === null ? '' : (lines[caretLine] ?? '').trim();
+  const lineHelp =
+    textMode && caretCommand && !caretCommand.startsWith('#') ? blockHelp(caretCommand, role, level) : null;
   // Groups folded shut, so a long routine reads at a glance. Folds follow their lines through edits and are this
   // robot's own; a group holding the running block or the failure shows it, folded or not.
   const [folds, setFolds] = useState({ role, source, lines: new Set<number>() as ReadonlySet<number> });
@@ -445,7 +469,7 @@ export function Editor({
                 aria-description={
                   (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
                   (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
-                  'Tab indents, Shift+Tab outdents, Escape leaves the editor.'
+                  'Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.'
                 }
                 onKeyDown={onTextKey}
                 onSelect={(e) => trackCaret(e.currentTarget)}
@@ -509,6 +533,23 @@ export function Editor({
             </ProgramSurface>
           )}
         </div>
+        {textMode && !observation && (
+          <div className="text-tools">
+            <p className="text-help">
+              {lineHelp?.text && (
+                <>
+                  <strong>{lineHelp.name}</strong> {lineHelp.text}
+                </>
+              )}
+            </p>
+            {!disabled && (
+              <button type="button" onClick={() => tidy()} aria-keyshortcuts="Shift+Alt+F" title="Shift+Alt+F">
+                <WandSparkles size={13} aria-hidden="true" />
+                Tidy up
+              </button>
+            )}
+          </div>
+        )}
         {problem && (
           <div className="routine-check">
             <TriangleAlert size={14} aria-hidden="true" />
