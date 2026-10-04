@@ -9,6 +9,7 @@ export * from './directions';
 export * from './dragPlacement';
 export * from './dialogue';
 export * from './drinks';
+export * from './failures';
 export * from './layout';
 export * from './liveSimulation';
 export * from './operandKind';

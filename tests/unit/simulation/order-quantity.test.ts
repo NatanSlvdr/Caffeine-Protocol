@@ -19,7 +19,7 @@ const source = 'LISTEN\nTAKE UP\nITEM 2 coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOV
 describe('quantity on one paper', () => {
   it('validates two cups on one ticket and charges for both', () => {
     const result = executeCustomerEvent(compileProgram(source, UNLOCKS.forEach), customer, 'quantity');
-    expect(validate(customer, result)).toBe('');
+    expect(validate(customer, result)).toBeUndefined();
     expect(result.tickets).toHaveLength(1);
     expect(result.tickets[0].quantity).toBe(2);
     expect(result.payment?.amount).toBe(6);
@@ -29,7 +29,7 @@ describe('quantity on one paper', () => {
         customer,
         executeCustomerEvent(compileProgram(source.replace('2 coffee', '1 coffee')), customer, 'wrong'),
       ),
-    ).toContain('but Query wrote');
+    ).toMatchObject({ code: 'ticket-count', context: { expected: 2, actual: 1 } });
   });
   it.each(['offline', 'live'])('prepares and serves every cup in %s service', (mode) => {
     let result = runLevel(level, compileProgram(source, UNLOCKS.forEach));

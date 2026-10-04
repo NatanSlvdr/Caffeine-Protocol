@@ -31,6 +31,8 @@ export function finishLiveRun(
       intent: event.customer.intent,
       expected: event.customer.expected,
       actual: event.tickets,
+      code: failure.code,
+      context: failure.context,
       reason: failure.reason,
     };
     result.average_satisfaction =

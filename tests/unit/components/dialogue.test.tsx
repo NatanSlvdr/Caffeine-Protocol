@@ -8,6 +8,7 @@ import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
 import { levels } from '../../../src/data';
 import { failureLines, successLines } from '../../../src/features/workspace/reactions';
+import type { FailureCode } from '../../../src/domain/failures';
 import type { RunFailure, RunResult } from '../../../src/domain/types';
 
 const lines = [line('', 'The shutters roll up.'), line('niko:happy', 'We’re open!'), line('query', 'Acknowledged.')];
@@ -159,17 +160,17 @@ describe('scripts', () => {
 });
 
 describe('reactions', () => {
-  const failure = (reason: string, extra: Partial<RunFailure> = {}): RunResult =>
+  const failure = (code: FailureCode, reason: string, extra: Partial<RunFailure> = {}): RunResult =>
     ({
       passed: false,
       observation: false,
       stars: 0,
-      first_failure: { role: 'query', phrase: 'Two teas, please.', reason, ...extra },
+      first_failure: { role: 'query', phrase: 'Two teas, please.', code, reason, ...extra },
     }) as RunResult;
 
   it('lets the guest react to a wrong order, then Niko explains', () => {
     const [guest, niko] = failureLines(
-      failure('Ticket 1 has the wrong item: they asked for tea, not coffee.'),
+      failure('ticket-item', 'Ticket 1 has the wrong item: they asked for tea, not coffee.'),
       'query',
     );
     expect(guest).toMatchObject({ who: 'guest', mood: 'worried' });
@@ -179,118 +180,179 @@ describe('reactions', () => {
   });
 
   it('explains why the common Query and robot mistakes matter', () => {
-    const niko = (reason: string) => failureLines(failure(reason, { role: 'query' }), 'query')[1].text;
-    expect(niko('Query stopped listening. Jump back to Wait for Orders after serving.')).toContain('next one');
-    expect(niko('Query handed over too few tickets: every drink they ordered needs its own.')).toContain(
-      'every drink they named',
+    const niko = (code: FailureCode, reason: string) =>
+      failureLines(failure(code, reason, { role: 'query' }), 'query')[1].text;
+    expect(niko('stopped-listening', 'Query stopped listening. Jump back to Wait for Orders after serving.')).toContain(
+      'next one',
     );
-    expect(niko('This order is unclear. Use Help before taking paper.')).toContain('Guessing');
     expect(
-      niko('Query is still holding a ticket the kitchen never got: Deposit right at the kitchen handoff.'),
-    ).toContain('only half of it');
-    expect(niko('Wait for dirty cups before collecting one.')).toContain('job it has been handed');
-    expect(
-      niko('Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.'),
-    ).toContain('job it has been handed');
-    expect(
-      niko('Brew made every drink one at a time: this shift, claim 2 tickets and make them in one trip.'),
-    ).toContain('Fill both before setting off');
-    expect(niko('Porter carried one item at a time: this shift, fill the tray with 2 before setting off.')).toContain(
-      'Fill both before setting off',
-    );
+      niko('ticket-count', 'Query handed over too few tickets: every drink they ordered needs its own.'),
+    ).toContain('One sheet per drink they named');
+    expect(niko('unclear-order', 'This order is unclear. Use Help before taking paper.')).toContain('Guessing');
     expect(
       niko(
+        'ticket-not-handed-over',
+        'Query is still holding a ticket the kitchen never got: Deposit right at the kitchen handoff.',
+      ),
+    ).toContain('only half of it');
+    expect(niko('no-job', 'Wait for dirty cups before collecting one.')).toContain('job it has been handed');
+    expect(
+      niko(
+        'no-job',
+        'Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.',
+      ),
+    ).toContain('job it has been handed');
+    expect(
+      niko('carry-more', 'Brew made every drink one at a time: this shift, claim 2 tickets and make them in one trip.'),
+    ).toContain('Fill both before setting off');
+    expect(
+      niko('carry-more', 'Porter carried one item at a time: this shift, fill the tray with 2 before setting off.'),
+    ).toContain('Fill both before setting off');
+    expect(
+      niko(
+        'recipe-not-function',
         'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
       ),
     ).toContain('one place to change');
     expect(
       niko(
+        'end-of-routine',
         'Brew reached the end of its routine with work still to do: put a jump destination at the top and a Jump back to it at the end, so Brew goes back for the next ticket.',
       ),
     ).toContain('from top to bottom once');
     expect(
       niko(
+        'loop-limit',
         'An hour went by and the service still isn’t finished: Porter keeps going round its loop without reaching its next job.',
       ),
     ).toContain('Something loops forever');
     expect(
       niko(
+        'loop-limit',
         'Brew keeps going round its loop without doing anything: put Wait for Orders inside it, so Brew waits for its next ticket.',
       ),
     ).toContain('Something loops forever');
     expect(
       niko(
+        'unfinished-work',
         'Porter is still holding the coffee for table 2, and its guest is waiting for it: serve it before waiting for more work.',
       ),
     ).toContain('has to see it through');
     // Brew's sugar slip is about counting it in, not reading the order.
-    expect(niko('This coffee takes 2 sugars, but it has 1.')).toContain('exactly the sugar on the ticket');
-    expect(niko('Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
-    // A mark written where it doesn't belong is the opposite slip to a missing one.
-    expect(niko('Ticket 1 isn’t in a rush, but it says Rush.')).toContain('only for guests who say they’re in a hurry');
-    expect(niko('Ticket 1 is staying in, but it says To go.')).toContain('Only write To go when the order says so');
-    expect(niko('Ticket 1 is to go: Write To go on it.')).toContain('If To go IN item, then Write To go');
-    expect(niko('This coffee is for table 2, not the to-go shelf.')).toContain('goes to the table on its ticket');
-    expect(niko('Finish brewing before putting a lid on.')).toContain('putting a lid on');
-    expect(niko('Deposit the current paper before taking another.')).toContain('Deposit right, then take a fresh one');
-    expect(niko('Deposit this item’s paper before the For loop moves on.')).toContain('Deposit right');
-    expect(niko('Query isn’t holding a ticket to hand over: Take up a sheet and write on it first.')).toContain(
-      'only write on paper it’s holding',
+    expect(niko('sugar-count', 'This coffee takes 2 sugars, but it has 1.')).toContain(
+      'exactly the sugar on the ticket',
     );
+    expect(niko('ticket-sugar', 'Ticket 1 needs 2 sugars, but it says 0.')).toContain('how much sugar they asked for');
+    // A mark written where it doesn't belong is the opposite slip to a missing one.
+    expect(niko('ticket-rush-extra', 'Ticket 1 isn’t in a rush, but it says Rush.')).toContain(
+      'only for guests who say they’re in a hurry',
+    );
+    expect(niko('ticket-to-go-extra', 'Ticket 1 is staying in, but it says To go.')).toContain(
+      'Only write To go when the order says so',
+    );
+    expect(niko('ticket-to-go-missing', 'Ticket 1 is to go: Write To go on it.')).toContain(
+      'If To go IN item, then Write To go',
+    );
+    expect(niko('stay-in-to-table', 'This coffee is for table 2, not the to-go shelf.')).toContain(
+      'goes to the table on its ticket',
+    );
+    expect(niko('not-brewed', 'Finish brewing before putting a lid on.')).toContain('putting a lid on');
+    expect(niko('paper-in-hand', 'Deposit the current paper before taking another.')).toContain(
+      'Deposit right, then take a fresh one',
+    );
+    expect(niko('paper-in-hand', 'Deposit this item’s paper before the For loop moves on.')).toContain('Deposit right');
+    expect(
+      niko('no-paper', 'Query isn’t holding a ticket to hand over: Take up a sheet and write on it first.'),
+    ).toContain('only write on paper it’s holding');
     for (const reason of [
       'Move left 1 tile to the register before Wait for Orders.',
       'Return to the register after depositing the order.',
       'Move right to the handoff tile, then Deposit right into the order counter.',
       'No paper in that direction. At the register, use Take up: the paper stack is above it.',
     ])
-      expect(niko(reason)).toContain('the paper stack just above it');
-    expect(niko('Store a table or a place in var3 before moving to it.')).toBe(
+      expect(niko('wrong-spot', reason)).toContain('the paper stack just above it');
+    expect(niko('unset-variable', 'Store a table or a place in var3 before moving to it.')).toBe(
       'Store a table or a place in Var C before moving to it. A variable stays empty until a Store fills it: put the Store above the block that reads it.',
     );
-    expect(niko('Store a number in var2 before looping on it.')).toContain('until a Store fills it');
-    expect(niko('This item has no number to store. Check If Number IN item first.')).toContain('inside an If');
-    expect(niko('A function can’t call itself.')).toContain('a Call outside it');
-    expect(niko('The coffee machine can’t work on this coffee yet. Next step: Grind.')).toContain('one step at a time');
-    expect(niko('There’s nothing for Brew to take there yet.')).toContain('Wait for Orders first');
-    expect(niko('Brew isn’t holding anything to deposit.')).toContain('Pick it up first');
-    expect(niko('Finish this delivery or cup before waiting for another.')).toContain('before Wait for Orders');
+    expect(niko('unset-variable', 'Store a number in var2 before looping on it.')).toContain('until a Store fills it');
+    expect(niko('no-number', 'This item has no number to store. Check If Number IN item first.')).toContain(
+      'inside an If',
+    );
+    expect(niko('recursive-call', 'A function can’t call itself.')).toContain('a Call outside it');
+    expect(niko('recipe-order', 'The coffee machine can’t work on this coffee yet. Next step: Grind.')).toContain(
+      'one step at a time',
+    );
+    expect(niko('nothing-there', 'There’s nothing for Brew to take there yet.')).toContain('Wait for Orders first');
+    expect(niko('empty-hands', 'Brew isn’t holding anything to deposit.')).toContain('Pick it up first');
+    expect(niko('one-job-at-a-time', 'Finish this delivery or cup before waiting for another.')).toContain(
+      'before Wait for Orders',
+    );
     const late = failureLines(
-      failure('Use Help before taking paper or starting For item in order.', { role: 'query', phrase: 'a big one' }),
+      failure('unclear-order', 'Use Help before taking paper or starting For item in order.', {
+        role: 'query',
+        phrase: 'a big one',
+      }),
       'query',
     );
     expect(late.map((l) => l.text)).toEqual([
       'I said “a big one”… I’m not sure that came out right.',
       'Use Help before taking paper or starting For item in order. Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',
     ]);
-    // Checkout still wins over the register-position rule.
     expect(
-      niko('Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),
+      niko('checkout', 'Query has to be back at the register after the last ticket, so the guest can pay at checkout.'),
     ).toContain('so the guest can pay');
-    expect(niko('Finish the function before jumping back.')).toContain('let it reach its End');
-    expect(niko('Return only works inside a function that was called.')).toContain('back to the block after its Call');
-    expect(niko('This For loop’s End was reached without its For: jump to the For line, not into the loop.')).toContain(
-      'let it reach its End',
+    expect(niko('jump-across-block', 'Finish the function before jumping back.')).toContain('let it reach its End');
+    expect(niko('return-outside-call', 'Return only works inside a function that was called.')).toContain(
+      'back to the block after its Call',
     );
+    expect(
+      niko(
+        'jump-across-block',
+        'This For loop’s End was reached without its For: jump to the For line, not into the loop.',
+      ),
+    ).toContain('let it reach its End');
     // A slip that only mentions sugar is the robot's, so the guest doesn't complain about their sugar.
-    const [query, paper] = failureLines(failure('Take the order paper before writing sugar.'), 'query');
+    const [query, paper] = failureLines(failure('no-paper', 'Take the order paper before writing sugar.'), 'query');
     expect(query.who).toBe('query');
     expect(paper.text).toContain('only write on paper it’s holding');
     const [brew, brewed] = failureLines(
-      failure('This tea is already brewed: take up sugar or deposit it up at pickup.', { role: 'prep' }),
+      failure('already-brewed', 'This tea is already brewed: take up sugar or deposit it up at pickup.', {
+        role: 'prep',
+      }),
       'query',
     );
     expect(brew.who).toBe('brew');
     expect(brewed.text).toContain('finished with the machine');
-    expect(niko('Move to the sink first: it’s 2 tiles from here.')).toContain('walk over before using it');
-    expect(niko('Carry a ready drink before serving.')).toContain('Pick it up first');
+    expect(niko('out-of-reach', 'Move to the sink first: it’s 2 tiles from here.')).toContain(
+      'walk over before using it',
+    );
+    expect(niko('empty-hands', 'Carry a ready drink before serving.')).toContain('Pick it up first');
     // A dirty cup has no ticket, so Niko doesn't point at one.
-    expect(niko('The dirty cup is on table 3, not table 2.')).toContain('Wait for Dirty cups names the table');
-    expect(niko('This drink is for table 3, not table 2.')).toContain('The ticket names the table');
+    expect(niko('wrong-dirty-table', 'The dirty cup is on table 3, not table 2.')).toContain(
+      'Wait for Dirty cups names the table',
+    );
+    expect(niko('wrong-table', 'This drink is for table 3, not table 2.')).toContain('The ticket names the table');
+  });
+  it('picks the hint by failure code, never by wording', () => {
+    const lines = (code: FailureCode, reason: string) => failureLines(failure(code, reason), 'query');
+    const hint = (code: FailureCode, reason: string) => lines(code, reason)[1].text.slice(reason.length);
+    // Rewording, punctuating, or translating a message keeps its reaction and hint.
+    const [guest, niko] = lines('ticket-sugar', 'Ticket 1 needs 2 sugars, but it says 0.');
+    const [reworded, rewordedNiko] = lines('ticket-sugar', 'Le ticket 1 demande 2 sucres; il en indique 0!');
+    expect(reworded).toEqual(guest);
+    expect(rewordedNiko.text.endsWith(niko.text.slice('Ticket 1 needs 2 sugars, but it says 0.'.length))).toBe(true);
+    // A message that happens to mention sugar, a lid, or a table no longer borrows another failure's hint.
+    expect(hint('wrong-direction', 'The sugar station is below Brew: use Take down.')).toContain('arrow points at');
+    expect(hint('wrong-direction', 'The lids are below Brew: use Take down.')).not.toContain('lid');
+    expect(hint('wrong-variable-kind', 'Var A holds 9, and there’s no table 9.')).toContain('its Store put there');
+    // Brew adding a cube too many is Brew's slip, before any guest tastes it.
+    const [plop] = failureLines(failure('too-much-sugar', 'This coffee takes no sugar.', { role: 'prep' }), 'query');
+    expect(plop.who).toBe('brew');
   });
   it('lets the stuck robot speak for itself', () => {
-    const [robot] = failureLines(failure('Something odd happened.', { role: 'prep' }), 'query');
-    expect(robot.who).toBe('brew');
-    const [floor] = failureLines(failure('Finish brewing before sugar.', { role: 'floor' }), 'query');
+    const [robot] = failureLines(failure('unsupported', 'Something odd happened.', { role: 'prep' }), 'query');
+    expect(robot).toMatchObject({ who: 'brew', text: '*sad beep* Not know what next!' });
+    const [floor] = failureLines(failure('not-brewed', 'Finish brewing before sugar.', { role: 'floor' }), 'query');
     expect(floor.who).toBe('porter');
     expect(floor.text).toContain('not ready');
   });

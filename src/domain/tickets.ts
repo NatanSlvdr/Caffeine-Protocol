@@ -1,4 +1,5 @@
 import type { Customer, ExpectedTicket, OrderTicket, SpeechIntent } from './types';
+import type { Failure } from './failures';
 import { TICKET_DUE_SECONDS, TICKET_UNIT_SEPARATOR } from './constants';
 
 /** Kitchen jobs are individual cups; the submitted paper retains its quantity. */
@@ -33,7 +34,10 @@ export function createTicket(customer: Customer, id: string, intent: SpeechInten
 }
 
 /** Why a ticket written at closing time is wrong. */
-export const CLOSING_TICKET_ERROR = 'It’s closing time: there’s nobody left to write a ticket for.';
+export const CLOSING_TICKET: Failure = {
+  code: 'closing-ticket',
+  reason: 'It’s closing time: there’s nobody left to write a ticket for.',
+};
 
 /** At closing time Query hears one last call, after the last guest: it must stop without writing a ticket. */
 export function closingCall(arrival: number): Customer {
@@ -60,22 +64,48 @@ export function ticketSugar(ticket: Pick<OrderTicket, 'sugar_count' | 'with_suga
 /** "1 sugar", "2 sugars". */
 export const count = (n: number, noun: string): string => `${n} ${noun}${n === 1 ? '' : 's'}`;
 
-/** What's wrong with ticket `index` against what the guest asked for, in words Niko can read out; empty when it matches. */
-export function ticketMismatch(index: number, e: ExpectedTicket, a: OrderTicket): string {
-  const n = index + 1;
+/** What's wrong with ticket `index` against what the guest asked for, in words Niko can read out; nothing when it matches. */
+export function ticketMismatch(index: number, e: ExpectedTicket, a: OrderTicket): Failure | undefined {
+  const ticket = index + 1;
   if (e.item !== undefined && a.item !== e.item)
-    return `Ticket ${n} has the wrong item: they asked for ${e.item}, ${a.item ? `not ${a.item}` : 'but no drink is written on it'}.`;
+    return {
+      code: 'ticket-item',
+      reason: `Ticket ${ticket} has the wrong item: they asked for ${e.item}, ${a.item ? `not ${a.item}` : 'but no drink is written on it'}.`,
+      context: { ticket, expected: e.item, actual: a.item },
+    };
   if (e.with_sugar !== undefined && a.with_sugar !== e.with_sugar)
-    return e.with_sugar
-      ? `Ticket ${n} needs sugar: they asked for some.`
-      : `Ticket ${n} has sugar on it, but they didn’t want any.`;
+    return {
+      code: 'ticket-sugar',
+      reason: e.with_sugar
+        ? `Ticket ${ticket} needs sugar: they asked for some.`
+        : `Ticket ${ticket} has sugar on it, but they didn’t want any.`,
+      context: { ticket, expected: e.with_sugar, actual: !!a.with_sugar },
+    };
   if (e.sugar_count !== undefined && a.sugar_count !== e.sugar_count)
-    return `Ticket ${n} needs ${count(e.sugar_count, 'sugar')}, but it says ${a.sugar_count ?? 0}.`;
+    return {
+      code: 'ticket-sugar',
+      reason: `Ticket ${ticket} needs ${count(e.sugar_count, 'sugar')}, but it says ${a.sugar_count ?? 0}.`,
+      context: { ticket, expected: e.sugar_count, actual: a.sugar_count ?? 0 },
+    };
   if ((e.to_go ?? false) !== (a.to_go ?? false))
-    return e.to_go ? `Ticket ${n} is to go: Write To go on it.` : `Ticket ${n} is staying in, but it says To go.`;
+    return e.to_go
+      ? { code: 'ticket-to-go-missing', reason: `Ticket ${ticket} is to go: Write To go on it.`, context: { ticket } }
+      : {
+          code: 'ticket-to-go-extra',
+          reason: `Ticket ${ticket} is staying in, but it says To go.`,
+          context: { ticket },
+        };
   if ((e.rush ?? false) !== (a.rush ?? false))
     return e.rush
-      ? `Ticket ${n} is for someone in a rush: Write Rush on it.`
-      : `Ticket ${n} isn’t in a rush, but it says Rush.`;
-  return '';
+      ? {
+          code: 'ticket-rush-missing',
+          reason: `Ticket ${ticket} is for someone in a rush: Write Rush on it.`,
+          context: { ticket },
+        }
+      : {
+          code: 'ticket-rush-extra',
+          reason: `Ticket ${ticket} isn’t in a rush, but it says Rush.`,
+          context: { ticket },
+        };
+  return undefined;
 }

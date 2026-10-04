@@ -34,6 +34,7 @@ import { RECIPE_RULES, machineStep, machineStepError, recipeStepError } from './
 import { satisfactionFor, tableForShift } from './scoring';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from './robots';
 import { UNLOCKS } from './unlocks';
+import type { Failure, FailureCode, FailureContext } from './failures';
 import type {
   ActorId,
   Cargo,
@@ -96,6 +97,8 @@ export interface ServiceFailure {
   role: RobotRole;
   line: number;
   time: number;
+  code: FailureCode;
+  context?: FailureContext;
   reason: string;
   event?: ReplayEvent;
 }
@@ -240,19 +243,26 @@ export function* streamService(
     }
   let queryFailure = events.find((e) => !e.passed);
   live?.attach({ seed_id: seed, start, duration: Infinity, events: log });
-  const fail = (w: Worker, message: string, line = w.program.source_lines[w.pc] ?? -1) => {
+  const fail = (
+    w: Worker,
+    code: FailureCode,
+    message: string,
+    { line = w.program.source_lines[w.pc] ?? -1, context }: { line?: number; context?: FailureContext } = {},
+  ) => {
     // After closing, a robot that still acts as if more work were coming only needed to finish up and stop.
     const name = ROBOT_DISPLAY_NAMES[w.role];
-    const reason =
-      w.closed && !w.job && message.startsWith('Wait for')
-        ? w.inventory.length
-          ? `The café is closed, so nothing more is coming: after Wait for Orders, check If Closed IN Orders, finish the ${w.inventory[0].item} ${name} holds, and Stop.`
-          : `The café is closed and ${name} has nothing left to do: after Wait for Orders, check If Closed IN Orders and Stop.`
-        : message;
+    const closed = w.closed && !w.job && code === 'no-job';
+    const reason = closed
+      ? w.inventory.length
+        ? `The café is closed, so nothing more is coming: after Wait for Orders, check If Closed IN Orders, finish the ${w.inventory[0].item} ${name} holds, and Stop.`
+        : `The café is closed and ${name} has nothing left to do: after Wait for Orders, check If Closed IN Orders and Stop.`
+      : message;
     failure = {
       role: w.role,
       line,
       time: now,
+      code: closed ? 'open-after-closing' : code,
+      context,
       reason,
       event: w.job?.event ?? jobs.find((j) => j.ticketId === w.inventory[0]?.ticketId)?.event ?? events[0],
     };
@@ -270,6 +280,7 @@ export function* streamService(
       error: reason,
     });
   };
+  const failWith = (w: Worker, failure: Failure) => fail(w, failure.code, failure.reason, failure);
   const jobOf = (cargo: Cargo | undefined) => jobs.find((j) => j.ticketId === cargo?.ticketId);
   /** Orders from customers in a rush come first. */
   const rushFirst = (cups: Cargo[]) => cups.find((cup) => cup.stage !== 'dirty' && jobOf(cup)?.rush) ?? cups[0];
@@ -375,13 +386,13 @@ export function* streamService(
   };
   const station = (w: Worker, p: Point, name: string) => {
     if (!samePoint(w.position, p)) {
-      fail(w, `Move to ${name} first: it’s ${tilesAway(w.position, p)} from here.`);
+      fail(w, 'out-of-reach', `Move to ${name} first: it’s ${tilesAway(w.position, p)} from here.`);
       return false;
     }
     return true;
   };
   /** A Take or Deposit that reached no station: say where this robot's next one belongs. */
-  const handMiss = (w: Worker, c: string) => {
+  const handMiss = (w: Worker, c: string): Failure => {
     const take = !!parseTakeCommand(c),
       use = !!parseUseCommand(c),
       verb = use ? 'Use' : take ? 'Take' : 'Deposit',
@@ -417,14 +428,21 @@ export function* streamService(
                 : undefined;
     if (!goal)
       return take || w.inventory.length
-        ? `There’s nothing for ${ROBOT_DISPLAY_NAMES[w.role]} to ${verb.toLowerCase()} there yet.`
-        : `${ROBOT_DISPLAY_NAMES[w.role]} isn’t holding anything to deposit.`;
+        ? {
+            code: 'nothing-there',
+            reason: `There’s nothing for ${ROBOT_DISPLAY_NAMES[w.role]} to ${verb.toLowerCase()} there yet.`,
+          }
+        : { code: 'empty-hands', reason: `${ROBOT_DISPLAY_NAMES[w.role]} isn’t holding anything to deposit.` };
     const [stand, cell, name] = goal;
-    if (!samePoint(w.position, stand)) return `Move to ${name} first: it’s ${tilesAway(w.position, stand)} from here.`;
+    if (!samePoint(w.position, stand))
+      return { code: 'out-of-reach', reason: `Move to ${name} first: it’s ${tilesAway(w.position, stand)} from here.` };
     const direction = DIRECTIONS.find((d) => samePoint(interactionTarget(stand, d)!, cell))!;
-    return `${name[0].toUpperCase() + name.slice(1)} is ${direction === 'UP' ? 'above' : 'below'} ${
-      ROBOT_DISPLAY_NAMES[w.role]
-    }: use ${verb} ${directionLabel(direction)}.`;
+    return {
+      code: 'wrong-direction',
+      reason: `${name[0].toUpperCase() + name.slice(1)} is ${direction === 'UP' ? 'above' : 'below'} ${
+        ROBOT_DISPLAY_NAMES[w.role]
+      }: use ${verb} ${directionLabel(direction)}.`,
+    };
   };
   /** What Store reads: Brew's sugar from the drink it's finishing, Porter's table and place. */
   const storedValue = (w: Worker, source: string): VariableValue | undefined => {
@@ -513,7 +531,7 @@ export function* streamService(
       c = p.instructions[w.pc],
       line = p.source_lines[w.pc] ?? -1;
     if (p.compile_error) {
-      fail(w, p.compile_error, p.error_line);
+      fail(w, 'compile', p.compile_error, { line: p.error_line });
       return false;
     }
     if (c === undefined) {
@@ -526,6 +544,7 @@ export function* streamService(
     if (rushed && isWait(c)) {
       fail(
         w,
+        'rush-first',
         w.role === 'prep'
           ? `This ${rushed.item} is for someone in a rush: make it before waiting for another ticket.`
           : `This ${rushed.item} is for someone in a rush: serve it before anything else.`,
@@ -534,7 +553,11 @@ export function* streamService(
     }
     if (isWait(c) && !nextWork(w, c)) {
       if (closedFor(w, c) && w.closed) {
-        fail(w, `The café is closed: Stop ${name} instead of waiting for more ${c === 'LISTEN' ? 'orders' : 'cups'}.`);
+        fail(
+          w,
+          'open-after-closing',
+          `The café is closed: Stop ${name} instead of waiting for more ${c === 'LISTEN' ? 'orders' : 'cups'}.`,
+        );
         return false;
       }
       if (!closedFor(w, c)) {
@@ -598,6 +621,7 @@ export function* streamService(
       // A loop of blocks that take no time (Ifs, Stores, Jumps) piles these up while the clock stands still.
       fail(
         w,
+        'loop-limit',
         `${name} keeps going round its loop without doing anything: put Wait for Orders inside it, so ${name} waits for its next ${w.role === 'prep' ? 'ticket' : 'job'}.`,
       );
       return false;
@@ -605,7 +629,7 @@ export function* streamService(
     if (isMoveCommand(c)) {
       const move = parseMoveCommand(c);
       if (!move) {
-        fail(w, `Unknown movement direction: ${c.split(' ')[1]}`, line);
+        fail(w, 'unsupported', `Unknown movement direction: ${c.split(' ')[1]}`);
         return false;
       }
       const direction: Point = directionVectors[move.direction];
@@ -626,11 +650,11 @@ export function* streamService(
       const value = w.vars[moveTo],
         name = variableLabels(moveTo);
       if (value === undefined) {
-        fail(w, `Store a table or a place in ${name} before moving to it.`);
+        fail(w, 'unset-variable', `Store a table or a place in ${name} before moving to it.`);
         return false;
       }
       if (typeof value === 'number' && !TABLE_LAYOUT[value - 1]) {
-        fail(w, `${name} holds ${value}, and there’s no table ${value}.`);
+        fail(w, 'wrong-variable-kind', `${name} holds ${value}, and there’s no table ${value}.`);
         return false;
       }
       // Porter finds its own way around the furniture, one tile at a time.
@@ -664,12 +688,13 @@ export function* streamService(
       });
     if (c === 'STOP') {
       if (w.inventory.length) {
-        fail(w, `${name} is still holding a ${w.inventory[0].item}: finish it before stopping.`);
+        fail(w, 'unfinished-work', `${name} is still holding a ${w.inventory[0].item}: finish it before stopping.`);
         return false;
       }
       if (!w.closed) {
         fail(
           w,
+          'stopped-early',
           `It isn’t closing time yet: ${name} still has work coming. Stop only after Wait for Orders reports Closed.`,
         );
         return false;
@@ -681,7 +706,11 @@ export function* streamService(
     const stored = parseStore(c);
     if (stored) {
       if (stored.value === 'table' && currentJob(w)?.toGo) {
-        fail(w, `This ${currentJob(w)!.item} is to go: it has no table. Take it to the to-go shelf by the door.`);
+        fail(
+          w,
+          'to-go-to-shelf',
+          `This ${currentJob(w)!.item} is to go: it has no table. Take it to the to-go shelf by the door.`,
+        );
         return false;
       }
       const value = storedValue(w, stored.value);
@@ -690,6 +719,7 @@ export function* streamService(
         const waits = w.role === 'floor' && config.clearing ? 'Orders or Wait for Dirty cups' : 'Orders';
         fail(
           w,
+          'no-job',
           `Wait for ${waits} first: ${ROBOT_DISPLAY_NAMES[w.role]} has no ${w.role === 'prep' ? 'ticket' : 'job'} yet, so there’s no ${stored.value} to store.`,
         );
         return false;
@@ -706,6 +736,7 @@ export function* streamService(
       if (typeof count !== 'number') {
         fail(
           w,
+          count === undefined ? 'unset-variable' : 'wrong-variable-kind',
           count === undefined
             ? `Store a number in ${variableLabels(times)} before looping on it.`
             : `${variableLabels(times)} holds a place, not a number to count.`,
@@ -746,7 +777,7 @@ export function* streamService(
     }
     if (c.startsWith('CALL ')) {
       if (w.stack.length) {
-        fail(w, 'A function can’t call itself.');
+        fail(w, 'recursive-call', 'A function can’t call itself.');
         return false;
       }
       return control(() => {
@@ -758,7 +789,11 @@ export function* streamService(
       const back = w.stack.pop();
       if (back === undefined) {
         // An End is only reached without a Call when a Jump landed inside the function.
-        fail(w, c === 'RETURN' ? RETURN_OUTSIDE_CALL : FUNCTION_END_OUTSIDE_CALL);
+        fail(
+          w,
+          c === 'RETURN' ? 'return-outside-call' : 'jump-across-block',
+          c === 'RETURN' ? RETURN_OUTSIDE_CALL : FUNCTION_END_OUTSIDE_CALL,
+        );
         return false;
       }
       return control(() => {
@@ -772,7 +807,7 @@ export function* streamService(
     }
     if (c.startsWith('JUMP ')) {
       if (w.stack.length) {
-        fail(w, 'Finish the function before jumping back.');
+        fail(w, 'jump-across-block', 'Finish the function before jumping back.');
         return false;
       }
       return control(() => {
@@ -787,7 +822,7 @@ export function* streamService(
     }
     const hand = handAction(w.role, w.position, c);
     if (!hand) {
-      fail(w, handMiss(w, c));
+      failWith(w, handMiss(w, c));
       return false;
     }
     const cargo = currentCargo(w);
@@ -798,7 +833,7 @@ export function* streamService(
     if (c === 'LISTEN' && w.role === 'prep') {
       if (!station(w, STATIONS.orders.prep, 'the order handoff')) return false;
       if (w.inventory.length >= capacity(w)) {
-        fail(w, 'Brew’s hands are full. Deposit a drink before waiting for another ticket.');
+        fail(w, 'hands-full', 'Brew’s hands are full. Deposit a drink before waiting for another ticket.');
         return false;
       }
       const next = nextWork(w, c)!;
@@ -808,7 +843,7 @@ export function* streamService(
       };
     } else if (isWait(c)) {
       if (w.job) {
-        fail(w, 'Finish this delivery or cup before waiting for another.');
+        fail(w, 'one-job-at-a-time', 'Finish this delivery or cup before waiting for another.');
         return false;
       }
       const next = nextWork(w, c)!;
@@ -819,15 +854,15 @@ export function* streamService(
       };
     } else if (a === 'PICKUP') {
       if (rushed) {
-        fail(w, `This ${rushed.item} is for someone in a rush: serve it before anything else.`);
+        fail(w, 'rush-first', `This ${rushed.item} is for someone in a rush: serve it before anything else.`);
         return false;
       }
       if (!w.job || w.job.status !== 'reserved' || w.job.dirtyAt !== Infinity) {
-        fail(w, 'Wait for a ready drink before taking one.');
+        fail(w, 'no-job', 'Wait for a ready drink before taking one.');
         return false;
       }
       if (w.inventory.length >= capacity(w)) {
-        fail(w, 'Tray is full. Serve a carried item first.');
+        fail(w, 'hands-full', 'Tray is full. Serve a carried item first.');
         return false;
       }
       const next = w.job;
@@ -845,12 +880,13 @@ export function* streamService(
     } else if (a === 'SERVE' || a === 'HAND OVER') {
       const served = jobOf(cargo);
       if (!cargo || cargo.stage !== 'brewed' || !served) {
-        fail(w, 'Carry a ready drink before serving.');
+        fail(w, 'empty-hands', 'Carry a ready drink before serving.');
         return false;
       }
       if (served.toGo !== (a === 'HAND OVER')) {
         fail(
           w,
+          served.toGo ? 'to-go-to-shelf' : 'stay-in-to-table',
           served.toGo
             ? `This ${cargo.item} is to go: take it to the to-go shelf by the door, and Deposit down onto it.`
             : `This ${cargo.item} is for table ${cargo.table}, not the to-go shelf.`,
@@ -858,7 +894,9 @@ export function* streamService(
         return false;
       }
       if (a === 'SERVE' && hand.table !== cargo.table) {
-        fail(w, `This drink is for table ${cargo.table}, not table ${hand.table}.`);
+        fail(w, 'wrong-table', `This drink is for table ${cargo.table}, not table ${hand.table}.`, {
+          context: { expected: cargo.table, actual: hand.table },
+        });
         return false;
       }
       if (a === 'SERVE' && served.event.timing.seated > now) {
@@ -892,15 +930,16 @@ export function* streamService(
       if (!w.job || w.job.dirtyAt > now) {
         // Holding a drink's job, or before Porter clears tables, a Take at a table is just the wrong place.
         const drinkJob = w.job?.dirtyAt === Infinity;
-        fail(w, drinkJob || !config.clearing ? handMiss(w, c) : 'Wait for dirty cups before collecting one.');
+        if (drinkJob || !config.clearing) failWith(w, handMiss(w, c));
+        else fail(w, 'no-job', 'Wait for dirty cups before collecting one.');
         return false;
       }
       if (hand.table !== w.job.table) {
-        fail(w, `The dirty cup is on table ${w.job.table}, not table ${hand.table}.`);
+        fail(w, 'wrong-dirty-table', `The dirty cup is on table ${w.job.table}, not table ${hand.table}.`);
         return false;
       }
       if (w.inventory.length >= capacity(w)) {
-        fail(w, 'Tray is full. Return cups before collecting another.');
+        fail(w, 'hands-full', 'Tray is full. Return cups before collecting another.');
         return false;
       }
       const next = w.job;
@@ -913,7 +952,7 @@ export function* streamService(
       const cup = w.inventory.find((item) => item.stage === 'dirty'),
         cupJob = jobOf(cup);
       if (!cup || !cupJob) {
-        fail(w, 'Carry a used cup before returning it.');
+        fail(w, 'empty-hands', 'Carry a used cup before returning it.');
         return false;
       }
       apply = () => {
@@ -940,11 +979,11 @@ export function* streamService(
           : cargo;
       const cupJob = jobOf(cup);
       if (!cup || !cupJob) {
-        fail(w, 'Wait for an order ticket before preparing a drink.');
+        fail(w, 'no-job', 'Wait for an order ticket before preparing a drink.');
         return false;
       }
       if (a === 'USE') {
-        fail(w, machineStepError(cup));
+        fail(w, cup.stage === 'brewed' ? 'already-brewed' : 'recipe-order', machineStepError(cup));
         return false;
       }
       const recipeCommand = a === 'TAKE' ? (cupJob.item === 'coffee' ? 'TAKE BEANS' : 'TAKE LEAVES') : a;
@@ -957,6 +996,7 @@ export function* streamService(
         if (!ready || !readyJob) {
           fail(
             w,
+            'not-brewed',
             a === 'LID'
               ? 'Finish brewing before putting a lid on.'
               : 'Finish brewing before taking sugar or depositing.',
@@ -965,15 +1005,19 @@ export function* streamService(
         }
         if (a === 'LID') {
           if (!readyJob.toGo) {
-            fail(w, `This ${ready.item} is staying in: it doesn’t need a lid.`);
+            fail(w, 'lid-extra', `This ${ready.item} is staying in: it doesn’t need a lid.`);
             return false;
           }
           if (ready.lid) {
-            fail(w, `This ${ready.item} already has its lid.`);
+            fail(w, 'lid-extra', `This ${ready.item} already has its lid.`);
             return false;
           }
           if (ready.sugar !== readyJob.sugar) {
-            fail(w, `Put the sugar in before the lid: this ${ready.item} takes ${sugarCount(readyJob.sugar)}.`);
+            fail(
+              w,
+              'sugar-before-lid',
+              `Put the sugar in before the lid: this ${ready.item} takes ${sugarCount(readyJob.sugar)}.`,
+            );
             return false;
           }
           apply = () => {
@@ -981,16 +1025,19 @@ export function* streamService(
           };
         } else if (a === 'ADD SUGAR') {
           if (ready.lid) {
-            fail(w, `This ${ready.item} already has its lid on: sugar goes in before the lid.`);
+            fail(w, 'sugar-before-lid', `This ${ready.item} already has its lid on: sugar goes in before the lid.`);
             return false;
           }
           // Each Take up at the sugar station drops in one cube.
           if (ready.sugar >= readyJob.sugar) {
             fail(
               w,
+              'too-much-sugar',
               readyJob.sugar
                 ? `This ${ready.item} takes ${sugarCount(readyJob.sugar)}, and it already has them.`
                 : `This ${ready.item} takes no sugar.`,
+              // The cube it was about to drop in is the one too many.
+              { context: { expected: readyJob.sugar, actual: ready.sugar + 1 } },
             );
             return false;
           }
@@ -999,11 +1046,22 @@ export function* streamService(
           };
         } else {
           if (ready.sugar !== readyJob.sugar) {
-            fail(w, `This ${ready.item} takes ${sugarCount(readyJob.sugar)}, but it has ${ready.sugar}.`);
+            fail(
+              w,
+              'sugar-count',
+              `This ${ready.item} takes ${sugarCount(readyJob.sugar)}, but it has ${ready.sugar}.`,
+              {
+                context: { expected: readyJob.sugar, actual: ready.sugar },
+              },
+            );
             return false;
           }
           if (readyJob.toGo && !ready.lid) {
-            fail(w, `This ${ready.item} is to go: put a lid on it first. The lids are between the sugar and pickup.`);
+            fail(
+              w,
+              'lid-missing',
+              `This ${ready.item} is to go: put a lid on it first. The lids are between the sugar and pickup.`,
+            );
             return false;
           }
           apply = () => {
@@ -1015,7 +1073,7 @@ export function* streamService(
       } else if (rule) {
         // Take and Use reached their station already.
         if (!rule.previous.includes(cup.stage) || (rule.item && rule.item !== cup.item)) {
-          fail(w, recipeStepError(recipeCommand, cup));
+          fail(w, 'recipe-order', recipeStepError(recipeCommand, cup));
           return false;
         }
         // Café cups are counted; take-away drinks go in paper cups.
@@ -1023,6 +1081,7 @@ export function* streamService(
         if (cafeCup && !cleanCups) {
           fail(
             w,
+            'no-clean-cups',
             `There are no clean cups left: all ${config.cups} are in use. Wash the used ones first: Use up at the sink.`,
           );
           return false;
@@ -1033,7 +1092,7 @@ export function* streamService(
           if (cafeCup) cleanCups--;
         };
       } else {
-        fail(w, `Unsupported action: ${c}`);
+        fail(w, 'unsupported', `Unsupported action: ${c}`);
         return false;
       }
     }
@@ -1108,6 +1167,8 @@ export function* streamService(
         role: 'query',
         line: queryFailure.failure_line ?? 0,
         time: now,
+        code: queryFailure.failure_code ?? 'unsupported',
+        context: queryFailure.failure_context,
         reason: queryFailure.reason ?? 'Query’s routine failed.',
         event: queryFailure,
       };
@@ -1228,6 +1289,7 @@ export function* streamService(
       if ((config.minLoad ?? 0) > loadWorker.maxLoad)
         fail(
           loadWorker,
+          'carry-more',
           loadWorker.role === 'prep'
             ? `Brew made every drink one at a time: this shift, claim ${config.minLoad} tickets and make them in one trip.`
             : `Porter carried one item at a time: this shift, fill the tray with ${config.minLoad} before setting off.`,
@@ -1236,6 +1298,7 @@ export function* streamService(
       else if (number === UNLOCKS.functions && !workers[0].program.instructions.includes('CALL recipe'))
         fail(
           workers[0],
+          'recipe-not-function',
           'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
         );
       break;
@@ -1273,11 +1336,13 @@ export function* streamService(
       if (washer && config.cups && !cleanCups && !sinkCups)
         fail(
           washer,
+          'no-clean-cups',
           `Brew is waiting at the sink for a used cup, but none are coming back: all ${config.cups} cups are out. Porter has to bring them back.`,
         );
       else if (!finished() && dirtyLeft())
         fail(
           dirtyLeft()!.worker,
+          'table-not-cleared',
           `A used cup is still on table ${dirtyLeft()!.job.table}. Porter has to clear it: Wait for Dirty cups, take it up, and carry it to the sink.`,
         );
       else if (!finished()) {
@@ -1290,6 +1355,7 @@ export function* streamService(
         const cargo = stuck.inventory[0];
         fail(
           stuck,
+          ranOut ? 'end-of-routine' : !holding ? 'starved' : 'unfinished-work',
           ranOut
             ? `${name} reached the end of its routine with work still to do: put a jump destination at the top and a Jump back to it at the end, so ${name} goes back for the next ${stuck.role === 'prep' ? 'ticket' : 'job'}.`
             : !holding
@@ -1305,6 +1371,7 @@ export function* streamService(
         if (open)
           fail(
             open,
+            'open-after-closing',
             `${ROBOT_DISPLAY_NAMES[open.role]} is keeping the café open: Stop it once Wait for Orders reports Closed.`,
           );
       }
@@ -1322,6 +1389,7 @@ export function* streamService(
       ) ?? workers[0];
     fail(
       busy,
+      'loop-limit',
       `An hour went by and the service still isn’t finished: ${ROBOT_DISPLAY_NAMES[busy.role]} keeps going round its loop without reaching its next job.`,
     );
   }

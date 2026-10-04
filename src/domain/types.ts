@@ -1,3 +1,5 @@
+import type { FailureCode, FailureContext } from './failures';
+
 export type Drink = 'coffee' | 'tea';
 export interface SpeechIntent {
   confidence?: 'clear' | 'ambiguous';
@@ -102,6 +104,8 @@ export interface CustomerExecution {
   tickets: OrderTicket[];
   asked_help: boolean;
   error: string;
+  error_code?: FailureCode;
+  error_context?: FailureContext;
   error_line?: number;
   executed_instructions: number;
   trace: TraceStep[];
@@ -125,6 +129,8 @@ export interface ReplayEvent {
   asked_help: boolean;
   passed: boolean;
   reason?: string;
+  failure_code?: FailureCode;
+  failure_context?: FailureContext;
   trace: TraceStep[];
   failure_line?: number;
   timing: Timing;
@@ -141,6 +147,9 @@ export interface RunFailure {
   intent: SpeechIntent;
   expected: Customer['expected'];
   actual: OrderTicket[];
+  /** What went wrong, for hints and inspection; `reason` is only its wording. */
+  code: FailureCode;
+  context?: FailureContext;
   reason: string;
 }
 export interface RunResult {

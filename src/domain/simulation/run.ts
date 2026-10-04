@@ -15,7 +15,7 @@ import type {
 } from '../types';
 import { closingCall, createTicket } from '../tickets';
 import { executeCustomerEvent } from '../program';
-import { failureLine, validate } from './validate';
+import { failureLine, INSTRUCTION_LIMIT_FAILURE, validate } from './validate';
 
 const round = (n: number) => Math.round(n * 10) / 10;
 
@@ -79,29 +79,34 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
       }
       state = actual.state;
       seedInstructions += actual.executed_instructions;
-      if (seedInstructions > INSTRUCTION_LIMIT) actual.error = 'Instruction limit reached (10,000 per robot).';
+      if (seedInstructions > INSTRUCTION_LIMIT) {
+        actual.error = INSTRUCTION_LIMIT_FAILURE.reason;
+        actual.error_code = INSTRUCTION_LIMIT_FAILURE.code;
+      }
       result.executed_instructions += actual.executed_instructions;
-      const reason = validate(customer, actual);
-      const line = reason ? (failureLine(reason, actual) ?? -1) : -1;
+      const failed = validate(customer, actual);
+      const line = failed ? (failureLine(failed, actual) ?? -1) : -1;
       const event: ReplayEvent = {
         payment: actual.payment,
         seed_id: seed.id,
         customer: structuredClone(customer),
         tickets: actual.tickets,
         asked_help: actual.asked_help,
-        passed: !reason,
+        passed: !failed,
         trace: actual.trace,
         timing: { arrival: 0, created: 0, seated: 0, ready: 0, served: 0, left: 0, cleaned: 0 },
         table: 0,
         satisfaction: 100,
       };
       if (level.programming_enabled) {
-        event.reason = reason;
-        event.failure_line = reason ? line : -1;
+        event.reason = failed?.reason ?? '';
+        event.failure_code = failed?.code;
+        event.failure_context = failed?.context;
+        event.failure_line = failed ? line : -1;
       }
       result.events.push(event);
       result.tickets.push(...actual.tickets);
-      if (reason) {
+      if (failed) {
         const failure: RunFailure = {
           seed_id: seed.id,
           error_line: line,
@@ -111,7 +116,9 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
           intent: customer.intent,
           expected: customer.expected,
           actual: actual.tickets,
-          reason,
+          code: failed.code,
+          context: failed.context,
+          reason: failed.reason,
         };
         result.first_failure = failure;
         result.passed = false;
@@ -122,12 +129,14 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
       const call = closingCall(seed.customers.at(-1)?.arrival ?? 0);
       const actual = executeCustomerEvent(program, call, `${seed.id}_CLOSING`, state);
       result.executed_instructions += actual.executed_instructions;
-      const reason = validate(call, actual);
-      if (reason) {
+      const failed = validate(call, actual);
+      if (failed) {
         // The closing call has no guest of its own: the service stops with the last guest's, as it does live.
         const last = result.events.at(-1)!;
         last.passed = false;
-        last.reason = reason;
+        last.reason = failed.reason;
+        last.failure_code = failed.code;
+        last.failure_context = failed.context;
         last.failure_line = actual.error_line ?? actual.trace.at(-1)?.line ?? -1;
         result.first_failure = {
           seed_id: seed.id,
@@ -138,7 +147,9 @@ function runQueryPhase(level: LevelDefinition, program: Program, result: RunResu
           intent: call.intent,
           expected: call.expected,
           actual: actual.tickets,
-          reason,
+          code: failed.code,
+          context: failed.context,
+          reason: failed.reason,
         };
         result.passed = false;
         break outer;
@@ -166,6 +177,8 @@ function runServicePhase(level: LevelDefinition, result: RunResult, programs: Ro
       result.passed = false;
       e.passed = false;
       e.reason = f.reason;
+      e.failure_code = f.code;
+      e.failure_context = f.context;
       e.failure_line = f.line;
       result.passed_seeds = level.seeds.indexOf(seed);
       result.first_failure = {
@@ -178,6 +191,8 @@ function runServicePhase(level: LevelDefinition, result: RunResult, programs: Ro
         intent: e.customer.intent,
         expected: e.customer.expected,
         actual: e.tickets,
+        code: f.code,
+        context: f.context,
         reason: f.reason,
       };
       break;

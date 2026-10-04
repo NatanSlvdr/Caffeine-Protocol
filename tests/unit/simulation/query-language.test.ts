@@ -69,7 +69,7 @@ describe('token interpreter and physical order handling', () => {
       tickets: [{ item: 'coffee' }, { item: 'tea' }],
     });
     const result = exec(lessons[UNLOCKS.forEach - 1].solution, customer);
-    expect(validate(customer, result)).toBe('');
+    expect(validate(customer, result)).toBeUndefined();
     expect(result.tickets.map((t) => t.item)).toEqual(['coffee', 'tea']);
     for (const command of ['TAKE UP', 'DEPOSIT RIGHT'])
       expect(result.trace.filter((t) => t.command === command)).toHaveLength(2);
@@ -89,13 +89,16 @@ describe('token interpreter and physical order handling', () => {
     const customer = request([{ tokens: ['coffee', 'sugar', 'negation'] }], { item: 'coffee', with_sugar: false });
     const sugarOnly = lessons[sugarShift].solution.replace(negationCheck, 'WRITE 1 sugar');
     expect(sugarOnly).not.toBe(lessons[sugarShift].solution);
-    expect(validate(customer, exec(sugarOnly, customer))).toContain('sugar');
-    expect(validate(customer, exec(lessons[sugarShift].solution, customer))).toBe('');
+    expect(validate(customer, exec(sugarOnly, customer))).toMatchObject({
+      code: 'ticket-sugar',
+      context: { ticket: 1, expected: false, actual: true },
+    });
+    expect(validate(customer, exec(lessons[sugarShift].solution, customer))).toBeUndefined();
   });
   it.each([0, 1, 2])('copies explicitly read numeric metadata including %i', (number) => {
     const customer = request([{ tokens: ['tea', 'sugar', 'number'], number }], { item: 'tea', sugar_count: number });
     const result = exec(lessons[UNLOCKS.numbers - 1].solution, customer);
-    expect(validate(customer, result)).toBe('');
+    expect(validate(customer, result)).toBeUndefined();
   });
   it('says a Jump into a For loop skipped its For', () => {
     expect(exec('LISTEN\nJUMP in\nFOR item IN heard orders\nPOSITION in\nEND', coffee).error).toBe(
@@ -115,14 +118,14 @@ describe('token interpreter and physical order handling', () => {
     };
     expect(exec(lessons[UNLOCKS.help - 2].solution, customer).error).toContain('This order is unclear');
     const result = exec(lessons[UNLOCKS.help - 1].solution, customer);
-    expect(validate(customer, result)).toBe('');
+    expect(validate(customer, result)).toBeUndefined();
     expect(result.tickets.map((t) => t.item)).toEqual(['tea', 'coffee']);
   });
   it('defers unresolved speech without guessing and resumes service', () => {
     const customer = request([{ tokens: ['ambiguous'] }], { ask_help: true });
     const p = compileProgram(lessons[UNLOCKS.help - 1].solution);
     const result = executeCustomerEvent(p, customer, 'a');
-    expect(validate(customer, result)).toBe('');
+    expect(validate(customer, result)).toBeUndefined();
     expect(result.tickets).toEqual([]);
     expect(executeCustomerEvent(p, tea, 'b', result.state).tickets[0].item).toBe('tea');
   });

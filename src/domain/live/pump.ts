@@ -4,7 +4,7 @@ import { STARTS } from '../layout';
 import { moveQuery } from '../queryMovement';
 import { orderTotal } from '../pricing';
 import { BLOCK_SECONDS, INSTRUCTION_LIMIT } from '../constants';
-import { failureLine, validate } from '../simulation';
+import { failureLine, INSTRUCTION_LIMIT_FAILURE, validate } from '../simulation';
 import type {
   CustomerExecution,
   ExecutionEvent,
@@ -166,16 +166,18 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
     event.payment = actual.payment;
     event.timing.created = now;
     deps.result.executed_instructions += actual.executed_instructions;
-    const reason =
+    const failure =
       deps.result.executed_instructions > INSTRUCTION_LIMIT
-        ? 'Instruction limit reached (10,000 per robot).'
+        ? INSTRUCTION_LIMIT_FAILURE
         : validate(event.customer, actual);
-    if (reason) {
+    if (failure) {
       // The closing call has no guest of its own: the last guest's service stops with it.
       const failed = closing ? deps.events.at(-1)! : event;
       failed.passed = false;
-      failed.reason = reason;
-      failed.failure_line = failureLine(reason, actual) ?? deps.program.error_line;
+      failed.reason = failure.reason;
+      failed.failure_code = failure.code;
+      failed.failure_context = failure.context;
+      failed.failure_line = failureLine(failure, actual) ?? deps.program.error_line;
       state.queryNext = Infinity;
       return;
     }

@@ -38,6 +38,9 @@ describe('live multi-seed validation', () => {
     expect(live.passed).toBe(false);
     expect(live.first_failure?.seed_id).toBe(offline.first_failure?.seed_id);
     expect(live.first_failure?.seed_id).toBe('L04_A');
+    // Live and offline word and code the same slip alike, so the hint after a live run is the one tests expect.
+    expect(live.first_failure?.code).toBe('ticket-item');
+    expect(live.first_failure?.code).toBe(offline.first_failure?.code);
     expect(live.passed_seeds).toBe(offline.passed_seeds);
     expect(live.required_seeds).toBe(offline.required_seeds);
   });

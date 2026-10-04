@@ -145,13 +145,14 @@ describe('recipes, handoffs, and capacities', () => {
     const prep = referencePrograms(levels.length).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
     const r = service({ prep });
     expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
-    expect(r.first_failure?.role).toBe('prep');
+    expect(r.first_failure).toMatchObject({ role: 'prep', code: 'sugar-count', context: { actual: 0 } });
   });
   it('sends Porter back to the pickup, not to a block it has not met, when it takes from a table', () => {
     // Without walking back after serving, the next Take down lands on the table. Wait for Dirty cups comes later.
     const floor = referencePrograms(UNLOCKS.floor).floor.replace(/\n\s*MOVE var2/, '');
     const r = service({ floor }, UNLOCKS.floor);
     expect(r.first_failure?.reason).toMatch(/^Move to the drink pickup first/);
+    expect(r.first_failure?.code).toBe('out-of-reach');
   });
   it('names the Wait blocks that give Porter a table to store', () => {
     // Without Wait for Dirty cups, clearing starts with no job to read a table from.
@@ -160,6 +161,7 @@ describe('recipes, handoffs, and capacities', () => {
     expect(r.first_failure?.reason).toBe(
       'Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.',
     );
+    expect(r.first_failure?.code).toBe('no-job');
   });
   it('blames the robot holding an undelivered drink, not the one waiting for work', () => {
     // Without Call deliver, Porter takes a drink down and goes straight to clearing cups that never come.
@@ -167,12 +169,14 @@ describe('recipes, handoffs, and capacities', () => {
     const r = service({ floor }, UNLOCKS.clearing);
     expect(r.first_failure?.role).toBe('floor');
     expect(r.first_failure?.reason).toMatch(/^Porter is still holding the (coffee|tea) for table \d+/);
+    expect(r.first_failure?.code).toBe('unfinished-work');
   });
   it('blames the robot pacing in circles when the service runs out of time', () => {
     // Porter never waits for a drink, so Brew sits idle at Wait for Orders: Porter is the one to fix.
     const r = service({ floor: 'POSITION listen\nMOVE RIGHT 1\nMOVE LEFT 1\nJUMP listen' }, UNLOCKS.floor);
     expect(r.first_failure?.role).toBe('floor');
     expect(r.first_failure?.reason).toContain('Porter keeps going round its loop');
+    expect(r.first_failure?.code).toBe('loop-limit');
   });
   it('rejects claiming beyond capacity', () => {
     expect(service({ prep: 'LISTEN\nLISTEN' }, UNLOCKS.prep).first_failure?.reason).toBe(
@@ -182,7 +186,7 @@ describe('recipes, handoffs, and capacities', () => {
   it('asks for the named recipe on the shift that teaches functions', () => {
     // Shift 11's flat recipe still serves shift 12's guests, but the shift is about putting it in Function recipe.
     const flat = service({ prep: referencePrograms(UNLOCKS.functions - 1).prep }, UNLOCKS.functions);
-    expect(flat.first_failure?.role).toBe('prep');
+    expect(flat.first_failure).toMatchObject({ role: 'prep', code: 'recipe-not-function' });
     expect(flat.first_failure?.reason).toBe(
       'Brew served every ticket, but its recipe isn’t in a function yet: this shift, the steps go in Function recipe, and Brew uses Call recipe for each ticket.',
     );
@@ -269,7 +273,7 @@ describe('concurrency and replay', () => {
     const r = service({ prep: 'LISTEN\nMOVE LEFT 19' });
     // Brew ran past its last line with tickets still waiting: it needs a Jump back, not a hang.
     expect(r.first_failure?.reason).toContain('a Jump back to it at the end');
-    expect(r.first_failure?.role).toBe('prep');
+    expect(r.first_failure).toMatchObject({ role: 'prep', code: 'end-of-routine' });
   });
   it('freezes replay at the failure clock', () => {
     const r = service({ floor: 'DEPOSIT UP' }, FULL_HOUSE);
