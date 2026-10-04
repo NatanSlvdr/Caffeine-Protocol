@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { ArrowRight, FastForward } from 'lucide-react';
 import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueLine } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
+import { DialoguePaceContext } from './pace';
 import { Portrait, portraitUrl } from './Portrait';
 
 const TYPE_MS = 22;
+/** Letters typed on each tick: Quick types three at a time, at the same steady rhythm. */
+const LETTERS = { typed: 1, quick: 3, whole: Infinity };
 
 type Part = { kind: 'text' | 'sfx'; text: string } | { kind: 'block'; text: string; command: string };
 
@@ -31,7 +34,7 @@ export interface DialogueBoxProps {
   kicker?: string;
   /** Label on the last line's button. */
   doneLabel?: string;
-  /** Print each line whole instead of typing it out. */
+  /** Print each line whole instead of typing it out, as reduced motion asks; the house settings can ask for it too. */
   instant?: boolean;
   /** Called with the new line's index each time the scene moves on. */
   onLine?: (index: number) => void;
@@ -53,7 +56,9 @@ export function DialogueBox({
   const current = lines[Math.min(index, lines.length - 1)];
   const parts = segments(current?.text ?? '');
   const text = parts.map((part) => part.text).join('');
-  const shown = instant ? text.length : Math.min(typed, text.length);
+  const pace = useContext(DialoguePaceContext);
+  const step = instant ? Infinity : LETTERS[pace];
+  const shown = Math.min(step === Infinity ? text.length : typed, text.length);
   const typing = shown < text.length;
   const last = index >= lines.length - 1;
   const scene = variant === 'scene';
@@ -72,9 +77,9 @@ export function DialogueBox({
 
   useEffect(() => {
     if (!typing) return;
-    const timer = window.setInterval(() => setTyped((count) => count + 1), TYPE_MS);
+    const timer = window.setInterval(() => setTyped((count) => count + step), TYPE_MS);
     return () => window.clearInterval(timer);
-  }, [index, typing]);
+  }, [index, typing, step]);
 
   const advance = () => {
     if (typing) setTyped(text.length);

@@ -5,10 +5,16 @@ import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 import { SAVE_KEY, parseSave, untouched, type BackupReason } from '@/features/campaign/save/persistence';
-import { count, type ProgressSave } from '@/domain';
+import { count, type DialoguePace, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
+
+const PACES: [DialoguePace, string][] = [
+  ['typed', 'Typed'],
+  ['quick', 'Quick'],
+  ['whole', 'Whole lines'],
+];
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
@@ -91,6 +97,29 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               disabled={systemReducedMotion}
               onChange={(e) => setting('reduced_motion', e.target.checked)}
             />
+            <div className="setting-row" role="radiogroup" aria-labelledby="dialogue-pace-title">
+              <span>
+                <strong id="dialogue-pace-title">Dialogue text</strong>
+                <small>
+                  {settings.reduced_motion || systemReducedMotion
+                    ? 'Lines show whole while reduced motion is on.'
+                    : 'How the crew’s lines appear.'}
+                </small>
+              </span>
+              <span className="settings-pace">
+                {PACES.map(([pace, label]) => (
+                  <label key={pace}>
+                    <input
+                      type="radio"
+                      name="dialogue-pace"
+                      checked={settings.dialogue_pace === pace}
+                      onChange={() => setting('dialogue_pace', pace)}
+                    />
+                    {label}
+                  </label>
+                ))}
+              </span>
+            </div>
             <SettingRow
               title="Pixel-art shader"
               hint="Crisp pixels and outlined edges."

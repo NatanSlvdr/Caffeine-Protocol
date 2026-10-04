@@ -51,6 +51,7 @@ describe('historical save fixtures', () => {
       first_routine_tips: true,
       short_repeats: false,
       speed: 1,
+      dialogue_pace: 'typed',
     });
     // Incompatible Query programs retire: flat maps cleared, Act I scores
     // and story beats cleared (semantic-copy cannot map to token puzzles).
@@ -96,6 +97,7 @@ describe('historical save fixtures', () => {
       first_routine_tips: true,
       short_repeats: false,
       speed: 1,
+      dialogue_pace: 'typed',
     });
     // Flat Query maps retire even when they contain retired payment lines.
     expect(migrated.drafts).toEqual({});

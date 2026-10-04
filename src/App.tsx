@@ -14,6 +14,7 @@ import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
+import { DialoguePaceContext } from '@/components';
 
 export default function App() {
   return (
@@ -70,33 +71,36 @@ function Shell() {
   }, [title]);
   return (
     <div className={`app ${screen}`}>
-      <div className="app-body">
-        {screen === 'home' && <HomePage />}
-        {screen === 'campaign' && <CampaignPage />}
-        {screen === 'workspace' && (
-          <Workspace
-            key={index}
-            index={index}
-            save={save}
-            update={update}
-            lessons={lessons}
-            shift={shift}
-            nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
-            onNext={() => {
-              if (index === CAMPAIGN_LENGTH - 1) go('/ending');
-              else {
-                // A scene waiting before the next shift plays straight away.
-                const next = waitingScene(save, index + 1);
-                select(index + 1);
-                go(next ? `/scene/${next.id}` : '/campaign');
-              }
-            }}
-            onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
-          />
-        )}
-        {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
-        {screen === 'ending' && <EndingPage />}
-      </div>
+      {/* Every dialogue box, in a shift or a scene, keeps to the pace chosen in the house settings. */}
+      <DialoguePaceContext value={save.settings.dialogue_pace}>
+        <div className="app-body">
+          {screen === 'home' && <HomePage />}
+          {screen === 'campaign' && <CampaignPage />}
+          {screen === 'workspace' && (
+            <Workspace
+              key={index}
+              index={index}
+              save={save}
+              update={update}
+              lessons={lessons}
+              shift={shift}
+              nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
+              onNext={() => {
+                if (index === CAMPAIGN_LENGTH - 1) go('/ending');
+                else {
+                  // A scene waiting before the next shift plays straight away.
+                  const next = waitingScene(save, index + 1);
+                  select(index + 1);
+                  go(next ? `/scene/${next.id}` : '/campaign');
+                }
+              }}
+              onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
+            />
+          )}
+          {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
+          {screen === 'ending' && <EndingPage />}
+        </div>
+      </DialoguePaceContext>
       <SaveNotice />
       {(settingsOpen || page === 'settings') && (
         <SettingsWindow

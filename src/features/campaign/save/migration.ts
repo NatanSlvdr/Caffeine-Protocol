@@ -1,5 +1,5 @@
-import type { ProgressSave, RobotPrograms, Settings } from '@/domain/types';
-import { MAX_PLAYBACK_SPEED } from '@/domain/constants';
+import type { DialoguePace, ProgressSave, RobotPrograms, Settings } from '@/domain/types';
+import { DIALOGUE_PACES, MAX_PLAYBACK_SPEED } from '@/domain/constants';
 import { migrateQuerySource } from '@/domain/program';
 import { migrateRobotSource } from '@/domain/robotProgram';
 import { isRecord, isShiftIndex } from './validate';
@@ -118,6 +118,9 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
     if (settings[k] !== undefined && typeof settings[k] !== 'boolean') throw new Error('Invalid display setting.');
   // Saves from before the speed was kept play at 1×, as every shift used to open.
   const speed = settings.speed ?? 1;
+  // Every line was typed out before the pace could be chosen.
+  const pace = settings.dialogue_pace ?? 'typed';
+  if (!DIALOGUE_PACES.includes(pace as DialoguePace)) throw new Error('Invalid dialogue pace.');
   if (typeof speed !== 'number' || !(speed >= 1 && speed <= MAX_PLAYBACK_SPEED))
     throw new Error('Invalid playback speed.');
   return {
@@ -130,6 +133,7 @@ function validateSettingsMap(v: Record<string, unknown>): Settings {
     first_routine_tips: (settings.first_routine_tips as boolean | undefined) ?? true,
     // Every scene played in full before the option existed.
     short_repeats: (settings.short_repeats as boolean | undefined) ?? false,
+    dialogue_pace: pace as DialoguePace,
   };
 }
 

@@ -10,6 +10,7 @@ const settings: Settings = {
   speed: 1,
   first_routine_tips: true,
   short_repeats: false,
+  dialogue_pace: 'typed',
 };
 
 class FakeParam {

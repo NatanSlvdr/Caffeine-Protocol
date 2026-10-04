@@ -1,3 +1,5 @@
+import type { DialoguePace } from './types';
+
 /** Single source of truth for cross-module simulation, language, and editor limits. */
 
 /** Query instruction steps per customer event (was program.ts LIMIT). */
@@ -18,6 +20,8 @@ export const MAX_TRANSITIONS = 200000;
 export const BLOCK_SECONDS = 1.5;
 /** Fastest allowed playback multiplier. */
 export const MAX_PLAYBACK_SPEED = 12;
+/** The ways the crew's lines can appear, slowest first. */
+export const DIALOGUE_PACES: readonly DialoguePace[] = ['typed', 'quick', 'whole'];
 /** Ticket due timestamp offset after customer arrival. */
 export const TICKET_DUE_SECONDS = 30;
 /** Largest whole-tile MOVE count accepted by the language and the editor. */

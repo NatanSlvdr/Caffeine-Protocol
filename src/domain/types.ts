@@ -184,7 +184,11 @@ export interface Settings {
   first_routine_tips: boolean;
   /** Skip the intro of a shift already worked on, and keep the crew's reactions already heard to one line. */
   short_repeats: boolean;
+  /** How the crew's lines appear. Reduced motion shows them whole, whatever this says. */
+  dialogue_pace: DialoguePace;
 }
+/** Typed out a letter at a time, typed three times as fast, or each line shown whole at once. */
+export type DialoguePace = 'typed' | 'quick' | 'whole';
 export interface ProgressSaveV1 {
   version: 1;
   selected: number;

@@ -1966,3 +1966,18 @@ html[data-motion='reduced'] .story-page *::after {
     transform: translate(-50%, -12px);
   }
 }
+.settings-pace {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.settings-pace label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.settings-pace input[type='radio'] {
+  accent-color: var(--slip-coffee);
+}

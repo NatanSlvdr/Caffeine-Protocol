@@ -12,6 +12,7 @@ export { Editor } from './Editor';
 export { ExecutionCursor } from './ExecutionCursor';
 export { DialogueBox } from './dialogue/DialogueBox';
 export { Cutscene } from './dialogue/Cutscene';
+export { DialoguePaceContext } from './dialogue/pace';
 export { Modal } from '@/shared/ui/Modal';
 export { ModelThumbnail } from './thumbnails/ModelThumbnail';
 export type { ThumbnailModel } from './thumbnails/ModelThumbnail';
