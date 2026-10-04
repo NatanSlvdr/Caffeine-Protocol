@@ -38,6 +38,14 @@ Some original design pages still describe Godot, two observation shifts, or old 
 - Each row describes a proposed change and its completion criterion. Items are open unless explicitly marked otherwise later.
 - Milestones are ordered by value, but release foundations can proceed alongside gameplay work. Do not wait for every optional feature to ship.
 
+## Progress log
+
+Shipped items, newest last, with where they live and how they were checked. Items not listed here are still open.
+
+| ID | Shipped | Implementation | Validation |
+| --- | --- | --- | --- |
+| E01 | 2026-10-04 | `features/workspace/history.ts` (bounded per-robot history, typing bursts, layout-only edits), wired through `useLiveRun.change`; Undo/Redo in the routine header, Ctrl/⌘+Z, Ctrl/⌘+Shift+Z, Ctrl+Y. Histories survive a visit to the campaign page while they still lead to the saved routine. | `edit-history.test.ts`; `live-workspace.test.tsx` › undo and redo (deleted scope, reset, worked example, typing burst, locked during service). |
+
 ## 1. Make experimentation safe and failures clear
 
 **Outcome:** a new player can make a mistake, understand it, recover their code, and try again without revealing the full solution.

@@ -3,7 +3,7 @@ import { ArrowRight, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { indentSource, ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotPrograms, type RobotRole } from '@/domain';
-import { pad2 } from '@/shared/lib/format';
+import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
 
 export interface HelpModalProps {
@@ -45,8 +45,8 @@ export function HelpModal({
 }: HelpModalProps) {
   const example = lesson.robotSolution?.[role] ?? lesson.solution;
   const robot = ROBOT_DISPLAY_NAMES[role];
-  // The example overwrites the routine with no undo, so the player's own edits get a second look first.
-  // The opening routine needs none: Reset brings it back.
+  // The example replaces the routine wholesale, so the player's own edits get a second look first, and a reminder
+  // that Undo brings them back. The opening routine needs none: Reset brings it back too.
   const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
   // Already the routine: using it again would change nothing.
   const inUse = example.trim() === source.trim();
@@ -119,7 +119,8 @@ export function HelpModal({
           {confirming ? (
             <>
               <p className="help-example-warning" role="alert">
-                The example replaces {robot}’s routine, and your edits to it are lost.
+                The example replaces {robot}’s routine. If you change your mind, Undo ({RUN_MODIFIER} Z) brings your
+                version back.
               </p>
               <div className="modal-buttons help-example-actions">
                 <button

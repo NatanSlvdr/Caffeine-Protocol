@@ -32,6 +32,20 @@ import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { pad2 } from '@/shared/lib/format';
 
+/** Where `after` stops differing from `before`, counted in `after`: the end of an undone or redone change. */
+function changedEnd(before: string, after: string): number {
+  let start = 0;
+  while (start < before.length && start < after.length && before[start] === after[start]) start++;
+  let end = 0;
+  while (
+    end < before.length - start &&
+    end < after.length - start &&
+    before[before.length - 1 - end] === after[after.length - 1 - end]
+  )
+    end++;
+  return after.length - end;
+}
+
 export function Editor({
   role = 'query',
   source,
@@ -49,7 +63,8 @@ export function Editor({
 }: {
   role?: RobotRole;
   source: string;
-  onChange: (v: string) => void;
+  /** A `format` edit only lays the routine out again, so undo never stops on it. */
+  onChange: (v: string, kind?: 'edit' | 'format') => void;
   level: number;
   locked: boolean;
   observation: boolean;
@@ -93,7 +108,7 @@ export function Editor({
   // A program that has never been indented, such as a shift's starting code, opens in the text view laid out too.
   useEffect(() => {
     if (textMode && !disabled && !/^[ \t]/m.test(source) && indentSource(source) !== source)
-      onChange(indentSource(source));
+      onChange(indentSource(source), 'format');
     // Only on opening the text view or switching robots: text typed by hand keeps its layout.
   }, [textMode, role]);
   const { dragged, draggedLine, onDragStart, onDragCancel, onDragEnd } = useBlockDrag(
@@ -111,10 +126,23 @@ export function Editor({
   // Tab indents in the text view; the cursor is put back once the new source has rendered.
   const textInput = useRef<HTMLTextAreaElement>(null),
     tabCursor = useRef<number | null>(null);
+  // A routine that changes under the caret, by an undo or redo, puts the caret at the end of what changed rather
+  // than the end of the text. Text the player typed keeps the caret where the browser left it.
+  const typed = useRef(source),
+    shown = useRef(source);
   useLayoutEffect(() => {
-    if (tabCursor.current === null || !textInput.current) return;
-    textInput.current.setSelectionRange(tabCursor.current, tabCursor.current);
-    tabCursor.current = null;
+    const before = shown.current;
+    shown.current = source;
+    const input = textInput.current;
+    if (!input) return;
+    if (tabCursor.current !== null) {
+      input.setSelectionRange(tabCursor.current, tabCursor.current);
+      tabCursor.current = null;
+    } else if (source !== typed.current && document.activeElement === input) {
+      const caret = changedEnd(before, source);
+      input.setSelectionRange(caret, caret);
+    }
+    typed.current = source;
   }, [source]);
   const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Tab' || disabled || e.ctrlKey || e.metaKey || e.altKey) return;
@@ -227,7 +255,10 @@ export function Editor({
                 }
                 onKeyDown={onTextKey}
                 value={source}
-                onChange={(e) => change(e.target.value)}
+                onChange={(e) => {
+                  typed.current = e.target.value;
+                  change(e.target.value);
+                }}
                 readOnly={locked}
                 className="code-input"
               />

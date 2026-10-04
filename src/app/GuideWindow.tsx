@@ -58,6 +58,11 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per
             line.
           </p>
+          <p>
+            Changed your mind? <strong>Undo</strong> (<kbd>{RUN_MODIFIER} + Z</kbd>) steps back through every edit,
+            reset and worked example, one robot at a time, and <strong>Redo</strong> (
+            <kbd>{RUN_MODIFIER} + Shift + Z</kbd>) steps forward again.
+          </p>
         </section>
         <section className="settings-block">
           <h3>

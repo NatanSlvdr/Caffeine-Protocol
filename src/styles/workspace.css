@@ -307,6 +307,18 @@
   height: 30px;
   border-radius: 8px;
 }
+/* Undo and redo sit apart from Help and Options: they act on the routine, the others open windows. */
+.workspace-main .history-tools {
+  display: flex;
+  gap: 4px;
+  margin-right: 6px;
+  padding-right: 10px;
+  border-right: 1px solid #a88b632e;
+}
+.workspace-main .coding-tools button:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
 .workspace-main .coding-pane-heading .shift-objective {
   margin-top: 12px;
 }

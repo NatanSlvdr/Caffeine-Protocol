@@ -47,7 +47,7 @@ describe('worked example', () => {
     const onUseExample = help('take_order\nwait');
     expect(onUseExample).not.toHaveBeenCalled();
     expect(screen.getByRole('alert').textContent).toBe(
-      'The example replaces Query’s routine, and your edits to it are lost.',
+      'The example replaces Query’s routine. If you change your mind, Undo (Ctrl Z) brings your version back.',
     );
     expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Keep my edits' }));
     fireEvent.click(screen.getByRole('button', { name: 'Keep my edits' }));

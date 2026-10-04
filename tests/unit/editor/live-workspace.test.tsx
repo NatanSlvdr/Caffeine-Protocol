@@ -299,10 +299,10 @@ describe('live workspace lifecycle', () => {
       return said;
     };
     expect(text(true)).toBe(
-      'Query’s routine goes back to how it was when this shift opened. Your edits to it here are lost.',
+      'Query’s routine goes back to how it was when this shift opened. Undo (Ctrl Z) brings your version back.',
     );
     expect(text(false)).toBe(
-      'Query’s routine goes back to how it was when this shift opened. Your edits to it here are lost; the other robots keep theirs.',
+      'Query’s routine goes back to how it was when this shift opened; the other robots keep theirs. Undo (Ctrl Z) brings your version back.',
     );
   });
   it('says why the watch-only shift has nothing to reset', () => {
@@ -497,11 +497,92 @@ describe('live workspace lifecycle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
     fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
     // Query works alone on this shift: no other routines to keep.
-    expect(screen.getByText(/goes back to how it was/).textContent).toMatch(/are lost\.$/);
+    expect(screen.getByText(/goes back to how it was/).textContent).toMatch(/opened\. Undo/);
     fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
     expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('false');
     expect(savedStars()['2']).toBeUndefined();
+  });
+});
+
+describe('undo and redo', () => {
+  const draft = 'LISTEN\nIF tea IN CUSTOMER SPEECH\n  WRITE tea\nEND\nDEPOSIT RIGHT';
+  function openDraft(text = false) {
+    const save = makeSave();
+    seedLocalStorage({
+      ...save,
+      unlocked: 2,
+      selected: 2,
+      robotDrafts: { 2: { query: draft, prep: '', floor: '' } },
+      settings: { ...save.settings, text_editor: text },
+    });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+  }
+  const saved = () => JSON.parse(localStorage.getItem(SAVE_KEY)!).robotDrafts['2'].query;
+  const undoButton = () => screen.getByRole('button', { name: 'Undo' });
+  const redoButton = () => screen.getByRole('button', { name: 'Redo' });
+
+  it('brings back a deleted group, and redoes the deletion', () => {
+    openDraft();
+    expect(undoButton().hasAttribute('disabled')).toBe(true);
+    const group = document.querySelector<HTMLElement>('.block[data-line="1"]')!;
+    group.focus();
+    fireEvent.keyDown(group, { key: 'Delete' });
+    expect(saved()).toBe('LISTEN\nDEPOSIT RIGHT');
+    undoButton().focus();
+    fireEvent.click(undoButton());
+    expect(saved()).toBe(draft);
+    expect(screen.getByText('Undid an edit to Query’s routine.')).toBeTruthy();
+    // Undo has nothing left: focus moves to Redo instead of falling to the page.
+    expect(document.activeElement).toBe(redoButton());
+    fireEvent.click(redoButton());
+    expect(saved()).toBe('LISTEN\nDEPOSIT RIGHT');
+  });
+  it('undoes a reset and a worked example from the keyboard', () => {
+    openDraft();
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
+    expect(saved()).not.toBe(draft);
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(saved()).toBe(draft);
+    fireEvent.click(screen.getByRole('button', { name: 'Help' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reveal worked example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
+    fireEvent.click(screen.getByRole('button', { name: /Replace my edits/ }));
+    expect(saved()).toBe(lessons[2].solution);
+    fireEvent.keyDown(window, { key: 'z', metaKey: true });
+    expect(saved()).toBe(draft);
+    fireEvent.keyDown(window, { key: 'Z', metaKey: true, shiftKey: true });
+    expect(saved()).toBe(lessons[2].solution);
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    fireEvent.keyDown(window, { key: 'y', ctrlKey: true });
+    expect(saved()).toBe(lessons[2].solution);
+  });
+  it('undoes a burst of typing as one step and leaves the browser’s own undo out', () => {
+    openDraft(true);
+    const text = screen.getByLabelText<HTMLTextAreaElement>('Routine text');
+    text.focus();
+    for (const typed of ['LISTEN x', 'LISTEN xy', 'LISTEN xyz'])
+      fireEvent.change(text, { target: { value: draft.replace('LISTEN', typed) } });
+    const shortcut = fireEvent.keyDown(text, { key: 'z', ctrlKey: true });
+    expect(shortcut).toBe(false);
+    expect(text.value).toBe(draft);
+    // The caret goes back to where the change was, not to the end of the routine.
+    expect(text.selectionStart).toBe('LISTEN'.length);
+  });
+  it('says when there is nothing to undo, and locks history during a service', () => {
+    openDraft();
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(screen.getByText('Nothing to undo in Query’s routine.')).toBeTruthy();
+    const group = document.querySelector<HTMLElement>('.block[data-line="1"]')!;
+    group.focus();
+    fireEvent.keyDown(group, { key: 'Delete' });
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    expect(undoButton().hasAttribute('disabled')).toBe(true);
+    fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
+    expect(saved()).toBe('LISTEN\nDEPOSIT RIGHT');
   });
 });

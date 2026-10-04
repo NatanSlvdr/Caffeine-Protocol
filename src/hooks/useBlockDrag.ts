@@ -31,11 +31,12 @@ export function useBlockDrag(
   const [dragged, setDragged] = useState('');
   const [draggedLine, setDraggedLine] = useState<number | null>(null);
   // dnd-kit cancels a pointer drag on Escape without claiming the key; claim it first so the
-  // shift's own Escape shortcut does not also leave for the campaign.
+  // shift's own Escape shortcut does not also leave for the campaign. Undo and redo wait for the drop too: the
+  // routine can't change under a block in mid-air.
   useEffect(() => {
     if (!dragged) return;
     const claim = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') e.preventDefault();
+      if (e.key === 'Escape' || ((e.ctrlKey || e.metaKey) && /^[zy]$/i.test(e.key))) e.preventDefault();
     };
     window.addEventListener('keydown', claim, true);
     return () => window.removeEventListener('keydown', claim, true);

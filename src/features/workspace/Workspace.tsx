@@ -7,6 +7,7 @@ import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/per
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
@@ -103,6 +104,13 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     change,
     run,
   } = live;
+  // Undo and redo change the code out of sight of whatever has focus, so a screen reader hears what happened.
+  const [historySaid, sayHistory] = useAnnouncement();
+  const stepHistory = (direction: 'undo' | 'redo') => {
+    const robot = ROBOT_DISPLAY_NAMES[role];
+    if (live[direction]()) sayHistory(`${direction === 'undo' ? 'Undid' : 'Redid'} an edit to ${robot}’s routine.`);
+    else sayHistory(`Nothing to ${direction} in ${robot}’s routine.`);
+  };
 
   // A new service puts the last one's reaction away: run again from under it, and it would talk over the new run.
   useEffect(() => {
@@ -128,6 +136,15 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   };
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
+      // Ctrl/⌘+Z undoes and Ctrl/⌘+Shift+Z or Ctrl+Y redoes, in a text field too: the routine's own history replaces
+      // the browser's, which knows nothing of block edits. A drag in progress claims the keys first.
+      const key = e.key.toLowerCase();
+      if ((e.ctrlKey || e.metaKey) && !e.altKey && (key === 'z' || (key === 'y' && e.ctrlKey && !e.metaKey))) {
+        if (modal || scene === 'intro' || observation || e.defaultPrevented) return;
+        e.preventDefault();
+        if (!running) stepHistory(key === 'y' || e.shiftKey ? 'redo' : 'undo');
+        return;
+      }
       if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
         if (modal || scene === 'intro') return;
         e.preventDefault();
@@ -254,6 +271,16 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             onRole={(r) => {
               setRole(r);
             }}
+            history={
+              observation
+                ? undefined
+                : {
+                    canUndo: live.canUndo,
+                    canRedo: live.canRedo,
+                    onUndo: () => stepHistory('undo'),
+                    onRedo: () => stepHistory('redo'),
+                  }
+            }
           />
           <Editor
             role={role}
@@ -269,6 +296,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             textMode={textMode}
             tabbed
           />
+          <p className="sr-only" role="status">
+            {historySaid}
+          </p>
         </section>
       </div>
       {scene === 'intro' && (

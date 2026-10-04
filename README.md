@@ -16,7 +16,7 @@ Open the URL printed by Vite. The production build is fully static and supports 
 ## Play
 
 1. Choose a shift on the **Campaign** screen. The first shift is watch-only: Niko, Moka and Pip serve it by hand. Watch the whole service to unlock the next shift.
-2. From shift 2, add and arrange blocks in Query's routine. Choosing a library block appends it to the end of the routine; drag a block (or its grip) to a drop position to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END.
+2. From shift 2, add and arrange blocks in Query's routine. Choosing a library block appends it to the end of the routine; drag a block (or its grip) to a drop position to move a complete branch, loop, or function. IF, FOR, and FUNCTION blocks automatically include their matching END. **Undo** and **Redo** (Ctrl/⌘ + Z, Ctrl/⌘ + Shift + Z) step through each robot's edits, resets, and applied examples.
 3. Select **Run service** (Ctrl/⌘ + Enter) to run the routine against each of the shift's seeds, its fixed lines of customers. Every seed must pass before the next shift unlocks. **Esc** stops a run.
 4. Use the café toolbar to stop, pause, and change playback speed. From shift 9, program Brew's kitchen routines; from shift 14, Porter's floor routines.
 5. **Help** explains the lesson and provides a worked example. **Options** contains the workspace pixel-art shader, text-editor toggle, and routine reset; sound, display, save import/export, and progress-reset controls live in **Settings**.

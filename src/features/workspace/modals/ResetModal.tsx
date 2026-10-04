@@ -1,5 +1,6 @@
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
+import { RUN_MODIFIER } from '@/shared/lib/format';
 
 export interface ResetModalProps {
   /** The robot whose program is reset: only the open tab goes back, the other robots keep theirs. */
@@ -20,8 +21,8 @@ export function ResetModal({ robot, alone, onClose, onConfirm }: ResetModalProps
       onClose={onClose}
     >
       <p>
-        {robot}’s routine goes back to how it was when this shift opened. Your edits to it here are lost
-        {alone ? '.' : '; the other robots keep theirs.'}
+        {robot}’s routine goes back to how it was when this shift opened
+        {alone ? '.' : '; the other robots keep theirs.'} Undo ({RUN_MODIFIER} Z) brings your version back.
       </p>
       <div className="modal-buttons">
         <button className="settings-chip" data-autofocus onClick={onClose}>
