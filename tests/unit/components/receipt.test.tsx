@@ -73,9 +73,20 @@ describe('service receipt', () => {
   });
   it('explains a step target met while the block target is still missed', () => {
     const { unmount } = receipt(1, undefined, false, result(1, levels[2].block_target + 1, 1));
-    expect(screen.getByText(/stars climb in order: trim the blocks first/)).toBeTruthy();
+    expect(screen.getByText(/stars climb in order: trim 1 block first/)).toBeTruthy();
     unmount();
     receipt(3, undefined, false, result(3, 1, 1));
     expect(screen.queryByText(/stars climb in order/)).toBeNull();
+  });
+  it('says how far off the next star is', () => {
+    const { block_target, instruction_target } = levels[2];
+    const { unmount } = receipt(1, undefined, false, result(1, block_target + 2, instruction_target + 9));
+    expect(screen.getByText(`One more star: use 2 fewer blocks, ${block_target} or fewer.`)).toBeTruthy();
+    unmount();
+    const second = receipt(2, undefined, false, result(2, block_target, instruction_target + 1));
+    expect(screen.getByText(`One more star: run 1 fewer step, ${instruction_target} or fewer.`)).toBeTruthy();
+    second.unmount();
+    receipt(3, undefined, false, result(3, block_target, instruction_target));
+    expect(screen.queryByText(/One more star/)).toBeNull();
   });
 });

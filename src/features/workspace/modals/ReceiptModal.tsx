@@ -38,6 +38,16 @@ export function ReceiptModal({
   const stepsMet = result.executed_instructions <= level.instruction_target;
   // Stars climb in order, so a step target beaten over the block target earns nothing yet: say so.
   const stepsHeld = stepsMet && !blocksMet;
+  // A missed target says how far off it was, so the next star is a number to beat, not a guess.
+  const nextStar = observation
+    ? ''
+    : stepsHeld
+      ? `Steps are on target too, but stars climb in order: trim ${count(blocks - level.block_target, 'block')} first.`
+      : !blocksMet
+        ? `One more star: use ${count(blocks - level.block_target, 'fewer block')}, ${level.block_target} or fewer.`
+        : !stepsMet
+          ? `One more star: run ${count(result.executed_instructions - level.instruction_target, 'fewer step')}, ${level.instruction_target} or fewer.`
+          : '';
   // A replay says whether it beat the shift's best, so going back for stars has a point.
   const replay =
     observation || best === undefined
@@ -88,9 +98,7 @@ export function ReceiptModal({
           </>
         )}
       </dl>
-      {!observation && stepsHeld && (
-        <p className="receipt-note">Steps are on target too, but stars climb in order: trim the blocks first.</p>
-      )}
+      {nextStar && <p className="receipt-note">{nextStar}</p>}
       <p className="receipt-thanks">
         {nextShift ? (
           <>
