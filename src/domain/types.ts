@@ -180,6 +180,8 @@ export interface Settings {
   text_editor: boolean;
   /** How fast service plays back, carried from shift to shift. */
   speed: number;
+  /** Show the step-by-step tips on the first shift with a routine to write, until it's served or they're hidden. */
+  first_routine_tips: boolean;
 }
 export interface ProgressSaveV1 {
   version: 1;

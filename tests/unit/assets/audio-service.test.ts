@@ -8,6 +8,7 @@ const settings: Settings = {
   pixel_art: true,
   text_editor: false,
   speed: 1,
+  first_routine_tips: true,
 };
 
 class FakeParam {

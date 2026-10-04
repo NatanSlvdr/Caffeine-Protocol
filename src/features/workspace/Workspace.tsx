@@ -14,6 +14,8 @@ import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
+import { FirstRoutineTips } from './FirstRoutineTips';
+import { firstRoutineStep } from './firstRoutine';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
@@ -124,6 +126,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     !running && practised?.mode === 'practice' && practised.result.passed && !isStale(practised, programs)
       ? practised
       : undefined;
+  // The first shift with a routine to write teaches it step by step, until it's served or the player hides the tips.
+  const firstRoutine = index + 1 === UNLOCKS.query && save.stars[index] === undefined;
+  const setTips = (on: boolean) => update((s) => ({ ...s, settings: { ...s.settings, first_routine_tips: on } }));
   // The card that started a run goes with it: focus carries on at the run button, which now stops the run.
   const startFromCard = (start: () => void) => {
     start();
@@ -341,6 +346,17 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             textMode={textMode}
             tabbed
           />
+          {firstRoutine && save.settings.first_routine_tips && (
+            <FirstRoutineTips
+              step={firstRoutineStep(programs.query, records.length > 0)}
+              onHide={() => {
+                setTips(false);
+                // The button goes with the tips: focus moves to the options that bring them back, and says so.
+                document.querySelector<HTMLElement>('.coding-tools [aria-label="Options"]')?.focus();
+                sayHistory('Tips hidden. Workspace options brings them back.');
+              }}
+            />
+          )}
           {/* The crew tells the failure first; the card keeps it once they're done. */}
           {evidence && scene !== 'failure' && (
             <FailureCard
@@ -416,6 +432,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           edited={source.trim() !== resetRobotPrograms(save, index, lessons)[role].trim()}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
           onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
+          tips={firstRoutine ? { on: save.settings.first_routine_tips, onToggle: setTips } : undefined}
           onRequestReset={() => setModal('reset')}
           onClose={() => setModal('')}
         />

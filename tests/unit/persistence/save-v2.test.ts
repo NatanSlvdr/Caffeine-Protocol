@@ -162,6 +162,19 @@ describe('version 4 campaign saves', () => {
         parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, speed } }), lessons),
       ).toThrow('Invalid playback speed.');
   });
+  it('keeps the first-routine tips choice, with them on for saves made before it', () => {
+    const oldSave = newSave();
+    delete (oldSave.settings as Partial<typeof oldSave.settings>).first_routine_tips;
+    expect(parseSave(JSON.stringify(oldSave), lessons).settings.first_routine_tips).toBe(true);
+    const hidden = { ...newSave(), settings: { ...newSave().settings, first_routine_tips: false } };
+    expect(parseSave(JSON.stringify(hidden), lessons).settings.first_routine_tips).toBe(false);
+    expect(() =>
+      parseSave(
+        JSON.stringify({ ...newSave(), settings: { ...newSave().settings, first_routine_tips: 'no' } }),
+        lessons,
+      ),
+    ).toThrow('Invalid display setting.');
+  });
   it('enables pixel art when loading saves created before the display option existed', () => {
     const oldSave = newSave();
     delete (oldSave.settings as Partial<typeof oldSave.settings>).pixel_art;

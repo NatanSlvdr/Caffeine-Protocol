@@ -14,6 +14,7 @@ const defaultSettings: Settings = {
   pixel_art: true,
   text_editor: false,
   speed: 1,
+  first_routine_tips: true,
 };
 export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSave => ({
   version: 4,

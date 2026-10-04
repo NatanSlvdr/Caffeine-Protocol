@@ -41,13 +41,14 @@ describe('historical save fixtures', () => {
     expect(migrated.selected).toBe(5);
     expect(migrated.unlocked).toBe(6);
     expect(migrated.complete).toBe(false);
-    // Settings preserved; pre-display-option saves default pixel_art on, the retired effects volume and
+    // Settings preserved; pre-display-option saves default pixel_art and the first-routine tips on, the retired effects volume and
     // fullscreen flag are dropped, and the old master volume folds into the music (0.6 × 0.55).
     expect(migrated.settings).toEqual({
       music: 0.33,
       reduced_motion: false,
       pixel_art: true,
       text_editor: false,
+      first_routine_tips: true,
       speed: 1,
     });
     // Incompatible Query programs retire: flat maps cleared, Act I scores
@@ -91,6 +92,7 @@ describe('historical save fixtures', () => {
       reduced_motion: true,
       pixel_art: true,
       text_editor: false,
+      first_routine_tips: true,
       speed: 1,
     });
     // Flat Query maps retire even when they contain retired payment lines.

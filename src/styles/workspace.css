@@ -376,8 +376,83 @@
 }
 /* The last failed run, kept under the code: a warm red record while it still describes the routine, quiet once
    an edit has moved past it. It takes the board's bottom corners, so the code above it squares off. */
-.workspace-main .editor-panel:has(.failure-card) .editor-body {
+.workspace-main .editor-panel:has(.failure-card, .first-routine-tips) .editor-body {
   border-radius: 0;
+}
+/* The first routine's tips: a quiet gold strip under the code, one step at a time. A card under it takes the
+   corners. */
+.first-routine-tips {
+  flex: none;
+  padding: 10px 16px 12px;
+  border-top: 1px solid #f2c66d40;
+  border-radius: 0 0 17px 17px;
+  background: color-mix(in srgb, var(--draft-deep) 92%, #f2c66d);
+  color: var(--draft-text);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.first-routine-tips:has(+ .failure-card, + .practice-card) {
+  border-radius: 0;
+}
+.first-routine-tips header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.first-routine-tips header p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #f5d68f;
+  font-weight: 750;
+}
+.first-routine-step {
+  color: var(--draft-muted);
+  font-weight: 600;
+  white-space: pre;
+}
+.first-routine-pips {
+  display: flex;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.first-routine-pips li {
+  width: 14px;
+  height: 4px;
+  border-radius: 999px;
+  background: #ffffff1f;
+}
+.first-routine-pips li.done {
+  background: #4fbf85;
+}
+.first-routine-pips li.current {
+  background: #f5d68f;
+}
+.first-routine-tips header button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--draft-muted);
+}
+.first-routine-tips header button:hover {
+  background: #ffffff10;
+  color: var(--draft-text);
+}
+.workspace-main .first-routine-text {
+  margin: 4px 0 0 21px;
+  color: var(--draft-text);
+}
+.first-routine-text strong {
+  color: #f5d68f;
 }
 .failure-card {
   flex: none;
