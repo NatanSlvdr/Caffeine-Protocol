@@ -12,7 +12,7 @@ import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
-  const { save, recovery, saveError, importCafe } = useGame();
+  const { save, recovery, saveError, elsewhere, importCafe } = useGame();
   const cafe = useCafeName();
   const [pending, setPending] = useState<ProgressSave | null>(null),
     [error, setError] = useState(''),
@@ -205,7 +205,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
         </div>
         <p className="settings-foot" aria-hidden="true">
           <span className="settings-barcode" />
-          {saveError ? 'Not saving right now' : 'Saved as you go'} · Thank you, come again
+          {saveError || elsewhere ? 'Not saving right now' : 'Saved as you go'} · Thank you, come again
         </p>
       </Modal>
       {pending && (

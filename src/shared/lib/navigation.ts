@@ -6,6 +6,11 @@ export const go = (path: string): void => {
 export const readHashRoute = (): string =>
   typeof window === 'undefined' || !window.location ? '/' : window.location.hash.slice(1) || '/';
 
+/** Start the page afresh on the same screen, reading the café from storage again. */
+export const reloadPage = (): void => {
+  window.location.reload();
+};
+
 const SETTINGS_EVENT = 'caffeine:settings';
 
 /** Settings open as a window over the current screen rather than as a route of their own. */

@@ -1780,6 +1780,18 @@ html[data-motion='reduced'] .story-page *::after {
 .save-notice .save-notice-open:hover {
   background: #5d3826;
 }
+.save-notice .save-notice-keep {
+  min-height: 34px;
+  padding: 0 14px;
+  border: 1px solid #71452f66;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 700;
+}
+.save-notice .save-notice-keep:hover {
+  background: #392b2412;
+}
 .save-notice .save-notice-close {
   width: 30px;
   height: 30px;

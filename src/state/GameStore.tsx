@@ -1,14 +1,14 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
 import { isRated, lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
 import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
-import { completeLevel, newSave, readSave, writeSave } from '@/features/campaign/save/persistence';
+import { SAVE_KEY, completeLevel, newSave, parseSave, readSave, writeSave } from '@/features/campaign/save/persistence';
 import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
-import { go } from '@/shared/lib/navigation';
+import { go, reloadPage } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
 
 export type Update = Dispatch<SetStateAction<ProgressSave>>;
@@ -17,6 +17,12 @@ interface GameStore {
   save: ProgressSave;
   saveError: string;
   recovery: boolean;
+  /** Another tab or window saved this café since this one last did, so this one has stopped saving. */
+  elsewhere: boolean;
+  /** Reload this tab from the progress the other one saved. */
+  loadElsewhere: () => void;
+  /** Save this tab's progress over the other one's, and carry on saving. */
+  keepThisTab: () => void;
   route: string;
   go: (path: string) => void;
   update: Update;
@@ -57,8 +63,29 @@ export function GameProvider({ children }: { children: ReactNode }) {
     [saveError, setSaveError] = useState(initial.error),
     [recovery, setRecovery] = useState(initial.recovery);
   const [route] = useHashRoute();
+  // Two tabs saving one café would each quietly overwrite the other, so once another tab saves, this one holds off
+  // until the player says whose progress to keep.
+  const [elsewhere, setElsewhere] = useState(false);
+  const latest = useRef(save);
   useEffect(() => {
-    if (!recovery) {
+    const saved = (event: StorageEvent) => {
+      if (event.key !== SAVE_KEY || event.newValue === null) return;
+      // Opening the café in another tab writes the same progress back; only a real change counts.
+      const read = (raw: string) => JSON.stringify(parseSave(raw, lessons));
+      let same = false;
+      try {
+        same = read(event.newValue) === read(JSON.stringify(latest.current));
+      } catch {
+        // Unreadable data written over this café is a change too.
+      }
+      if (!same) setElsewhere(true);
+    };
+    window.addEventListener('storage', saved);
+    return () => window.removeEventListener('storage', saved);
+  }, []);
+  useEffect(() => {
+    latest.current = save;
+    if (!recovery && !elsewhere) {
       // Only a change of error re-renders: every keystroke saves, and a no-op update per save piles up during fast typing.
       const storage = siteStorage();
       const error = storage ? writeSave(storage, save) : STORAGE_BLOCKED;
@@ -66,7 +93,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     }
     configureAudio(save.settings);
     document.documentElement.dataset.motion = save.settings.reduced_motion ? 'reduced' : 'full';
-  }, [save, recovery]);
+  }, [save, recovery, elsewhere]);
   useEffect(() => {
     const gesture = () => startAudio();
     window.addEventListener('pointerdown', gesture);
@@ -81,6 +108,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
       save,
       saveError,
       recovery,
+      elsewhere,
+      loadElsewhere: reloadPage,
+      keepThisTab: () => setElsewhere(false),
       route,
       go,
       update: setSave,
@@ -115,7 +145,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         setSaveError('');
       },
     }),
-    [save, saveError, recovery, route],
+    [save, saveError, recovery, elsewhere, route],
   );
   return <GameContext.Provider value={store}>{children}</GameContext.Provider>;
 }
