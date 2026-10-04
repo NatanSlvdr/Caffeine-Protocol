@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, useSensors } from '@dnd-kit/core';
 import {
+  compileRobot,
   robotCommands,
   blockPrototypes,
   count,
@@ -38,6 +39,10 @@ import { ExecutionCursor } from './ExecutionCursor';
 import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { pad2 } from '@/shared/lib/format';
+import { TriangleAlert } from 'lucide-react';
+
+/** How long typing pauses before the text is checked for what would stop it on Run. */
+const CHECK_PAUSE_MS = 900;
 
 /** Where `after` stops differing from `before`, counted in `after`: the end of an undone or redone change. */
 function changedEnd(before: string, after: string): number {
@@ -168,6 +173,7 @@ export function Editor({
   const picked = pick?.source === source && !disabled && !dragged ? rows.find((r) => r.line === pick.line) : undefined;
   const spot = picked && insertSpot(picked);
   const ordinalOf = (line: number) => rows.findIndex((r) => r.line === line) + 1;
+  const lines = source.split('\n');
   // Groups folded shut, so a long routine reads at a glance. Folds follow their lines through edits and are this
   // robot's own; a group holding the running block or the failure shows it, folded or not.
   const [folds, setFolds] = useState({ role, source, lines: new Set<number>() as ReadonlySet<number> });
@@ -252,21 +258,53 @@ export function Editor({
     return {
       label: verb === 'JUMP' ? `Go to where the jump lands, ${where}` : `Go to ${where}`,
       title: verb === 'JUMP' ? 'Go to where it lands' : 'Go to the function',
-      onGo: () => {
-        const hiding = rows.filter((r) => folded.has(r.line) && r.line < target.line && target.line <= r.end);
-        if (hiding.length) {
-          setFolds({
-            role,
-            source,
-            lines: new Set([...folded].filter((line) => !hiding.some((r) => r.line === line))),
-          });
-          say(
-            `Unfolded ${hiding.map((r) => `block ${ordinalOf(r.line)} (${spokenBlock(r.command)})`).join(' and ')} to show ${where}.`,
-          );
-        }
-        setGoal({ line: target.line });
-      },
+      onGo: () => reveal(target.line, where),
     };
+  };
+  // Focus a block, opening any folded group it is in first, and say which opened.
+  const reveal = (line: number, where: string) => {
+    const hiding = rows.filter((r) => folded.has(r.line) && r.line < line && line <= r.end);
+    if (hiding.length) {
+      setFolds({ role, source, lines: new Set([...folded].filter((at) => !hiding.some((r) => r.line === at))) });
+      say(
+        `Unfolded ${hiding.map((r) => `block ${ordinalOf(r.line)} (${spokenBlock(r.command)})`).join(' and ')} to show ${where}.`,
+      );
+    }
+    setGoal({ line });
+  };
+  // What would stop the routine as soon as it ran, said before Run: the compiler's own verdict, never a guess, so any
+  // routine it accepts goes unremarked. Typed text is checked once the typing pauses, so a half-written line is left
+  // to be finished; blocks are always whole, so they are checked as they change.
+  const [settled, settle] = useState(source);
+  useEffect(() => {
+    const wait = setTimeout(() => settle(source), CHECK_PAUSE_MS);
+    return () => clearTimeout(wait);
+  }, [source]);
+  const verdict = useMemo(() => compileRobot(source, role, level), [source, role, level]);
+  const problem =
+    !disabled &&
+    source.trim() &&
+    failureLine < 0 &&
+    activeLine < 0 &&
+    (!textMode || settled === source) &&
+    verdict.compile_error
+      ? { line: verdict.error_line, message: verdict.compile_error }
+      : null;
+  const problemAt =
+    problem &&
+    (textMode ? `Line ${problem.line + 1}` : ordinalOf(problem.line) ? `Block ${ordinalOf(problem.line)}` : '');
+  const showProblem = () => {
+    if (!problem) return;
+    if (textMode) {
+      const input = textInput.current;
+      if (!input) return;
+      const start = lines.slice(0, problem.line).reduce((at, line) => at + line.length + 1, 0);
+      input.focus();
+      input.setSelectionRange(start, start + (lines[problem.line] ?? '').length);
+      return;
+    }
+    const block = rows.find((r) => r.line === problem.line);
+    if (block) reveal(block.line, `block ${ordinalOf(block.line)} (${spokenBlock(block.command)})`);
   };
   // The picked block's buttons copy, move or remove it whole. A copy or a move stays picked, and focus goes back to
   // the button pressed, so a block can be walked up a routine one press at a time.
@@ -300,8 +338,6 @@ export function Editor({
   const [explained, explain] = useState<string | null>(null);
   const help = explained && !dragged ? blockHelp(explained, role, level) : null;
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
-  const lines = source.split('\n');
-
   return (
     <DndContext
       sensors={sensors}
@@ -368,7 +404,18 @@ export function Editor({
               {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
               <div className="code-text-lines" aria-hidden="true">
                 {lines.map((line, i) => (
-                  <div key={i} className={i === failureLine ? 'failed' : i === markerLine ? 'active' : undefined}>
+                  <div
+                    key={i}
+                    className={
+                      i === failureLine
+                        ? 'failed'
+                        : i === markerLine
+                          ? 'active'
+                          : i === problem?.line
+                            ? 'flagged'
+                            : undefined
+                    }
+                  >
                     {line || ' '}
                   </div>
                 ))}
@@ -386,6 +433,7 @@ export function Editor({
                 placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
                 aria-description={
                   (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
+                  (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
                   'Tab indents, Shift+Tab outdents, Escape leaves the editor.'
                 }
                 onKeyDown={onTextKey}
@@ -433,6 +481,7 @@ export function Editor({
                 inside={inside}
                 onFold={fold}
                 goTo={goTo}
+                flaggedLine={problem?.line ?? -1}
                 actions={(block) => (
                   <BlockActions
                     block={block}
@@ -446,6 +495,20 @@ export function Editor({
             </ProgramSurface>
           )}
         </div>
+        {problem && (
+          <div className="routine-check">
+            <TriangleAlert size={14} aria-hidden="true" />
+            <p>
+              {problemAt && <strong>{problemAt}: </strong>}
+              {problem.message}
+            </p>
+            {(textMode || ordinalOf(problem.line) > 0) && (
+              <button type="button" onClick={showProblem}>
+                Show
+              </button>
+            )}
+          </div>
+        )}
         <p className="sr-only" role="status">
           {said}
         </p>

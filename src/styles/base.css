@@ -935,3 +935,63 @@ html[data-motion='reduced'] *:after {
   border: 2px dashed #bca58b;
   border-top: 0;
 }
+
+/* What would stop the routine as soon as it ran, said before Run: an amber mark on the block or line, and a note
+   under the code with a button to go there. It takes the board's bottom corners unless the last run's card is below. */
+.editor-panel .code-row .block.flagged {
+  outline: 2px solid #f0a64a;
+  outline-offset: 2px;
+}
+.editor-panel .code-text-lines > .flagged {
+  background: #f0a64a1f;
+  box-shadow: inset 3px 0 #f0a64a;
+}
+.routine-check {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 9px 12px 9px 16px;
+  border-top: 1px solid #f0a64a4d;
+  background: color-mix(in srgb, var(--draft-deep, #2b231f) 90%, #f0a64a);
+  color: var(--draft-text, #f3e6cf);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.workspace-main .editor-panel .routine-check {
+  border-radius: 0 0 17px 17px;
+}
+.workspace-main .editor-panel .routine-check:has(~ .failure-card) {
+  border-radius: 0;
+}
+.workspace-main .editor-panel:has(.routine-check) .editor-body {
+  border-radius: 0;
+}
+.routine-check > svg {
+  flex: none;
+  color: #f6bd6d;
+}
+.routine-check > p {
+  flex: 1;
+  margin: 0;
+}
+.routine-check > p > strong {
+  color: #f6bd6d;
+}
+.routine-check > button {
+  flex: none;
+  padding: 4px 11px;
+  border: 1px solid #f0a64a80;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.routine-check > button:hover {
+  background: #ffffff10;
+}
+.routine-check > button:focus-visible {
+  outline: 2px solid #f6bd6d;
+  outline-offset: 2px;
+}

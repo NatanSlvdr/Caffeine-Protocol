@@ -29,6 +29,8 @@ export interface ProgramRowsProps {
   onFold: (block: VisualBlock) => void;
   /** Where a jump or a call goes, for a button that takes the player there. */
   goTo: (block: VisualBlock) => GoTo | undefined;
+  /** The line the compiler would stop on at Run, or -1. */
+  flaggedLine: number;
   /** The picked block's own buttons. */
   actions: (block: VisualBlock) => React.ReactNode;
 }
@@ -57,6 +59,7 @@ export function ProgramRows({
   inside,
   onFold,
   goTo,
+  flaggedLine,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -88,6 +91,7 @@ export function ProgramRows({
             locked={disabled}
             active={activeLine === block.line}
             failure={visibleFailureLine === block.line}
+            flagged={flaggedLine === block.line}
             onDismissFailure={onDismissFailure}
             onChange={(c) => {
               const lines = source.split('\n');
@@ -122,6 +126,7 @@ export function ProgramRows({
                 locked={disabled}
                 active={activeLine === block.elseLine}
                 failure={visibleFailureLine === block.elseLine}
+                flagged={flaggedLine === block.elseLine}
                 onDismissFailure={onDismissFailure}
                 onChange={() => {}}
                 onRemove={() => remove(elseBlock(block))}

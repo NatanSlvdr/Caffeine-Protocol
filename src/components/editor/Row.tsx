@@ -30,6 +30,7 @@ export function Row({
   actions,
   fold,
   goTo,
+  flagged = false,
 }: {
   block: VisualBlock;
   depth: number;
@@ -52,6 +53,8 @@ export function Row({
   /** A group with blocks in it folds shut to its first block, and says how many it hides. */
   fold?: { folded: boolean; inside: number; onToggle: () => void };
   goTo?: GoTo;
+  /** Where the routine would stop as soon as it ran, marked before Run. */
+  flagged?: boolean;
 }) {
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
@@ -99,6 +102,7 @@ export function Row({
             ? `Drag ${spokenBlock(command)}`
             : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
           (failure ? ', where the service stopped' : '') +
+          (flagged && !failure ? ', which needs a fix before Run' : '') +
           (fold?.folded ? `, folded with ${count(fold.inside, 'block')} inside` : '') +
           (picked ? ', where new blocks go' : '')
         }
@@ -110,6 +114,7 @@ export function Row({
           target ? 'jump-target' : '',
           active ? 'active' : '',
           failure ? 'failure' : '',
+          flagged && !failure ? 'flagged' : '',
           picked ? 'picked' : '',
         ].join(' ')}
         aria-current={active && !failure ? 'step' : undefined}
