@@ -4,6 +4,7 @@ import {
   robotCommands,
   blockPrototypes,
   indentSource,
+  isOpening,
   placeBlock,
   removeVisualBlock,
   spokenBlock,
@@ -25,6 +26,7 @@ import { blockHelp, spokenHelp } from './editor/blockHelp';
 import { DragPreview, ProjectedBlocks } from './editor/ProjectedBlocks';
 import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
+import { insertSpot, spotWords } from './editor/insertSpot';
 import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
@@ -156,11 +158,38 @@ export function Editor({
   };
   // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
   const [said, say] = useAnnouncement();
-  // A library block goes on the end of the routine; focus stays in the library, ready to add the next.
+  // A routine block tapped, or picked with Enter, is where library blocks go next instead of the end. It holds only
+  // while the routine is the one it was picked in: a drag, an undo or a typed edit moves the lines out from under it.
+  const [pick, setPick] = useState<{ line: number; source: string } | null>(null);
+  const picked = pick?.source === source && !disabled && !dragged ? rows.find((r) => r.line === pick.line) : undefined;
+  const spot = picked && insertSpot(picked);
+  const ordinalOf = (line: number) => rows.findIndex((r) => r.line === line) + 1;
+  const choose = (block: VisualBlock) => {
+    if (block.line === picked?.line) {
+      setPick(null);
+      say('New blocks go at the end of the routine again.');
+    } else {
+      setPick({ line: block.line, source });
+      say(
+        `New blocks go ${spotWords(block, ordinalOf(block.line))}. Pick it again, or press Escape, to add at the end.`,
+      );
+    }
+  };
+  // A library block goes after the picked block, or on the end of the routine; focus stays in the library, ready to
+  // add the next, which follows the one just added.
   const insert = (command: string) => {
     if (disabled) return;
-    say(`Added block ${rows.length + 1} (${spokenBlock(command)}) at the end of the routine.`);
-    blockChange(placeBlock(source, command, source ? source.split('\n').length : 0));
+    const before = source ? source.split('\n').length : 0;
+    const at = spot ? spot.at : before;
+    const next = indentSource(placeBlock(source, command, at));
+    // A new jump also puts its destination at the top, which moves every line down one.
+    const shift = next.split('\n').length - before - (isOpening(command) ? 2 : 1);
+    const ordinal = rows.filter((r) => r.line < at).length + 1 + shift;
+    say(
+      `Added block ${ordinal} (${spokenBlock(command)}) ${picked ? spotWords(picked, ordinalOf(picked.line) + shift) : 'at the end of the routine'}.`,
+    );
+    if (picked) setPick({ line: at + shift, source: next });
+    change(next);
   };
   // Focus moves to the block that took a removed one's place, or the one above, or the library once the routine is
   // empty, rather than falling to the page.
@@ -231,6 +260,12 @@ export function Editor({
         <div
           className="editor-body"
           ref={codeArea}
+          onKeyDown={(e) => {
+            // Only from a block or the pane itself: Escape in a value's menu just closes the menu.
+            if (e.key !== 'Escape' || !picked || !(e.target as Element).matches('.block, .editor-body')) return;
+            setPick(null);
+            say('New blocks go at the end of the routine again.');
+          }}
           {...(tabbed
             ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
             : { role: 'group', 'aria-label': 'Code zone' })}
@@ -304,6 +339,9 @@ export function Editor({
                 draggedLine={draggedLine}
                 change={blockChange}
                 remove={remove}
+                picked={picked?.line ?? null}
+                nextAt={spot ? spot.at : null}
+                onPick={choose}
               />
               <JumpArrows root={root} source={source} dragging={!!dragged} />
             </ProgramSurface>

@@ -8,11 +8,14 @@ export function Insertion({
   disabled,
   alternative = false,
   hint = '',
+  next = false,
 }: {
   at: number;
   disabled: boolean;
   alternative?: boolean;
   hint?: string;
+  /** Marks where the next library block goes, once a routine block is picked. */
+  next?: boolean;
 }) {
   const { setNodeRef, isOver } = useDroppable({
     id: (alternative ? 'else:' : 'gap:') + at,
@@ -35,7 +38,8 @@ export function Insertion({
           'code-insertion ' +
           (hint ? 'with-hint ' : '') +
           (isElse ? 'else-option ' : '') +
-          (isOver ? 'drop-target' : '')
+          (isOver ? 'drop-target ' : '') +
+          (next ? 'next-spot' : '')
         }
       >
         {isElse ? (
@@ -57,7 +61,7 @@ export function Insertion({
             </div>
           </>
         ) : (
-          !preview && hint
+          !preview && (next && hint ? 'The next block goes here' : hint)
         )}
       </div>
       {!isElse && preview && (

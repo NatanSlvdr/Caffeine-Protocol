@@ -17,6 +17,8 @@ export function Row({
   onChange,
   onRemove,
   inLoop = false,
+  picked = false,
+  onPick,
 }: {
   block: VisualBlock;
   depth: number;
@@ -30,7 +32,12 @@ export function Row({
   onRemove?: () => void;
   inLoop?: boolean;
   onDismissFailure?: () => void;
+  /** Library blocks are added after this one, rather than at the end. */
+  picked?: boolean;
+  /** A tap on the block itself, or Enter, picks it as the place library blocks go; again, and they go at the end. */
+  onPick?: () => void;
 }) {
+  const pickable = !locked && !!onPick;
   const { line: id, command } = block;
   const { attributes, listeners, setNodeRef } = useDraggable({ id: String(id), data: { at: id }, disabled: locked });
   const rowRef = useRef<HTMLDivElement | null>(null),
@@ -50,8 +57,19 @@ export function Row({
         }}
         {...attributes}
         {...listeners}
+        onClick={(e) => {
+          // Its fields keep their clicks: only the block's own face picks it.
+          const field = (e.target as Element).closest(
+            'input, select, textarea, button, [role="combobox"], [role="option"]',
+          );
+          if (pickable && (!field || field === e.currentTarget)) onPick?.();
+        }}
         onKeyDown={(e) => {
           listeners?.onKeyDown?.(e);
+          if (e.key === 'Enter' && e.target === e.currentTarget && pickable) {
+            e.preventDefault();
+            onPick?.();
+          }
           // Only the block itself: its own fields keep Backspace for their text.
           if ((e.key === 'Delete' || e.key === 'Backspace') && e.target === e.currentTarget && !locked && onRemove) {
             e.preventDefault();
@@ -64,7 +82,8 @@ export function Row({
           (target
             ? `Drag ${spokenBlock(command)}`
             : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
-          (failure ? ', where the service stopped' : '')
+          (failure ? ', where the service stopped' : '') +
+          (picked ? ', where new blocks go' : '')
         }
         aria-disabled={locked}
         tabIndex={locked ? -1 : 0}
@@ -74,6 +93,7 @@ export function Row({
           target ? 'jump-target' : '',
           active ? 'active' : '',
           failure ? 'failure' : '',
+          picked ? 'picked' : '',
         ].join(' ')}
         aria-current={active && !failure ? 'step' : undefined}
         data-line={id}

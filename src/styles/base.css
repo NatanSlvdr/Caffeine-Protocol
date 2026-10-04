@@ -833,3 +833,26 @@ html[data-motion='reduced'] *:after {
 .playback-speed strong {
   font-variant-numeric: tabular-nums;
 }
+
+/* A routine block picked as the place library blocks go, and the line the next one takes. */
+.editor-panel .code-row .block.picked {
+  outline: 2px dashed #f4c95d;
+  outline-offset: 2px;
+}
+.editor-panel .code-insertion.next-spot {
+  opacity: 1;
+}
+.editor-panel .code-insertion.next-spot:not(.with-hint):after {
+  content: '';
+  position: absolute;
+  top: 5px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: #f4c95d;
+}
+.editor-panel .code-insertion.with-hint.next-spot {
+  border-color: #f4c95d;
+  color: #8a6a1f;
+}

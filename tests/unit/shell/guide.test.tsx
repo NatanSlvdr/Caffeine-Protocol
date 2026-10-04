@@ -30,7 +30,7 @@ describe('how to play', () => {
     expect(guide.textContent).not.toContain('grip');
     // The keyboard way to move a block names every key the editor's own instructions do.
     expect(guide.textContent).toContain(
-      'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it.',
+      'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it, Enter to pick it as the place new blocks go.',
     );
     // A block's values can be set without a pointer too, both ways its menus answer the keys.
     expect(guide.textContent).toContain(
@@ -50,7 +50,7 @@ describe('how to play', () => {
       'Most shifts send in a few rounds of guests, one after another, and every round has to go right.',
     );
     // The run shortcut names this keyboard's modifier only.
-    const run = [...guide.querySelectorAll('kbd')].find((k) => k.textContent.includes('Enter'));
+    const run = [...guide.querySelectorAll('kbd')].find((k) => k.textContent.includes('+ Enter'));
     expect(run?.textContent).toMatch(/^(Ctrl|⌘) \+ Enter$/);
     // Star glyphs are drawn only; each count is read in words, climbing in order.
     for (const words of ['One star', 'Two stars', 'Three stars']) expect(screen.getByText(words)).toBeTruthy();

@@ -4,7 +4,7 @@ import { spokenBlock, type VisualBlock } from '@/domain';
 /** Read with every draggable block, so it fits a library block being added as well as one being moved. */
 export const dragInstructions: ScreenReaderInstructions = {
   draggable:
-    'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel.',
+    'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel. In the routine, Enter picks a block as the place library blocks go.',
 };
 
 /**

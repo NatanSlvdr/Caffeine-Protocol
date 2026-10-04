@@ -45,14 +45,16 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             <Puzzle size={16} aria-hidden="true" /> Writing a routine
           </h3>
           <p>
-            Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. Set
-            its values right in the code pane. From the keyboard, a value’s menu opens with the arrow keys, or by typing
-            the first letters of the one you want.
+            Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. To add
+            a few in the middle, tap a block in the routine first: new ones follow it, or fill it if it’s an empty
+            branch, until you tap it again. Set its values right in the code pane. From the keyboard, a value’s menu
+            opens with the arrow keys, or by typing the first letters of the one you want.
           </p>
           <p>
             Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to
             remove it. From the keyboard: <kbd>Space</kbd> to lift, arrow keys to move, <kbd>Space</kbd> to drop,{' '}
-            <kbd>Esc</kbd> to put it back, <kbd>Delete</kbd> to remove it.
+            <kbd>Esc</kbd> to put it back, <kbd>Delete</kbd> to remove it, <kbd>Enter</kbd> to pick it as the place new
+            blocks go.
           </p>
           <p>
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per

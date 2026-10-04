@@ -237,7 +237,8 @@ describe('compact visual code', () => {
     await user.click(document.querySelector('[data-line="1"] .block-verb')!);
     await choose('Library Write value', 'tea');
     await user.click(screen.getByRole('button', { name: 'Insert write coffee' }));
-    expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\nEND\nITEM coffee');
+    // Tapping the empty branch picked it, so the block fills it rather than going on the end.
+    expect(source()).toBe('LISTEN\nIF tea IN CUSTOMER SPEECH\n  ITEM coffee\nEND');
     expect(document.querySelectorAll('.block.selected')).toHaveLength(0);
   });
   it('preserves branch contents when editing the condition', async () => {
@@ -554,7 +555,7 @@ describe('keyboard dragging', () => {
       return document.getElementById(button.getAttribute('aria-describedby')!)?.textContent;
     };
     const instructions =
-      'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel.';
+      'Press Space to lift this block, the arrow keys to choose a spot, Space to drop it there, or Escape to cancel. In the routine, Enter picks a block as the place library blocks go.';
     expect(described('Insert take up')).toBe(instructions);
     expect(described('Drag block 2 (move right 2)')).toBe(instructions);
   });

@@ -19,6 +19,10 @@ export interface ProgramRowsProps {
   draggedLine: number | null;
   change: (value: string) => void;
   remove: (block: VisualBlock) => void;
+  /** The routine block library blocks are added after, and the line the next one takes. */
+  picked: number | null;
+  nextAt: number | null;
+  onPick: (block: VisualBlock) => void;
 }
 
 /** Recursive visual rows with insertion anchors, else branches, and jump slots. */
@@ -37,6 +41,9 @@ export function ProgramRows({
   draggedLine,
   change,
   remove,
+  picked,
+  nextAt,
+  onPick,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -71,6 +78,8 @@ export function ProgramRows({
             change(lines.join('\n'));
           }}
           onRemove={() => remove(block)}
+          picked={picked === block.line}
+          onPick={dragged ? undefined : () => onPick(block)}
         />
         {block.children && (
           <div className="scope-body">
@@ -78,6 +87,7 @@ export function ProgramRows({
               at={block.line + 1}
               disabled={disabled}
               hint={block.children.length ? '' : 'Drop a block here'}
+              next={nextAt === block.line + 1}
             />
             {renderBlocks(block.children, depth + 1)}
           </div>
@@ -95,9 +105,11 @@ export function ProgramRows({
               onDismissFailure={onDismissFailure}
               onChange={() => {}}
               onRemove={() => remove(elseBlock(block))}
+              picked={picked === block.elseLine}
+              onPick={dragged ? undefined : () => onPick(elseBlock(block))}
             />
             <div className="scope-body">
-              <Insertion at={block.elseLine! + 1} disabled={disabled} />
+              <Insertion at={block.elseLine! + 1} disabled={disabled} next={nextAt === block.elseLine! + 1} />
               {renderBlocks(block.alternative, depth + 1)}
             </div>
           </div>
@@ -105,7 +117,7 @@ export function ProgramRows({
         {block.command.startsWith('IF ') && !block.alternative?.length && dragged && elseSlots && (
           <Insertion at={block.end} alternative={block.elseLine === undefined} disabled={disabled} hint="Else" />
         )}
-        <Insertion at={block.end + 1} disabled={disabled} />
+        <Insertion at={block.end + 1} disabled={disabled} next={nextAt === block.end + 1} />
       </div>
     ));
   return <>{renderBlocks(tree)}</>;
