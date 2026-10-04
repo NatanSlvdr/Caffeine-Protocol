@@ -198,9 +198,39 @@ describe('live workspace lifecycle', () => {
       act(() => {
         vi.advanceTimersByTime(1000);
       });
-    expect(status.textContent).toBe('Service running, round 2 of 3. The routines are locked until it stops.');
+    expect(status.textContent).toBe('Service running, round 2 of 3, 1 passed. The routines are locked until it stops.');
+    // A pip a round: the one that went right is filled, the one playing is ringed.
+    expect([...toolbar.querySelectorAll('.round-pips i')].map((pip) => pip.className)).toEqual([
+      'passed',
+      'current',
+      '',
+    ]);
     fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
     expect(within(toolbar).queryByText(/^Round/)).toBeNull();
+  });
+  it('shows on each robot’s tab whether it’s busy or waiting, while the service runs', () => {
+    open();
+    const tab = () => screen.getByRole('tab', { name: /Query/ });
+    // Before the doors open, Query is already waiting at the counter.
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    expect(tab().getAttribute('data-activity')).toBe('waiting');
+    expect(tab().getAttribute('aria-description')).toBe('Waiting for orders');
+    expect(tab().textContent).toContain('waiting');
+    fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '4' } });
+    const seen = new Set<string>();
+    for (let i = 0; i < 80 && seen.size < 2; i++) {
+      act(() => {
+        vi.advanceTimersByTime(250);
+      });
+      seen.add(tab().getAttribute('data-activity')!);
+    }
+    expect(seen).toEqual(new Set(['waiting', 'working']));
+    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    expect(tab().getAttribute('data-activity')).toBeNull();
+    expect(tab().getAttribute('aria-description')).toBeNull();
+    expect(tab().textContent).toBe('Query');
   });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });

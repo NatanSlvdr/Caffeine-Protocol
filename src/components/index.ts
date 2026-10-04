@@ -21,5 +21,6 @@ export type { IconOrder } from './OrderIcons';
 export { OrderQueueBubble } from './OrderQueueBubble';
 export { PixelArtEffect } from './cafe/PixelArtEffect';
 export { RobotChoice, RobotOptions, RobotTabs, RobotButtons } from './RobotChoice';
+export type { RobotTabActivity } from './RobotChoice';
 export { RobotHolding } from './RobotHolding';
 export { Street, StreetClip } from './Street';

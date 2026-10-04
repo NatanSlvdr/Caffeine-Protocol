@@ -110,6 +110,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     stale,
     instructionProgress,
     round,
+    activity,
     change,
     run,
     practise,
@@ -314,6 +315,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             onRole={(r) => {
               setRole(r);
             }}
+            activity={activity}
             history={
               observation
                 ? undefined

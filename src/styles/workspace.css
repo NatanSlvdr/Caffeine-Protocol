@@ -178,6 +178,48 @@
 .workspace-main .robot-tabs button:focus-visible {
   outline-offset: 1px;
 }
+/* While a run plays, each tab says whether its robot is busy, waiting for work, or done for the day. */
+.workspace-main .robot-tabs button[data-activity] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.workspace-main .robot-tabs .robot-activity {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0 9px 0 -3px;
+  font-size: 10.5px;
+  font-weight: 650;
+  opacity: 0.72;
+}
+.workspace-main .robot-tabs .robot-activity::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border: 1.5px solid currentColor;
+  border-radius: 50%;
+}
+.workspace-main .robot-tabs [data-activity='working'] .robot-activity::before {
+  border-color: #4fbf85;
+  background: #4fbf85;
+  animation: robot-working 1.2s ease-in-out infinite;
+}
+.workspace-main .robot-tabs [data-activity='waiting'] .robot-activity::before {
+  border-color: #e0b25c;
+}
+.workspace-main .robot-tabs [aria-selected='true'][data-activity='working'] .robot-activity::before {
+  border-color: #2f8f5a;
+  background: #2f8f5a;
+}
+.workspace-main .robot-tabs [aria-selected='true'][data-activity='waiting'] .robot-activity::before {
+  border-color: #b07d22;
+}
+@keyframes robot-working {
+  50% {
+    opacity: 0.45;
+  }
+}
 .workspace-main .robot-tabs .locked-robot-buttons {
   flex: 1;
   gap: 4px;
@@ -226,6 +268,17 @@
     monospace;
   opacity: 0.85;
 }
+/* On a narrower stage the run button keeps its name on one line and lets its shortcut chip go: the shortcut is
+   still announced with the button, and the Guide teaches it. */
+@media (max-width: 1180px) {
+  .workspace-main .playback-toolbar .run-button {
+    min-width: 0;
+    white-space: nowrap;
+  }
+  .workspace-main .playback-toolbar .run-button kbd {
+    display: none;
+  }
+}
 /* Without a keyboard the shortcut chip names keys the player doesn't have. */
 @media (hover: none) and (pointer: coarse) {
   .workspace-main .playback-toolbar .run-button kbd {
@@ -252,6 +305,25 @@
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+.workspace-main .playback-round .round-pips {
+  display: inline-flex;
+  gap: 3px;
+  margin-right: 7px;
+  vertical-align: 1px;
+}
+.workspace-main .round-pips i {
+  width: 7px;
+  height: 7px;
+  border: 1.5px solid #c9b8a2;
+  border-radius: 50%;
+}
+.workspace-main .round-pips i.current {
+  border-color: var(--desk-ink);
+}
+.workspace-main .round-pips i.passed {
+  border-color: #3b9566;
+  background: #3b9566;
 }
 .workspace-main .playback-round.practice strong {
   margin-right: 6px;

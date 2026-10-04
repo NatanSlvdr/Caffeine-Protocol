@@ -4,6 +4,7 @@ import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
 import { BookOpen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
 import { RUN_MODIFIER } from '@/shared/lib/format';
 import { RobotOptions } from './RobotChoice';
+import type { RobotTabActivity } from './RobotChoice';
 
 /** Keep every robot directly below the goal, with explicit unlock states. */
 export function CodingPaneHeader({
@@ -16,6 +17,7 @@ export function CodingPaneHeader({
   onHelp,
   onOptions,
   history,
+  activity,
 }: {
   shift: string;
   objective: string;
@@ -27,6 +29,8 @@ export function CodingPaneHeader({
   onOptions?: () => void;
   /** Undo and redo for the open robot's routine. */
   history?: { canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void };
+  /** Each robot's activity while a run plays, shown on its tab. */
+  activity?: Partial<Record<RobotRole, RobotTabActivity>>;
 }) {
   // Undoing the last step greys Undo out under the pointer or keyboard focus; focus moves across to Redo, and back.
   const undoButton = useRef<HTMLButtonElement>(null),
@@ -97,7 +101,14 @@ export function CodingPaneHeader({
         </p>
       </header>
       <div className="robot-tabs" role="tablist" aria-label="Robot routines">
-        <RobotOptions level={level} selected={role} labels={ROBOT_DISPLAY_NAMES} onSelect={onRole} tabs />
+        <RobotOptions
+          level={level}
+          selected={role}
+          labels={ROBOT_DISPLAY_NAMES}
+          onSelect={onRole}
+          activity={activity}
+          tabs
+        />
       </div>
     </section>
   );

@@ -52,7 +52,16 @@ export function PlaybackToolbar({
       </button>
       {counted && (
         <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
-          {practice && <strong>Practice</strong>}
+          {/* A service stops at its first slip, so every round before this one went right. */}
+          {practice ? (
+            <strong>Practice</strong>
+          ) : (
+            <span className="round-pips">
+              {Array.from({ length: rounds }, (_, i) => (
+                <i key={i} className={i < round - 1 ? 'passed' : i === round - 1 ? 'current' : undefined} />
+              ))}
+            </span>
+          )}
           Round {round} of {rounds}
         </span>
       )}
@@ -77,7 +86,7 @@ export function PlaybackToolbar({
         {running &&
           (paused
             ? 'Service paused.'
-            : `${practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
+            : `${practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>
   );

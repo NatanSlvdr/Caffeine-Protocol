@@ -8,6 +8,7 @@ import { usePlaybackClock } from './usePlaybackClock';
 import { keepHistories, keptHistories, record, redo, undo } from './history';
 import type { EditKind } from './history';
 import { evidenceOf, isStale } from './evidence';
+import { crewActivity } from './crew';
 import type { RunEvidence } from './evidence';
 
 export interface LiveRunArgs {
@@ -58,6 +59,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const round = sampled?.seed
     ? level.seeds.findIndex((seed) => seed.id === sampled.seed!.seed_id) + 1
     : (practising ?? 0) + 1;
+  // Who is busy and who is waiting, while the run plays: the robot tabs show it.
+  const activity = running && sampled ? crewActivity(sampled) : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
@@ -186,6 +189,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     stale,
     instructionProgress,
     round,
+    activity,
     change,
     undo: () => step('undo'),
     redo: () => step('redo'),

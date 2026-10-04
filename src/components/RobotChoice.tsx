@@ -23,15 +23,26 @@ export function RobotChoice({ robot, label }: { robot: RobotRole; label: string 
 
 const joins = (robot: RobotRole) => `Joins the crew on Shift ${pad2(ROBOT_UNLOCK_LEVELS[robot])}`;
 
+/** What a robot is up to while a run plays, shown on its tab: busy, waiting for work, or done for the day. */
+export interface RobotTabActivity {
+  state: 'working' | 'waiting' | 'stopped';
+  /** What it's doing or waiting for, in the words its blocks use. */
+  label: string;
+}
+
+const ACTIVITY_WORDS = { working: 'working', waiting: 'waiting', stopped: 'stopped' } as const;
+
 interface RobotListProps {
   level: number;
+  /** Each robot's activity during a run; tabs only. */
+  activity?: Partial<Record<RobotRole, RobotTabActivity>>;
   selected?: RobotRole;
   labels: Record<RobotRole, string>;
   onSelect: (robot: RobotRole) => void;
   tabs: boolean;
 }
 
-function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) {
+function RobotList({ level, selected, labels, onSelect, tabs, activity }: RobotListProps) {
   const { unlocked, locked } = splitByUnlock(level);
   const current = selected && unlocked.includes(selected) ? selected : unlocked[0];
   // Tabs follow the arrow keys, Home and End, wrapping round the robots already running.
@@ -46,28 +57,37 @@ function RobotList({ level, selected, labels, onSelect, tabs }: RobotListProps) 
     onSelect(next);
     e.currentTarget.closest('[role="tablist"]')?.querySelector<HTMLElement>(`[data-robot="${next}"]`)?.focus();
   };
-  const button = (robot: RobotRole, disabled: boolean) => (
-    <button
-      key={robot}
-      type="button"
-      data-robot={robot}
-      id={tabs ? routineTab(robot) : undefined}
-      role={tabs ? 'tab' : undefined}
-      aria-controls={tabs && !disabled ? ROUTINE_PANEL : undefined}
-      aria-selected={tabs ? !disabled && selected === robot : undefined}
-      aria-pressed={tabs ? undefined : !disabled && selected === robot}
-      aria-description={disabled ? joins(robot) : undefined}
-      // Only the open tab sits in the Tab order; the arrows reach the others.
-      tabIndex={tabs && !disabled ? (robot === current ? 0 : -1) : undefined}
-      // A greyed-out robot says on hover when it arrives, not just to screen readers.
-      title={disabled ? `${labels[robot]} · ${joins(robot)}` : tabs ? undefined : labels[robot]}
-      disabled={disabled}
-      onClick={() => onSelect(robot)}
-      onKeyDown={tabs ? (e) => step(e, robot) : undefined}
-    >
-      <RobotChoice robot={robot} label={labels[robot]} />
-    </button>
-  );
+  const button = (robot: RobotRole, disabled: boolean) => {
+    const doing = tabs && !disabled ? activity?.[robot] : undefined;
+    return (
+      <button
+        key={robot}
+        type="button"
+        data-robot={robot}
+        id={tabs ? routineTab(robot) : undefined}
+        role={tabs ? 'tab' : undefined}
+        aria-controls={tabs && !disabled ? ROUTINE_PANEL : undefined}
+        aria-selected={tabs ? !disabled && selected === robot : undefined}
+        aria-pressed={tabs ? undefined : !disabled && selected === robot}
+        aria-description={disabled ? joins(robot) : doing?.label}
+        data-activity={doing?.state}
+        // Only the open tab sits in the Tab order; the arrows reach the others.
+        tabIndex={tabs && !disabled ? (robot === current ? 0 : -1) : undefined}
+        // A greyed-out robot says on hover when it arrives, not just to screen readers.
+        title={disabled ? `${labels[robot]} · ${joins(robot)}` : tabs ? doing?.label : labels[robot]}
+        disabled={disabled}
+        onClick={() => onSelect(robot)}
+        onKeyDown={tabs ? (e) => step(e, robot) : undefined}
+      >
+        <RobotChoice robot={robot} label={labels[robot]} />
+        {doing && (
+          <span className="robot-activity" aria-hidden="true">
+            {ACTIVITY_WORDS[doing.state]}
+          </span>
+        )}
+      </button>
+    );
+  };
   return (
     <>
       {unlocked.map((robot) => button(robot, false))}
