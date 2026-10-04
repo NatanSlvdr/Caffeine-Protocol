@@ -21,6 +21,7 @@ export * from './replay';
 export * from './robotConditions';
 export * from './robotProgram';
 export * from './robots';
+export * from './runRecord';
 export * from './defaultPrograms';
 export * from './scope';
 export * from './scoring';

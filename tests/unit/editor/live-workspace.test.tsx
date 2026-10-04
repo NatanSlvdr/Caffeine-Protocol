@@ -593,6 +593,60 @@ describe('the failure card', () => {
     expect(within(screen.getByRole('list', { name: 'Hints' })).getAllByRole('listitem')).toHaveLength(2);
     expect(screen.getByRole('button', { name: 'Reveal worked example' })).toBeTruthy();
   });
+
+  it('practises the round that failed for no stars, and runs the whole service from there', () => {
+    window.location.hash = '/shift/4';
+    const save = makeSave();
+    seedLocalStorage({
+      ...save,
+      unlocked: 3,
+      selected: 3,
+      settings: { ...save.settings, text_editor: true },
+      robotDrafts: { 3: { query: failing, prep: '', floor: '' } },
+    });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const play = () => {
+      for (let i = 0; i < 60 && !screen.queryByRole('dialog', { name: 'Dialogue' }) && !practised(); i++)
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+    };
+    const practised = () => screen.queryByRole('region', { name: /went right/ });
+    const run = () => screen.getByRole('button', { name: /Run service|Stop/ });
+    fireEvent.click(run());
+    play();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    // The same routine, the same round: the same slip, now marked as practice.
+    fireEvent.click(within(card()!).getByRole('button', { name: 'Practise round 1' }));
+    expect(card()).toBeNull();
+    expect(document.activeElement).toBe(run());
+    expect(document.querySelector('.playback-round')!.textContent).toBe('PracticeRound 1 of 3');
+    const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
+    expect(status.textContent).toBe('Practising round 1 of 3, for no stars. The routines are locked until it stops.');
+    play();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    expect(within(card()!).getByText('Query stopped').textContent).toBe('Query stopped · Practice · Round 1 · Guest 2');
+    // Fixed, the card says to check it, and practice that goes right says so beside the code: no cheer, no receipt.
+    fireEvent.change(screen.getByRole('textbox', { name: 'Routine text' }), { target: { value: lessons[3].solution } });
+    expect(card()!.textContent).toContain('practise this round to check it, or run the whole service.');
+    fireEvent.click(within(card()!).getByRole('button', { name: 'Practise round 1' }));
+    play();
+    expect(practised()!.textContent).toContain('Round 1 went right · Practice');
+    expect(practised()!.textContent).toContain('Practice earns no stars');
+    expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
+    expect(screen.queryByText('Service complete')).toBeNull();
+    expect(savedStars()['3']).toBeUndefined();
+    // An edit takes the card away: it spoke for routines that are gone.
+    const routine = screen.getByRole('textbox', { name: 'Routine text' });
+    fireEvent.change(routine, { target: { value: lessons[3].solution + '\n' } });
+    expect(practised()).toBeNull();
+    fireEvent.change(routine, { target: { value: lessons[3].solution } });
+    fireEvent.click(within(practised()!).getByRole('button', { name: 'Run the whole service' }));
+    expect(practised()).toBeNull();
+    expect(document.activeElement).toBe(run());
+    expect(document.querySelector('.playback-round')!.textContent).toBe('Round 1 of 3');
+  });
 });
 
 describe('undo and redo', () => {

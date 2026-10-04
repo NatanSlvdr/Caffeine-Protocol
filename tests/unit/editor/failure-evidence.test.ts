@@ -6,6 +6,7 @@ import type { FailureCode, FailureContext, RunFailure } from '../../../src/domai
 import { comparisonOf, evidenceOf, isStale } from '../../../src/features/workspace/evidence';
 import { referencePrograms } from '../../../src/data/extension';
 import { runCampaignLevel, runServiceShift } from '../../helpers/run';
+import { recordRun } from '../../../src/domain';
 
 const failure = (
   code: FailureCode,
@@ -124,14 +125,22 @@ describe('the evidence a failed run leaves', () => {
   const level = levels[3];
   const programs = { query: lessons[3].solution.replace('ITEM tea', 'ITEM coffee'), prep: '', floor: '' };
   const run = runLevel(level, compileProgram(programs.query, 4), programs);
+  const record = (result = run) =>
+    recordRun(
+      1,
+      level,
+      programs,
+      result,
+      level.seeds.map((_, i) => i),
+    );
 
   it('places the failure in its round and guest, and keeps the routines it ran on', () => {
-    expect(evidenceOf(level, run, programs)).toMatchObject({ round: 1, guest: 2, programs });
-    expect(evidenceOf(level, { ...run, passed: true, first_failure: null }, programs)).toBeNull();
+    expect(evidenceOf(level, record())).toMatchObject({ round: 1, guest: 2, programs, practice: false });
+    expect(evidenceOf(level, record({ ...run, passed: true, first_failure: null }))).toBeNull();
   });
 
   it('goes stale when any robot’s routine changes, and fresh again when it changes back', () => {
-    const evidence = evidenceOf(level, run, programs)!;
+    const evidence = evidenceOf(level, record())!;
     expect(isStale(evidence, { ...programs })).toBe(false);
     expect(isStale(evidence, { ...programs, floor: 'WAIT DRINKS' })).toBe(true);
   });

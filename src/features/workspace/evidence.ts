@@ -1,5 +1,5 @@
 import { count } from '@/domain';
-import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunResult } from '@/domain';
+import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord } from '@/domain';
 
 /**
  * A failed run, kept beside the code after the café moves on: what stopped, where, and the routines it stopped on.
@@ -8,7 +8,9 @@ import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunResult
 export interface RunEvidence {
   failure: RunFailure;
   /** Every robot's routine as it ran: any edit makes the evidence describe a routine that's no longer there. */
-  programs: RobotPrograms;
+  programs: Readonly<RobotPrograms>;
+  /** The run was practice of one round, not the full service. */
+  practice: boolean;
   /** Which round of guests, counting from 1. */
   round: number;
   /** Which guest of that round, counting from 1; nothing for the closing call, which belongs to no guest. */
@@ -16,16 +18,22 @@ export interface RunEvidence {
 }
 
 /** The evidence a failed run leaves; nothing for a run that passed. */
-export function evidenceOf(level: LevelDefinition, result: RunResult, programs: RobotPrograms): RunEvidence | null {
-  const failure = result.first_failure;
-  if (result.passed || !failure) return null;
+export function evidenceOf(level: LevelDefinition, record: RunRecord): RunEvidence | null {
+  const failure = record.result.first_failure;
+  if (record.result.passed || !failure) return null;
   const seed = level.seeds.findIndex((s) => s.id === failure.seed_id),
     guest = seed < 0 ? -1 : level.seeds[seed].customers.findIndex((c) => c.customer_id === failure.customer_id);
-  return { failure, programs, round: Math.max(seed, 0) + 1, guest: guest < 0 ? undefined : guest + 1 };
+  return {
+    failure,
+    programs: record.programs,
+    practice: record.mode === 'practice',
+    round: Math.max(seed, 0) + 1,
+    guest: guest < 0 ? undefined : guest + 1,
+  };
 }
 
-/** True once any robot's routine differs from the one that ran: the evidence no longer describes the code. */
-export function isStale(evidence: RunEvidence, programs: RobotPrograms): boolean {
+/** True once any robot's routine differs from the one that ran: the evidence, or record, no longer describes the code. */
+export function isStale(evidence: Pick<RunEvidence, 'programs'>, programs: RobotPrograms): boolean {
   return (Object.keys(evidence.programs) as (keyof RobotPrograms)[]).some(
     (role) => evidence.programs[role] !== programs[role],
   );

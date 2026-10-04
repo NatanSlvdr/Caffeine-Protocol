@@ -9,6 +9,7 @@ import {
   Crosshair,
   History,
   Receipt,
+  RotateCcw,
   ShoppingBag,
   TriangleAlert,
   Zap,
@@ -49,13 +50,15 @@ export interface FailureCardProps {
   rounds: number;
   /** Open the robot that stopped and put focus on the block or line where it did. */
   onShowLine: () => void;
+  /** Play just the round that failed again, with the routines as they are now. */
+  onPractise: () => void;
 }
 
 /**
  * The last failed run, kept beside the code: where it stopped, why, what was wanted against what happened, and what
  * to try next. It stays while the player fixes, dimmed once the routines change, and goes when the next run starts.
  */
-export function FailureCard({ evidence, stale, rounds, onShowLine }: FailureCardProps) {
+export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise }: FailureCardProps) {
   const [open, setOpen] = useState(true);
   const heading = useId(),
     body = useId();
@@ -66,7 +69,12 @@ export function FailureCard({ evidence, stale, rounds, onShowLine }: FailureCard
   const title = failure.code === 'compile' ? `${robot}’s routine won’t run` : `${robot} stopped`;
   const when = routine
     ? undefined
-    : [rounds > 1 && `Round ${round}`, guest ? `Guest ${guest}` : 'Closing time'].filter(Boolean).join(' · ');
+    : [evidence.practice && 'Practice', rounds > 1 && `Round ${round}`, guest ? `Guest ${guest}` : 'Closing time']
+        .filter(Boolean)
+        .join(' · ');
+  // One round of several can be played on its own to check a fix; a routine that won't run has no round to play.
+  const practisable = rounds > 1 && !routine;
+  const showable = !stale && failure.error_line >= 0;
   return (
     <section className={'failure-card' + (stale ? ' stale' : '')} aria-labelledby={heading}>
       <header>
@@ -81,7 +89,10 @@ export function FailureCard({ evidence, stale, rounds, onShowLine }: FailureCard
       </header>
       <div id={body} className="failure-card-body" hidden={!open}>
         {stale && (
-          <p className="failure-card-stale">From your last run. The routine has changed since: run again to check.</p>
+          <p className="failure-card-stale">
+            From your last run. The routine has changed since:{' '}
+            {practisable ? 'practise this round to check it, or run the whole service.' : 'run again to check.'}
+          </p>
         )}
         {!routine && guest && failure.phrase && <blockquote>“{failure.phrase}”</blockquote>}
         <p className="failure-card-reason">{variableLabels(failure.reason)}</p>
@@ -117,11 +128,21 @@ export function FailureCard({ evidence, stale, rounds, onShowLine }: FailureCard
         <p className="failure-card-next">
           <strong>Try</strong> {failureHint(failure.code)}
         </p>
-        {!stale && failure.error_line >= 0 && (
-          <button type="button" className="failure-card-show" onClick={onShowLine}>
-            <Crosshair size={14} aria-hidden="true" />
-            Show where {robot} stopped
-          </button>
+        {(showable || practisable) && (
+          <div className="failure-card-actions">
+            {showable && (
+              <button type="button" className="failure-card-show" onClick={onShowLine}>
+                <Crosshair size={14} aria-hidden="true" />
+                Show where {robot} stopped
+              </button>
+            )}
+            {practisable && (
+              <button type="button" className="failure-card-show" onClick={onPractise}>
+                <RotateCcw size={14} aria-hidden="true" />
+                Practise round {round}
+              </button>
+            )}
+          </div>
         )}
       </div>
     </section>

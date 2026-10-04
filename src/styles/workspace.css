@@ -253,6 +253,16 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
+.workspace-main .playback-round.practice strong {
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #2f8f5a1f;
+  color: #2a6e47;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
 .workspace-main .playback-toolbar > button:disabled {
   color: var(--desk-muted);
   opacity: 0.55;
@@ -444,6 +454,26 @@ html[data-motion='reduced'] .failure-card-chevron {
 .failure-card-show:hover:not(:disabled) {
   border-color: var(--draft-chalk);
   background: #ffffff0d;
+}
+.failure-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+/* Practice that went right: the same place under the code, in green, with the way on to the whole service. */
+.failure-card.practice-card {
+  border-top-color: #7fd6a64d;
+  background: color-mix(in srgb, var(--draft-deep) 90%, #4fcf8c);
+}
+.practice-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 11px 16px;
+  color: #a9e8c4;
+  font-size: 12px;
+  font-weight: 750;
 }
 .editor-body .observation-note {
   max-width: 34ch;

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { STREET_APPROACH_SECONDS, createLiveRun, sampleReplay } from '@/domain';
+import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay } from '@/domain';
 import { robotForLevel } from '@/domain/robots';
 import { incomingRobotPrograms } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
-import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunResult } from '@/domain';
+import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunRecord, RunResult } from '@/domain';
 import { usePlaybackClock } from './usePlaybackClock';
 import { keepHistories, keptHistories, record, redo, undo } from './history';
 import type { EditKind } from './history';
@@ -17,7 +17,8 @@ export interface LiveRunArgs {
   lessons: LessonCatalog;
   onDraft: (updated: RobotPrograms) => void;
   onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
-  onFinish: (passed: boolean) => void;
+  /** A run ended, passed or failed, service or practice: its record says which. */
+  onFinish: (record: RunRecord) => void;
 }
 
 /** Owns the live run lifecycle: programs, role, result, clock, and completion. View state stays in Workspace. */
@@ -37,6 +38,11 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [speed, setSpeed] = useState(save.settings.speed),
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
+  // The round being practised, counting from 0, or nothing for a full service.
+  const [practising, setPractising] = useState<number | null>(null);
+  // Every finished run this shift, frozen with the routines it ran, newest last; the oldest drop off past a few.
+  const [records, setRecords] = useState<RunRecord[]>([]);
+  const nextRecord = useRef(1);
   const [showFailure, setShowFailure] = useState(false);
   // The last failed run, kept beside the code while the player fixes it; the next run puts it away.
   const [evidence, setEvidence] = useState<RunEvidence | null>(null);
@@ -49,7 +55,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     (e) => e.role === role && e.start <= sampled.local && (e.end > sampled.local || e.start === e.end),
   );
   // Most shifts send in a few rounds of guests, one after another; this is the one on screen.
-  const round = sampled?.seed ? (result?.execution?.indexOf(sampled.seed) ?? 0) + 1 : 1;
+  const round = sampled?.seed
+    ? level.seeds.findIndex((seed) => seed.id === sampled.seed!.seed_id) + 1
+    : (practising ?? 0) + 1;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
@@ -96,29 +104,40 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPaused(false);
     setShowFailure(false);
   };
-  const fail = (failure: RunResult) => {
+  /** Freeze a finished run with the routines and rounds it played, and keep it. */
+  const keep = (finished: RunResult, practice: number | null): RunRecord => {
+    const rounds = practice === null ? level.seeds.map((_, i) => i) : [practice];
+    const record = recordRun(nextRecord.current++, level, programs, finished, rounds);
+    setRecords((kept) => keepRecord(kept, record));
+    return record;
+  };
+  const fail = (record: RunRecord) => {
     liveRun.current = null;
     setRunning(false);
     setPaused(false);
     setShowFailure(true);
-    setEvidence(evidenceOf(level, failure, programs));
-    if (failure.first_failure?.role) setRole(failure.first_failure.role);
-    onFinish(false);
+    setEvidence(evidenceOf(level, record));
+    if (record.result.first_failure?.role) setRole(record.result.first_failure.role);
+    onFinish(record);
   };
-  const run = () => {
+  /** Start the whole service, or practise one round of it; while running, the same call stops it. */
+  const start = (practice: number | null) => {
     if (running) {
       stop();
       return;
     }
+    const options = practice === null ? {} : { practice };
     // A program that fails as the doors open, like a typo, reports at once instead of after the street intro.
-    const opening = createLiveRun(level, programs).advance(STREET_APPROACH_SECONDS);
+    const opening = createLiveRun(level, programs, options).advance(STREET_APPROACH_SECONDS);
     if (opening.done && !opening.result.passed) {
+      setPractising(practice);
       setResult(opening.result);
       setReplayTime(opening.time);
-      fail(opening.result);
+      fail(keep(opening.result, practice));
       return;
     }
-    liveRun.current = createLiveRun(level, programs);
+    liveRun.current = createLiveRun(level, programs, options);
+    setPractising(practice);
     setBestBefore(save.stars[index]);
     setResult(null);
     setEvidence(null);
@@ -136,15 +155,17 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       setResult(frame.result);
       setReplayTime(frame.time);
       if (!frame.done) return;
+      const record = keep(frame.result, practising);
       if (frame.result.passed) {
         liveRun.current = null;
         setRunning(false);
         setPaused(false);
-        onComplete(frame.result.stars, programs.query, programs);
-        onFinish(true);
-      } else fail(frame.result);
+        // Practice can pass, but only the whole service counts.
+        if (record.mode === 'service') onComplete(frame.result.stars, programs.query, programs);
+        onFinish(record);
+      } else fail(record);
     },
-    [speed, index, level, programs],
+    [speed, index, level, programs, practising],
   );
   return {
     programs,
@@ -170,7 +191,11 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     redo: () => step('redo'),
     canUndo: !running && history.past.length > 0,
     canRedo: !running && history.future.length > 0,
-    run,
+    run: () => start(null),
+    /** Play one round, counting from 0, with the routines as they are now: practice, never stars. */
+    practise: (round: number) => start(round),
+    practising,
+    records,
     stop,
     bestBefore,
   };

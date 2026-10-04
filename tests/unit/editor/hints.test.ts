@@ -5,6 +5,7 @@ import { runLevel } from '../../../src/domain/simulation';
 import { campaignNarrative } from '../../../src/data/campaign/narrative';
 import { evidenceOf } from '../../../src/features/workspace/evidence';
 import { clueFor } from '../../../src/features/workspace/hints';
+import { recordRun } from '../../../src/domain';
 
 // Shift 4: tea joins the menu, and the example tells the two drinks apart.
 const example = lessons[3].solution;
@@ -49,7 +50,8 @@ describe('a clue about the routine', () => {
   it('sends the player to the robot that stopped, while the last run still describes the routines', () => {
     const level = levels[3];
     const programs = { query: example.replace('ITEM tea', 'ITEM coffee'), prep: '', floor: '' };
-    const evidence = evidenceOf(level, runLevel(level, compileProgram(programs.query, 4), programs), programs)!;
+    const result = runLevel(level, compileProgram(programs.query, 4), programs);
+    const evidence = evidenceOf(level, recordRun(1, level, programs, result, [0]))!;
     const elsewhere = { ...evidence, failure: { ...evidence.failure, role: 'prep' as const, error_line: 2 } };
     expect(clueFor('query', example, example, elsewhere, false)).toEqual({
       text: 'The last run stopped in Brew’s routine, not Query’s. Look there first.',

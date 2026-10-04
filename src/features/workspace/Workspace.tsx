@@ -13,6 +13,8 @@ import { pad2 } from '@/shared/lib/format';
 import { useLiveRun } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
+import { PracticeCard } from './PracticeCard';
+import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { ResetModal } from './modals/ResetModal';
@@ -81,11 +83,13 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     lessons,
     onDraft: (updated) => update((s) => saveRobotDraft(s, index, updated)),
     onComplete,
-    onFinish: (passed) => {
-      if (passed) {
+    onFinish: (record) => {
+      // Practice that goes right says so beside the code; the cheer and the receipt are for the whole service.
+      if (!record.result.passed) setScene('failure');
+      else if (record.mode === 'service') {
         setWrapUp(true);
         setCheer(true);
-      } else setScene('failure');
+      }
     },
   });
   const {
@@ -108,7 +112,22 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     round,
     change,
     run,
+    practise,
+    practising,
+    records,
+    programs,
   } = live;
+  // Practice that went right, while the routines are still the ones it ran.
+  const practised = records.at(-1);
+  const practiceCard =
+    !running && practised?.mode === 'practice' && practised.result.passed && !isStale(practised, programs)
+      ? practised
+      : undefined;
+  // The card that started a run goes with it: focus carries on at the run button, which now stops the run.
+  const startFromCard = (start: () => void) => {
+    start();
+    document.querySelector<HTMLElement>('.playback-toolbar .run-button')?.focus();
+  };
   // “Show where it stopped”, or a hint's “Show this block”, opens the robot the block belongs to; once its routine is
   // on screen, focus goes to the block, or in the text view to the start of its line.
   const [seeking, setSeeking] = useState<number | null>(null);
@@ -271,6 +290,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             speed={speed}
             round={round}
             rounds={level.seeds.length}
+            practice={practising !== null}
             onRun={run}
             onTogglePause={() => {
               setPaused((p) => !p);
@@ -329,6 +349,13 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 setRole(evidence.failure.role ?? 'query');
                 setSeeking(evidence.failure.error_line);
               }}
+              onPractise={() => startFromCard(() => practise(evidence.round - 1))}
+            />
+          )}
+          {practiceCard && (
+            <PracticeCard
+              round={level.seeds.findIndex((seed) => seed.id === practiceCard.seeds[0]) + 1}
+              onRunService={() => startFromCard(run)}
             />
           )}
           <p className="sr-only" role="status">

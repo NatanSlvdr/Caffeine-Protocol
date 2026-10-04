@@ -28,6 +28,11 @@ export interface LivePumpState {
   closing?: ReplayEvent;
   /** Query stopped at closing time. */
   closed: boolean;
+  /**
+   * Query's steps this round. The step limit counts each round on its own, as the offline run does, so a round
+   * plays the same whether it follows others or is practised alone.
+   */
+  instructions: number;
 }
 
 export interface LivePumpDeps {
@@ -48,6 +53,7 @@ export function createLivePumpState(queryNext: number): LivePumpState {
     pending: undefined,
     queryNext,
     closed: false,
+    instructions: 0,
   };
 }
 
@@ -166,10 +172,9 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
     event.payment = actual.payment;
     event.timing.created = now;
     deps.result.executed_instructions += actual.executed_instructions;
+    state.instructions += actual.executed_instructions;
     const failure =
-      deps.result.executed_instructions > INSTRUCTION_LIMIT
-        ? INSTRUCTION_LIMIT_FAILURE
-        : validate(event.customer, actual);
+      state.instructions > INSTRUCTION_LIMIT ? INSTRUCTION_LIMIT_FAILURE : validate(event.customer, actual);
     if (failure) {
       // The closing call has no guest of its own: the last guest's service stops with it.
       const failed = closing ? deps.events.at(-1)! : event;

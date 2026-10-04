@@ -168,6 +168,8 @@ export interface RunResult {
   average_satisfaction: number;
   stars: number;
   first_failure: RunFailure | null;
+  /** A practice run of one round: it can pass, but only the full service earns stars or unlocks a shift. */
+  practice?: boolean;
 }
 export interface Settings {
   /** The café soundtrack's loudness, the game's only sound. */

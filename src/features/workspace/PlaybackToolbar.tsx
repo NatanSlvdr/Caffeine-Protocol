@@ -11,6 +11,8 @@ export interface PlaybackToolbarProps {
   /** The round of guests on screen, and how many the shift sends in. */
   round: number;
   rounds: number;
+  /** The run plays one round as practice, which earns no stars. */
+  practice: boolean;
   onRun: () => void;
   onTogglePause: () => void;
   onSpeed: (speed: number) => void;
@@ -25,6 +27,7 @@ export function PlaybackToolbar({
   speed,
   round,
   rounds,
+  practice,
   onRun,
   onTogglePause,
   onSpeed,
@@ -48,7 +51,8 @@ export function PlaybackToolbar({
         {paused ? 'Resume' : 'Pause'}
       </button>
       {counted && (
-        <span className="playback-round" aria-hidden="true">
+        <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
+          {practice && <strong>Practice</strong>}
           Round {round} of {rounds}
         </span>
       )}
@@ -73,7 +77,7 @@ export function PlaybackToolbar({
         {running &&
           (paused
             ? 'Service paused.'
-            : `Service running${counted ? `, round ${round} of ${rounds}` : ''}.${observation ? '' : ' The routines are locked until it stops.'}`)}
+            : `${practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>
   );
