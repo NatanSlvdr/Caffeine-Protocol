@@ -92,7 +92,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </p>
           <p>
             <Stars n={1} /> serves every order correctly, <Stars n={2} /> also meets the block target, and{' '}
-            <Stars n={3} /> the step target on top. Each shift’s Help has its lesson and a worked example.
+            <Stars n={3} /> the step target on top. Each shift’s Help has its lesson, then hints one at a time: the
+            idea, a clue about your routine, and a worked example.
           </p>
         </section>
       </div>

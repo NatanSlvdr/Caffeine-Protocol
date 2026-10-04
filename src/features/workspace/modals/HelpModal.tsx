@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, MessageCircle } from 'lucide-react';
+import { ArrowRight, Crosshair, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { indentSource, ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotPrograms, type RobotRole } from '@/domain';
 import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
+import type { RunEvidence } from '../evidence';
+import { clueFor, HINT_TIERS, type Clue } from '../hints';
 
 export interface HelpModalProps {
   index: number;
@@ -18,14 +20,24 @@ export interface HelpModalProps {
   opening: string;
   observation: boolean;
   running: boolean;
-  showSolution: boolean;
-  onToggleSolution: () => void;
+  /** How many hint tiers the player has asked for this shift: the last is the worked example. */
+  hints: number;
+  onHints: (hints: number) => void;
+  /** The last failed run, for a clue that points at the robot that stopped. */
+  evidence: RunEvidence | null;
+  stale: boolean;
+  /** Close the notes and put focus on the block a clue points at. */
+  onShowClue: (show: NonNullable<Clue['show']>) => void;
   onUseExample: (source: string) => void;
   onReplayIntro: () => void;
   onClose: () => void;
 }
 
-/** Shift field notes: lesson, goal, star targets, and the worked example. */
+/**
+ * Shift field notes: lesson, goal, star targets, then hints the player asks for one at a time: the idea behind the
+ * shift, a clue about where their routine needs work, and last the worked example, which only replaces their
+ * routine when they say so.
+ */
 export function HelpModal({
   index,
   title,
@@ -37,8 +49,11 @@ export function HelpModal({
   opening,
   observation,
   running,
-  showSolution,
-  onToggleSolution,
+  hints,
+  onHints,
+  evidence,
+  stale,
+  onShowClue,
   onUseExample,
   onReplayIntro,
   onClose,
@@ -50,10 +65,20 @@ export function HelpModal({
   const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
   // Already the routine: using it again would change nothing.
   const inUse = example.trim() === source.trim();
+  const showSolution = hints >= HINT_TIERS.length;
+  const clue = hints >= 2 ? clueFor(role, source, example, evidence, stale) : undefined;
   const [confirming, setConfirming] = useState(false);
   // Backing out of the warning puts focus back on the button that raised it, not on the page.
   const useButton = useRef<HTMLButtonElement>(null);
   const backingOut = useRef(false);
+  // On a short screen the hints above can push a newly revealed example below the fold: bring it up to be read.
+  const exampleRef = useRef<HTMLPreElement>(null);
+  const revealing = useRef(false);
+  useEffect(() => {
+    if (!showSolution || !revealing.current) return;
+    revealing.current = false;
+    exampleRef.current?.scrollIntoView?.({ block: 'nearest' });
+  }, [showSolution]);
   useEffect(() => {
     if (confirming || !backingOut.current) return;
     backingOut.current = false;
@@ -116,6 +141,25 @@ export function HelpModal({
               </dd>
             </div>
           </dl>
+          {hints > 0 && (
+            <ol className="help-hints" aria-label="Hints">
+              <li>
+                <span className="help-hint-label">{HINT_TIERS[0]}</span>
+                <p>{brief.concept}</p>
+              </li>
+              {clue && (
+                <li>
+                  <span className="help-hint-label">{HINT_TIERS[1]}</span>
+                  <p>{clue.text}</p>
+                  {clue.show && (
+                    <button className="settings-chip help-hint-show" onClick={() => onShowClue(clue.show!)}>
+                      <Crosshair size={14} aria-hidden="true" /> Show this block
+                    </button>
+                  )}
+                </li>
+              )}
+            </ol>
+          )}
           {confirming ? (
             <>
               <p className="help-example-warning" role="alert">
@@ -140,16 +184,18 @@ export function HelpModal({
             </>
           ) : (
             <div className="modal-buttons help-example-actions">
+              {/* One button climbs the tiers; at the top it hides and shows the example, keeping the hints above. */}
               <button
                 className="settings-chip"
-                aria-expanded={showSolution}
+                aria-expanded={hints >= HINT_TIERS.length - 1 ? showSolution : undefined}
                 aria-controls={showSolution ? 'worked-example' : undefined}
                 onClick={() => {
                   setConfirming(false);
-                  onToggleSolution();
+                  revealing.current = hints === HINT_TIERS.length - 1;
+                  onHints(showSolution ? hints - 1 : hints + 1);
                 }}
               >
-                {showSolution ? 'Hide worked example' : 'Reveal worked example'}
+                {['Remind me of the idea', 'Give me a clue', 'Reveal worked example', 'Hide worked example'][hints]}
               </button>
               {showSolution &&
                 (inUse ? (
@@ -167,6 +213,11 @@ export function HelpModal({
                     Use this example <ArrowRight size={15} aria-hidden="true" />
                   </Button>
                 ))}
+              {!showSolution && (
+                <span className="help-hint-count" aria-hidden="true">
+                  {hints ? `${hints} of ${HINT_TIERS.length} hints` : 'Hints come one at a time'}
+                </span>
+              )}
             </div>
           )}
           {showSolution && (
@@ -174,7 +225,7 @@ export function HelpModal({
               {lesson.robotSolution && (
                 <p className="code-example-label">{robot}’s routine · the other robots keep theirs</p>
               )}
-              <pre className="code-example" id="worked-example">
+              <pre className="code-example" id="worked-example" ref={exampleRef}>
                 {indentSource(example)}
               </pre>
             </>

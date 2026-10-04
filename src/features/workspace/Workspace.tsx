@@ -22,6 +22,8 @@ import { failureLines, successLines } from './reactions';
 export interface ShiftBrief {
   story: string;
   objective: string;
+  /** The idea behind the shift, Help's first hint. */
+  concept: string;
 }
 
 export interface WorkspaceShift {
@@ -54,7 +56,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const observation = index + 1 < UNLOCKS.query;
   const textMode = save.settings.text_editor;
   const [modal, setModal] = useState(''),
-    [showSolution, setShowSolution] = useState(false);
+    [hints, setHints] = useState(0);
   const [zoomToRobot, setZoomToRobot] = useState(!observation);
   // A finished service pulls back to the whole café before the crew cheers and the receipt comes.
   const [wrapUp, setWrapUp] = useState(false);
@@ -107,21 +109,21 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     change,
     run,
   } = live;
-  // “Show where it stopped” opens the robot that stopped; once its routine is on screen, focus goes to the block,
-  // or in the text view to the start of the line.
-  const [seeking, setSeeking] = useState(false);
+  // “Show where it stopped”, or a hint's “Show this block”, opens the robot the block belongs to; once its routine is
+  // on screen, focus goes to the block, or in the text view to the start of its line.
+  const [seeking, setSeeking] = useState<number | null>(null);
   useEffect(() => {
-    if (!seeking) return;
-    setSeeking(false);
-    const block = document.querySelector<HTMLElement>('.editor-panel .block.failure');
+    if (seeking === null) return;
+    setSeeking(null);
+    const block = document.querySelector<HTMLElement>(`.editor-panel .block[data-line="${seeking}"]`);
     if (block) {
       block.focus();
       block.scrollIntoView?.({ block: 'nearest', behavior: reduced ? 'instant' : 'smooth' });
       return;
     }
     const text = document.querySelector<HTMLTextAreaElement>('.editor-panel .code-input');
-    if (!text || failureLine < 0) return;
-    const at = source.split('\n').slice(0, failureLine).join('\n').length + (failureLine ? 1 : 0);
+    if (!text) return;
+    const at = source.split('\n').slice(0, seeking).join('\n').length + (seeking ? 1 : 0);
     text.focus();
     text.setSelectionRange(at, at);
   }, [seeking]);
@@ -325,7 +327,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               rounds={level.seeds.length}
               onShowLine={() => {
                 setRole(evidence.failure.role ?? 'query');
-                setSeeking(true);
+                setSeeking(evidence.failure.error_line);
               }}
             />
           )}
@@ -355,8 +357,15 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           opening={resetRobotPrograms(save, index, lessons)[role]}
           observation={observation}
           running={running}
-          showSolution={showSolution}
-          onToggleSolution={() => setShowSolution((s) => !s)}
+          hints={hints}
+          onHints={setHints}
+          evidence={evidence}
+          stale={stale}
+          onShowClue={(show) => {
+            setModal('');
+            setRole(show.role);
+            setSeeking(show.line);
+          }}
           onUseExample={(example) => {
             change(example);
             setModal('');

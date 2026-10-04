@@ -61,9 +61,14 @@ export async function finishShift(page: Page) {
   await expect(page.getByRole('dialog', { name: 'Service complete' })).toBeVisible();
 }
 
-/** Reveal the worked example in Help and insert it into the editor, over any edits. */
+/** Climb Help's hints to the worked example and insert it into the editor, over any edits. */
 export async function useWorkedExample(page: Page) {
   await page.getByRole('button', { name: 'Help', exact: true }).click();
+  // The hints come one at a time; a shift that already revealed some starts further up.
+  for (const tier of ['Remind me of the idea', 'Give me a clue']) {
+    const next = page.getByRole('button', { name: tier });
+    if (await next.isVisible()) await next.click();
+  }
   await page.getByRole('button', { name: 'Reveal worked example' }).click();
   await page.getByRole('button', { name: 'Use this example' }).click();
   // Help asks first when the routine holds the player's own edits.

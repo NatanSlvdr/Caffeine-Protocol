@@ -575,6 +575,24 @@ describe('the failure card', () => {
     fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
     expect(card()).toBeNull();
   });
+
+  it('climbs Help’s hints to a clue that shows the block, and keeps them for the rest of the shift', () => {
+    failRun();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(screen.getByRole('button', { name: 'Help' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remind me of the idea' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Give me a clue' }));
+    const hints = screen.getByRole('list', { name: 'Hints' });
+    expect(hints.textContent).toContain('For every guest, exactly one of the two happens.');
+    expect(hints.textContent).toContain('then parts ways at “write coffee”');
+    fireEvent.click(within(hints).getByRole('button', { name: 'Show this block' }));
+    expect(screen.queryByRole('list', { name: 'Hints' })).toBeNull();
+    expect(document.activeElement?.getAttribute('data-line')).toBe('4');
+    // Asking again picks up where the player left off.
+    fireEvent.click(screen.getByRole('button', { name: 'Help' }));
+    expect(within(screen.getByRole('list', { name: 'Hints' })).getAllByRole('listitem')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Reveal worked example' })).toBeTruthy();
+  });
 });
 
 describe('undo and redo', () => {
@@ -620,7 +638,8 @@ describe('undo and redo', () => {
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(saved()).toBe(draft);
     fireEvent.click(screen.getByRole('button', { name: 'Help' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reveal worked example' }));
+    for (const name of ['Remind me of the idea', 'Give me a clue', 'Reveal worked example'])
+      fireEvent.click(screen.getByRole('button', { name }));
     fireEvent.click(screen.getByRole('button', { name: 'Use this example' }));
     fireEvent.click(screen.getByRole('button', { name: /Replace my edits/ }));
     expect(saved()).toBe(lessons[2].solution);

@@ -1415,6 +1415,46 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 12px;
   line-height: 1.6;
 }
+/* Hints the player asked for, one per tier, above the button that asks for the next. */
+.help-slip .help-hints {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+}
+.help-slip .help-hints li {
+  padding: 10px 14px 11px;
+  border: 1.5px dashed #392b2433;
+  border-radius: 4px;
+  background: #f8f1e3;
+}
+.help-slip .help-hint-label {
+  color: var(--slip-clay);
+  font-family: var(--slip-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.settings-window.help-slip .help-hints p {
+  margin: 3px 0 0;
+  color: var(--slip-ink);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.settings-window.help-slip button.help-hint-show {
+  min-height: 30px;
+  margin-top: 8px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.help-slip .help-hint-count {
+  align-self: center;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+}
 .settings-window.help-slip p.help-example-warning {
   margin: 0 0 10px;
   color: var(--slip-ink);

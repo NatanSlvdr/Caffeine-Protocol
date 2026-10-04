@@ -334,6 +334,7 @@ interface NarrativeRow {
   story?: unknown;
   objective?: unknown;
   hint?: unknown;
+  concept?: unknown;
   lessonNote?: unknown;
 }
 
@@ -351,7 +352,7 @@ export function collectNarrativeErrors(narrative: unknown): string[] {
   });
   (narrative as NarrativeRow[]).forEach((row, index) => {
     const context = `narrative[${index}]`;
-    for (const field of ['title', 'story', 'objective', 'hint', 'lessonNote'] as const) {
+    for (const field of ['title', 'story', 'objective', 'hint', 'concept', 'lessonNote'] as const) {
       if (typeof row[field] !== 'string' || (row[field] as string).length === 0)
         errors.push(`${context}: ${field} must be a non-empty string`);
     }
