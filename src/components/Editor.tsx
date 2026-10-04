@@ -235,6 +235,39 @@ export function Editor({
       codeArea.current?.parentElement?.querySelector<HTMLElement>('.command-library button:not(:disabled)');
     next?.focus();
   }, [removed]);
+  // A jump or a call takes the player to where it goes: the landing spot, or the function, opened if folded away.
+  const [goal, setGoal] = useState<{ line: number } | null>(null);
+  useEffect(() => {
+    if (!goal) return;
+    const target = root.current?.querySelector<HTMLElement>(`.block[data-line="${goal.line}"]`);
+    target?.scrollIntoView?.({ block: 'center', behavior: 'instant' });
+    target?.focus();
+  }, [goal]);
+  const goTo = (block: VisualBlock) => {
+    const [verb, ...name] = block.command.split(' ');
+    const want = { JUMP: 'POSITION ', CALL: 'FUNCTION ' }[verb];
+    const target = want && rows.find((r) => r.command === want + name.join(' '));
+    if (!target) return;
+    const where = `block ${ordinalOf(target.line)} (${spokenBlock(target.command)})`;
+    return {
+      label: verb === 'JUMP' ? `Go to where the jump lands, ${where}` : `Go to ${where}`,
+      title: verb === 'JUMP' ? 'Go to where it lands' : 'Go to the function',
+      onGo: () => {
+        const hiding = rows.filter((r) => folded.has(r.line) && r.line < target.line && target.line <= r.end);
+        if (hiding.length) {
+          setFolds({
+            role,
+            source,
+            lines: new Set([...folded].filter((line) => !hiding.some((r) => r.line === line))),
+          });
+          say(
+            `Unfolded ${hiding.map((r) => `block ${ordinalOf(r.line)} (${spokenBlock(r.command)})`).join(' and ')} to show ${where}.`,
+          );
+        }
+        setGoal({ line: target.line });
+      },
+    };
+  };
   // The picked block's buttons copy, move or remove it whole. A copy or a move stays picked, and focus goes back to
   // the button pressed, so a block can be walked up a routine one press at a time.
   const [pressed, setPressed] = useState<{ action: BlockAction } | null>(null);
@@ -399,6 +432,7 @@ export function Editor({
                 isFolded={isFolded}
                 inside={inside}
                 onFold={fold}
+                goTo={goTo}
                 actions={(block) => (
                   <BlockActions
                     block={block}

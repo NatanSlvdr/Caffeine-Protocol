@@ -897,8 +897,10 @@ html[data-motion='reduced'] *:after {
   background: transparent;
 }
 
-/* A group's fold button, at the end of its first block; folded, it shows how many blocks it hides. */
-.editor-panel .block .block-fold {
+/* A group's fold button, at the end of its first block; folded, it shows how many blocks it hides. A jump's or a
+   call's go-to button matches it. */
+.editor-panel .block .block-fold,
+.editor-panel .block .block-go {
   display: inline-flex;
   align-items: center;
   gap: 1px;
@@ -916,7 +918,9 @@ html[data-motion='reduced'] *:after {
   cursor: pointer;
 }
 .editor-panel .block .block-fold:hover,
-.editor-panel .block .block-fold:focus-visible {
+.editor-panel .block .block-fold:focus-visible,
+.editor-panel .block .block-go:hover,
+.editor-panel .block .block-go:focus-visible {
   background: #ffffffa6;
 }
 /* Folded, the group's edge stays as a short stub under its first block, so it still reads as a group. */

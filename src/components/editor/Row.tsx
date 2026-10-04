@@ -1,10 +1,17 @@
 import { useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { ChevronDown, ChevronRight, Crosshair } from 'lucide-react';
 import { blockFields, count, parseStore, spokenBlock, type VisualBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+
+/** A button on a jump or a call that goes to its landing spot or its function. */
+export interface GoTo {
+  label: string;
+  title: string;
+  onGo: () => void;
+}
 
 export function Row({
   block,
@@ -22,6 +29,7 @@ export function Row({
   onPick,
   actions,
   fold,
+  goTo,
 }: {
   block: VisualBlock;
   depth: number;
@@ -43,6 +51,7 @@ export function Row({
   actions?: React.ReactNode;
   /** A group with blocks in it folds shut to its first block, and says how many it hides. */
   fold?: { folded: boolean; inside: number; onToggle: () => void };
+  goTo?: GoTo;
 }) {
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
@@ -133,6 +142,11 @@ export function Row({
             <BlockIcon command={command} />
             <span className="sr-only">Jump destination</span>
           </>
+        )}
+        {goTo && (
+          <button type="button" className="block-go" aria-label={goTo.label} title={goTo.title} onClick={goTo.onGo}>
+            <Crosshair size={13} aria-hidden="true" />
+          </button>
         )}
         {fold && (
           <button

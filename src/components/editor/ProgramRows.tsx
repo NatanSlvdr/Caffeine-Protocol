@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { VisualBlock } from '@/domain';
 import { category } from './blockMeta';
 import { Insertion } from './Insertion';
-import { Row } from './Row';
+import { Row, type GoTo } from './Row';
 
 export interface ProgramRowsProps {
   tree: VisualBlock[];
@@ -27,6 +27,8 @@ export interface ProgramRowsProps {
   isFolded: (block: VisualBlock) => boolean;
   inside: (block: VisualBlock) => number;
   onFold: (block: VisualBlock) => void;
+  /** Where a jump or a call goes, for a button that takes the player there. */
+  goTo: (block: VisualBlock) => GoTo | undefined;
   /** The picked block's own buttons. */
   actions: (block: VisualBlock) => React.ReactNode;
 }
@@ -54,6 +56,7 @@ export function ProgramRows({
   isFolded,
   inside,
   onFold,
+  goTo,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -96,6 +99,7 @@ export function ProgramRows({
             onPick={dragged ? undefined : () => onPick(block)}
             actions={picked === block.line ? actions(block) : undefined}
             fold={foldable ? { folded, inside: inside(block), onToggle: () => onFold(block) } : undefined}
+            goTo={goTo(block)}
           />
           {block.children && !folded && (
             <div className="scope-body">
