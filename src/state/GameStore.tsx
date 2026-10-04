@@ -5,7 +5,19 @@ import { narrativeFor } from '@/data/campaign/narrative';
 import type { ShiftNarrative } from '@/data/campaign/narrative';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
-import { SAVE_KEY, completeLevel, newSave, parseSave, readSave, writeSave } from '@/features/campaign/save/persistence';
+import {
+  SAVE_KEY,
+  backupSave,
+  completeLevel,
+  newSave,
+  parseSave,
+  readBackup,
+  readSave,
+  storedIsOlder,
+  writeSave,
+  type BackupReason,
+  type SaveBackup,
+} from '@/features/campaign/save/persistence';
 import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
 import { go, reloadPage } from '@/shared/lib/navigation';
@@ -23,6 +35,10 @@ interface GameStore {
   loadElsewhere: () => void;
   /** Save this tab's progress over the other one's, and carry on saving. */
   keepThisTab: () => void;
+  /** The café as it was before it was last imported over, reset, restored, or updated to a new save version. */
+  backup: SaveBackup | null;
+  /** Put the kept copy back, keeping the café it replaces in its place. */
+  restoreBackup: () => void;
   route: string;
   go: (path: string) => void;
   update: Update;
@@ -54,14 +70,22 @@ function siteStorage(): Storage | undefined {
 export function GameProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => {
     const storage = siteStorage();
-    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false };
+    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null };
+    // A café from an older version is kept as it was before the first save rewrites it in the new one.
+    if (storedIsOlder(storage)) backupSave(storage, 'migration', lessons);
     const read = readSave(storage, lessons);
     // Only an unreadable café is held back from saves, so a recovery copy of it can still be exported.
-    return { ...read, recovery: !!read.error };
+    return { ...read, recovery: !!read.error, backup: readBackup(storage, lessons) };
   });
   const [save, setSave] = useState(initial.save),
     [saveError, setSaveError] = useState(initial.error),
-    [recovery, setRecovery] = useState(initial.recovery);
+    [recovery, setRecovery] = useState(initial.recovery),
+    [backup, setBackup] = useState(initial.backup);
+  // Runs before the replacement is saved, so the slot gets the café still in storage: the one being replaced.
+  const keep = (reason: BackupReason) => {
+    const storage = siteStorage();
+    if (storage && backupSave(storage, reason, lessons)) setBackup(readBackup(storage, lessons));
+  };
   const [route] = useHashRoute();
   // Two tabs saving one café would each quietly overwrite the other, so once another tab saves, this one holds off
   // until the player says whose progress to keep.
@@ -135,17 +159,27 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }));
       },
       resetCafe: () => {
+        keep('reset');
         setSave((s) => newSave(s.settings));
         setRecovery(false);
         go('/');
       },
       importCafe: (next: ProgressSave) => {
+        keep('import');
         setSave(next);
         setRecovery(false);
         setSaveError('');
       },
+      backup,
+      restoreBackup: () => {
+        if (!backup) return;
+        keep('restore');
+        setSave(backup.save);
+        setRecovery(false);
+        setSaveError('');
+      },
     }),
-    [save, saveError, recovery, elsewhere, route],
+    [save, saveError, recovery, elsewhere, backup, route],
   );
   return <GameContext.Provider value={store}>{children}</GameContext.Provider>;
 }

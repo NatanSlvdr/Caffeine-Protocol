@@ -1,5 +1,5 @@
 import type { ProgressSave } from '@/domain/types';
-import { SAVE_KEY, newSave } from './settings';
+import { SAVE_KEY, newSave, untouched } from './settings';
 import { parseSave } from './migration';
 import type { LessonCatalog } from './migration';
 
@@ -24,5 +24,65 @@ export function writeSave(storage: Pick<Storage, 'setItem'>, save: ProgressSave)
     return '';
   } catch {
     return 'Progress could not be saved. Export your café from Settings to keep it.';
+  }
+}
+
+/** One copy of the café from before the last time it was replaced, so a slip can be taken back. */
+export const BACKUP_KEY = `${SAVE_KEY}.backup`;
+/** What replaced the café the backup was taken from. */
+export type BackupReason = 'import' | 'reset' | 'restore' | 'migration';
+export interface SaveBackup {
+  reason: BackupReason;
+  /** ISO time the copy was taken. */
+  saved_at: string;
+  save: ProgressSave;
+}
+
+/**
+ * Copy the stored café into the backup slot before it is replaced. Only a café that reads back is copied: a
+ * damaged one would push out the last good copy, and it has its own recovery export. Returns whether a copy was kept.
+ */
+export function backupSave(
+  storage: Pick<Storage, 'getItem' | 'setItem'>,
+  reason: BackupReason,
+  lessons: LessonCatalog,
+  now = new Date(),
+): boolean {
+  try {
+    const raw = storage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    // A café with nothing in it yet isn't worth pushing out the last copy for.
+    if (untouched(parseSave(raw, lessons))) return false;
+    storage.setItem(BACKUP_KEY, JSON.stringify({ reason, saved_at: now.toISOString(), raw }));
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/** The kept copy, read and migrated like any save, or null when there is none or it no longer reads. */
+export function readBackup(storage: Pick<Storage, 'getItem'>, lessons: LessonCatalog): SaveBackup | null {
+  try {
+    const kept: unknown = JSON.parse(storage.getItem(BACKUP_KEY) ?? 'null');
+    if (typeof kept !== 'object' || kept === null) return null;
+    const { reason, saved_at, raw } = kept as Record<string, unknown>;
+    if (!REASONS.includes(reason as BackupReason) || typeof saved_at !== 'string' || typeof raw !== 'string')
+      return null;
+    if (Number.isNaN(Date.parse(saved_at))) return null;
+    return { reason: reason as BackupReason, saved_at, save: parseSave(raw, lessons) };
+  } catch {
+    return null;
+  }
+}
+const REASONS: BackupReason[] = ['import', 'reset', 'restore', 'migration'];
+
+/** Whether the stored café is from an older save version, and will be rewritten in the new one on its next save. */
+export function storedIsOlder(storage: Pick<Storage, 'getItem'>): boolean {
+  try {
+    const stored: unknown = JSON.parse(storage.getItem(SAVE_KEY) ?? 'null');
+    const version = (stored as { version?: unknown } | null)?.version;
+    return typeof version === 'number' && version < newSave().version;
+  } catch {
+    return false;
   }
 }

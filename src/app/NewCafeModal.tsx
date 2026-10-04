@@ -3,12 +3,15 @@ import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { count } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
+import { untouched } from '@/features/campaign/save/persistence';
 import { useGame, useProgress } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Confirm a fresh start: name what it clears, and offer the export the warning recommends right here. */
 export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
-  const { save } = useGame();
+  const { save, saveError } = useGame();
+  // Settings keeps a copy of a café with something in it, once it is saved where a copy can go.
+  const kept = !saveError && !untouched(save);
   const { done, stars } = useProgress();
   const [exported, announce] = useAnnouncement();
   return (
@@ -17,7 +20,11 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
         This clears {done ? `${count(done, 'served shift')}, ${count(stars, 'star')}, ` : ''}every routine and the story
         so far. Your audio and display settings will stay.
       </p>
-      <p>Export your current café first if you want to return to it.</p>
+      <p>
+        {kept
+          ? 'A copy is kept in Settings until your next import or fresh start. Export it to keep it for good.'
+          : 'Export your current café first if you want to return to it.'}
+      </p>
       <button
         className="settings-chip"
         onClick={() => {

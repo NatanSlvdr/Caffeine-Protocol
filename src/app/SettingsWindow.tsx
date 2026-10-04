@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, FolderHeart, Leaf, Maximize, Minimize, Sparkles, Upload, Volume2 } from 'lucide-react';
+import { Download, FolderHeart, Leaf, Maximize, Minimize, RotateCcw, Sparkles, Upload, Volume2 } from 'lucide-react';
 import { lessons } from '@/data';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow } from '@/shared/ui/SettingRow';
-import { SAVE_KEY, parseSave } from '@/features/campaign/save/persistence';
+import { SAVE_KEY, parseSave, untouched, type BackupReason } from '@/features/campaign/save/persistence';
 import { count, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
@@ -12,9 +12,10 @@ import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
-  const { save, recovery, saveError, elsewhere, importCafe } = useGame();
+  const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup } = useGame();
   const cafe = useCafeName();
-  const [pending, setPending] = useState<ProgressSave | null>(null),
+  // A café waiting on the Replace slip: one chosen from a file, or the kept copy.
+  const [pending, setPending] = useState<{ save: ProgressSave; kept?: true } | null>(null),
     [error, setError] = useState(''),
     [status, setStatus] = useAnnouncement();
   const input = useRef<HTMLInputElement>(null);
@@ -173,7 +174,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 if (file) {
                   try {
                     if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
-                    setPending(parseSave(await file.text(), lessons));
+                    setPending({ save: parseSave(await file.text(), lessons) });
                     setError('');
                   } catch (err) {
                     setError(importProblem(file.name, err));
@@ -182,6 +183,16 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 e.target.value = '';
               }}
             />
+            {backup && (
+              <div className="settings-backup">
+                <p>
+                  Kept from before {BEFORE[backup.reason]}, {when(backup.saved_at)}: {holds(backup.save) || FRESH}.
+                </p>
+                <button className="settings-chip" onClick={() => setPending({ save: backup.save, kept: true })}>
+                  <RotateCcw size={15} aria-hidden="true" /> Restore kept copy
+                </button>
+              </div>
+            )}
             {/* Present before any export or import, so the confirmation is announced when it lands. */}
             <p className="settings-status" role="status">
               {status}
@@ -211,13 +222,16 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
       {pending && (
         <Modal
           className="settings-window confirm-slip"
-          kicker="Import a café"
+          kicker={pending.kept ? 'The kept copy' : 'Import a café'}
           title="Replace this café?"
           onClose={() => setPending(null)}
         >
           <p>
-            {holds(pending) ? `This export holds ${holds(pending)}.` : `This export is ${FRESH}.`} Importing it will
-            replace your current progress, routines and settings.
+            {pending.kept ? 'The kept copy' : 'This export'}{' '}
+            {holds(pending.save) ? `holds ${holds(pending.save)}` : `is ${FRESH}`}.{' '}
+            {pending.kept
+              ? `Restoring it will replace your current progress, routines and settings${untouched(save) ? '' : ', and keep this café as the copy instead'}.`
+              : 'Importing it will replace your current progress, routines and settings.'}
           </p>
           <div className="modal-buttons">
             <button className="settings-chip" data-autofocus onClick={() => setPending(null)}>
@@ -226,12 +240,13 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <Button
               variant="danger"
               onClick={() => {
-                importCafe(pending);
+                if (pending.kept) restoreBackup();
+                else importCafe(pending.save);
                 setPending(null);
-                setStatus(`Café imported: ${holds(pending) || FRESH}.`);
+                setStatus(`Café ${pending.kept ? 'restored' : 'imported'}: ${holds(pending.save) || FRESH}.`);
               }}
             >
-              Replace café
+              {pending.kept ? 'Restore copy' : 'Replace café'}
             </Button>
           </div>
         </Modal>
@@ -241,6 +256,17 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
 }
 
 const FRESH = 'a fresh café, with no shifts served yet';
+
+/** What the kept copy was taken ahead of. */
+const BEFORE: Record<BackupReason, string> = {
+  import: 'your last import',
+  reset: 'you started a new café',
+  restore: 'you last restored a copy',
+  migration: 'the game updated its save',
+};
+
+/** When the kept copy was taken, in the player's own date and time format. */
+const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
 /** What an export holds, counted as the New café window counts what it clears; empty for a café never opened. */
 function holds(save: ProgressSave): string {

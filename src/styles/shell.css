@@ -1197,6 +1197,21 @@ html[data-motion='reduced'] .front-page *::after {
   margin-top: 3px;
   font-size: 12px;
 }
+.settings-backup {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed #392b2433;
+}
+.settings-window .settings-block .settings-backup p {
+  margin: 0;
+}
+.settings-backup .settings-chip {
+  flex: none;
+}
 .settings-actions {
   display: flex;
   flex-wrap: wrap;

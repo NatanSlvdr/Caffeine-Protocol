@@ -28,3 +28,10 @@ export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSa
   story: {},
   settings: { ...settings },
 });
+/** A café nobody has played in yet: nothing unlocked, served, written or seen. Its settings don't count. */
+export const untouched = (save: ProgressSave): boolean =>
+  save.unlocked === 0 &&
+  !save.complete &&
+  [save.robotDrafts, save.robotSolutions, save.drafts, save.solutions, save.stars, save.story].every(
+    (map) => Object.keys(map).length === 0,
+  );
