@@ -19,6 +19,7 @@ export function Row({
   inLoop = false,
   picked = false,
   onPick,
+  actions,
 }: {
   block: VisualBlock;
   depth: number;
@@ -36,6 +37,8 @@ export function Row({
   picked?: boolean;
   /** A tap on the block itself, or Enter, picks it as the place library blocks go; again, and they go at the end. */
   onPick?: () => void;
+  /** Buttons shown beside the block while it's picked. */
+  actions?: React.ReactNode;
 }) {
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
@@ -127,6 +130,7 @@ export function Row({
           </>
         )}
       </div>
+      {actions}
     </div>
   );
 }

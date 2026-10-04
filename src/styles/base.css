@@ -856,3 +856,43 @@ html[data-motion='reduced'] *:after {
   border-color: #f4c95d;
   color: #8a6a1f;
 }
+
+/* The picked block's copy, move and remove buttons, beside it so the routine below doesn't shift. */
+.editor-panel .block-actions {
+  position: absolute;
+  top: 50%;
+  left: calc(100% + 8px);
+  display: flex;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 8px;
+  background: #fffaf2;
+  box-shadow:
+    0 0 0 1px #d8c6ad,
+    0 3px 8px #4a35201f;
+  transform: translateY(-50%);
+  z-index: 4;
+}
+.editor-panel .block-actions button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #5c4632;
+  cursor: pointer;
+}
+.editor-panel .block-actions button:hover,
+.editor-panel .block-actions button:focus-visible {
+  background: #f4c95d55;
+}
+.editor-panel .block-actions button[aria-disabled='true'] {
+  color: #5c463266;
+  cursor: default;
+}
+.editor-panel .block-actions button[aria-disabled='true']:hover {
+  background: transparent;
+}

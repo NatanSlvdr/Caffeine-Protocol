@@ -27,6 +27,8 @@ import { DragPreview, ProjectedBlocks } from './editor/ProjectedBlocks';
 import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
 import { insertSpot, spotWords } from './editor/insertSpot';
+import { BlockActions, type BlockAction } from './editor/BlockActions';
+import { copyBlock, copyBlocker, moveBlock, ordinalIn } from './editor/blockEdits';
 import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
@@ -209,6 +211,34 @@ export function Editor({
       codeArea.current?.parentElement?.querySelector<HTMLElement>('.command-library button:not(:disabled)');
     next?.focus();
   }, [removed]);
+  // The picked block's buttons copy, move or remove it whole. A copy or a move stays picked, and focus goes back to
+  // the button pressed, so a block can be walked up a routine one press at a time.
+  const [pressed, setPressed] = useState<{ action: BlockAction } | null>(null);
+  useEffect(() => {
+    if (!pressed) return;
+    const bar = root.current?.querySelector('.block-actions');
+    bar?.querySelector<HTMLElement>(`[data-action="${pressed.action}"]`)?.focus();
+  }, [pressed]);
+  const act = (block: VisualBlock, action: BlockAction) => {
+    if (action === 'remove') return remove(block);
+    const ordinal = ordinalOf(block.line);
+    const name = `block ${ordinal} (${spokenBlock(block.command)})${block.children ? ' and its group' : ''}`;
+    let edited;
+    if (action === 'copy') {
+      const blocker = copyBlocker(source, block);
+      if (blocker) return say(`Block ${ordinal} can’t be copied: ${blocker}.`);
+      edited = copyBlock(source, block);
+      say(`Copied ${name}. The copy is block ${ordinalIn(edited.source, edited.line)}.`);
+    } else {
+      edited = moveBlock(source, block, action);
+      if (!edited)
+        return say(`Block ${ordinal} is already at the ${action === 'up' ? 'top' : 'bottom'} of the routine.`);
+      say(`Moved ${name} ${action}. It is block ${ordinalIn(edited.source, edited.line)} now.`);
+    }
+    setPick(edited);
+    setPressed({ action });
+    change(edited.source);
+  };
   // The library block pointed at or focused, explained in a line over the top of the code.
   const [explained, explain] = useState<string | null>(null);
   const help = explained && !dragged ? blockHelp(explained, role, level) : null;
@@ -342,6 +372,14 @@ export function Editor({
                 picked={picked?.line ?? null}
                 nextAt={spot ? spot.at : null}
                 onPick={choose}
+                actions={(block) => (
+                  <BlockActions
+                    block={block}
+                    ordinal={ordinalOf(block.line)}
+                    source={source}
+                    onAct={(action) => act(block, action)}
+                  />
+                )}
               />
               <JumpArrows root={root} source={source} dragging={!!dragged} />
             </ProgramSurface>

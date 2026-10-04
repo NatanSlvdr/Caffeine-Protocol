@@ -47,8 +47,9 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           <p>
             Tap or click a block’s name in the library to add it to the end, or drag it exactly where it belongs. To add
             a few in the middle, tap a block in the routine first: new ones follow it, or fill it if it’s an empty
-            branch, until you tap it again. Set its values right in the code pane. From the keyboard, a value’s menu
-            opens with the arrow keys, or by typing the first letters of the one you want.
+            branch, until you tap it again. A picked block also has buttons to copy it, move it a step or remove it,
+            group and all. Set its values right in the code pane. From the keyboard, a value’s menu opens with the arrow
+            keys, or by typing the first letters of the one you want.
           </p>
           <p>
             Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to

@@ -23,6 +23,8 @@ export interface ProgramRowsProps {
   picked: number | null;
   nextAt: number | null;
   onPick: (block: VisualBlock) => void;
+  /** The picked block's own buttons. */
+  actions: (block: VisualBlock) => React.ReactNode;
 }
 
 /** Recursive visual rows with insertion anchors, else branches, and jump slots. */
@@ -44,6 +46,7 @@ export function ProgramRows({
   picked,
   nextAt,
   onPick,
+  actions,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -80,6 +83,7 @@ export function ProgramRows({
           onRemove={() => remove(block)}
           picked={picked === block.line}
           onPick={dragged ? undefined : () => onPick(block)}
+          actions={picked === block.line ? actions(block) : undefined}
         />
         {block.children && (
           <div className="scope-body">
@@ -107,6 +111,7 @@ export function ProgramRows({
               onRemove={() => remove(elseBlock(block))}
               picked={picked === block.elseLine}
               onPick={dragged ? undefined : () => onPick(elseBlock(block))}
+              actions={picked === block.elseLine ? actions(elseBlock(block)) : undefined}
             />
             <div className="scope-body">
               <Insertion at={block.elseLine! + 1} disabled={disabled} next={nextAt === block.elseLine! + 1} />
