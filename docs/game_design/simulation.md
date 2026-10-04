@@ -1,5 +1,7 @@
 # Cafe Simulation
 
+> Historical: this is the first-pass café model from the Act I slice. Its rules hold in spirit, but its layout, timing figures and Godot notes are out of date; the simulation lives in `src/domain/`. The current documents are listed in [docs/README.md](../README.md).
+
 ## Role In Act I
 
 The cafe simulation is the validation harness for Query's program. It should be

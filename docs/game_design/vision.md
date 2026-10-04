@@ -40,13 +40,12 @@ for that role during validation.
 - Setting: cozy modern 2026 coffee shop with visible repair benches, practical
   robot parts, clean service surfaces, comfortable cafe materials, and selective
   machine-status details.
-- Camera: 2D top-down cafe view.
+- Camera: a fixed orthographic view of a small 3D café.
 - Humor should come from literal robot interpretation and cafe mishaps, not from
   punishing the player.
 
 ## Future Scope Notes
 
-The preparation robot, floor robot, charging, carrying-route planning, robot
-running, pricing-machine failure, and customer total calculation are not Act I
-requirements. They should be referenced only as future hooks unless a later
-documentation pass makes them implementation-ready.
+Brew (the kitchen) and Porter (the floor) arrived in Acts II and III, and Act IV
+runs all three robots together. Charging, robot running, pricing-machine failure
+and customer total calculation are still future hooks, not part of the game.

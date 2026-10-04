@@ -8,10 +8,10 @@ that robot owns the role and there is no human fallback for failed robot logic.
 
 Act I ownership:
 
-- Order intake: scripted human in Level 1, Query from Level 2 onward.
-- Drink preparation: scripted human/system for all Act I levels.
-- Serving: Niko in Level 1; a scripted floor helper from Level 2 onward.
-- Cleaning: scripted human/system for all Act I levels.
+- Order intake: scripted human in shift 1, Query from shift 2 onward.
+- Drink preparation: Moka, automatically, until Brew takes over at shift 9.
+- Serving and cleaning: Pip, automatically, until Porter takes over at shift 14
+  (and clears cups from shift 15).
 
 The floor helper reuses the supplied robot sprite. Niko deposits drinks inside the pickup counter and the helper collects them outside. This visual role separation does not add floor-robot programming, charging or route-planning puzzles to Act I.
 
@@ -104,7 +104,8 @@ rule that isn't active is harmless, so programs carry forward.
 
 ## Godot Implementation Notes
 
-Recommended structure:
+Historical: the retired Godot prototype's structure. The web game's robots live in
+`src/domain/`.
 
 - `RobotActor.tscn`: shared visual actor base for robots.
 - `QueryRobot.tscn`: counter robot with local counter movement and speech event

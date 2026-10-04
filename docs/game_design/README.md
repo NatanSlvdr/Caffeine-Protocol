@@ -1,42 +1,33 @@
 # Game Design Specification
 
-> Frozen archive: this folder specifies the original 14-shift Act I slice,
-> including Godot references that no longer apply (the game ships as a
-> React + TypeScript web build). Current truth lives in `docs/ARCHITECTURE.md`
-> and the generated `docs/campaign/` shift table. Do not extend these files;
-> record new decisions in `docs/adr/`.
+Design notes from the original 14-shift Act I slice, built first as a Godot
+prototype. The game now ships as a React + TypeScript web build with 21 shifts
+([ADR 005](../adr/005-21-shifts.md)). Some of these files are kept up to date
+and some are historical; [docs/README.md](../README.md) says which.
 
-This folder is the source of truth for gameplay implementation in Caffeine
-Protocol. Gameplay decisions should live here before they are implemented in
-Godot.
+Shift-by-shift specs (story, lesson, customers, reference programs) are
+generated into [../campaign/shifts/](../campaign/shifts/README.md) by
+`npm run docs:gen`, and they win over anything written here.
 
-Act I is the first playable vertical slice. It covers the cafe simulation, the
-visual programming interface, and Query, the order-taking robot.
+## Kept up to date
 
-The September 2026 completion and user-authorized art override are recorded in
-[`implementation.md`](implementation.md). This records the shipped control and
-timing details where the earlier specification left tuning open.
+- `programming.md` - the routine language, editor, runtime and save migration.
+- `orders.md` - heard speech, tokens and tickets.
+- `gameplay.md` - the puzzle loop, scoring and which shift brings what.
+- `robots.md` - role ownership and what each robot can do.
+- `story.md` and `vision.md` - cast, arc, tone and pillars.
+- `cutscene_prompts.md` and `portrait_prompts.md` - art prompts for the story.
 
-## Current Specification Files
+## Historical
 
-- `vision.md` - design pillars, tone, and scope boundaries.
-- `art_direction.md` - custom pixel-art style, asset pipeline, and import rules.
-- `story.md` - campaign setup, Act I arc, and future-act hooks.
-- `gameplay.md` - player loop and Act I progression.
-- `simulation.md` - cafe simulation rules, timing defaults, validation, scoring.
-- `programming.md` - visual block editor, runtime, debugging, scoring metrics.
-- `robots.md` - robot ownership rules, Query's Act I capabilities, future robots.
-- `orders.md` - order phrases, ticket fields, modifiers, ambiguity rules.
-- `pricing.md` - future pricing-machine hook and customer total rules.
-- `ui.md` - main puzzle screen, debug views, and run controls.
-- Shift-by-shift specs (story, lesson, customers, reference programs) are
-  generated into [../campaign/shifts/](../campaign/shifts/README.md) by
-  `npm run docs:gen`.
+- `implementation.md` - the September 2026 prototype notes.
+- `simulation.md` - the first-pass café model and its Godot notes.
+- `ui.md` - the prototype's screens.
+- `art_direction.md` and `asset_pipeline.md` - the prototype's art rules.
+- `pricing.md` - a pricing puzzle that was never built.
 
 ## Documentation Rules
 
-- Act I docs should be decision-complete for implementation.
-- Tuning numbers are first-pass defaults unless a file says they are locked.
-- TODOs are allowed only for non-blocking polish or future acts.
-- If a gameplay change touches levels, robots, orders, UI, or story, update the
-  relevant docs in the same task.
+- Record new decisions in [`docs/adr/`](../adr/), not in the historical files.
+- If a gameplay change touches shifts, robots, orders or story, update the
+  files kept up to date in the same task, and rerun `npm run docs:gen`.

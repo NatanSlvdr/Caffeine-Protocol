@@ -1,6 +1,6 @@
-> Current task: reuse supplied assets only; do not generate replacements. See [implementation.md](implementation.md).
-
 # 48px Asset Pipeline
+
+> Historical: this is the retired Godot prototype's tile and sprite pipeline; its assets have been removed. See [implementation.md](implementation.md). The current documents are listed in [docs/README.md](../README.md).
 
 ## Locked Output
 

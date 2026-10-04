@@ -1,5 +1,7 @@
 # User Interface
 
+> Historical: this describes the retired Godot prototype's screens and scenes, not the web game. The current documents are listed in [docs/README.md](../README.md).
+
 ## Campaign
 
 The campaign is a separate screen with every shift, lock states, completion and stars. Selecting a shift shows its lesson and launch button. Launching fades through a short title transition into the level. Returning after completion selects the next shift. Reduced motion shortens transitions.

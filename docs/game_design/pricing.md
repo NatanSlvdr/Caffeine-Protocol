@@ -1,5 +1,7 @@
 # Pricing
 
+> Historical: this pricing puzzle was planned for a later act and isn't in the game. The current documents are listed in [docs/README.md](../README.md).
+
 ## Role
 
 The pricing machine is a counter device that totals customer orders after Query

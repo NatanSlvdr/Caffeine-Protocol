@@ -1,6 +1,6 @@
 # Caffeine Protocol
 
-A browser-based café programming campaign with 21 shifts: one observation shift, seven Query puzzles (Act I), five Brew kitchen shifts (Act II), three Porter floor shifts (Act III), and five shifts where all three robots run the café together (Act IV). The game is built with React, TypeScript, Vite, and Three.js from the design documents in `docs/game_design/`.
+A browser-based café programming campaign with 21 shifts: one observation shift, seven Query puzzles (Act I), five Brew kitchen shifts (Act II), three Porter floor shifts (Act III), and five shifts where all three robots run the café together (Act IV). The game is built with React, TypeScript, Vite, and Three.js; the [documentation map](docs/README.md) lists what describes it.
 
 ## Run locally
 
@@ -36,6 +36,7 @@ The [improvement roadmap](docs/ROADMAP.md) proposes prioritized milestones for d
 - `src/` contains the React application, simulation, editor, and campaign data.
 - `public/` contains static audio and icon assets shipped with the game.
 - `tests/` contains unit, parity, and browser end-to-end tests.
+- `docs/README.md` maps the documentation: which design notes are current and which are historical.
 - `docs/game_design/` contains the original design specification and implementation history.
 - `assets/` retains the original source art and audio used during development.
 

@@ -28,19 +28,18 @@ Query conditions inspect membership in the currently selected group: `IF sugar I
 
 ## Progression
 
-- Levels 1–2: observation.
-- Level 3: one coffee and the physical paper workflow.
-- Level 4: coffee/tea membership; conditions use `CUSTOMER SPEECH`.
-- Level 5: continuous service using Position/Jump.
-- Level 6: positive sugar tokens.
-- Level 7: modifier negation.
-- Level 8: filler words with familiar tokens.
-- Level 9: multiple groups and `FOR item IN heard orders`.
-- Level 10: numeric sugar, including zero.
-- Level 11: ambiguous speech and HELP.
-- Level 12: mixed groups and modifiers.
-- Level 13: denser lunch service.
-- Level 14: Query certification.
+Query's part of the campaign, by shift (see [docs/campaign/](../campaign/README.md)):
+
+- Shift 1: observation.
+- Shift 2: one coffee and the physical paper workflow.
+- Shift 3: continuous service using Position/Jump.
+- Shift 4: coffee/tea membership; conditions use `CUSTOMER SPEECH`.
+- Shift 5: sugar tokens, and negation for “without sugar”.
+- Shift 6: multiple groups and `FOR item IN heard orders`.
+- Shift 7: numeric sugar, including zero.
+- Shift 8: ambiguous speech and HELP.
+- Shifts 9–16: Query keeps the counter while Brew and Porter are programmed.
+- Shifts 17–21: drinks to go, customers in a rush and closing time add the `togo`, `rush` and `closed` tokens.
 
 ## Ticket data and validation
 
