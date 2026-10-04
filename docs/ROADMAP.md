@@ -45,6 +45,9 @@ Shipped items, newest last, with where they live and how they were checked. Item
 | ID | Shipped | Implementation | Validation |
 | --- | --- | --- | --- |
 | E01 | 2026-10-04 | `features/workspace/history.ts` (bounded per-robot history, typing bursts, layout-only edits), wired through `useLiveRun.change`; Undo/Redo in the routine header, Ctrl/⌘+Z, Ctrl/⌘+Shift+Z, Ctrl+Y. Histories survive a visit to the campaign page while they still lead to the saved routine. | `edit-history.test.ts`; `live-workspace.test.tsx` › undo and redo (deleted scope, reset, worked example, typing burst, locked during service). |
+| E10 | 2026-10-04 | `ReceiptModal.tsx`: the receipt note names the gap to the next star in the order stars climb (“One more star: use 2 fewer blocks, 5 or fewer.” / “run 14 fewer steps” / held steps “trim 1 block first”). | `receipt.test.tsx` › says how far off the next star is. |
+| E06 (partial) | 2026-10-04 | Round count only: `useLiveRun` derives the round on screen from the replay sample; `PlaybackToolbar` shows “Round 2 of 3” and its status line says it; the Guide explains rounds. Still open: active robot, practice versus certification, waiting versus stalled. | `live-workspace.test.tsx` › counts the rounds of guests a shift sends in; `guide.test.tsx`. |
+| A01 (slice) | 2026-10-04 | `CampaignPage.tsx`: Home and End on a rail line reach the first and the latest open line; off the ticket they still scroll the page. The rest of the keyboard audit is open. | `campaign.test.tsx` › reaches the first and the latest open line with Home and End. |
 
 ## 1. Make experimentation safe and failures clear
 

@@ -131,10 +131,16 @@ export function CampaignPage() {
 
   // Left and right move along the order unless focus is in a text field.
   // Pressed from a line on the ticket, the arrows carry focus along, so the focus ring stays on the chosen line; there
-  // up and down work too, as the lines run down the ticket. Elsewhere up and down are left to scroll the page.
+  // up and down work too, as the lines run down the ticket, and Home and End reach the first and the latest open line.
+  // Elsewhere up and down, Home and End are left to scroll the page.
   const followFocus = useRef(false);
-  const step = (direction: -1 | 1, fromLine: boolean) => {
-    const entry = neighbour(direction);
+  const step = (direction: -1 | 1 | 'first' | 'last', fromLine: boolean) => {
+    const entry =
+      direction === 'first'
+        ? entries.find(opens)
+        : direction === 'last'
+          ? entries.findLast(opens)
+          : neighbour(direction);
     if (!entry || ordering !== null) return;
     followFocus.current = fromLine;
     turnToEntry(entry);
@@ -163,7 +169,11 @@ export function CampaignPage() {
           ? -1
           : event.key === 'ArrowRight' || (onLine && event.key === 'ArrowDown')
             ? 1
-            : 0;
+            : onLine && event.key === 'Home'
+              ? 'first'
+              : onLine && event.key === 'End'
+                ? 'last'
+                : 0;
       if (!direction) return;
       keys.current(direction, onLine);
       event.preventDefault();

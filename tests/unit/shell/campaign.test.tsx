@@ -93,6 +93,24 @@ describe('campaign order rail', () => {
     expect(selectedShift().getAttribute('aria-label')).toContain('Shift 2:');
   });
 
+  it('reaches the first and the latest open line with Home and End on the ticket', () => {
+    openCampaign(makeSave({ unlocked: 2, selected: 1, stars: { 0: 0, 1: 3 } }));
+    selectedShift().focus();
+    fireEvent.keyDown(document.activeElement!, { key: 'End' });
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 3:');
+    expect(document.activeElement).toBe(selectedShift());
+    // The rail opens on the scene before the first shift.
+    fireEvent.keyDown(document.activeElement!, { key: 'Home' });
+    expect(selectedShift().getAttribute('aria-label')).toBe('Scene: The Keys, seen');
+    expect(document.activeElement).toBe(selectedShift());
+    // Off the ticket, Home and End are left to scroll the page.
+    fireEvent.keyDown(document.activeElement!, { key: 'ArrowDown' });
+    const start = screen.getByRole('button', { name: 'Watch again' });
+    start.focus();
+    expect(fireEvent.keyDown(start, { key: 'End' })).toBe(true);
+    expect(selectedShift().getAttribute('aria-label')).toContain('Shift 1:');
+  });
+
   it('starts the chosen line on Enter, as a double-click does, and only chooses any other', async () => {
     openCampaign(makeSave({ unlocked: 2, selected: 2, stars: { 0: 0, 1: 3 } }));
     const served = screen.getByRole('button', { name: /^Shift 2:/ });
