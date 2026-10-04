@@ -3,6 +3,7 @@ import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, 
 import {
   robotCommands,
   blockPrototypes,
+  count,
   indentSource,
   isOpening,
   placeBlock,
@@ -27,6 +28,7 @@ import { DragPreview, ProjectedBlocks } from './editor/ProjectedBlocks';
 import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
 import { insertSpot, spotWords } from './editor/insertSpot';
+import { carryFolds } from './editor/folds';
 import { BlockActions, type BlockAction } from './editor/BlockActions';
 import { copyBlock, copyBlocker, moveBlock, ordinalIn } from './editor/blockEdits';
 import { ProgramSurface } from './editor/ProgramSurface';
@@ -166,6 +168,28 @@ export function Editor({
   const picked = pick?.source === source && !disabled && !dragged ? rows.find((r) => r.line === pick.line) : undefined;
   const spot = picked && insertSpot(picked);
   const ordinalOf = (line: number) => rows.findIndex((r) => r.line === line) + 1;
+  // Groups folded shut, so a long routine reads at a glance. Folds follow their lines through edits and are this
+  // robot's own; a group holding the running block or the failure shows it, folded or not.
+  const [folds, setFolds] = useState({ role, source, lines: new Set<number>() as ReadonlySet<number> });
+  let folded = folds.lines;
+  if (folds.role !== role || folds.source !== source) {
+    folded = folds.role === role ? carryFolds(folds.source, source, folds.lines) : new Set();
+    setFolds({ role, source, lines: folded });
+  }
+  const revealed = [markerLine, visibleFailureLine];
+  const isFolded = (block: VisualBlock) =>
+    folded.has(block.line) && !revealed.some((line) => line > block.line && line <= block.end);
+  const inside = (block: VisualBlock) => rows.filter((r) => r.line > block.line && r.line <= block.end).length;
+  const fold = (block: VisualBlock) => {
+    const lines = new Set(folded);
+    const closing = !lines.delete(block.line);
+    if (closing) lines.add(block.line);
+    setFolds({ role, source, lines });
+    const name = `block ${ordinalOf(block.line)} (${spokenBlock(block.command)})`;
+    say(closing ? `Folded ${name}, with ${count(inside(block), 'block')} inside.` : `Unfolded ${name}.`);
+    // A pick out of sight would take new blocks where they can't be seen.
+    if (closing && picked && picked.line > block.line && picked.line <= block.end) setPick(null);
+  };
   const choose = (block: VisualBlock) => {
     if (block.line === picked?.line) {
       setPick(null);
@@ -372,6 +396,9 @@ export function Editor({
                 picked={picked?.line ?? null}
                 nextAt={spot ? spot.at : null}
                 onPick={choose}
+                isFolded={isFolded}
+                inside={inside}
+                onFold={fold}
                 actions={(block) => (
                   <BlockActions
                     block={block}

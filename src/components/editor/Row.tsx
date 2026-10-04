@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { blockFields, parseStore, spokenBlock, type VisualBlock } from '@/domain';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+import { blockFields, count, parseStore, spokenBlock, type VisualBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
@@ -20,6 +21,7 @@ export function Row({
   picked = false,
   onPick,
   actions,
+  fold,
 }: {
   block: VisualBlock;
   depth: number;
@@ -39,6 +41,8 @@ export function Row({
   onPick?: () => void;
   /** Buttons shown beside the block while it's picked. */
   actions?: React.ReactNode;
+  /** A group with blocks in it folds shut to its first block, and says how many it hides. */
+  fold?: { folded: boolean; inside: number; onToggle: () => void };
 }) {
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
@@ -86,6 +90,7 @@ export function Row({
             ? `Drag ${spokenBlock(command)}`
             : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
           (failure ? ', where the service stopped' : '') +
+          (fold?.folded ? `, folded with ${count(fold.inside, 'block')} inside` : '') +
           (picked ? ', where new blocks go' : '')
         }
         aria-disabled={locked}
@@ -128,6 +133,19 @@ export function Row({
             <BlockIcon command={command} />
             <span className="sr-only">Jump destination</span>
           </>
+        )}
+        {fold && (
+          <button
+            type="button"
+            className="block-fold"
+            aria-expanded={!fold.folded}
+            aria-label={`${fold.folded ? 'Unfold' : 'Fold'} block ${ordinal}`}
+            title={fold.folded ? `Show the ${count(fold.inside, 'block')} inside` : 'Fold this group'}
+            onClick={fold.onToggle}
+          >
+            {fold.folded ? <ChevronRight size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}
+            {fold.folded && <span aria-hidden="true">{fold.inside}</span>}
+          </button>
         )}
       </div>
       {actions}

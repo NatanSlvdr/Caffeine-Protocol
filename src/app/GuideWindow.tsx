@@ -53,9 +53,10 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </p>
           <p>
             Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to
-            remove it. From the keyboard: <kbd>Space</kbd> to lift, arrow keys to move, <kbd>Space</kbd> to drop,{' '}
-            <kbd>Esc</kbd> to put it back, <kbd>Delete</kbd> to remove it, <kbd>Enter</kbd> to pick it as the place new
-            blocks go.
+            remove it. The arrow at the end of its first block folds it shut, to read a long routine at a glance; it
+            opens by itself to show the block running or the one that failed. From the keyboard: <kbd>Space</kbd> to
+            lift, arrow keys to move, <kbd>Space</kbd> to drop, <kbd>Esc</kbd> to put it back, <kbd>Delete</kbd> to
+            remove it, <kbd>Enter</kbd> to pick it as the place new blocks go.
           </p>
           <p>
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per
