@@ -46,6 +46,9 @@ describe('how to play', () => {
     expect(guide.textContent).toContain('Stop & edit (or Esc)');
     // Esc's other job, out of service, is spelled out too.
     expect(guide.textContent).toContain('With the café idle, Esc heads back to the campaign.');
+    expect(guide.textContent).toContain(
+      'Most shifts send in a few rounds of guests, one after another, and every round has to go right.',
+    );
     // The run shortcut names this keyboard's modifier only.
     const run = [...guide.querySelectorAll('kbd')].find((k) => k.textContent.includes('Enter'));
     expect(run?.textContent).toMatch(/^(Ctrl|⌘) \+ Enter$/);

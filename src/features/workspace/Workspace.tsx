@@ -99,6 +99,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     activeLine,
     failureLine,
     instructionProgress,
+    round,
     change,
     run,
   } = live;
@@ -228,6 +229,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             paused={paused}
             pausable={running && !!result?.passed}
             speed={speed}
+            round={round}
+            rounds={level.seeds.length}
             onRun={run}
             onTogglePause={() => {
               setPaused((p) => !p);

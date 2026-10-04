@@ -179,7 +179,7 @@ describe('live workspace lifecycle', () => {
   it('tells a screen reader that service started, paused and locked the code', () => {
     open();
     const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
-    expect(status.textContent).toBe('Service running. The routines are locked until it stops.');
+    expect(status.textContent).toBe('Service running, round 1 of 3. The routines are locked until it stops.');
     act(() => {
       vi.advanceTimersByTime(100);
     });
@@ -187,6 +187,20 @@ describe('live workspace lifecycle', () => {
     expect(status.textContent).toBe('Service paused.');
     fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
     expect(status.textContent).toBe('');
+  });
+  it('counts the rounds of guests a shift sends in', () => {
+    open();
+    const toolbar = screen.getByRole('group', { name: 'Simulation controls' });
+    const status = toolbar.querySelector('[role="status"]')!;
+    expect(within(toolbar).getByText('Round 1 of 3')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });
+    for (let i = 0; i < 120 && !within(toolbar).queryByText('Round 2 of 3'); i++)
+      act(() => {
+        vi.advanceTimersByTime(1000);
+      });
+    expect(status.textContent).toBe('Service running, round 2 of 3. The routines are locked until it stops.');
+    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    expect(within(toolbar).queryByText(/^Round/)).toBeNull();
   });
   it('focuses the scene on the robot selected for editing', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13 });

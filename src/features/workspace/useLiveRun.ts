@@ -37,6 +37,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const displayedTrace = sampled?.seed?.events.findLast(
     (e) => e.role === role && e.start <= sampled.local && (e.end > sampled.local || e.start === e.end),
   );
+  // Most shifts send in a few rounds of guests, one after another; this is the one on screen.
+  const round = sampled?.seed ? (result?.execution?.indexOf(sampled.seed) ?? 0) + 1 : 1;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
@@ -130,6 +132,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     activeLine,
     failureLine,
     instructionProgress,
+    round,
     change,
     run,
     stop,

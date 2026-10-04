@@ -8,6 +8,9 @@ export interface PlaybackToolbarProps {
   paused: boolean;
   pausable: boolean;
   speed: number;
+  /** The round of guests on screen, and how many the shift sends in. */
+  round: number;
+  rounds: number;
   onRun: () => void;
   onTogglePause: () => void;
   onSpeed: (speed: number) => void;
@@ -20,10 +23,14 @@ export function PlaybackToolbar({
   paused,
   pausable,
   speed,
+  round,
+  rounds,
   onRun,
   onTogglePause,
   onSpeed,
 }: PlaybackToolbarProps) {
+  // A shift of one round has nothing to count.
+  const counted = running && rounds > 1;
   return (
     <div className="playback-toolbar" role="group" aria-label="Simulation controls">
       <button
@@ -40,6 +47,11 @@ export function PlaybackToolbar({
         {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}{' '}
         {paused ? 'Resume' : 'Pause'}
       </button>
+      {counted && (
+        <span className="playback-round" aria-hidden="true">
+          Round {round} of {rounds}
+        </span>
+      )}
       <label className="playback-speed">
         <span>
           Speed <strong>{speed}×</strong>
@@ -61,9 +73,7 @@ export function PlaybackToolbar({
         {running &&
           (paused
             ? 'Service paused.'
-            : observation
-              ? 'Service running.'
-              : 'Service running. The routines are locked until it stops.')}
+            : `Service running${counted ? `, round ${round} of ${rounds}` : ''}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>
   );
