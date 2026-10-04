@@ -49,6 +49,6 @@ describe('buttons that open a window', () => {
     opensWindow('Help', narrativeFor(2).title);
     fireEvent.click(screen.getByRole('button', { name: /Close/ }));
     opensWindow('Options', 'Workspace options');
-    opensWindow('Reset Query’s routine', 'Reset Query’s routine?');
+    opensWindow('Restore Query’s routine', 'Restore Query’s routine');
   });
 });

@@ -52,13 +52,15 @@ export interface FailureCardProps {
   onShowLine: () => void;
   /** Play just the round that failed again, with the routines as they are now. */
   onPractise: () => void;
+  /** Set the routine against the last one that served this shift, to go back to it; only when they differ. */
+  onCompareServed?: () => void;
 }
 
 /**
  * The last failed run, kept beside the code: where it stopped, why, what was wanted against what happened, and what
  * to try next. It stays while the player fixes, dimmed once the routines change, and goes when the next run starts.
  */
-export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise }: FailureCardProps) {
+export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, onCompareServed }: FailureCardProps) {
   const [open, setOpen] = useState(true);
   const heading = useId(),
     body = useId();
@@ -128,7 +130,7 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise }:
         <p className="failure-card-next">
           <strong>Try</strong> {failureHint(failure.code)}
         </p>
-        {(showable || practisable) && (
+        {(showable || practisable || onCompareServed) && (
           <div className="failure-card-actions">
             {showable && (
               <button type="button" className="failure-card-show" onClick={onShowLine}>
@@ -140,6 +142,12 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise }:
               <button type="button" className="failure-card-show" onClick={onPractise}>
                 <RotateCcw size={14} aria-hidden="true" />
                 Practise round {round}
+              </button>
+            )}
+            {onCompareServed && (
+              <button type="button" className="failure-card-show" aria-haspopup="dialog" onClick={onCompareServed}>
+                <History size={14} aria-hidden="true" />
+                Compare with last served
               </button>
             )}
           </div>

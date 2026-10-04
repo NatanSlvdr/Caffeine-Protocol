@@ -1467,6 +1467,106 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-window.confirm-slip .setting-row {
   margin-bottom: 14px;
 }
+/* Restoring a routine: the earlier versions as a short list of choices, then the chosen one against the routine now. */
+.modal.settings-window.restore-slip {
+  width: min(560px, 92vw);
+}
+.restore-versions {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 14px;
+  padding: 0;
+  border: 0;
+}
+.restore-version {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding: 9px 12px;
+  border: 1.5px solid #392b241f;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.restore-version:has(input:checked) {
+  border-color: var(--slip-coffee);
+  background: #71452f0d;
+}
+.restore-version:has(input:focus-visible) {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 2px;
+}
+.restore-version:has(input:disabled) {
+  cursor: default;
+  opacity: 0.62;
+}
+.restore-version input {
+  flex: none;
+  margin: 3px 0 0;
+  accent-color: var(--slip-coffee);
+}
+.restore-version strong {
+  display: block;
+  font-size: 14px;
+}
+.restore-version small {
+  display: block;
+  margin-top: 2px;
+  color: var(--slip-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+.settings-window.confirm-slip p.restore-compare-title {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.restore-compare-title span {
+  color: var(--slip-ink);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.restore-diff {
+  max-height: min(220px, 30dvh);
+  margin: 6px 0 14px;
+  padding: 8px 0;
+  overflow: auto;
+  border: 1.5px dashed #392b2433;
+  border-radius: 4px;
+  color: var(--slip-muted);
+  background: #f8f1e3;
+  font-family: var(--slip-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  list-style: none;
+}
+.restore-diff li {
+  display: flex;
+  padding: 0 12px 0 6px;
+}
+.restore-diff code {
+  font: inherit;
+  white-space: pre;
+}
+.restore-diff-mark {
+  flex: none;
+  width: 16px;
+  font-weight: 800;
+  text-align: center;
+}
+.restore-diff .add {
+  color: #22603c;
+  background: #2f8f5a1f;
+}
+.restore-diff .remove {
+  color: #8f3f22;
+  background: #b968471f;
+}
 /* Service receipt: the till slip for a finished shift, each total checked against its star target. */
 .receipt-slip .receipt-lead {
   color: var(--slip-ink);

@@ -37,7 +37,7 @@ export function incomingRobotPrograms(save: ProgressSave, index: number, lessons
     floor: cleanFloor(index === UNLOCKS.floor - 1 ? defaults.floor : (previous?.floor ?? defaults.floor)),
   };
 }
-/** What "Reset <robot>’s routine" restores: the incoming programs, ignoring this shift's own draft. */
+/** How the shift opened the routines: the incoming programs, ignoring this shift’s own draft. */
 export function resetRobotPrograms(save: ProgressSave, index: number, lessons: LessonCatalog): RobotPrograms {
   const drafts = { ...save.drafts };
   delete drafts[index];

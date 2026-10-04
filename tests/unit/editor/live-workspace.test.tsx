@@ -6,7 +6,7 @@ import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { OptionsModal } from '../../../src/features/workspace/modals/OptionsModal';
-import { ResetModal } from '../../../src/features/workspace/modals/ResetModal';
+import { RestoreModal } from '../../../src/features/workspace/modals/RestoreModal';
 
 vi.mock('../../../src/components/Cafe', () => ({
   Cafe: ({ serviceView, focusRole }: { serviceView?: boolean; focusRole?: string }) => (
@@ -291,16 +291,16 @@ describe('live workspace lifecycle', () => {
     expect(screen.queryByText('Locked')).toBeNull();
     expect(screen.getByRole('tab', { name: 'Query' }).hasAttribute('disabled')).toBe(false);
   });
-  it('offers a reset only once the open routine has been edited', () => {
+  it('offers to restore only once the open routine differs from an earlier version', () => {
     seedLocalStorage({ ...makeSave(), unlocked: 2, selected: 2 });
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    const reset = screen.getByRole('button', { name: /Reset Query’s routine/ });
+    const reset = screen.getByRole('button', { name: /Restore Query’s routine/ });
     expect(reset.hasAttribute('disabled')).toBe(true);
-    expect(reset.getAttribute('aria-describedby')).toBe('reset-note');
-    expect(screen.getByText('Query’s routine is just as the shift opened it.')).toBeTruthy();
+    expect(reset.getAttribute('aria-describedby')).toBe('restore-note');
+    expect(screen.getByText('Query’s routine is just like every earlier version.')).toBeTruthy();
   });
-  it('says to stop the service before resetting an edited routine', () => {
+  it('says to stop the service before restoring an edited routine', () => {
     render(
       <OptionsModal
         robot="Brew"
@@ -308,33 +308,40 @@ describe('live workspace lifecycle', () => {
         textMode={false}
         observation={false}
         running
-        edited
+        restorable
         onTogglePixelArt={() => {}}
         onToggleTextMode={() => {}}
         shortRepeats={false}
         onToggleShortRepeats={() => {}}
-        onRequestReset={() => {}}
+        onRequestRestore={() => {}}
         onClose={() => {}}
       />,
     );
-    const reset = screen.getByRole('button', { name: /Reset Brew’s routine/ });
+    const reset = screen.getByRole('button', { name: /Restore Brew’s routine/ });
     expect(reset.hasAttribute('disabled')).toBe(true);
     expect(document.getElementById(reset.getAttribute('aria-describedby')!)?.textContent).toBe(
-      'Stop the service to reset Brew’s routine.',
+      'Stop the service to restore Brew’s routine.',
     );
   });
-  it('mentions the other robots’ routines on reset only when there are other robots', () => {
+  it('mentions the other robots’ routines on restoring only when there are other robots', () => {
     const text = (alone: boolean) => {
-      const { unmount } = render(<ResetModal robot="Query" alone={alone} onClose={() => {}} onConfirm={() => {}} />);
-      const said = screen.getByText(/goes back to how it was/).textContent;
+      const { unmount } = render(
+        <RestoreModal
+          robot="Query"
+          alone={alone}
+          current="LISTEN"
+          versions={[{ id: 'starter', label: 'Shift starter', detail: '', source: 'LISTEN\nTAKE UP' }]}
+          onClose={() => {}}
+          onRestore={() => {}}
+        />,
+      );
+      const said = screen.getByText(/routine changes/).textContent;
       unmount();
       return said;
     };
-    expect(text(true)).toBe(
-      'Query’s routine goes back to how it was when this shift opened. Undo (Ctrl Z) brings your version back.',
-    );
+    expect(text(true)).toBe('Only Query’s routine changes. Undo (Ctrl Z) brings yours back.');
     expect(text(false)).toBe(
-      'Query’s routine goes back to how it was when this shift opened; the other robots keep theirs. Undo (Ctrl Z) brings your version back.',
+      'Only Query’s routine changes; the other robots keep theirs. Undo (Ctrl Z) brings yours back.',
     );
   });
   it('says why the watch-only shift has nothing to reset', () => {
@@ -342,10 +349,10 @@ describe('live workspace lifecycle', () => {
     seedLocalStorage(makeSave());
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    const reset = screen.getByRole('button', { name: /Reset Query’s routine/ });
+    const reset = screen.getByRole('button', { name: /Restore Query’s routine/ });
     expect(reset.hasAttribute('disabled')).toBe(true);
     expect(document.getElementById(reset.getAttribute('aria-describedby')!)?.textContent).toBe(
-      'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.',
+      'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or restore.',
     );
     // The greyed-out text editor switch says why too.
     const text = screen.getByRole('checkbox', { name: 'Text editor' });
@@ -527,10 +534,10 @@ describe('live workspace lifecycle', () => {
       screen.getByRole('img', { name: 'Current instruction' }).querySelector('.execution-line-highlight'),
     ).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Restore Query’s routine/ }));
     // Query works alone on this shift: no other routines to keep.
-    expect(screen.getByText(/goes back to how it was/).textContent).toMatch(/opened\. Undo/);
-    fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
+    expect(screen.getByText(/routine changes/).textContent).toMatch(/changes\. Undo/);
+    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
     expect([...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains('failure'))).toBeUndefined();
     expect(screen.queryByRole('dialog', { name: 'Dialogue' })).toBeNull();
     expect(screen.getByTestId('cafe').getAttribute('data-service-view')).toBe('false');
@@ -715,11 +722,11 @@ describe('undo and redo', () => {
     fireEvent.click(redoButton());
     expect(saved()).toBe('LISTEN\nDEPOSIT RIGHT');
   });
-  it('undoes a reset and a worked example from the keyboard', () => {
+  it('undoes a restore and a worked example from the keyboard', () => {
     openDraft();
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
-    fireEvent.click(screen.getByRole('button', { name: /Reset Query’s routine/ }));
-    fireEvent.click(screen.getByRole('button', { name: 'Reset routine' }));
+    fireEvent.click(screen.getByRole('button', { name: /Restore Query’s routine/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
     expect(saved()).not.toBe(draft);
     fireEvent.keyDown(window, { key: 'z', ctrlKey: true });
     expect(saved()).toBe(draft);

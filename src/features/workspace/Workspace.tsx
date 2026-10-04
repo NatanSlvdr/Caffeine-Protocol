@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
-import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms } from '@/domain';
+import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
@@ -19,7 +19,8 @@ import { firstRoutineStep } from './firstRoutine';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
-import { ResetModal } from './modals/ResetModal';
+import { RestoreModal } from './modals/RestoreModal';
+import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal } from './modals/ReceiptModal';
 import { failureLines, successLines } from './reactions';
 
@@ -134,6 +135,13 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     !running && practised?.mode === 'practice' && practised.result.passed && !isStale(practised, programs)
       ? practised
       : undefined;
+  // The earlier versions of the open routine that Workspace options can restore.
+  const versions = observation ? [] : routineVersions(save, index, lessons, role, ROBOT_DISPLAY_NAMES[role]);
+  // A robot's routine has been broken since it last served this shift: the failure card offers the way back.
+  const servedBefore = (robot: RobotRole) => {
+    const served = save.robotSolutions[index]?.[robot];
+    return !!served && !sameRoutine(served, programs[robot]);
+  };
   // A shift served before has had its payoff: shorter repeats keep the cheer to Niko's verdict.
   const briefSuccess = shortRepeats && live.bestBefore !== undefined;
   // The first shift with a routine to write teaches it step by step, until it's served or the player hides the tips.
@@ -381,6 +389,14 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 setSeeking(evidence.failure.error_line);
               }}
               onPractise={() => startFromCard(() => practise(evidence.round - 1))}
+              onCompareServed={
+                servedBefore(evidence.failure.role ?? 'query')
+                  ? () => {
+                      setRole(evidence.failure.role ?? 'query');
+                      setModal('restore');
+                    }
+                  : undefined
+              }
             />
           )}
           {practiceCard && (
@@ -442,24 +458,29 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           textMode={textMode}
           observation={observation}
           running={running}
-          edited={source.trim() !== resetRobotPrograms(save, index, lessons)[role].trim()}
+          restorable={versions.some((version) => !sameRoutine(version.source, source))}
           onTogglePixelArt={(value) => update((s) => ({ ...s, settings: { ...s.settings, pixel_art: value } }))}
           onToggleTextMode={(value) => update((s) => ({ ...s, settings: { ...s.settings, text_editor: value } }))}
           shortRepeats={shortRepeats}
           onToggleShortRepeats={(value) => update((s) => ({ ...s, settings: { ...s.settings, short_repeats: value } }))}
           tips={firstRoutine ? { on: save.settings.first_routine_tips, onToggle: setTips } : undefined}
-          onRequestReset={() => setModal('reset')}
+          onRequestRestore={() => setModal('restore')}
           onClose={() => setModal('')}
         />
       )}
-      {modal === 'reset' && (
-        <ResetModal
+      {modal === 'restore' && (
+        <RestoreModal
           robot={ROBOT_DISPLAY_NAMES[role]}
           alone={!robotUnlocked('prep', index + 1)}
+          current={source}
+          versions={versions}
           onClose={() => setModal('')}
-          onConfirm={() => {
-            change(resetRobotPrograms(save, index, lessons)[role]);
+          onRestore={(version) => {
+            change(version.source);
             setModal('');
+            sayHistory(
+              `${ROBOT_DISPLAY_NAMES[role]}’s routine is back to the ${version.label.toLowerCase()} version. Undo brings yours back.`,
+            );
           }}
         />
       )}

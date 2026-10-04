@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react';
+import { History } from 'lucide-react';
 import { Modal } from '@/components';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 
@@ -9,21 +9,21 @@ export interface OptionsModalProps {
   textMode: boolean;
   observation: boolean;
   running: boolean;
-  /** Whether the open routine differs from how the shift opened it; a reset of an untouched one does nothing. */
-  edited: boolean;
+  /** Whether any earlier version differs from the open routine; restoring one just like it would do nothing. */
+  restorable: boolean;
   onTogglePixelArt: (value: boolean) => void;
   onToggleTextMode: (value: boolean) => void;
   shortRepeats: boolean;
   onToggleShortRepeats: (value: boolean) => void;
   /** The first-routine tips' switch, on the shift that has them; they go once the shift is served. */
   tips?: { on: boolean; onToggle: (value: boolean) => void };
-  onRequestReset: () => void;
+  onRequestRestore: () => void;
   onClose: () => void;
 }
 
 /**
- * Workspace options: shader, text editor, shorter repeats, the first routine's tips, and resetting the open robot’s
- * routine.
+ * Workspace options: shader, text editor, shorter repeats, the first routine's tips, and restoring an earlier version
+ * of the open robot’s routine.
  */
 export function OptionsModal({
   robot,
@@ -31,22 +31,22 @@ export function OptionsModal({
   textMode,
   observation,
   running,
-  edited,
+  restorable,
   onTogglePixelArt,
   onToggleTextMode,
   shortRepeats,
   onToggleShortRepeats,
   tips,
-  onRequestReset,
+  onRequestRestore,
   onClose,
 }: OptionsModalProps) {
-  // Says why the reset is greyed out, when nothing else in the window does.
+  // Says why restoring is greyed out, when nothing else in the window does.
   const note = observation
-    ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or reset.'
-    : !edited
-      ? `${robot}’s routine is just as the shift opened it.`
+    ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or restore.'
+    : !restorable
+      ? `${robot}’s routine is just like every earlier version.`
       : running
-        ? `Stop the service to reset ${robot}’s routine.`
+        ? `Stop the service to restore ${robot}’s routine.`
         : '';
   return (
     <Modal className="settings-window confirm-slip" kicker="This shift" title="Workspace options" onClose={onClose}>
@@ -85,14 +85,14 @@ export function OptionsModal({
       )}
       <button
         className="settings-chip"
-        disabled={running || observation || !edited}
-        aria-describedby={note ? 'reset-note' : undefined}
+        disabled={running || observation || !restorable}
+        aria-describedby={note ? 'restore-note' : undefined}
         aria-haspopup="dialog"
-        onClick={onRequestReset}
+        onClick={onRequestRestore}
       >
-        <RotateCcw size={15} aria-hidden="true" /> Reset {robot}’s routine
+        <History size={15} aria-hidden="true" /> Restore {robot}’s routine
       </button>
-      {note && <p id="reset-note">{note}</p>}
+      {note && <p id="restore-note">{note}</p>}
     </Modal>
   );
 }
