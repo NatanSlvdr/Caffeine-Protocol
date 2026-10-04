@@ -1712,9 +1712,12 @@ html[data-motion='reduced'] .execution-line-highlight {
 .editor-panel .code-text .code-input {
   height: auto;
   overflow: hidden;
+  padding-left: 50px;
 }
+/* Both copies leave a gutter on the left for the line numbers, which only the copy draws. */
 .editor-panel .code-text-lines {
-  padding: 20px;
+  padding: 20px 20px 20px 50px;
+  counter-reset: line;
   color: transparent;
   font:
     12px/1.85 ui-monospace,
@@ -1725,8 +1728,32 @@ html[data-motion='reduced'] .execution-line-highlight {
   pointer-events: none;
 }
 .editor-panel .code-text-lines > div {
-  margin: 0 -20px;
-  padding: 0 20px;
+  position: relative;
+  margin: 0 -20px 0 -50px;
+  padding: 0 20px 0 50px;
+  counter-increment: line;
+}
+.editor-panel .code-text-lines > div::after {
+  content: counter(line);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 32px;
+  color: #8f7f69;
+  font-size: 10.5px;
+  text-align: right;
+}
+/* With the caret inside an If, For or Function, a gold rule in the gutter runs from the line that opens it to its
+   End, and those lines' numbers (and its Else's) light up, as matching brackets do in a code editor. */
+.editor-panel .code-text-lines > :is(.scope-edge, .in-scope) {
+  background-image: linear-gradient(#f4c95d80, #f4c95d80);
+  background-position: 40px 0;
+  background-size: 2px 100%;
+  background-repeat: no-repeat;
+}
+.editor-panel .code-text-lines > .scope-edge::after {
+  color: #f4c95d;
+  font-weight: 700;
 }
 .editor-panel .code-text-lines > .active {
   position: relative;

@@ -62,7 +62,8 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           </p>
           <p>
             Rather type? Turn on the <strong>Text editor</strong> in a shift’s Options: the same routine, one block per
-            line.
+            line, numbered down the side. With the caret inside an If, For or Function, a gold line in the margin joins
+            it to its End.
           </p>
           <p>
             Changed your mind? <strong>Undo</strong> (<kbd>{RUN_MODIFIER} + Z</kbd>) steps back through every edit,

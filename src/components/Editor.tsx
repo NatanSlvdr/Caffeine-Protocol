@@ -30,6 +30,7 @@ import { Insertion } from './editor/Insertion';
 import { ProgramRows } from './editor/ProgramRows';
 import { insertSpot, spotWords } from './editor/insertSpot';
 import { carryFolds } from './editor/folds';
+import { scopeAround } from './editor/textScope';
 import { BlockActions, type BlockAction } from './editor/BlockActions';
 import { copyBlock, copyBlocker, moveBlock, ordinalIn } from './editor/blockEdits';
 import { ProgramSurface } from './editor/ProgramSurface';
@@ -156,6 +157,10 @@ export function Editor({
     }
     typed.current = source;
   }, [source]);
+  // The line the caret is on while the text view has focus, to match the group around it.
+  const [caretLine, setCaretLine] = useState<number | null>(null);
+  const trackCaret = (input: HTMLTextAreaElement) =>
+    setCaretLine(input.value.slice(0, input.selectionStart).split('\n').length - 1);
   const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key !== 'Tab' || disabled || e.ctrlKey || e.metaKey || e.altKey) return;
     e.preventDefault();
@@ -174,6 +179,7 @@ export function Editor({
   const spot = picked && insertSpot(picked);
   const ordinalOf = (line: number) => rows.findIndex((r) => r.line === line) + 1;
   const lines = source.split('\n');
+  const scope = textMode && caretLine !== null ? scopeAround(lines, caretLine) : [];
   // Groups folded shut, so a long routine reads at a glance. Folds follow their lines through edits and are this
   // robot's own; a group holding the running block or the failure shows it, folded or not.
   const [folds, setFolds] = useState({ role, source, lines: new Set<number>() as ReadonlySet<number> });
@@ -407,13 +413,18 @@ export function Editor({
                   <div
                     key={i}
                     className={
-                      i === failureLine
-                        ? 'failed'
-                        : i === markerLine
-                          ? 'active'
-                          : i === problem?.line
-                            ? 'flagged'
-                            : undefined
+                      [
+                        i === failureLine
+                          ? 'failed'
+                          : i === markerLine
+                            ? 'active'
+                            : i === problem?.line
+                              ? 'flagged'
+                              : '',
+                        scope.includes(i) ? 'scope-edge' : i > scope[0] && i < scope.at(-1)! ? 'in-scope' : '',
+                      ]
+                        .filter(Boolean)
+                        .join(' ') || undefined
                     }
                   >
                     {line || ' '}
@@ -437,6 +448,9 @@ export function Editor({
                   'Tab indents, Shift+Tab outdents, Escape leaves the editor.'
                 }
                 onKeyDown={onTextKey}
+                onSelect={(e) => trackCaret(e.currentTarget)}
+                onFocus={(e) => trackCaret(e.currentTarget)}
+                onBlur={() => setCaretLine(null)}
                 value={source}
                 onChange={(e) => {
                   typed.current = e.target.value;
