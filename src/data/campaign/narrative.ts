@@ -154,7 +154,7 @@ export const campaignNarrative: ShiftNarrative[] = [
     title: 'Call Me Maybe',
     story: 'Brew has made the same recipes all morning. Let’s give those familiar steps a name, and just call them.',
     objective:
-      'Brew’s routine repeats the same recipe steps for every ticket, which makes it long and hard to change. Serve every ticket as before, with the recipe written in one place.',
+      'Brew’s recipe is one long run of steps in the middle of its routine, and soon Brew will need it more than once per trip. Serve every ticket as before, with the recipe written in one place.',
     hint: 'Name the recipe, then call it.',
     concept:
       'A function is a recipe with a name. Write the steps once, Call them wherever they’re needed, and a change to the recipe changes every drink.',
@@ -207,7 +207,8 @@ export const campaignNarrative: ShiftNarrative[] = [
     objective:
       'Porter’s tray now holds two items, but Porter still carries one at a time. Porter must fill the tray before setting off, and anything beyond two won’t fit.',
     hint: 'Fill the tray before you go.',
-    concept: 'Fill, then go: two items per trip halve the walking. The tray gives them back in the order they went on.',
+    concept:
+      'Brew’s batching, out on the floor: fill the tray, then go. Each drink still carries its own table, and the tray gives them back in the order they went on.',
     lessonNote:
       'Porter now holds two items. Take two drinks before serving, then clear both tables. The tray empties in the order it was filled.',
   },
