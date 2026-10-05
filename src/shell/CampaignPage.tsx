@@ -241,7 +241,7 @@ export function CampaignPage() {
         )}
       </ShellBar>
       {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}
-      {looking && <ShelfWindow earned={earned} fresh={looking} onClose={() => setLooking(null)} />}
+      {looking && <ShelfWindow save={save} earned={earned} fresh={looking} onClose={() => setLooking(null)} />}
 
       <header className="pass-title">
         <p className="pass-kicker">{shop} · Order rail</p>

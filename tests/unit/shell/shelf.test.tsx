@@ -4,7 +4,7 @@ import { CAMPAIGN_LENGTH, isRated } from '../../../src/data';
 import { UNLOCKS } from '../../../src/domain';
 import { CampaignPage } from '../../../src/shell/CampaignPage';
 import { acts } from '../../../src/shell/rail/acts';
-import { keepsakes, shelved } from '../../../src/shell/shelf';
+import { keepsakes, shelved, veiled } from '../../../src/shell/shelf';
 import { GameProvider } from '../../../src/state/GameStore';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
@@ -73,6 +73,21 @@ describe('the shelf', () => {
     expect(Array.from({ length: acts[0].to }, (_, i) => isRated(i)).some(Boolean)).toBe(false);
   });
 
+  it('keeps a keepsake under wraps while its act is sealed on the rail, and never one already earned', () => {
+    const wrapped = (unlocked: number, stars: Record<string, number> = servedThrough(unlocked)) =>
+      keepsakes.filter((keepsake) => veiled(keepsake, { unlocked, stars })).map((keepsake) => keepsake.id);
+    expect(wrapped(0)).toEqual(['order-pad', 'recipe-card', 'name-tags', 'floor-plan', 'closing-sign', 'gold-star']);
+    // Act I served opens Act II: Brew may be named now, Porter and a third robot not yet.
+    expect(wrapped(acts[2].from)).toEqual(['name-tags', 'floor-plan', 'closing-sign']);
+    expect(wrapped(acts[3].from)).toEqual(['closing-sign']);
+    expect(wrapped(acts[4].from)).toEqual([]);
+    // Whatever the save says is unlocked, a keepsake on the shelf shows itself.
+    for (let served = 0; served <= CAMPAIGN_LENGTH; served++) {
+      const stars = servedThrough(served, 3);
+      for (const keepsake of shelved({ stars })) expect(veiled(keepsake, { unlocked: 0, stars })).toBe(false);
+    }
+  });
+
   it('goes up on the campaign with its first keepsake, and shows what is left to earn', () => {
     seedLocalStorage(makeSave());
     const { unmount } = render(
@@ -98,6 +113,10 @@ describe('the shelf', () => {
     expect(within(items[0]).getByText(keepsakes[0].story)).toBeTruthy();
     expect(within(items[1]).getByText('Not yet')).toBeTruthy();
     expect(within(items[1]).getByText('Serve every shift of Act II.')).toBeTruthy();
+    // Act III is still sealed, so nothing on the shelf names who works it.
+    expect(shelf.textContent).not.toMatch(/Porter|three robots|floor/i);
+    expect(within(shelf).getAllByRole('heading', { name: 'Under wraps' })).toHaveLength(3);
+    expect(within(items[3]).getByText('Something for Act III. It comes out once Act II is served.')).toBeTruthy();
     fireEvent.click(within(shelf).getByRole('button', { name: 'Close dialog' }));
     expect(screen.queryByRole('dialog', { name: 'The shelf.' })).toBeNull();
   });

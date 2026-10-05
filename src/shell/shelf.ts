@@ -12,6 +12,8 @@ export interface Keepsake {
   goal: string;
   /** What it marks, read once it is there. */
   story: string;
+  /** The act that brings it into the story. Until that act's ticket opens, the shelf keeps it under wraps. */
+  act: number;
   /** Read from what the save already keeps, so nothing new has to be stored and an old save earns what it has done. */
   earned: (save: Pick<ProgressSave, 'stars'>) => boolean;
 }
@@ -31,6 +33,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'Query’s order pad',
     goal: 'Serve every shift of Act I.',
     story: 'Query took every order of Act I, from the first coffee to the orders nobody could make out.',
+    act: 1,
     earned: actServed(1),
   },
   {
@@ -38,6 +41,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'Brew’s recipe card',
     goal: 'Serve every shift of Act II.',
     story: 'Brew made every recipe of Act II, and learned to keep one card for all of them.',
+    act: 2,
     earned: actServed(2),
   },
   {
@@ -45,6 +49,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'Three name tags',
     goal: 'Serve a shift with all three robots at work.',
     story: 'Query, Brew and Porter served a shift together, each running a routine of its own.',
+    act: 3,
     earned: (save) => levels.some((_, shift) => shift >= UNLOCKS.floor - 1 && served(save, shift)),
   },
   {
@@ -52,6 +57,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'Porter’s floor plan',
     goal: 'Serve every shift of Act III.',
     story: 'Porter carried every cup of Act III to its table, then cleared the empties away.',
+    act: 3,
     earned: actServed(3),
   },
   {
@@ -59,6 +65,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'The closing sign',
     goal: 'Serve every shift of Act IV.',
     story: 'The whole crew saw out the busiest days, and turned the sign at closing time.',
+    act: 4,
     earned: actServed(4),
   },
   {
@@ -66,6 +73,7 @@ export const keepsakes: readonly Keepsake[] = [
     name: 'A gold star',
     goal: 'Earn three stars on every shift of one act.',
     story: 'Every shift of an act served on target, blocks and steps both.',
+    act: 1,
     earned: (save) =>
       acts.some((_, act) => {
         const rated = shiftsOf(act).filter(isRated);
@@ -73,6 +81,13 @@ export const keepsakes: readonly Keepsake[] = [
       }),
   },
 ];
+
+/**
+ * Whether a keepsake not yet earned is still under wraps: its act is sealed on the rail (no shift of it unlocked yet),
+ * so naming it or what earns it would give away who joins the crew, as the sealed ticket never does.
+ */
+export const veiled = (keepsake: Keepsake, save: Pick<ProgressSave, 'stars' | 'unlocked'>) =>
+  !keepsake.earned(save) && acts[keepsake.act].from > save.unlocked;
 
 /** The keepsakes on the shelf so far, in the shelf's order. */
 export const shelved = (save: Pick<ProgressSave, 'stars'>) => keepsakes.filter((keepsake) => keepsake.earned(save));
