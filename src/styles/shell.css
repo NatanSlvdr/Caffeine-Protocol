@@ -1246,6 +1246,19 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-backup .settings-chip {
   flex: none;
 }
+.settings-changes {
+  margin-top: 8px;
+  font-size: 13px;
+}
+.settings-window .settings-changes p {
+  margin: 0;
+}
+.settings-changes ul {
+  display: grid;
+  gap: 4px;
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
 .options-report {
   margin-top: 18px;
   padding-top: 14px;
@@ -1978,6 +1991,15 @@ html[data-motion='reduced'] .story-page *::after {
 .save-notice > svg {
   flex: none;
   color: #b4432e;
+}
+/* News, not a problem: star amber, and the icon at the top of a longer note. */
+.save-notice.is-update {
+  align-items: flex-start;
+  border-left-color: #d4962c;
+}
+.save-notice.is-update > svg {
+  margin-top: 2px;
+  color: #d4962c;
 }
 .save-notice p {
   margin: 0;

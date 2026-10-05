@@ -4,7 +4,13 @@ import { lessons } from '@/data';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
-import { SAVE_KEY, parseSave, untouched, type BackupReason } from '@/features/campaign/save/persistence';
+import {
+  SAVE_KEY,
+  migrationChanges,
+  parseSave,
+  untouched,
+  type BackupReason,
+} from '@/features/campaign/save/persistence';
 import { count, type DialoguePace, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
@@ -20,8 +26,8 @@ const PACES: [DialoguePace, string][] = [
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
   const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup } = useGame();
   const cafe = useCafeName();
-  // A café waiting on the Replace slip: one chosen from a file, or the kept copy.
-  const [pending, setPending] = useState<{ save: ProgressSave; kept?: true } | null>(null),
+  // A café waiting on the Replace slip: one chosen from a file, with what bringing it up to date changes, or the kept copy.
+  const [pending, setPending] = useState<{ save: ProgressSave; changes?: string[]; kept?: true } | null>(null),
     [error, setError] = useState(''),
     [status, setStatus] = useAnnouncement();
   const input = useRef<HTMLInputElement>(null);
@@ -209,7 +215,8 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                 if (file) {
                   try {
                     if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
-                    setPending({ save: parseSave(await file.text(), lessons) });
+                    const text = await file.text();
+                    setPending({ save: parseSave(text, lessons), changes: migrationChanges(text, lessons) });
                     setError('');
                   } catch (err) {
                     setError(importProblem(file.name, err));
@@ -220,9 +227,12 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             />
             {backup && (
               <div className="settings-backup">
-                <p>
-                  Kept from before {BEFORE[backup.reason]}, {when(backup.saved_at)}: {holds(backup.save) || FRESH}.
-                </p>
+                <div>
+                  <p>
+                    Kept from before {BEFORE[backup.reason]}, {when(backup.saved_at)}: {holds(backup.save) || FRESH}.
+                  </p>
+                  <Changes changes={backup.changes} lead="What the update changed:" />
+                </div>
                 <button className="settings-chip" onClick={() => setPending({ save: backup.save, kept: true })}>
                   <RotateCcw size={15} aria-hidden="true" /> Restore kept copy
                 </button>
@@ -268,6 +278,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               ? `Restoring it will replace your current progress, routines and settings${untouched(save) ? '' : ', and keep this café as the copy instead'}.`
               : 'Importing it will replace your current progress, routines and settings.'}
           </p>
+          <Changes changes={pending.changes} lead="It was saved by an older version of the game, so:" />
           <div className="modal-buttons">
             <button className="settings-chip" data-autofocus onClick={() => setPending(null)}>
               Keep current café
@@ -299,6 +310,21 @@ const BEFORE: Record<BackupReason, string> = {
   restore: 'you last restored a copy',
   migration: 'the game updated its save',
 };
+
+/** What bringing an older café up to date changed in it, or nothing when it was already current. */
+function Changes({ changes = [], lead }: { changes?: string[]; lead: string }) {
+  if (!changes.length) return null;
+  return (
+    <div className="settings-changes">
+      <p>{lead}</p>
+      <ul>
+        {changes.map((change) => (
+          <li key={change}>{change}</li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 /** When the kept copy was taken, in the player's own date and time format. */
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });

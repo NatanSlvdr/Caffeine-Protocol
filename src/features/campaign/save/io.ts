@@ -1,6 +1,6 @@
 import type { ProgressSave } from '@/domain/types';
 import { SAVE_KEY, newSave, untouched } from './settings';
-import { parseSave } from './migration';
+import { migrationChanges, parseSave } from './migration';
 import type { LessonCatalog } from './migration';
 
 export function readSave(
@@ -36,6 +36,8 @@ export interface SaveBackup {
   /** ISO time the copy was taken. */
   saved_at: string;
   save: ProgressSave;
+  /** For a copy kept ahead of a save update, what the update changed: see migrationChanges. */
+  changes?: string[];
 }
 
 /**
@@ -69,7 +71,9 @@ export function readBackup(storage: Pick<Storage, 'getItem'>, lessons: LessonCat
     if (!REASONS.includes(reason as BackupReason) || typeof saved_at !== 'string' || typeof raw !== 'string')
       return null;
     if (Number.isNaN(Date.parse(saved_at))) return null;
-    return { reason: reason as BackupReason, saved_at, save: parseSave(raw, lessons) };
+    const backup: SaveBackup = { reason: reason as BackupReason, saved_at, save: parseSave(raw, lessons) };
+    if (reason === 'migration') backup.changes = migrationChanges(raw, lessons);
+    return backup;
   } catch {
     return null;
   }

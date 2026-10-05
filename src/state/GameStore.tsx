@@ -9,6 +9,7 @@ import {
   SAVE_KEY,
   backupSave,
   completeLevel,
+  migrationChanges,
   newSave,
   parseSave,
   readBackup,
@@ -39,6 +40,9 @@ interface GameStore {
   backup: SaveBackup | null;
   /** Put the kept copy back, keeping the café it replaces in its place. */
   restoreBackup: () => void;
+  /** What updating the stored café to this version just changed, until the player has read it; see migrationChanges. */
+  updated: string[];
+  dismissUpdated: () => void;
   route: string;
   go: (path: string) => void;
   update: Update;
@@ -70,17 +74,21 @@ function siteStorage(): Storage | undefined {
 export function GameProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => {
     const storage = siteStorage();
-    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null };
-    // A café from an older version is kept as it was before the first save rewrites it in the new one.
-    if (storedIsOlder(storage)) backupSave(storage, 'migration', lessons);
+    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null, updated: [] };
+    // A café from an older version is kept as it was before the first save rewrites it in the new one. That save
+    // makes it current, so the player hears what changed on this visit only.
+    const older = storedIsOlder(storage);
+    if (older) backupSave(storage, 'migration', lessons);
+    const updated = older ? migrationChanges(storage.getItem(SAVE_KEY) ?? '', lessons) : [];
     const read = readSave(storage, lessons);
     // Only an unreadable café is held back from saves, so a recovery copy of it can still be exported.
-    return { ...read, recovery: !!read.error, backup: readBackup(storage, lessons) };
+    return { ...read, recovery: !!read.error, backup: readBackup(storage, lessons), updated };
   });
   const [save, setSave] = useState(initial.save),
     [saveError, setSaveError] = useState(initial.error),
     [recovery, setRecovery] = useState(initial.recovery),
-    [backup, setBackup] = useState(initial.backup);
+    [backup, setBackup] = useState(initial.backup),
+    [updated, setUpdated] = useState(initial.updated);
   // Runs before the replacement is saved, so the slot gets the café still in storage: the one being replaced.
   const keep = (reason: BackupReason) => {
     const storage = siteStorage();
@@ -160,12 +168,14 @@ export function GameProvider({ children }: { children: ReactNode }) {
       },
       resetCafe: () => {
         keep('reset');
+        setUpdated([]);
         setSave((s) => newSave(s.settings));
         setRecovery(false);
         go('/');
       },
       importCafe: (next: ProgressSave) => {
         keep('import');
+        setUpdated([]);
         setSave(next);
         setRecovery(false);
         setSaveError('');
@@ -174,12 +184,15 @@ export function GameProvider({ children }: { children: ReactNode }) {
       restoreBackup: () => {
         if (!backup) return;
         keep('restore');
+        setUpdated([]);
         setSave(backup.save);
         setRecovery(false);
         setSaveError('');
       },
+      updated,
+      dismissUpdated: () => setUpdated([]),
     }),
-    [save, saveError, recovery, elsewhere, backup, route],
+    [save, saveError, recovery, elsewhere, backup, updated, route],
   );
   return <GameContext.Provider value={store}>{children}</GameContext.Provider>;
 }

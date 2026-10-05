@@ -1,8 +1,10 @@
 import type { DialoguePace, ProgressSave, RobotPrograms, Settings } from '@/domain/types';
 import { DIALOGUE_PACES, MAX_PLAYBACK_SPEED } from '@/domain/constants';
+import { count } from '@/domain/tickets';
 import { migrateQuerySource } from '@/domain/program';
 import { migrateRobotSource } from '@/domain/robotProgram';
 import { isRecord, isShiftIndex } from './validate';
+import { untouched } from './settings';
 
 /** Campaign starters injected by the caller so the save layer never imports data. */
 export interface LessonCatalog {
@@ -258,4 +260,43 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     story: { ...(v.story as Record<string, boolean>) },
     settings,
   };
+}
+
+/** The shifts, numbered as the player reads them, that no 32-shift café ever played. */
+const NEW_SHIFTS = LEGACY_COUNTERPARTS.flatMap((old, index) => (old === undefined ? [index + 1] : []));
+
+/**
+ * What bringing a café saved by an older version up to this one changed that its player would notice, one sentence
+ * each. Empty for a current save, an unreadable one, and a café nobody played in.
+ */
+export function migrationChanges(raw: string, lessons: LessonCatalog): string[] {
+  let stored: unknown, save: ProgressSave;
+  try {
+    stored = JSON.parse(raw);
+    save = parseSave(raw, lessons);
+  } catch {
+    return [];
+  }
+  if (!isRecord(stored) || stored.version === 4 || untouched(save)) return [];
+  const semantic = stored.version === 1 || stored.version === 2;
+  // Act I's stars are accounted for by Query's change, so only the rest are counted against what carried over.
+  const served = Object.keys(stored.stars as Record<string, number>).filter(
+      (shift) => !semantic || Number(shift) >= 14,
+    ).length,
+    kept = Object.keys(save.stars).length;
+  const changes = [];
+  if (semantic)
+    changes.push(
+      'Query reads orders as token puzzles now, so its old routines couldn’t come along: the Prologue and Act I shifts you’d reached stay open, but start again from Query’s opening routines, with their stars and scenes to earn again.',
+    );
+  if (served) {
+    const yours = `your ${semantic ? 'other ' : ''}${count(served, 'served shift')}`;
+    const carried = kept === served ? (served === 1 ? yours : `all ${yours}`) : `${kept || 'none'} of ${yours}`;
+    const what = kept ? ` with ${kept === 1 ? 'its' : 'their'} stars and routines` : '';
+    changes.push(`The campaign is ${count(lessons.length, 'shift')} long now, not 32: ${carried} carried over${what}.`);
+  }
+  changes.push(
+    `Shifts ${NEW_SHIFTS[0]}–${NEW_SHIFTS.at(-1)} are new${stored.complete ? ', so the café isn’t finished until they’re served too' : ''}.`,
+  );
+  return changes;
 }
