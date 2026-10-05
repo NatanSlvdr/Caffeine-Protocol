@@ -1,5 +1,5 @@
 import { DoubleSide } from 'three';
-import { BOUNDS, ENTRANCE } from '@/domain';
+import { BOUNDS, ENTRANCE, type Restoration, type SillGrowth } from '@/domain';
 import { useCanvasTexture } from '@/hooks/useCanvasTexture';
 import { Box, Cylinder, CAFE_COLORS } from './primitives';
 import {
@@ -10,6 +10,7 @@ import {
   WAINSCOT_HEIGHT,
   type FloorPatch,
 } from './dressing';
+import { StoryDressing } from './StoryDressing';
 import { tileTexture } from './tileTexture';
 
 /** The back wall runs the room's full width, from the street wall to the far side. */
@@ -22,8 +23,19 @@ const STREET_WALL_MID = (STREET_WALL.back + STREET_WALL.front) / 2;
 const STREET_WALL_LENGTH = STREET_WALL.front - STREET_WALL.back;
 const WALL_TOP = 2.65;
 
-/** Panelling, trim and the few things hung on the walls, composed around the cup mural. */
-export function WallDressing() {
+/**
+ * Panelling, trim and the few things hung on the walls, composed around the cup mural, with what the story has put
+ * back by the shift shown: the herbs on the sills, and the photos, aprons and lights on the back wall.
+ */
+export function WallDressing({
+  restored,
+  growth,
+  evening,
+}: {
+  restored: ReadonlySet<Restoration>;
+  growth: SillGrowth;
+  evening: boolean;
+}) {
   return (
     <group>
       {/* Wainscot with a chair rail and skirting on the back wall… */}
@@ -69,8 +81,9 @@ export function WallDressing() {
       <CupShelf at={[1.6, 1.55, BACK_WALL_FACE]} />
       <MenuBoard at={[5.7, 1.62, BACK_WALL_FACE]} />
       {STREET_WINDOWS.map((z, i) => (
-        <SillPot key={z} at={[STREET_WALL_FACE + 0.22, 0.925, z + (i % 2 ? -0.62 : 0.62)]} />
+        <SillPot key={z} at={[STREET_WALL_FACE + 0.22, 0.925, z + (i % 2 ? -0.62 : 0.62)]} growth={growth} />
       ))}
+      <StoryDressing restored={restored} evening={evening} />
     </group>
   );
 }
@@ -172,23 +185,44 @@ function MenuBoard({ at }: { at: [number, number, number] }) {
   );
 }
 
-/** A terracotta pot of herbs on a window sill. */
-function SillPot({ at }: { at: [number, number, number] }) {
+const LEAVES = [0, 1, 2, 3, 4];
+const SHOOTS = [0, 2, 4];
+const FLOWERS = ['#f6efe3', '#e9b0a0', '#f6efe3'];
+
+/** A terracotta pot of herbs on a window sill: dry stalks, new shoots, a full pot, or one in flower. */
+function SillPot({ at, growth }: { at: [number, number, number]; growth: SillGrowth }) {
   return (
     <group position={at}>
       <Cylinder at={[0, 0.07, 0]} size={[0.085, 0.065, 0.14]} color={CAFE_COLORS.terracotta} />
-      {[0, 1, 2, 3, 4].map((i) => (
-        <mesh
-          key={i}
-          position={[Math.sin(i * 2.5) * 0.05, 0.17 + i * 0.02, Math.cos(i * 2.5) * 0.05]}
-          rotation={[i * 0.4, i * 2.5, 0.5]}
-          scale={[0.05, 0.1, 0.03]}
-          castShadow
-        >
-          <icosahedronGeometry args={[1, 0]} />
-          <meshStandardMaterial color={i % 2 ? CAFE_COLORS.leaf : CAFE_COLORS.leafLight} roughness={0.8} />
-        </mesh>
-      ))}
+      {growth === 0
+        ? SHOOTS.map((i) => (
+            <group
+              key={i}
+              position={[Math.sin(i * 2.5) * 0.03, 0.2, Math.cos(i * 2.5) * 0.03]}
+              rotation={[i * 0.2, i, 0.35]}
+            >
+              <Box size={[0.012, 0.14, 0.012]} color="#8b6b47" />
+            </group>
+          ))
+        : (growth === 1 ? SHOOTS : LEAVES).map((i) => (
+            <mesh
+              key={i}
+              position={[Math.sin(i * 2.5) * 0.05, (growth === 1 ? 0.15 : 0.17) + i * 0.02, Math.cos(i * 2.5) * 0.05]}
+              rotation={[i * 0.4, i * 2.5, 0.5]}
+              scale={growth === 1 ? [0.032, 0.065, 0.02] : [0.05, 0.1, 0.03]}
+              castShadow
+            >
+              <icosahedronGeometry args={[1, 0]} />
+              <meshStandardMaterial color={i % 2 ? CAFE_COLORS.leaf : CAFE_COLORS.leafLight} roughness={0.8} />
+            </mesh>
+          ))}
+      {growth === 3 &&
+        FLOWERS.map((color, i) => (
+          <mesh key={i} position={[Math.sin(i * 2.1 + 1) * 0.045, 0.3 + (i % 2) * 0.03, Math.cos(i * 2.1 + 1) * 0.045]}>
+            <icosahedronGeometry args={[0.022, 0]} />
+            <meshStandardMaterial color={color} roughness={0.7} />
+          </mesh>
+        ))}
     </group>
   );
 }

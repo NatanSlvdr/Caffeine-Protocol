@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import { Cafe } from '@/components';
 import { STREET_APPROACH_SECONDS } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { HOME_PREVIEW_LEVEL, homePreviewResult } from './homePreview';
+import { useGame } from '@/state/GameStore';
+import { HOME_PREVIEW_LEVEL, homePreviewResult, restoredShift } from './homePreview';
 
-/** Loop a completed service in the landing preview, respecting reduced motion. */
+/** Loop a completed service in the landing preview, respecting reduced motion, in the café as far as it's restored. */
 export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixelArt: boolean }) {
+  const { save } = useGame();
   const [result] = useState(homePreviewResult);
   const [time, setTime] = useState(-STREET_APPROACH_SECONDS);
   const reduceMotion = useReducedMotion(reduced);
@@ -36,6 +38,7 @@ export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixel
   return (
     <Cafe
       level={HOME_PREVIEW_LEVEL}
+      restored={restoredShift(save)}
       result={result}
       time={reduceMotion && stillTime ? (stillTime.start + stillTime.end) / 2 : time}
       reduced={reduceMotion}

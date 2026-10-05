@@ -1,4 +1,4 @@
-import { BOUNDS, QUERY_TILES, STATIONS, TABLE_LAYOUT, type Point } from '@/domain';
+import { BOUNDS, ENTRANCE, QUERY_TILES, STATIONS, TABLE_LAYOUT, type Point } from '@/domain';
 
 /** A floor area in tile edges: x from `left` to `right`, z from `back` to `front`. */
 export interface FloorPatch {
@@ -30,6 +30,10 @@ export const BACK_WALL_FACE = BOUNDS.minZ - 0.5;
 export const STREET_WALL_FACE = BOUNDS.minX - 0.5;
 /** Window centres along the street wall, matching the frames drawn by the room. */
 export const STREET_WINDOWS = [-4, 0, 2.3] as const;
+/** The sidewalk board's centre, under the window beside the door, between the wall and the guests' way in. */
+export const OPEN_BOARD: Point = [STREET_WALL_FACE - 0.54, ENTRANCE[1] - 2.05];
+/** The board's footprint from its centre: its width along the wall's normal, and its legs' splay along the street. */
+export const OPEN_BOARD_REACH = { x: 0.23, z: 0.16 } as const;
 /** Wainscot height: just under the window sills, so the panelling runs unbroken beneath them. */
 export const WAINSCOT_HEIGHT = 0.78;
 

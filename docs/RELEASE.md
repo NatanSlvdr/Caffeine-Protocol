@@ -10,7 +10,7 @@ The first release: the whole campaign, start to finish.
 - **Two ways to write a routine:** blocks you drag or move from the keyboard, and a text editor that round-trips with them.
 - **Seeing what happened:** a replay timeline with the crew's events, pause marks on blocks, a robot inspector, the receipt's wait breakdown, and two runs of the same rounds side by side.
 - **Help without spoilers first:** each shift's lesson, then hints one at a time, then a worked example; the crew react to a failed run and point at the block where the service stopped.
-- **The café remembers:** stars and routines per shift, the regulars' guestbook, and a shelf of keepsakes for finishing each act.
+- **The café remembers:** stars and routines per shift, the regulars' guestbook, a shelf of keepsakes for finishing each act, and a café that is put back together as the story goes, from the sidewalk board to Lou's postcard on the wall.
 - **Offline:** the build caches itself on its first load and offers updates instead of swapping them in mid-shift.
 - **Accessibility:** reduced motion, dialogue text speed, shorter repeats, a screen-reader service summary, keyboard play throughout, and an editor that keeps working without WebGL.
 

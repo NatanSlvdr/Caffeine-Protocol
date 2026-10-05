@@ -93,6 +93,7 @@ export function World({
   cameraAngleDegrees,
   follow,
   preview,
+  restored,
 }: {
   evening: boolean;
   result?: RunResult;
@@ -111,6 +112,8 @@ export function World({
   follow?: { seed: string; guest: string };
   /** The block picked in the routine, drawn where it goes. */
   preview?: BlockPreview;
+  /** The shift whose café is dressed: what the story has put back by then. */
+  restored: number;
 }) {
   const state = result ? sampleReplay(result, time) : undefined;
   const followed =
@@ -141,7 +144,7 @@ export function World({
         cameraAngleDegrees={cameraAngleDegrees}
       />
       <SceneLights evening={evening} />
-      <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} />
+      <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} restored={restored} />
       {preview && <BlockPath preview={preview} />}
       {Object.entries(actors).map(
         ([id, actor]) =>

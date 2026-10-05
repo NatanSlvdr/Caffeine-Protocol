@@ -21,6 +21,7 @@ export function Cafe({
   cameraAngleDegrees = 0,
   follow,
   preview,
+  restored = level,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -40,6 +41,11 @@ export function Cafe({
   follow?: { seed: string; guest: string };
   /** The block picked in the routine, drawn where it goes. */
   preview?: BlockPreview;
+  /**
+   * The shift whose café is dressed, with what the story has put back by then: the sidewalk board, the photos, the
+   * aprons on their hooks, the lights and the herbs. The shift played by default; the shell's views show the furthest.
+   */
+  restored?: number;
 }) {
   return (
     <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
@@ -60,6 +66,7 @@ export function Cafe({
           cameraAngleDegrees={cameraAngleDegrees}
           follow={follow}
           preview={preview}
+          restored={restored}
         />
         {pixelArt && <PixelArtEffect />}
       </SceneCanvas>

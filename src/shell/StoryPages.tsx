@@ -10,8 +10,9 @@ import { useGame, useProgress } from '@/state/GameStore';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ShellBar } from './ShellBar';
 import { acts } from './rail/acts';
+import { restoredShift } from './homePreview';
 
-/** The café in the evening light, running quietly behind the page. */
+/** The café in the evening light, as far as it's restored, running quietly behind the page. */
 function StoryScene() {
   const { save } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
@@ -19,6 +20,7 @@ function StoryScene() {
     <div className="story-scene" aria-hidden="true">
       <Cafe
         evening
+        restored={restoredShift(save)}
         reduced={reduced}
         pixelArt={save.settings.pixel_art}
         showStatusBubbles={false}

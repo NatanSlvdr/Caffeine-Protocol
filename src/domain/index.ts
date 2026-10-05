@@ -27,6 +27,7 @@ export * from './robots';
 export * from './runRecord';
 export * from './defaultPrograms';
 export * from './scope';
+export * from './restoration';
 export * from './scoring';
 export * from './service';
 export * from './simulation';

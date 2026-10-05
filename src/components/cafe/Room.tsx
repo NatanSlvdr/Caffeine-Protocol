@@ -6,6 +6,8 @@ import {
   FURNITURE,
   ROOM,
   STARTS,
+  restoredBy,
+  sillGrowth,
   STATIONS,
   TABLE_LAYOUT,
   tableSeat,
@@ -20,16 +22,28 @@ import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } f
 const COUNTER_OUTLINES = counterOutlines(FURNITURE.filter((f) => f.kind === 'counter' && f.id !== 'storage'));
 
 /** Floor zones, furniture, and station positions share the simulation's tile model. */
-export function Room({ evening, gateOpen, showLabels }: { evening: boolean; gateOpen: boolean; showLabels: boolean }) {
+export function Room({
+  evening,
+  gateOpen,
+  showLabels,
+  restored,
+}: {
+  evening: boolean;
+  gateOpen: boolean;
+  showLabels: boolean;
+  /** The shift whose café is shown: what the story has put back by then. */
+  restored: number;
+}) {
+  const done = restoredBy(restored);
   return (
     <group>
       <Box at={[-0.55, -0.42, -0.55]} size={[16.1, 0.7, ROOM[1] + 0.1]} color={CAFE_COLORS.walnut} />
       <CafeFloor showGrid={showLabels} />
       <Box at={[-0.6, 1.3, -6.6]} size={[16.2, 2.7, 0.2]} color={CAFE_COLORS.wall} />
       <CafeMural />
-      <WallDressing />
+      <WallDressing restored={done} growth={sillGrowth(restored)} evening={evening} />
       <KitchenFloor />
-      <Facade />
+      <Facade open={done.has('open-sign')} />
       <Box at={[-8.6, 1.3, -1.6]} size={[0.2, 2.7, 10.2]} color={CAFE_COLORS.wall} />
       <Box at={[-8.6, 2.48, 4.5]} size={[0.24, 0.34, 2]} color={CAFE_COLORS.walnut} />
       <Box at={[-8.6, 1.14, 3.45]} size={[0.25, 2.3, 0.1]} color={CAFE_COLORS.walnut} />

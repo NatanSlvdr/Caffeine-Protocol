@@ -1,7 +1,7 @@
-import { levels } from '@/data';
+import { CAMPAIGN_LENGTH, levels } from '@/data';
 import { referencePrograms } from '@/data/extension';
 import { UNLOCKS, compileProgram, runLevel } from '@/domain';
-import type { RunResult } from '@/domain';
+import type { ProgressSave, RunResult } from '@/domain';
 
 export const HOME_PREVIEW_LEVEL = UNLOCKS.floor;
 let cachedPreview: RunResult | undefined;
@@ -17,4 +17,12 @@ export function homePreviewResult(): RunResult {
     programs,
   );
   return cachedPreview;
+}
+
+/**
+ * The shift whose café the shell's backdrops are dressed as: the furthest one opened, so what the story has put back
+ * shows there too, and the whole of it once the campaign is served and Closing Time has played.
+ */
+export function restoredShift(save: Pick<ProgressSave, 'unlocked' | 'complete'>): number {
+  return save.complete ? CAMPAIGN_LENGTH + 1 : Math.min(save.unlocked, CAMPAIGN_LENGTH - 1) + 1;
 }
