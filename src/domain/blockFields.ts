@@ -86,7 +86,7 @@ export function spokenBlock(command: string): string {
       : /^(TAKE|DEPOSIT|WRITE|USE) /.test(command)
         ? command
         : `${verb} ${value}`;
-  return variableLabels(text.toLowerCase().replace('heard orders', 'order').replace('customer speech', 'orders'))
+  return variableLabels(text.toLowerCase().replace('heard orders', 'order').replaceAll('customer speech', 'orders'))
     .toLowerCase()
     .trim();
 }

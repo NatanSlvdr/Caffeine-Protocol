@@ -68,6 +68,12 @@ export interface TraceStep {
   line: number;
   command: string;
   function_depth: number;
+  /** On an IF: which way it went, and the tokens it tested, by source, as Query heard them. */
+  decision?: ConditionDecision;
+}
+export interface ConditionDecision {
+  holds: boolean;
+  heard: Record<string, string[]>;
 }
 export interface OrderTicket {
   quantity?: number;

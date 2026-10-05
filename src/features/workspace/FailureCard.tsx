@@ -42,6 +42,9 @@ const ROUTINE_CODES: ReadonlySet<FailureCode> = new Set([
   'recursive-call',
 ]);
 
+/** Enough IFs to see the choice that led to the slip, without the card outgrowing the routine beside it. */
+const DECISIONS_SHOWN = 4;
+
 export interface FailureCardProps {
   evidence: RunEvidence;
   /** The routines changed since this run: the card is a record now, not a description of the code. */
@@ -63,7 +66,8 @@ export interface FailureCardProps {
 export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, onCompareServed }: FailureCardProps) {
   const [open, setOpen] = useState(true);
   const heading = useId(),
-    body = useId();
+    body = useId(),
+    decisionsHeading = useId();
   const { failure, round, guest } = evidence;
   const robot = ROBOT_DISPLAY_NAMES[failure.role ?? 'query'],
     routine = ROUTINE_CODES.has(failure.code),
@@ -77,6 +81,9 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, o
   // One round of several can be played on its own to check a fix; a routine that won't run has no round to play.
   const practisable = rounds > 1 && !routine;
   const showable = !stale && failure.error_line >= 0;
+  // Query's choices for the guest, when Query is the one who stopped: the latest few, which led to the slip.
+  const decisions = routine || (failure.role ?? 'query') !== 'query' ? [] : evidence.decisions.slice(-DECISIONS_SHOWN);
+  const earlier = evidence.decisions.length - decisions.length;
   return (
     <section className={'failure-card' + (stale ? ' stale' : '')} aria-labelledby={heading}>
       <header>
@@ -126,6 +133,31 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, o
               })}
             </tbody>
           </table>
+        )}
+        {decisions.length > 0 && (
+          <section className="failure-decisions" aria-labelledby={decisionsHeading}>
+            <h3 id={decisionsHeading}>
+              What {ROBOT_DISPLAY_NAMES.query} decided
+              {earlier > 0 && <span> · last {decisions.length}</span>}
+            </h3>
+            <ol>
+              {decisions.map((decision, i) => (
+                <li key={i}>
+                  <span className="failure-decision-block">Block {decision.line + 1}</span>
+                  <span className="failure-decision-if">
+                    {decision.condition}?{' '}
+                    <strong className={decision.holds ? 'yes' : 'no'}>{decision.holds ? 'Yes' : 'No'}</strong>
+                  </span>
+                  {decision.parts.length > 0 && (
+                    <span className="failure-decision-parts">
+                      {decision.parts.map((part) => `${part.text}: ${part.holds ? 'yes' : 'no'}`).join(' · ')}
+                    </span>
+                  )}
+                  <span className="failure-decision-heard">Heard in {decision.heard.join('; ')}</span>
+                </li>
+              ))}
+            </ol>
+          </section>
         )}
         <p className="failure-card-next">
           <strong>Try</strong> {failureHint(failure.code)}

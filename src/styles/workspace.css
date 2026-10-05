@@ -693,6 +693,57 @@ html[data-motion='reduced'] .failure-card-chevron {
 .failure-card.stale .failure-compare-got {
   color: inherit;
 }
+.failure-decisions h3 {
+  margin: 0 0 4px;
+  color: #d2ae7f;
+  font:
+    750 9px/1.3 ui-monospace,
+    monospace;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.failure-decisions h3 span {
+  color: var(--draft-muted);
+}
+.failure-decisions ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.failure-decisions li {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: 10px;
+  padding: 5px 0;
+  border-top: 1px solid var(--draft-line);
+}
+.failure-decision-block {
+  grid-row: span 3;
+  color: var(--draft-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.failure-decision-if {
+  color: var(--draft-text);
+}
+.failure-decision-if::first-letter {
+  text-transform: uppercase;
+}
+.failure-decision-if strong {
+  font-weight: 700;
+}
+.failure-decision-if .yes {
+  color: #8fe0b4;
+}
+.failure-decision-if .no {
+  color: #ffb4a3;
+}
+.failure-decision-parts,
+.failure-decision-heard {
+  color: var(--draft-muted);
+  font-size: 11px;
+}
 .failure-card-next {
   color: var(--draft-muted);
 }

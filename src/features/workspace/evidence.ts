@@ -1,5 +1,5 @@
-import { count } from '@/domain';
-import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord } from '@/domain';
+import { count, evaluateQueryComparison, parseConditionExpression, spokenBlock } from '@/domain';
+import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord, TraceStep } from '@/domain';
 
 /**
  * A failed run, kept beside the code after the café moves on: what stopped, where, and the routines it stopped on.
@@ -15,6 +15,46 @@ export interface RunEvidence {
   round: number;
   /** Which guest of that round, counting from 1; nothing for the closing call, which belongs to no guest. */
   guest?: number;
+  /** The IFs Query tested for that guest, in order, each with why it went the way it did. */
+  decisions: Decision[];
+}
+
+/** One IF Query tested: which way it went, and why, from what Query heard rather than what the guest meant. */
+export interface Decision {
+  line: number;
+  /** The IF as the block reads, like "if tea in orders". */
+  condition: string;
+  holds: boolean;
+  /** Each part of a condition joined by And or Or, and whether it held; empty when there's only one part. */
+  parts: { text: string; holds: boolean }[];
+  /** What Query heard in each place the IF looked, like "orders: coffee, sugar". */
+  heard: string[];
+}
+
+const TOKEN_WORDS: Record<string, string> = { togo: 'to go' };
+const word = (token: string) => TOKEN_WORDS[token] ?? token;
+const placeWord = (source: string) => (source === 'CUSTOMER SPEECH' ? 'orders' : source);
+
+/** Why each IF in a stretch of Query's trace went the way it did. */
+export function decisionsOf(trace: readonly TraceStep[]): Decision[] {
+  return trace.flatMap(({ line, command, decision }) => {
+    const expression = decision && parseConditionExpression(command);
+    if (!decision || !expression) return [];
+    const bindings = Object.fromEntries(Object.entries(decision.heard).map(([source, tokens]) => [source, { tokens }]));
+    const parts =
+      expression.conditions.length < 2
+        ? []
+        : expression.conditions.map((condition) => ({
+            text: `${word(condition.left)} ${condition.operator === 'IN' ? 'in' : 'not in'} ${placeWord(condition.right)}`,
+            holds: evaluateQueryComparison(condition, bindings),
+          }));
+    const heard = Object.entries(decision.heard).map(
+      ([source, tokens]) => `${placeWord(source)}: ${tokens.length ? tokens.map(word).join(', ') : 'nothing'}`,
+    );
+    return [
+      { line, condition: spokenBlock(command).replace(/\btogo\b/g, word('togo')), holds: decision.holds, parts, heard },
+    ];
+  });
 }
 
 /** The evidence a failed run leaves; nothing for a run that passed. */
@@ -23,8 +63,12 @@ export function evidenceOf(level: LevelDefinition, record: RunRecord): RunEviden
   if (record.result.passed || !failure) return null;
   const seed = level.seeds.findIndex((s) => s.id === failure.seed_id),
     guest = seed < 0 ? -1 : level.seeds[seed].customers.findIndex((c) => c.customer_id === failure.customer_id);
+  const event = record.result.events.findLast(
+    (e) => e.seed_id === failure.seed_id && e.customer.customer_id === failure.customer_id,
+  );
   return {
     failure,
+    decisions: decisionsOf(event?.trace ?? []),
     programs: record.programs,
     practice: record.mode === 'practice',
     round: Math.max(seed, 0) + 1,

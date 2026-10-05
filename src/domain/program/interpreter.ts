@@ -120,6 +120,12 @@ export function* streamCustomerEvent(
       if (!heard) return fail('no-job', 'Wait for Orders first: no customer has spoken yet.');
       const expression = parseConditionExpression(c);
       const yes = !!expression && evaluateConditionExpression(expression, bindings);
+      // What it tested, from what Query heard: never the order the guest meant.
+      const tested = new Set(expression?.conditions.map((condition) => condition.right));
+      out.trace.at(-1)!.decision = {
+        holds: yes,
+        heard: Object.fromEntries([...tested].map((source) => [source, [...(bindings[source]?.tokens ?? [])]])),
+      };
       if (!yes) next = (p.alternatives[pc] ?? p.ends[pc]) + 1;
     } else if (c.startsWith('FOR ')) {
       const loop = parseFor(c);
