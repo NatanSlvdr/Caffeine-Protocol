@@ -1,7 +1,7 @@
 /* Dialogue: visual-novel scenes over the café, and short asides when a service ends. */
 .dialogue {
   --dialogue-ink: #392b24;
-  --dialogue-muted: #817062;
+  --dialogue-muted: #766659;
   --dialogue-paper: #fffcf4;
   --dialogue-coffee: #71452f;
   --dialogue-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;

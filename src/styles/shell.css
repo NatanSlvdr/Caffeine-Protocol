@@ -25,7 +25,7 @@
 }
 .front-page {
   --front-ink: #392b24;
-  --front-muted: #817062;
+  --front-muted: #766659;
   --front-paper: #fffcf4;
   --front-clay: #b96847;
   --front-coffee: #71452f;
@@ -274,7 +274,7 @@ html[data-motion='reduced'] .front-page *::after {
 }
 .campaign-page {
   --pass-ink: #392b24;
-  --pass-muted: #817062;
+  --pass-muted: #766659;
   --pass-paper: #fffcf4;
   --pass-clay: #b96847;
   --pass-coffee: #71452f;
@@ -362,7 +362,7 @@ html[data-motion='reduced'] .front-page *::after {
   color: #d4962c;
 }
 .shell-stars small {
-  color: #817062;
+  color: #766659;
   font-weight: 600;
 }
 .shell-back:hover,
@@ -1093,7 +1093,7 @@ html[data-motion='reduced'] .front-page *::after {
 /* Settings window: the house settings printed on a long slip of order paper, open over any screen. */
 .modal.settings-window {
   --slip-ink: #392b24;
-  --slip-muted: #817062;
+  --slip-muted: #766659;
   --slip-paper: #fffcf4;
   --slip-clay: #b96847;
   --slip-coffee: #71452f;
@@ -1808,7 +1808,7 @@ html[data-motion='reduced'] .modal.settings-window {
 }
 .story-page {
   --story-ink: #392b24;
-  --story-muted: #817062;
+  --story-muted: #766659;
   --story-paper: #fffcf4;
   --story-clay: #b96847;
   --story-coffee: #71452f;

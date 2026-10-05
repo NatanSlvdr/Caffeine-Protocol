@@ -2,7 +2,8 @@
 :root {
   --pine: #71452f;
   --ink: #392b24;
-  --muted: #817062;
+  /* Quiet text, still 4.5:1 on the cream page and the cards. */
+  --muted: #766659;
   --line: #ddd2c1;
   --cream: #faf5e9;
   --sage: #dce4ce;
@@ -362,8 +363,9 @@ input[type='checkbox']:checked {
   font-size: 12px;
 }
 .danger {
-  background: var(--red);
-  border-color: var(--red);
+  /* A shade under the clay accent, so white letters on it read at 4.5:1. */
+  background: #a9502f;
+  border-color: #a9502f;
   color: white;
 }
 .outline-danger {
@@ -2001,7 +2003,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   white-space: nowrap;
 }
 .order-mark.rush {
-  background: var(--orange);
+  background: #a9502f;
   color: var(--cream);
 }
 
@@ -2354,7 +2356,7 @@ html[data-motion='reduced'] .drop-projection {
   --bubble-paper: #fffaf0;
   --bubble-well: #f5ecdc;
   --bubble-well-line: #e8d9bf;
-  --bubble-quiet: #8a7564;
+  --bubble-quiet: #7a6657;
   --bubble-font: 'Avenir Next', 'Nunito', ui-rounded, sans-serif;
   position: relative;
   transform: translateY(-50%);
