@@ -331,6 +331,96 @@ describe('live workspace lifecycle', () => {
     expect(within(inspector()!).getByText(brew ? 'Brew takes a ticket' : 'Porter takes a drink')).toBeTruthy();
     expect(screen.getByRole('tab', { selected: true }).textContent).toMatch(brew ? /Brew/ : /Porter/);
   });
+  it('looks back through a paused service, from order to order, and comes back to now', () => {
+    open();
+    const timeline = () => screen.queryByRole('group', { name: 'Look back through the run' });
+    // Nothing to look back on while the service plays.
+    expect(timeline()).toBeNull();
+    playUntil(() => false, 20);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    const bar = timeline()!;
+    const when = () => bar.querySelector('.replay-when')!.textContent;
+    const now = when();
+    // Query works alone here: no handoffs to jump between, and nobody else's blocks.
+    expect(
+      within(bar)
+        .getAllByRole('button', { pressed: false })
+        .map((b) => b.textContent),
+    ).toEqual(['Orders', 'Query’s blocks']);
+    expect(within(bar).getByRole('button', { name: 'Next key moment' }).hasAttribute('disabled')).toBe(true);
+    fireEvent.click(within(bar).getByRole('button', { name: 'Orders' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous order' }));
+    expect(when()).not.toBe(now);
+    expect(within(bar).getByText(/^Round 1 · \d+\.\d s\. Query takes an order: “.+”\.$/)).toBeTruthy();
+    // The robot as it was then, and the block it was starting.
+    expect(screen.getByRole('complementary', { name: 'Query, earlier' })).toBeTruthy();
+    expect(document.querySelector('.block.active')?.getAttribute('data-line')).toBe('1');
+    const scrubber = within(bar).getByRole('slider', { name: 'Service time' });
+    expect(scrubber.getAttribute('aria-valuetext')).toMatch(/, earlier$/);
+    // Escape on the scrubber comes back to now, and stays on the shift.
+    fireEvent.keyDown(scrubber, { key: 'Escape' });
+    expect(when()).toBe(now);
+    expect(screen.getByRole('complementary', { name: 'Query, paused' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Stop & edit/ })).toBeTruthy();
+    fireEvent.keyDown(scrubber, { key: 'Home' });
+    expect(when()).toBe('Round 1 · 0.0 s');
+    fireEvent.click(within(bar).getByRole('button', { name: 'Back to now' }));
+    expect(when()).toBe(now);
+    // Looking back changes nothing: playing on goes on from where the service paused.
+    fireEvent.keyDown(scrubber, { key: 'Home' });
+    fireEvent.click(screen.getByRole('button', { name: 'Resume playback' }));
+    expect(timeline()).toBeNull();
+  });
+  it('looks back through a run that slipped, once the crew has had its say', () => {
+    open('LISTEN\nITEM coffee');
+    playUntil(() => screen.queryByRole('button', { name: 'Skip' }));
+    expect(screen.queryByRole('group', { name: 'Look back through the run' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    const bar = screen.getByRole('group', { name: 'Look back through the run' });
+    const marked = (name: string) =>
+      [...document.querySelectorAll('[data-line]')].find((e) => e.classList.contains(name))?.getAttribute('data-line');
+    const failure = () => marked('failure');
+    expect(failure()).toBe('1');
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous key moment' }));
+    expect(within(bar).getByText('Round 1 · 0.0 s. Query takes an order: “coffee”.')).toBeTruthy();
+    // Back at the order, the block running then is marked, not the one that slipped.
+    expect(failure()).toBeUndefined();
+    expect(marked('active')).toBe('0');
+    expect(screen.getByRole('complementary', { name: 'Query, earlier' })).toBeTruthy();
+    // On to the slip is back to now, where the run stopped.
+    fireEvent.click(within(bar).getByRole('button', { name: 'Next key moment' }));
+    expect(
+      within(bar).getByText(/^Round 1 · 3\.0 s\. Query stopped: Take the order paper before writing its item\.$/),
+    ).toBeTruthy();
+    expect(failure()).toBe('1');
+    expect(marked('active')).toBeUndefined();
+    expect(screen.queryByRole('complementary', { name: /^Query, / })).toBeNull();
+    // An edit puts the run, and looking back through it, away.
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous key moment' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('button', { name: /Restore Query’s routine/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
+    expect(screen.queryByRole('group', { name: 'Look back through the run' })).toBeNull();
+    expect(screen.queryByRole('complementary', { name: /^Query, / })).toBeNull();
+  });
+  it('jumps between a crew’s handoffs, and one robot’s blocks', () => {
+    window.location.hash = '/shift/14';
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13, robotDrafts: { 13: referencePrograms(14) } });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    playUntil(() => false, 40);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    const bar = screen.getByRole('group', { name: 'Look back through the run' });
+    fireEvent.click(within(bar).getByRole('button', { name: 'Handoffs' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous handoff' }));
+    expect(within(bar).getByText(/^Round 1 · \d+\.\d s\. (Brew takes a ticket|Porter takes a drink)/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: /Brew/ }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Brew’s blocks' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Brew’s previous block' }));
+    expect(within(bar).getByText(/^Round 1 · \d+\.\d s\. Brew: .+, block \d+\.$/)).toBeTruthy();
+    expect(screen.getByRole('complementary', { name: 'Brew, earlier' })).toBeTruthy();
+  });
   it('counts the rounds of guests a shift sends in', () => {
     open();
     const toolbar = screen.getByRole('group', { name: 'Simulation controls' });

@@ -19,6 +19,8 @@ import { firstRoutineStep } from './firstRoutine';
 import { HandoverCard } from './HandoverCard';
 import { RobotInspector } from './RobotInspector';
 import { startedWords } from './inspector';
+import { ReplayTimeline } from './ReplayTimeline';
+import { whenWords } from './timeline';
 import { markCount, pauseReason } from './breakpoints';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
@@ -121,6 +123,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     speed,
     setSpeed,
     time,
+    head,
+    viewing,
+    moments,
     activeLine,
     failureLine,
     evidence,
@@ -259,9 +264,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     return () => window.removeEventListener('keydown', keys);
   });
   // When the service is paused: the round, if the shift has more than one, and the time into it.
-  const pausedAt =
-    (level.seeds.length > 1 ? `Round ${round} · ` : '') +
-    (roundTime < 0 ? 'Before opening' : `${roundTime.toFixed(1)} s`);
+  const pausedAt = whenWords(level.seeds.length, round, roundTime);
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
   const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
@@ -324,6 +327,22 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 instant={reduced}
                 doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
                 onDone={closeReaction}
+              />
+            )}
+            {((running && paused) || (failed && !reaction)) && !observation && result && head > 0 && (
+              <ReplayTimeline
+                head={head}
+                time={time}
+                viewing={viewing}
+                moments={moments}
+                roundStarts={(result.execution ?? []).map((r) => r.start).filter((start) => start > 0 && start < head)}
+                rounds={level.seeds.length}
+                when={pausedAt}
+                crew={crew}
+                role={role}
+                programs={programs}
+                textMode={textMode}
+                onView={live.view}
               />
             )}
           </div>
@@ -412,7 +431,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               state={inspected}
               reads={role === 'query' ? 'guest' : 'ticket'}
               when={pausedAt}
-              reason={stepped?.by && pauseReason(stepped.by)}
+              earlier={viewing}
+              reason={viewing ? undefined : stepped?.by && pauseReason(stepped.by)}
             />
           )}
           {firstRoutine && save.settings.first_routine_tips && (

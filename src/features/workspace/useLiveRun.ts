@@ -1,5 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
-import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay, splitByUnlock } from '@/domain';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  STREET_APPROACH_SECONDS,
+  createLiveRun,
+  keepRecord,
+  recordRun,
+  runMoments,
+  sampleReplay,
+  splitByUnlock,
+} from '@/domain';
 import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type {
@@ -49,7 +57,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [running, setRunning] = useState(false),
     [paused, setPaused] = useState(false),
     [speed, setSpeed] = useState(save.settings.speed),
-    [replayTime, setReplayTime] = useState(0);
+    [replayTime, setReplayTime] = useState(0),
+    // An earlier moment of the run the player went back to, while paused or after a slip; nothing for now.
+    [viewTime, setViewTime] = useState<number | null>(null);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
   // What started at the moment the last step, or a pause the service took itself, stopped on, and why it paused
   // itself; playing on, or another run, puts it away.
@@ -73,7 +83,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const stale = !!evidence && isStale(evidence, programs);
   // The shift's stars before this run, so the receipt can tell a new best from a replay.
   const [bestBefore, setBestBefore] = useState<number | undefined>(save.stars[index]);
-  const time = replayTime;
+  const time = viewTime ?? replayTime;
+  const viewing = viewTime !== null;
   const sampled = result ? sampleReplay(result, time) : undefined;
   const displayedTrace = sampled?.seed?.events.findLast(
     (e) => e.role === role && e.start <= sampled.local && (e.end > sampled.local || e.start === e.end),
@@ -82,11 +93,13 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const round = sampled?.seed
     ? level.seeds.findIndex((seed) => seed.id === sampled.seed!.seed_id) + 1
     : (practising ?? 0) + 1;
-  // Who is busy and who is waiting, while the run plays: the robot tabs show it.
-  const activity = running && sampled ? crewActivity(sampled) : undefined;
-  // The open robot, while the service is paused on it.
+  // A failed run has already stopped, but its last frame stays up until the code changes.
+  const failed = showFailure && !!result && !result.passed;
+  // Who is busy and who is waiting, while the run plays or is looked back on: the robot tabs show it.
+  const activity = (running || (failed && viewing)) && sampled ? crewActivity(sampled) : undefined;
+  // The open robot, while the service is paused on it, or at an earlier moment of a run that slipped.
   const inspected =
-    running && paused && result && sampled
+    ((running && paused) || (failed && viewing)) && result && sampled
       ? inspectRobot(result, sampled, role, source, save.settings.text_editor)
       : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
@@ -94,15 +107,13 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
   // instruction waiting for the next customer when no action is in flight.
   const activeLine =
-    running && (!result || result.passed || held)
+    (running && (!result || result.passed || held)) || (failed && viewing)
       ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine))
       : -1;
-  // A failed run stops at once so the code can be fixed, but its last frame stays up until the code changes.
-  const failed = showFailure && !!result && !result.passed;
   // The block where it stopped stays marked for as long as the routines are the ones that ran: an edit clears it,
-  // and undoing back to them marks it again.
+  // and undoing back to them marks it again. Looking at an earlier moment, the block running then is marked instead.
   const failureLine =
-    evidence && !stale && (evidence.failure.role ?? 'query') === role ? evidence.failure.error_line : -1;
+    !viewing && evidence && !stale && (evidence.failure.role ?? 'query') === role ? evidence.failure.error_line : -1;
   const instructionProgress =
     displayedTrace && sampled && displayedTrace.end > displayedTrace.start
       ? (sampled.local - displayedTrace.start) / (displayedTrace.end - displayedTrace.start)
@@ -113,6 +124,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setMarks((m) => ({ ...m, [role]: carryMarks(source, next, m[role]) }));
     setPrograms(updated);
     setResult(null);
+    setViewTime(null);
     setShowFailure(false);
     onDraft(updated);
   };
@@ -136,6 +148,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setRunning(false);
     setPaused(false);
     setStepped(null);
+    setViewTime(null);
     setShowFailure(false);
   };
   /** Freeze a finished run with the routines and rounds it played, and keep it. */
@@ -151,6 +164,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPaused(false);
     setStepped(null);
     setHeld(null);
+    setViewTime(null);
     setShowFailure(true);
     setEvidence(evidenceOf(level, record));
     if (record.result.first_failure?.role) setRole(record.result.first_failure.role);
@@ -169,6 +183,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       setPractising(practice);
       setResult(opening.result);
       setReplayTime(opening.time);
+      setViewTime(null);
       fail(keep(opening.result, practice));
       return;
     }
@@ -178,6 +193,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setResult(null);
     setEvidence(null);
     setReplayTime(-STREET_APPROACH_SECONDS);
+    setViewTime(null);
     setShowFailure(false);
     setPaused(false);
     setStepped(null);
@@ -188,6 +204,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const show = (frame: LiveFrame) => {
     setResult(frame.result);
     setReplayTime(frame.time);
+    setViewTime(null);
     if (!frame.done) return;
     const record = keep(frame.result, practising);
     if (frame.result.passed) {
@@ -214,6 +231,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     fail(held);
     return true;
   };
+  // Everything that has happened in the run so far, to jump between.
+  const moments = useMemo(() => (result ? runMoments(result, replayTime) : []), [result, replayTime]);
   const stopWhen = pauseWhen(crew, marks, pauseAt);
   usePlaybackClock(
     running && !paused,
@@ -255,6 +274,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPaused: (next: boolean | ((paused: boolean) => boolean)) => {
       if (!(typeof next === 'function' ? next(paused) : next) && release()) return;
       setStepped(null);
+      setViewTime(null);
       setPaused(next);
     },
     held: !!held,
@@ -270,6 +290,13 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     speed,
     setSpeed,
     time,
+    /** How far the run has got: the latest moment there is to look back from. */
+    head: replayTime,
+    /** Looking at an earlier moment of the run than the latest. */
+    viewing,
+    /** Look at a moment of the run up to the latest, or back at the latest with nothing. */
+    view: (at: number | null) => setViewTime(at === null || at >= replayTime ? null : Math.max(at, 0)),
+    moments,
     activeLine,
     failureLine,
     evidence,

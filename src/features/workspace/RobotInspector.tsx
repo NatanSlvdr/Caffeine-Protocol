@@ -8,6 +8,8 @@ export interface RobotInspectorProps {
   reads: 'guest' | 'ticket';
   /** When the service is paused, like "Round 2 · 42.0 s". */
   when: string;
+  /** Looking back at an earlier moment of the run, rather than where it paused. */
+  earlier?: boolean;
   /** Why the service paused itself, when it did, like "At Brew’s mark". */
   reason?: string;
 }
@@ -15,18 +17,18 @@ export interface RobotInspectorProps {
 const Unset = ({ children }: { children: string }) => <span className="inspector-unset">{children}</span>;
 
 /**
- * The open robot at the paused moment, under its routine: what it is doing, the guest or ticket it is on, what it
+ * The open robot at the paused moment, or an earlier one looked back on, under its routine: what it is doing, the guest or ticket it is on, what it
  * carries, what its memory holds, and where it is in a For loop. Everything comes from the run's records, so a slot
  * the robot has stored nothing in says "not set" rather than showing a guess.
  */
-export function RobotInspector({ state, reads, when, reason }: RobotInspectorProps) {
+export function RobotInspector({ state, reads, when, earlier, reason }: RobotInspectorProps) {
   const heading = useId();
   return (
     <aside className="robot-inspector" aria-labelledby={heading}>
       <header>
         <p id={heading}>
           <ScanEye size={14} aria-hidden="true" />
-          {state.robot}, paused
+          {state.robot}, {earlier ? 'earlier' : 'paused'}
         </p>
         {reason && <span className="inspector-reason">{reason}</span>}
         <span className="inspector-when">{when}</span>

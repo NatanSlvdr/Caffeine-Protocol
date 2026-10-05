@@ -1,7 +1,7 @@
 /* In-game workspace: the shift's toolbar pills speak the same paper-and-ink language as the campaign rail. */
 .workspace-main {
   --desk-ink: #392b24;
-  --desk-muted: #817062;
+  --desk-muted: #766659;
   --desk-paper: #fffcf4;
   --desk-pill: #fffcf4cc;
   --desk-rule: #e3d6c1;
@@ -1097,5 +1097,199 @@ html[data-motion='reduced'] .failure-card-chevron {
   to {
     transform: scale(1);
     opacity: 1;
+  }
+}
+
+/* Looking back through a paused or slipped run: a paper strip along the bottom of the café, the run so far as a
+   scrubber, with its orders, handoffs and slips drawn as ticks in the colours the blocks wear. */
+.workspace-main .replay-timeline {
+  position: absolute;
+  right: 50%;
+  bottom: 12px;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  width: min(620px, calc(100% - 24px));
+  padding: 8px 10px 6px;
+  border-radius: 16px;
+  background: var(--desk-pill);
+  box-shadow: 0 6px 20px #392b241f;
+  color: var(--desk-ink);
+  transform: translateX(50%);
+  backdrop-filter: blur(6px);
+}
+.workspace-main .replay-track {
+  position: relative;
+  height: 22px;
+}
+.workspace-main .replay-marks {
+  position: absolute;
+  inset: 4px 8px;
+  pointer-events: none;
+}
+.workspace-main .replay-marks::before {
+  position: absolute;
+  inset: 6px 0;
+  border-radius: 999px;
+  background: var(--desk-rule);
+  content: '';
+}
+.workspace-main .replay-tick,
+.workspace-main .replay-round {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--desk-muted);
+}
+.workspace-main .replay-tick.order {
+  background: #b3822b;
+}
+.workspace-main .replay-tick.handoff {
+  background: #4d9275;
+}
+.workspace-main .replay-tick.slip {
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  background: #c4553d;
+}
+.workspace-main .replay-tick.start {
+  top: 3px;
+  bottom: 3px;
+  width: 1px;
+  background: #8f78d6;
+}
+.workspace-main .replay-round {
+  top: -3px;
+  bottom: -3px;
+  width: 0;
+  border-left: 1px dashed var(--desk-muted);
+  background: none;
+}
+.workspace-main .replay-scrubber {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  appearance: none;
+}
+.workspace-main .replay-scrubber::-webkit-slider-runnable-track {
+  height: 100%;
+  background: transparent;
+}
+.workspace-main .replay-scrubber::-moz-range-track {
+  background: transparent;
+}
+.workspace-main .replay-scrubber::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: 3px;
+  border: 2px solid var(--desk-paper);
+  border-radius: 50%;
+  background: var(--desk-ink);
+  box-shadow: 0 1px 3px #392b2459;
+  appearance: none;
+}
+.workspace-main .replay-scrubber::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 2px solid var(--desk-paper);
+  border-radius: 50%;
+  background: var(--desk-ink);
+  box-shadow: 0 1px 3px #392b2459;
+}
+.workspace-main .replay-scrubber:focus-visible {
+  outline: none;
+}
+.workspace-main .replay-scrubber:focus-visible::-webkit-slider-thumb {
+  box-shadow:
+    0 0 0 2px var(--desk-paper),
+    0 0 0 4px #8f78d6;
+}
+.workspace-main .replay-scrubber:focus-visible::-moz-range-thumb {
+  box-shadow:
+    0 0 0 2px var(--desk-paper),
+    0 0 0 4px #8f78d6;
+}
+.workspace-main .replay-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+}
+.workspace-main .replay-controls button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 28px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--desk-ink);
+  font-size: 12px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.workspace-main .replay-controls button:hover:not(:disabled) {
+  background: #f1e6d2;
+}
+.workspace-main .replay-controls button:disabled {
+  color: var(--desk-muted);
+  opacity: 0.55;
+}
+.workspace-main .replay-controls .replay-jump {
+  width: 28px;
+  padding: 0;
+}
+.workspace-main .replay-when {
+  min-width: 112px;
+  color: var(--desk-ink);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.workspace-main .replay-when.earlier {
+  color: #6b55b3;
+}
+.workspace-main .replay-kinds {
+  display: flex;
+  gap: 2px;
+  margin-left: auto;
+  padding: 2px;
+  border-radius: 999px;
+  background: #f1e6d2a6;
+}
+.workspace-main .replay-kinds button {
+  min-height: 24px;
+  padding: 0 8px;
+  color: var(--desk-muted);
+  font-size: 11.5px;
+}
+.workspace-main .replay-kinds button[aria-pressed='true'] {
+  background: var(--desk-paper);
+  box-shadow: var(--desk-shadow);
+  color: var(--desk-ink);
+}
+.workspace-main .replay-controls .replay-now {
+  background: #6b55b3;
+  color: #fff;
+}
+.workspace-main .replay-controls .replay-now:hover:not(:disabled) {
+  background: #5c47a3;
+}
+@container cafe-panel (max-width: 620px) {
+  .workspace-main .replay-when {
+    min-width: 0;
+  }
+  .workspace-main .replay-kinds button {
+    padding: 0 6px;
   }
 }

@@ -1,11 +1,4 @@
-import {
-  ROBOT_DISPLAY_NAMES,
-  canPauseAt,
-  type ExecutionEvent,
-  type RobotRole,
-  type Start,
-  type StopWhen,
-} from '@/domain';
+import { ROBOT_DISPLAY_NAMES, canPauseAt, isHandoff, type RobotRole, type Start, type StopWhen } from '@/domain';
 
 /** The blocks each robot's routine is marked to pause at, by line. */
 export type Marks = Readonly<Record<RobotRole, ReadonlySet<number>>>;
@@ -89,9 +82,6 @@ export function pauseWhen(crew: readonly RobotRole[], marks: Marks, pauseAt: Pau
     event.actor !== 'niko' &&
     ((!resumed && marks[event.role].has(event.line)) || (pauseAt.handoffs && isHandoff(event)));
 }
-
-const isHandoff = (event: ExecutionEvent) =>
-  event.role !== 'query' && event.command === 'LISTEN' && !event.waiting && !event.error;
 
 /** Which of the reasons stopped it, and where: a mark is named first, since the player put it there. */
 export function pausedBy(marks: Marks, stopped: readonly Start[]): PausedBy {
