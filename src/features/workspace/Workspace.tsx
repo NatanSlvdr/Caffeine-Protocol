@@ -280,9 +280,14 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
   const reaction =
     scene === 'failure' && failed && result
-      ? failureLines(result, role, shortRepeats && firstHeard !== undefined && firstHeard !== records.at(-1)?.id)
+      ? failureLines(
+          result,
+          role,
+          shortRepeats && firstHeard !== undefined && firstHeard !== records.at(-1)?.id,
+          save.robotSolutions[index],
+        )
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index, level, outro, briefSuccess)
+        ? successLines(result, role, index, level, outro, briefSuccess, live.bestBefore)
         : undefined;
   // The latest run before the one just served that played the same rounds, for the receipt to compare with.
   const latest = records.at(-1);

@@ -6,6 +6,7 @@ import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
 import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
+import type { DialogueLine } from '../../../src/domain/dialogue';
 import { levels } from '../../../src/data';
 import { failureLines, successLines } from '../../../src/features/workspace/reactions';
 import type { FailureCode } from '../../../src/domain/failures';
@@ -378,5 +379,41 @@ describe('reactions', () => {
     const lines = successLines(passed, 'query', 2, targets, payoff);
     expect(lines.map((l) => l.text)).toEqual(['Actual tea.', expect.stringContaining('Three stars')]);
     expect(successLines({ ...passed, observation: true }, 'query', 0, targets, payoff)).toEqual(payoff);
+  });
+
+  it('lets the robot cheer a new best in its own words, even on a repeat', () => {
+    const passed = { passed: true, observation: false, stars: 3, first_failure: null } as unknown as RunResult;
+    const texts = (lines: DialogueLine[]) => lines.map((l) => l.text);
+    const [robot, niko] = successLines(passed, 'prep', 0, targets, [], false, 1);
+    expect(robot).toMatchObject({ who: 'brew', text: '*BEEP BEEP!* New best! 3 stars, up from 1 star!' });
+    expect(niko.text).toContain('Three stars');
+    // A repeat told briefly still hears it, and a written payoff plays first.
+    expect(texts(successLines({ ...passed, stars: 2 }, 'floor', 0, targets, [], true, 1))).toEqual([
+      '*ding ding ding!* Up from 1 star to 2 stars. New best!',
+      expect.stringContaining('took'),
+    ]);
+    expect(texts(successLines(passed, 'query', 0, targets, [line('juno:happy', 'Actual tea.')], false, 2))).toEqual([
+      'Actual tea.',
+      '*bip boop* 3 stars, up from 2 stars. Recording: new best.',
+      expect.stringContaining('Three stars'),
+    ]);
+    // Matching the best, or a first service, is no milestone.
+    expect(successLines(passed, 'prep', 0, targets, [], true, 3)).toHaveLength(1);
+    expect(texts(successLines(passed, 'prep', 0, targets))[0]).not.toContain('New best');
+  });
+
+  it('points a setback on a shift that went right before at the routine that was served', () => {
+    const slip = failure('ticket-item', 'Ticket 1 has the wrong item.');
+    const [, , restore] = failureLines(slip, 'query', false, { query: 'listen' });
+    expect(restore).toMatchObject({ who: 'niko' });
+    expect(restore.text).toContain('Options → Restore Query’s routine has the one you last served');
+    const porter = failureLines(failure('wrong-table', 'Wrong table.', { role: 'floor' }), 'query', false, {
+      floor: 'walk',
+    });
+    expect(porter.at(-1)!.text).toContain('Restore Porter’s routine');
+    // Only the robot that slipped, only with a routine that was served, and not on a reaction heard before.
+    expect(failureLines(slip, 'query', false, { prep: 'brew', query: '  ' })).toHaveLength(2);
+    expect(failureLines(slip, 'query')).toHaveLength(2);
+    expect(failureLines(slip, 'query', true, { query: 'listen' })).toHaveLength(1);
   });
 });

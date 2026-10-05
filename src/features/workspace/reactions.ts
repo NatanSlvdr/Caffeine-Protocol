@@ -1,5 +1,5 @@
-import { line, variableLabels } from '@/domain';
-import type { CastId, DialogueLine, FailureCode, LevelDefinition, RobotRole, RunResult } from '@/domain';
+import { count, line, ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
+import type { CastId, DialogueLine, FailureCode, LevelDefinition, RobotPrograms, RobotRole, RunResult } from '@/domain';
 
 const ROBOT_CAST: Record<RobotRole, CastId> = { query: 'query', prep: 'brew', floor: 'porter' };
 
@@ -310,8 +310,14 @@ export const failureHint = (code: FailureCode): string => kinds[code].hint;
 /**
  * A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. Told `brief`ly,
  * for a slip the crew has already reacted to, only the reaction stays: the card under the routine says the rest.
+ * On a shift that went right before, Niko also points at the routine that was `served`, so a setback can be undone.
  */
-export function failureLines(result: RunResult, fallbackRole: RobotRole, brief = false): DialogueLine[] {
+export function failureLines(
+  result: RunResult,
+  fallbackRole: RobotRole,
+  brief = false,
+  served?: Partial<RobotPrograms>,
+): DialogueLine[] {
   const failure = result.first_failure;
   if (!failure) return [];
   const role = failure.role ?? fallbackRole;
@@ -321,7 +327,16 @@ export function failureLines(result: RunResult, fallbackRole: RobotRole, brief =
       ? line('guest:worried', kind.react(failure.phrase))
       : line(ROBOT_CAST[role], kind.by === 'robot' && kind.react ? kind.react(failure.phrase) : stuck[role]);
   if (brief) return [reaction];
-  return [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${failureHint(failure.code)}`)];
+  const lines = [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${failureHint(failure.code)}`)];
+  if (!served?.[role]?.trim()) return lines;
+  const robot = ROBOT_DISPLAY_NAMES[role];
+  return [
+    ...lines,
+    line(
+      'niko',
+      `${robot} got this shift right before, though. If you’d rather go back, Options → Restore ${robot}’s routine has the one you last served.`,
+    ),
+  ];
 }
 
 /** Stand-in cheers for shifts without a written payoff. */
@@ -329,6 +344,13 @@ const cheers: Record<RobotRole, string[]> = {
   query: ['*bip boop* Every order understood. Feeling: pleased?', '*bip* Zero errors. Is this… satisfaction?'],
   prep: ['*BEEP!* Every cup perfect! Ninety-two degrees!', '*sniff sniff* Smell that? Perfect service!'],
   floor: ['*ding ding!* Every guest served!', 'Zero spills! *bip* …Zero big spills.'],
+};
+
+/** A robot's delight at beating the shift's best, said even on a repeat: it's news every time. */
+const newBest: Record<RobotRole, (stars: string, best: string) => string> = {
+  query: (stars, best) => `*bip boop* ${stars}, up from ${best}. Recording: new best.`,
+  prep: (stars, best) => `*BEEP BEEP!* New best! ${stars}, up from ${best}!`,
+  floor: (stars, best) => `*ding ding ding!* Up from ${best} to ${stars}. New best!`,
 };
 
 type Targets = Pick<LevelDefinition, 'block_target' | 'instruction_target'>;
@@ -345,7 +367,7 @@ function starVerdict(result: RunResult, targets: Targets): string {
 /**
  * The crew's reaction to a finished service, before the receipt: the shift's payoff scene, then Niko's verdict. Told
  * `brief`ly, for a shift served before, the payoff has been seen: only the verdict stays, and a watched shift goes
- * straight to its receipt.
+ * straight to its receipt. Beating the shift's `best` stars gets the robot's own cheer, in place of the stock one.
  */
 export function successLines(
   result: RunResult,
@@ -354,6 +376,7 @@ export function successLines(
   targets: Targets,
   payoff: DialogueLine[] = [],
   brief = false,
+  best?: number,
 ): DialogueLine[] {
   if (result.observation)
     return brief
@@ -362,9 +385,16 @@ export function successLines(
         ? payoff
         : [line('niko:happy', 'And that’s a whole service, start to finish. Easy when you watch it, right?')];
   const pool = cheers[role];
-  if (brief) return [line('niko:happy', starVerdict(result, targets))];
-  return [
-    ...(payoff.length ? payoff : [line(ROBOT_CAST[role], pool[index % pool.length])]),
-    line('niko:happy', starVerdict(result, targets)),
-  ];
+  const milestone =
+    best !== undefined && result.stars > best
+      ? [line(ROBOT_CAST[role], newBest[role](count(result.stars, 'star'), count(best, 'star')))]
+      : [];
+  const opening = brief
+    ? []
+    : payoff.length
+      ? payoff
+      : milestone.length
+        ? []
+        : [line(ROBOT_CAST[role], pool[index % pool.length])];
+  return [...opening, ...milestone, line('niko:happy', starVerdict(result, targets))];
 }
