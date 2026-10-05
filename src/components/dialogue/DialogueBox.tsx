@@ -11,6 +11,11 @@ const TYPE_MS = 22;
 /** Letters typed on each tick: Quick types three at a time, at the same steady rhythm. */
 const LETTERS = { typed: 1, quick: 3, whole: Infinity };
 
+/** A field being typed in, which a reaction landing beside it never takes focus from. */
+const writing = (element: Element | null) =>
+  element instanceof HTMLElement &&
+  (element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName));
+
 type Part = { kind: 'text' | 'sfx'; text: string } | { kind: 'block'; text: string; command: string };
 
 /** `*whirr*` in a script is a sound effect; `[LISTEN|Wait for Orders]` shows the command as its block. */
@@ -91,8 +96,10 @@ export function DialogueBox({
     }
   };
 
+  // A scene takes focus. So does an aside, so the crew's reaction to a run started from the keyboard is one key away,
+  // unless the player is typing in a field: then it waits for them to Tab to it.
   useEffect(() => {
-    if (scene) next.current?.focus({ preventScroll: true });
+    if (scene || !writing(document.activeElement)) next.current?.focus({ preventScroll: true });
   }, [scene]);
 
   // A scene owns the keyboard; an aside only answers while focus is inside it, so typing code is never hijacked.
@@ -102,7 +109,13 @@ export function DialogueBox({
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       if (!scene && !box.current?.contains(document.activeElement)) return;
-      if (e.key === 'Escape') handlers.current.onDone();
+      if (e.key === 'Tab' && scene) {
+        // A scene is modal: Tab goes round its own buttons, not through the dimmed screen behind it.
+        const stops = [...(box.current?.querySelectorAll<HTMLButtonElement>('button') ?? [])];
+        const at = stops.indexOf(document.activeElement as HTMLButtonElement);
+        const to = e.shiftKey ? (at <= 0 ? stops.length : at) - 1 : (at + 1) % stops.length;
+        stops[to]?.focus({ preventScroll: true });
+      } else if (e.key === 'Escape') handlers.current.onDone();
       else if ((e.key === 'Enter' || e.key === ' ') && !e.metaKey && !e.ctrlKey) {
         // A held key moves on one line, not through the rest of the scene and past its last button.
         // Its repeats are swallowed, so a focused button doesn't click on them either.

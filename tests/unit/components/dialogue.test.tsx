@@ -87,13 +87,61 @@ describe('DialogueBox', () => {
 
   it('leaves the keyboard alone for an aside unless focus is inside it', () => {
     const onDone = vi.fn();
-    render(<DialogueBox lines={lines} onDone={onDone} variant="aside" instant />);
+    const Host = ({ aside }: { aside: boolean }) => (
+      <>
+        <textarea aria-label="Routine" />
+        {aside && <DialogueBox lines={lines} onDone={onDone} variant="aside" instant />}
+      </>
+    );
+    const { rerender } = render(<Host aside={false} />);
+    screen.getByRole('textbox', { name: 'Routine' }).focus();
+    rerender(<Host aside />);
+    // Landing beside code being typed, it leaves focus where it is.
+    expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Routine' }));
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onDone).not.toHaveBeenCalled();
     expect(screen.getByRole('dialog').getAttribute('aria-modal')).toBeNull();
     screen.getByRole('button', { name: 'Next' }).focus();
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
     expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it('puts an aside one key away when nobody is typing', () => {
+    render(
+      <>
+        <button type="button">Run service</button>
+        <DialogueBox lines={lines} onDone={vi.fn()} variant="aside" instant />
+      </>,
+    );
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next' }));
+    // It isn't modal, so Tab is free to leave it.
+    fireEvent.keyDown(document.activeElement!, { key: 'Tab' });
+    expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Next' }));
+  });
+
+  it('keeps Tab on a scene’s own buttons, not the screen dimmed behind it', () => {
+    render(
+      <>
+        <button type="button">Run service</button>
+        <DialogueBox lines={lines} onDone={vi.fn()} instant />
+      </>,
+    );
+    const tab = (shiftKey = false) => fireEvent.keyDown(document.activeElement!, { key: 'Tab', shiftKey });
+    const next = screen.getByRole('button', { name: 'Next' });
+    const skip = screen.getByRole('button', { name: /Skip/ });
+    expect(document.activeElement).toBe(next);
+    tab();
+    expect(document.activeElement).toBe(skip);
+    tab();
+    expect(document.activeElement).toBe(next);
+    tab(true);
+    expect(document.activeElement).toBe(skip);
+    tab(true);
+    expect(document.activeElement).toBe(next);
+    // Focus that slipped out comes back in on the next Tab.
+    screen.getByRole('button', { name: 'Run service' }).focus();
+    tab();
+    expect(document.activeElement).toBe(skip);
   });
 
   it('sets robots in machine type and sound effects apart', () => {
