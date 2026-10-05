@@ -304,6 +304,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     speed,
     setSpeed,
     time,
+    /** The café at the moment on screen, sampled from the run's records. */
+    sampled,
     /** How far the run has got: the latest moment there is to look back from. */
     head: replayTime,
     /** Looking at an earlier moment of the run than the latest. */

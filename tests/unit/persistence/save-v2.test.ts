@@ -182,6 +182,16 @@ describe('version 4 campaign saves', () => {
       parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, block_preview: 'yes' } }), lessons),
     ).toThrow('Invalid display setting.');
   });
+  it('keeps the café told in words, with it off for saves made before it', () => {
+    const oldSave = newSave();
+    delete (oldSave.settings as Partial<typeof oldSave.settings>).service_summary;
+    expect(parseSave(JSON.stringify(oldSave), lessons).settings.service_summary).toBe(false);
+    const on = { ...newSave(), settings: { ...newSave().settings, service_summary: true } };
+    expect(parseSave(JSON.stringify(on), lessons).settings.service_summary).toBe(true);
+    expect(() =>
+      parseSave(JSON.stringify({ ...newSave(), settings: { ...newSave().settings, service_summary: 1 } }), lessons),
+    ).toThrow('Invalid display setting.');
+  });
   it('keeps the first-routine tips choice, with them on for saves made before it', () => {
     const oldSave = newSave();
     delete (oldSave.settings as Partial<typeof oldSave.settings>).first_routine_tips;

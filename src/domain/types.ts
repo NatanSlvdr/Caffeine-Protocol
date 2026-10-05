@@ -194,6 +194,8 @@ export interface Settings {
   short_repeats: boolean;
   /** Draw the block picked in the routine where it goes in the café: its walk, or what it reaches. */
   block_preview: boolean;
+  /** Tell the service in words beside the café, and say what happens in it as it plays. */
+  service_summary: boolean;
   /** How the crew's lines appear. Reduced motion shows them whole, whatever this says. */
   dialogue_pace: DialoguePace;
 }

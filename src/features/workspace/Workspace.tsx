@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Footprints, Store } from 'lucide-react';
+import { ArrowLeft, Captions, Footprints, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
@@ -23,6 +23,8 @@ import { ReplayTimeline } from './ReplayTimeline';
 import { OrderRoute } from './OrderRoute';
 import { BlockPreviewNote } from './BlockPreviewNote';
 import { useBlockPreview } from './blockPreview';
+import { ServiceSummary } from './ServiceSummary';
+import { summarize, useServiceAnnouncements } from './serviceWords';
 import { followable, guestName, routeDone } from './route';
 import { whenWords } from './timeline';
 import { markCount, pauseReason } from './breakpoints';
@@ -130,6 +132,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     setSpeed,
     time,
     head,
+    sampled,
     viewing,
     moments,
     activeLine,
@@ -294,6 +297,19 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     line: previewing && selected?.role === role ? selected.line : null,
     textMode,
   });
+  // The café in words beside the scene while the service plays or is looked back on, and what happens said aloud.
+  const summaryOn = save.settings.service_summary;
+  const summary =
+    summaryOn && serviceView && result && sampled ? summarize(result, sampled, level, index + 1) : undefined;
+  const told = useServiceAnnouncements({
+    on: summaryOn,
+    result,
+    level,
+    shift: index + 1,
+    head,
+    playing: running && !paused,
+    speed,
+  });
   // An event looked back on, an order's leg or a moment on the timeline, opens the routine of the robot that did it,
   // where the marker is on the very block it began on.
   const showRobot = (event: { role?: RobotRole; actor?: string }) => {
@@ -335,7 +351,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               {!observation && (
                 <button
                   type="button"
-                  className="preview-toggle"
+                  className="heading-toggle preview-toggle"
                   aria-pressed={save.settings.block_preview}
                   title="Show where the picked Move, Take, Deposit or Use block goes in the café"
                   onClick={() =>
@@ -346,6 +362,18 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                   <span>Block paths</span>
                 </button>
               )}
+              <button
+                type="button"
+                className="heading-toggle summary-toggle"
+                aria-pressed={summaryOn}
+                title="Tell the service in words: the guests, the crew, the counters, and what happens as it plays"
+                onClick={() =>
+                  update((s) => ({ ...s, settings: { ...s.settings, service_summary: !s.settings.service_summary } }))
+                }
+              >
+                <Captions size={16} aria-hidden="true" />
+                <span>Café in words</span>
+              </button>
               <div className="view-controls" role="group" aria-label="Camera view">
                 <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>
                   <Store size={16} aria-hidden="true" />
@@ -380,6 +408,21 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               preview={preview}
             />
             {previewing && <BlockPreviewNote note={note} textMode={textMode} />}
+            {summary && (
+              <ServiceSummary
+                summary={summary}
+                when={
+                  running && !paused
+                    ? level.seeds.length > 1
+                      ? `Round ${round} of ${level.seeds.length}`
+                      : 'Playing'
+                    : pausedAt
+                }
+              />
+            )}
+            <p className="sr-only" aria-live="polite">
+              {told}
+            </p>
             {serviceView && followed && followedRound && result && (
               <OrderRoute
                 name={guestName(level, followed)}

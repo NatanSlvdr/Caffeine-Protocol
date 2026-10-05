@@ -17,6 +17,7 @@ const defaultSettings: Settings = {
   first_routine_tips: true,
   short_repeats: false,
   block_preview: false,
+  service_summary: false,
   dialogue_pace: 'typed',
 };
 export const newSave = (settings: Settings = { ...defaultSettings }): ProgressSave => ({

@@ -519,6 +519,52 @@ describe('live workspace lifecycle', () => {
     expect(note().textContent).toMatch(/The round stops before it runs: .+\.$/);
     expect(screen.getByTestId('cafe').getAttribute('data-preview')).toBeNull();
   });
+  it('tells the service in words beside the café, and says what happens as it plays', () => {
+    ready();
+    const toggle = screen.getByRole('button', { name: 'Café in words' });
+    const words = () => screen.queryByRole('region', { name: 'The café in words' });
+    const told = () =>
+      [...document.querySelectorAll('.cafe-panel .sr-only[aria-live="polite"]')].map((p) => p.textContent).join(' ');
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!).settings.service_summary).toBe(true);
+    // Nothing to tell before the service runs.
+    expect(words()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    const panel = words()!;
+    expect(within(panel).getByRole('heading', { level: 3 }).textContent).toMatch(/^The café in wordsRound 1 of \d+$/);
+    expect(within(panel).getByRole('heading', { name: /^Guests · 0 of \d+ served$/ })).toBeTruthy();
+    const crew = within(panel).getByRole('region', { name: 'Crew' });
+    expect(within(crew).getAllByRole('listitem')[0].textContent).toMatch(/^Query/);
+    expect(within(panel).getByRole('region', { name: 'Counters' }).textContent).toContain('Tickets for Moka');
+    // What happens is said a little at a time, not every frame.
+    playUntil(() => /Guest 1 walks in\./.test(told()), 20);
+    expect(told()).toMatch(/^Guest 1 walks in\./);
+    expect(within(panel).getByRole('region', { name: /^Guests/ }).textContent).toContain('Guest 1 · “');
+    playUntil(() => /served/.test(told()) || /to go/.test(told()), 90);
+    expect(within(panel).getByRole('heading', { name: /^Guests · [1-9]\d* of \d+ served$/ })).toBeTruthy();
+    // Paused, it says the moment it is on.
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    expect(within(panel).getByRole('heading', { level: 3 }).textContent).toMatch(/Round 1 · \d+\.\d s$/);
+    // Off, it is neither shown nor said.
+    fireEvent.click(toggle);
+    expect(words()).toBeNull();
+    expect(told().trim()).toBe('');
+  });
+  it('says what stopped the run, in the café told in words', () => {
+    ready(lessons[2].solution.replace('DEPOSIT RIGHT', 'DEPOSIT DOWN'), { service_summary: true });
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    const told = () =>
+      [...document.querySelectorAll('.cafe-panel .sr-only[aria-live="polite"]')].map((p) => p.textContent).join(' ');
+    playUntil(() => /Query stopped: /.test(told()), 30);
+    expect(told()).toMatch(/Query stopped: .+\./);
+    const panel = screen.getByRole('region', { name: 'The café in words' });
+    expect(panel.querySelector('.service-summary-stopped')?.textContent).toMatch(/^Query stopped: .+\.$/);
+  });
   it('opens the routine of the robot behind a moment or an order’s leg, at the block it began on', () => {
     window.location.hash = '/shift/14';
     seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13, robotDrafts: { 13: referencePrograms(14) } });

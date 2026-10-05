@@ -11,6 +11,7 @@ const settings: Settings = {
   first_routine_tips: true,
   short_repeats: false,
   block_preview: false,
+  service_summary: false,
   dialogue_pace: 'typed',
 };
 
