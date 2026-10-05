@@ -74,17 +74,18 @@ Play a shift through each of these, start to finish.
 
 Before each release, someone plays through the list below and fills in a row. A release ships when every row is signed off or has an issue filed against it.
 
-| Check                                                    | Chrome | Firefox | Safari | iPad | Notes |
-| -------------------------------------------------------- | ------ | ------- | ------ | ---- | ----- |
-| Default checks and `npm run test:e2e` pass               |        |         |        |      |       |
-| A new café, from the opening day to Shift 3's receipt    |        |         |        |      |       |
-| One Brew shift and one Porter shift, to three stars      |        |         |        |      |       |
-| An Act IV shift with all three robots                    |        |         |        |      |       |
-| A failed run: the crew's reaction, the timeline, the fix |        |         |        |      |       |
-| Every viewport above fits without scrolling              |        |         |        |      |       |
-| Keyboard only, through one shift                         |        |         |        |      |       |
-| Touch only, through one shift                            | n/a    | n/a     | n/a    |      |       |
-| Offline reload and update                                |        |         |        |      |       |
-| Each accessibility path                                  |        |         |        |      |       |
-| Music and sound at the default volume, and muted         |        |         |        |      |       |
-| Export a save, reset progress, import it back            |        |         |        |      |       |
+| Check                                                                   | Chrome | Firefox | Safari | iPad | Notes |
+| ----------------------------------------------------------------------- | ------ | ------- | ------ | ---- | ----- |
+| Default checks and `npm run test:e2e` pass                              |        |         |        |      |       |
+| A new café, from the opening day to Shift 3's receipt                   |        |         |        |      |       |
+| One Brew shift and one Porter shift, to three stars                     |        |         |        |      |       |
+| An Act IV shift with all three robots                                   |        |         |        |      |       |
+| A failed run: the crew's reaction, the timeline, the fix                |        |         |        |      |       |
+| Every viewport above fits without scrolling                             |        |         |        |      |       |
+| Keyboard only, through one shift                                        |        |         |        |      |       |
+| Touch only, through one shift                                           | n/a    | n/a     | n/a    |      |       |
+| Offline reload and update                                               |        |         |        |      |       |
+| Each accessibility path                                                 |        |         |        |      |       |
+| Music and sound at the default volume, and muted                        |        |         |        |      |       |
+| Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks |        |         |        |      |       |
+| Export a save, reset progress, import it back                           |        |         |        |      |       |
