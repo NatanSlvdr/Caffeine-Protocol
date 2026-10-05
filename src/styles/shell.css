@@ -1325,6 +1325,25 @@ html[data-motion='reduced'] .front-page *::after {
   border-color: var(--slip-clay);
   background: #f8e8dc;
 }
+/* A newer build waiting to take over: news, so star amber, and never in the way of the settings. */
+.settings-update {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 18px;
+  padding: 10px 12px;
+  border-left: 4px solid #d4962c;
+  border-radius: 10px;
+  background: #f8f1e3;
+  font-size: 13px;
+}
+.settings-window .settings-update p {
+  margin: 0;
+}
+.settings-update .settings-chip {
+  flex: none;
+}
 .settings-window .settings-foot {
   display: flex;
   flex-direction: column;

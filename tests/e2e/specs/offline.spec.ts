@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { SOUNDS } from '../../../src/shared/audio-manifest';
+import { UPDATE_MESSAGE } from '../../../src/shared/offline-manifest';
 import { ready } from '../helpers';
 
 test.describe.configure({ timeout: 180_000 });
@@ -54,7 +55,10 @@ test('precache manifest covers every offline asset with a full content hash', as
   for (const sound of SOUNDS) expect(has(`/audio/${sound}.wav`)).toBe(true);
 });
 
-test('offline upgrade rotates the precache and removes obsolete caches', async ({ page, context }) => {
+test('offline upgrade waits to be asked, keeps the build it replaces, and removes older caches', async ({
+  page,
+  context,
+}) => {
   await ready(page);
   await page.evaluate(async () => {
     await navigator.serviceWorker.ready;
@@ -65,7 +69,10 @@ test('offline upgrade rotates the precache and removes obsolete caches', async (
   });
 
   const cacheNames = () =>
-    page.evaluate(() => caches.keys().then((keys) => keys.filter((k) => k.includes('caffeine-'))));
+    page.evaluate(() =>
+      // The worker's own record of which build is current isn't a build.
+      caches.keys().then((keys) => keys.filter((k) => k.includes('caffeine-') && !k.endsWith('-meta'))),
+    );
   const initial = await cacheNames();
   expect(initial).toHaveLength(1);
   const oldName = initial[0];
@@ -93,10 +100,23 @@ test('offline upgrade rotates the precache and removes obsolete caches', async (
   await writeFile(swPath, nextSource);
   try {
     await page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r?.update()));
-    // New worker installs the new cache, activates, and deletes every other
-    // prefixed cache (the previous build + the seeded stale entry).
+    // The new worker installs its cache beside the one in use and waits: nothing changes mid-session.
     await expect.poll(async () => cacheNames(), { timeout: 60_000, intervals: [500] }).toContain(nextName);
-    await expect.poll(async () => cacheNames(), { timeout: 60_000, intervals: [500] }).toEqual([nextName]);
+    await expect
+      .poll(() => page.evaluate(() => navigator.serviceWorker.getRegistration().then((r) => r?.waiting?.state)), {
+        timeout: 60_000,
+        intervals: [500],
+      })
+      .toBe('installed');
+    expect((await cacheNames()).sort()).toEqual([oldName, staleName, nextName].sort());
+    // Asked to, it takes over, keeps the build it replaced for tabs still on it, and deletes anything older.
+    await page.evaluate(
+      (message) => navigator.serviceWorker.getRegistration().then((r) => r?.waiting?.postMessage(message)),
+      UPDATE_MESSAGE,
+    );
+    await expect
+      .poll(async () => (await cacheNames()).sort(), { timeout: 60_000, intervals: [500] })
+      .toEqual([oldName, nextName].sort());
 
     const served = await page.evaluate(async (name) => {
       const cache = await caches.open(name);

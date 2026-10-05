@@ -1,5 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
-import { Download, FolderHeart, Leaf, Maximize, Minimize, RotateCcw, Sparkles, Upload, Volume2 } from 'lucide-react';
+import {
+  Download,
+  FolderHeart,
+  Leaf,
+  Maximize,
+  Minimize,
+  RefreshCw,
+  RotateCcw,
+  Sparkles,
+  Upload,
+  Volume2,
+} from 'lucide-react';
 import { lessons } from '@/data';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
@@ -15,6 +26,7 @@ import { count, type DialoguePace, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
+import { updateNow, useUpdateReady } from './offlineUpdate';
 
 const PACES: [DialoguePace, string][] = [
   ['typed', 'Typed'],
@@ -26,6 +38,7 @@ const PACES: [DialoguePace, string][] = [
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
   const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup } = useGame();
   const cafe = useCafeName();
+  const updateReady = useUpdateReady();
   // A café waiting on the Replace slip: one chosen from a file, with what bringing it up to date changes, or the kept copy.
   const [pending, setPending] = useState<{ save: ProgressSave; changes?: string[]; kept?: true } | null>(null),
     [error, setError] = useState(''),
@@ -259,6 +272,21 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <small>We’ll ask before clearing anything.</small>
           </section>
         </div>
+        {updateReady && (
+          <div className="settings-update">
+            <p>
+              A new version of the café is ready. It takes over once every tab of the café is closed
+              {saveError || elsewhere
+                ? '; progress isn’t being saved right now, so it waits until then.'
+                : ', or now: your progress is kept, though a service under way starts over.'}
+            </p>
+            {!saveError && !elsewhere && (
+              <button className="settings-chip" onClick={updateNow}>
+                <RefreshCw size={15} aria-hidden="true" /> Update and reload
+              </button>
+            )}
+          </div>
+        )}
         <p className="settings-foot" aria-hidden="true">
           <span className="settings-barcode" />
           {saveError || elsewhere ? 'Not saving right now' : 'Saved as you go'} · Thank you, come again
