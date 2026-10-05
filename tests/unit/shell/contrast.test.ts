@@ -92,6 +92,11 @@ const PAIRS: [label: string, text: string, ground: string][] = [
     declared('shell.css', '.restore-diff', 'color'),
     declared('shell.css', '.restore-diff', 'background'),
   ],
+  [
+    'a regular’s signature in the guestbook',
+    declared('shell.css', '.guestbook-notes cite', 'color'),
+    'var(--slip-paper)',
+  ],
   ['a guest’s quiet line in their bubble', 'var(--bubble-quiet)', 'var(--bubble-paper)'],
   ['a guest’s quiet line on the bubble’s well', 'var(--bubble-quiet)', 'var(--bubble-well)'],
   [

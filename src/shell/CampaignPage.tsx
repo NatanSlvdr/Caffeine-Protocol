@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { CircleHelp, Clapperboard, Play } from 'lucide-react';
+import { BookOpen, CircleHelp, Clapperboard, Play } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
+import { guestbookNotes } from '@/data/campaign/guestbook';
 import { narrativeFor } from '@/data/campaign/narrative';
+import { count } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
 import { go, openGuide } from '@/shared/lib/navigation';
@@ -10,6 +12,7 @@ import { pad2, starRow } from '@/shared/lib/format';
 import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
+import { GuestbookWindow } from './GuestbookWindow';
 import { ShellBar } from './ShellBar';
 
 /** How long "Order up!" stays on the specials board before the shift opens. */
@@ -42,6 +45,8 @@ export function CampaignPage() {
   // A scene waiting before the selected shift is what the rail opens on.
   const [scene, setScene] = useState<Cutscene | undefined>(() => waitingScene(save, save.selected));
   const gated = waitingScene(save, save.unlocked)?.before;
+  const notes = guestbookNotes(save);
+  const [reading, setReading] = useState(false);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -194,7 +199,20 @@ export function CampaignPage() {
         >
           <CircleHelp size={18} aria-hidden="true" />
         </button>
+        {/* The regulars start writing once a shift they were part of has been served. */}
+        {notes.length > 0 && (
+          <button
+            className="shell-icon"
+            aria-label={`Guestbook, ${count(notes.length, 'note')}`}
+            aria-haspopup="dialog"
+            title="Guestbook"
+            onClick={() => setReading(true)}
+          >
+            <BookOpen size={18} aria-hidden="true" />
+          </button>
+        )}
       </ShellBar>
+      {reading && <GuestbookWindow notes={notes} onClose={() => setReading(false)} />}
 
       <header className="pass-title">
         <p className="pass-kicker">{shop} · Order rail</p>
