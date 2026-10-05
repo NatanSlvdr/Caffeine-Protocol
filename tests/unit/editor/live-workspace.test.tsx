@@ -314,6 +314,7 @@ describe('live workspace lifecycle', () => {
         shortRepeats={false}
         onToggleShortRepeats={() => {}}
         onRequestRestore={() => {}}
+        report={() => ''}
         onClose={() => {}}
       />,
     );

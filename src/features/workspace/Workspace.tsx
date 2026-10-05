@@ -24,6 +24,7 @@ import { OptionsModal } from './modals/OptionsModal';
 import { RestoreModal } from './modals/RestoreModal';
 import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal } from './modals/ReceiptModal';
+import { problemReport } from './report';
 import { failureLines, successLines } from './reactions';
 
 export interface ShiftBrief {
@@ -470,6 +471,16 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           onToggleShortRepeats={(value) => update((s) => ({ ...s, settings: { ...s.settings, short_repeats: value } }))}
           tips={firstRoutine ? { on: save.settings.first_routine_tips, onToggle: setTips } : undefined}
           onRequestRestore={() => setModal('restore')}
+          report={() =>
+            problemReport({
+              index,
+              level,
+              programs,
+              record: records.at(-1),
+              now: new Date(),
+              browser: navigator.userAgent,
+            })
+          }
           onClose={() => setModal('')}
         />
       )}

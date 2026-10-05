@@ -1212,6 +1212,43 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-backup .settings-chip {
   flex: none;
 }
+.options-report {
+  margin-top: 18px;
+  padding-top: 14px;
+  border-top: 1px dashed #392b2433;
+}
+.options-report h3 {
+  margin: 0 0 6px;
+  color: var(--slip-ink);
+  font-size: 14px;
+}
+.settings-window .options-report p {
+  margin: 0 0 12px;
+}
+.settings-window .options-report p.settings-status {
+  margin: 10px 0 0;
+  color: var(--slip-ink);
+}
+.settings-window .options-report p.settings-status:empty {
+  margin: 0;
+}
+.options-report-preview {
+  max-height: 220px;
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  overflow: auto;
+  border: 1px solid #392b2433;
+  border-radius: 8px;
+  color: var(--slip-ink);
+  background: #f5ecdc;
+  font: 11px/1.5 var(--slip-mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.options-report-preview:focus-visible {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 2px;
+}
 .settings-actions {
   display: flex;
   flex-wrap: wrap;

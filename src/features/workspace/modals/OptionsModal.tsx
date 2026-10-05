@@ -1,5 +1,7 @@
-import { History } from 'lucide-react';
+import { useState } from 'react';
+import { Bug, Download, History } from 'lucide-react';
 import { Modal } from '@/components';
+import { download, saveFileName } from '@/shared/lib/download';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 
 export interface OptionsModalProps {
@@ -18,12 +20,14 @@ export interface OptionsModalProps {
   /** The first-routine tips' switch, on the shift that has them; they go once the shift is served. */
   tips?: { on: boolean; onToggle: (value: boolean) => void };
   onRequestRestore: () => void;
+  /** A problem report on this shift, its routines and its last run, built when the player asks to see it. */
+  report: () => string;
   onClose: () => void;
 }
 
 /**
- * Workspace options: shader, text editor, shorter repeats, the first routine's tips, and restoring an earlier version
- * of the open robot’s routine.
+ * Workspace options: shader, text editor, shorter repeats, the first routine's tips, restoring an earlier version of
+ * the open robot’s routine, and a problem report to save.
  */
 export function OptionsModal({
   robot,
@@ -38,8 +42,12 @@ export function OptionsModal({
   onToggleShortRepeats,
   tips,
   onRequestRestore,
+  report,
   onClose,
 }: OptionsModalProps) {
+  // The report is shown in full before it's saved: the player sees everything the file holds.
+  const [preview, setPreview] = useState<string>();
+  const [status, setStatus] = useState('');
   // Says why restoring is greyed out, when nothing else in the window does.
   const note = observation
     ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or restore.'
@@ -93,6 +101,50 @@ export function OptionsModal({
         <History size={15} aria-hidden="true" /> Restore {robot}’s routine
       </button>
       {note && <p id="restore-note">{note}</p>}
+      <section className="options-report" aria-labelledby="options-report-title">
+        <h3 id="options-report-title">Something wrong with the game?</h3>
+        <p>
+          A problem report holds this shift, your routines and your last run, so the problem can be played back. It’s
+          saved as a file on this computer, and goes nowhere unless you share it.
+        </p>
+        {preview === undefined ? (
+          <button
+            className="settings-chip"
+            onClick={() => {
+              setPreview(report());
+              setStatus('');
+            }}
+          >
+            <Bug size={15} aria-hidden="true" /> Review a problem report
+          </button>
+        ) : (
+          <>
+            {/* Focusable, so the report can be scrolled and read from the keyboard. */}
+            <pre className="options-report-preview" tabIndex={0} aria-label="Problem report, as it will be saved">
+              {preview}
+            </pre>
+            <div className="settings-actions">
+              <button
+                className="settings-chip"
+                onClick={() => {
+                  const name = saveFileName(new Date(), 'report');
+                  download(preview, name);
+                  setPreview(undefined);
+                  setStatus(`Report saved as ${name}. Look for it with your downloads.`);
+                }}
+              >
+                <Download size={15} aria-hidden="true" /> Save report
+              </button>
+              <button className="settings-chip" onClick={() => setPreview(undefined)}>
+                Not now
+              </button>
+            </div>
+          </>
+        )}
+        <p className="settings-status" role="status">
+          {status}
+        </p>
+      </section>
     </Modal>
   );
 }
