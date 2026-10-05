@@ -1,9 +1,9 @@
-import { useId, useState } from 'react';
-import { indentSource } from '@/domain';
+import { useState } from 'react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { RUN_MODIFIER } from '@/shared/lib/format';
-import { lineDiff, sameRoutine, type RoutineVersion } from '../versions';
+import { sameRoutine, type RoutineVersion } from '../versions';
+import { RoutineDiff } from './RoutineDiff';
 
 export interface RestoreModalProps {
   /** The robot whose routine goes back: only the open tab changes, the other robots keep theirs. */
@@ -17,8 +17,6 @@ export interface RestoreModalProps {
   onRestore: (version: RoutineVersion) => void;
 }
 
-const count = (n: number, block: string) => `${n} ${block}${n === 1 ? '' : 's'}`;
-
 /**
  * Put one robot's routine back to an earlier version: the last that served this shift, the one carried in from the
  * shift before, or the shift's starter, each named for where it comes from and set line by line against the routine
@@ -27,10 +25,6 @@ const count = (n: number, block: string) => `${n} ${block}${n === 1 ? '' : 's'}`
 export function RestoreModal({ robot, alone, current, versions, onClose, onRestore }: RestoreModalProps) {
   const [chosen, setChosen] = useState(() => versions.find((v) => !sameRoutine(v.source, current))?.id);
   const version = versions.find((v) => v.id === chosen);
-  const diff = version ? lineDiff(indentSource(current), indentSource(version.source)) : [];
-  const added = diff.filter((line) => line.kind === 'add').length,
-    removed = diff.filter((line) => line.kind === 'remove').length;
-  const heading = useId();
   return (
     <Modal
       className="settings-window confirm-slip restore-slip"
@@ -59,29 +53,7 @@ export function RestoreModal({ robot, alone, current, versions, onClose, onResto
           );
         })}
       </fieldset>
-      {version && (
-        <section className="restore-compare" aria-labelledby={heading}>
-          <p id={heading} className="restore-compare-title">
-            Against {robot}’s routine now
-            <span>
-              {[added && `${count(added, 'line')} back`, removed && `${count(removed, 'line')} out`]
-                .filter(Boolean)
-                .join(' · ') || 'Only the spacing differs'}
-            </span>
-          </p>
-          <ol className="restore-diff">
-            {diff.map((line, i) => (
-              <li key={i} className={line.kind}>
-                <span className="restore-diff-mark" aria-hidden="true">
-                  {line.kind === 'add' ? '+' : line.kind === 'remove' ? '−' : ''}
-                </span>
-                {line.kind !== 'same' && <span className="sr-only">{line.kind === 'add' ? 'Back: ' : 'Out: '}</span>}
-                <code>{line.text}</code>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+      {version && <RoutineDiff robot={robot} current={current} next={version.source} />}
       <p>
         Only {robot}’s routine changes{alone ? '' : '; the other robots keep theirs'}. Undo ({RUN_MODIFIER} Z) brings
         yours back.

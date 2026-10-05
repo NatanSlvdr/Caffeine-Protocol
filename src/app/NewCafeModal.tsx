@@ -18,7 +18,7 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
     <Modal className="settings-window confirm-slip" kicker="A fresh start" title="Start a new café?" onClose={onClose}>
       <p>
         This clears {done ? `${count(done, 'served shift')}, ${count(stars, 'star')}, ` : ''}every routine and the story
-        so far. Your audio and display settings will stay.
+        so far. Your audio and display settings, and your routine notebook, will stay.
       </p>
       <p>
         {kept

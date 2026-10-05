@@ -34,6 +34,7 @@ import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { RestoreModal } from './modals/RestoreModal';
+import { NotebookModal } from './modals/NotebookModal';
 import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal } from './modals/ReceiptModal';
 import { CompareModal } from './modals/CompareModal';
@@ -531,6 +532,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             story={brief.story}
             onHelp={() => setModal('help')}
             onOptions={() => setModal('options')}
+            onNotebook={observation ? undefined : () => setModal('notebook')}
             level={index + 1}
             role={role}
             onRole={(r) => {
@@ -706,6 +708,25 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               `${ROBOT_DISPLAY_NAMES[role]}’s routine is back to the ${version.label.toLowerCase()} version. Undo brings yours back.`,
             );
           }}
+        />
+      )}
+      {modal === 'notebook' && (
+        <NotebookModal
+          role={role}
+          shift={index + 1}
+          current={source}
+          running={running}
+          onUse={(page) => {
+            change(page.source);
+            setModal('');
+            sayHistory(`${ROBOT_DISPLAY_NAMES[role]}’s routine is now “${page.name}”. Undo brings yours back.`);
+          }}
+          onAdd={(page) => {
+            change(source.trimEnd() ? `${source.trimEnd()}\n${page.source}` : page.source);
+            setModal('');
+            sayHistory(`Added “${page.name}” to the end of ${ROBOT_DISPLAY_NAMES[role]}’s routine. Undo takes it out.`);
+          }}
+          onClose={() => setModal('')}
         />
       )}
       {(modal === 'compare' || modal === 'compare-last') && (

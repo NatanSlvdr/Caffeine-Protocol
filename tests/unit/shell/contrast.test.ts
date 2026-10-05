@@ -93,6 +93,11 @@ const PAIRS: [label: string, text: string, ground: string][] = [
     declared('shell.css', '.restore-diff', 'background'),
   ],
   [
+    'why a notebook page doesn’t fit the open robot',
+    declared('shell.css', '.restore-version small.notebook-unfit', 'color'),
+    'var(--slip-paper)',
+  ],
+  [
     'a regular’s signature in the guestbook',
     declared('shell.css', '.guestbook-notes cite', 'color'),
     'var(--slip-paper)',

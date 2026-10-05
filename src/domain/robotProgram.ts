@@ -9,6 +9,7 @@ import {
   parseConditionExpression,
   parseStore,
   parseTimes,
+  queryReads,
   retireRepeat,
   unreadable,
 } from './program';
@@ -116,6 +117,24 @@ function recognised(c: string, role: Exclude<RobotRole, 'query'>, level: number)
     (role === 'floor' && /^IF TABLE ([1-9]|1[0-6])$/.test(c)) ||
     comparisonUnlocked(c, level)
   );
+}
+/**
+ * The first line a robot can't read on a shift, and why: a block that joins the library later, or one it doesn't know.
+ * Only the lines are read, not how they fit together, so part of a routine checks as well as a whole one.
+ */
+export function unreadableLine(
+  source: string,
+  role: RobotRole,
+  level: number,
+): { line: number; message: string } | undefined {
+  const reads = (c: string, at: number) => (role === 'query' ? queryReads(c, at) : recognised(c, role, at));
+  for (const [line, raw] of source.split('\n').entries()) {
+    const c = raw.trim();
+    if (!c || c.startsWith('#') || reads(c, level)) continue;
+    const later = reads(c, EVERY_UNLOCK);
+    return { line, message: unreadable(ROBOT_DISPLAY_NAMES[role], c, later, (fixed) => reads(fixed, EVERY_UNLOCK)) };
+  }
+  return undefined;
 }
 export function compileRobot(source: string, role: RobotRole, level = ROBOT_STAND_IN_LEVEL): Program {
   if (role === 'query') return compileProgram(source, level);

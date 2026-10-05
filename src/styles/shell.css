@@ -1799,6 +1799,89 @@ html[data-motion='reduced'] .front-page *::after {
   color: #8f3f22;
   background: #b968471f;
 }
+/* The routine notebook: a name to keep the routine under, the kept pages as the same list of choices, then what
+   the chosen page would change. */
+.notebook-keep {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 16px;
+}
+.notebook-keep label {
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.notebook-keep div {
+  display: flex;
+  gap: 8px;
+}
+.notebook-keep input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  padding: 0 12px;
+  border: 1.5px solid #392b2433;
+  border-radius: 10px;
+  color: var(--slip-ink);
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+.notebook-keep input:focus-visible {
+  border-color: var(--slip-coffee);
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 1px;
+}
+.notebook-keep small {
+  color: var(--slip-muted);
+  font-size: 12px;
+}
+.restore-versions.notebook-pages {
+  max-height: min(236px, 30dvh);
+  margin-bottom: 10px;
+  padding: 2px;
+  overflow: auto;
+}
+.restore-version small.notebook-unfit {
+  color: #9c4f32;
+}
+.settings-window.confirm-slip p.notebook-empty {
+  margin: 0 0 14px;
+  padding: 12px 14px;
+  border: 1.5px dashed #392b2433;
+  border-radius: 10px;
+  font-size: 13px;
+}
+.notebook-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.notebook-status:has(p:empty):not(:has(button)) {
+  margin: 0;
+}
+.settings-window.confirm-slip .notebook-status p {
+  margin: 0;
+  color: var(--slip-ink);
+  font-size: 13px;
+}
+.settings-window button.settings-chip.notebook-put-back {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.confirm-slip .notebook-actions {
+  margin-top: 4px;
+}
+.settings-window .notebook-actions > button:first-child {
+  margin-right: auto;
+}
+.notebook-carry {
+  margin-top: 22px;
+}
 /* Two runs of the same rounds side by side, on the same till paper: each number, and which way it went. */
 .compare-pick {
   display: grid;

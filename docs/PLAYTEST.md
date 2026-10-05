@@ -44,6 +44,13 @@ The production build is static and caches itself on its first successful load. T
 2. Go offline (the browser's dev tools, or flight mode on a tablet) and reload. The café, its art, its music and the shift you were on come back.
 3. Back online, deploy a new build and reload. The café offers the update rather than swapping it in mid-shift, and the save survives the update.
 
+## Routine notebook
+
+1. On a shift, open **Notebook**, keep the open routine under a name, then change the routine and bring the page back with **Use this page**. Undo brings the change back.
+2. On an earlier shift, open the notebook: a page with blocks that shift doesn't have says so, and can't be used. A page kept for another robot says which blocks the open one doesn't know.
+3. Export the notebook, clear the site data, and import the file: every page comes back. Import it again: nothing is added twice.
+4. Start a new café from Settings: the notebook is still there.
+
 ## Accessibility paths
 
 Play a shift through each of these, start to finish.
@@ -89,3 +96,4 @@ Before each release, someone plays through the list below and fills in a row. A 
 | Music and sound at the default volume, and muted                        |        |         |        |      |       |
 | Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks |        |         |        |      |       |
 | Export a save, reset progress, import it back                           |        |         |        |      |       |
+| The routine notebook, as above                                          |        |         |        |      |       |

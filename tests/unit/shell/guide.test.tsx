@@ -71,6 +71,10 @@ describe('how to play', () => {
     expect(guide.textContent).toContain(
       'On a touch screen, rest a finger on a block until it rises, then drag; a quicker swipe scrolls the routine.',
     );
+    // The notebook is named where it is, and what it checks.
+    expect(guide.textContent).toContain(
+      'The Notebook beside Help keeps the open robot’s routine under a name, to bring back on any shift in its place or after it.',
+    );
     // The keyboard way to move a block names every key the editor's own instructions do.
     expect(guide.textContent).toContain(
       'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it, Enter to pick it as the place new blocks go.',

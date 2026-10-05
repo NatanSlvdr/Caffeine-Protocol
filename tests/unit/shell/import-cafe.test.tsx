@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../../src/App';
 import { newSave } from '../../../src/features/campaign/save/persistence';
+import { notebookFile } from '../../../src/features/workspace/notebook';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
@@ -28,6 +29,12 @@ async function importFile(name: string, text: string) {
 }
 
 describe('importing a café', () => {
+  it('sends a routine notebook to the notebook', async () => {
+    expect(await importFile('notebook.json', notebookFile([]))).toBe(
+      'notebook.json wasn’t imported. It’s a routine notebook: import it from the Notebook on a shift. Your current café has been kept.',
+    );
+  });
+
   it('says a file that is not an export was not imported, and nothing was replaced', async () => {
     expect(await importFile('notes.json', 'shopping list')).toBe(
       'notes.json wasn’t imported. It isn’t a Caffeine Protocol café export. Your current café has been kept.',

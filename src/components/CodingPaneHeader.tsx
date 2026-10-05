@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { RobotRole } from '@/domain';
 import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
-import { BookOpen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
+import { BookOpen, NotebookPen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
 import { RUN_MODIFIER } from '@/shared/lib/format';
 import { RobotOptions } from './RobotChoice';
 import type { RobotTabActivity } from './RobotChoice';
@@ -15,6 +15,7 @@ export function CodingPaneHeader({
   role,
   onRole,
   onHelp,
+  onNotebook,
   onOptions,
   history,
   activity,
@@ -26,6 +27,8 @@ export function CodingPaneHeader({
   onRole: (role: RobotRole) => void;
   story?: string;
   onHelp?: () => void;
+  /** The routine notebook, on a shift with a routine to keep or fill. */
+  onNotebook?: () => void;
   onOptions?: () => void;
   /** Undo and redo for the open robot's routine. */
   history?: { canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void };
@@ -85,6 +88,17 @@ export function CodingPaneHeader({
             {onHelp && (
               <button type="button" aria-label="Help" aria-haspopup="dialog" title="Help" onClick={onHelp}>
                 <BookOpen size={14} aria-hidden="true" />
+              </button>
+            )}
+            {onNotebook && (
+              <button
+                type="button"
+                aria-label="Notebook"
+                aria-haspopup="dialog"
+                title="Routine notebook"
+                onClick={onNotebook}
+              >
+                <NotebookPen size={14} aria-hidden="true" />
               </button>
             )}
             {onOptions && (

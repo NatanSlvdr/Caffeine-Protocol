@@ -61,6 +61,8 @@ export function availableCommands(level: number): string[] {
   if (level >= UNLOCKS.closing) c.push('STOP');
   return c;
 }
+/** Whether Query reads one line on a shift, with that shift's library of commands. */
+export const queryReads = (c: string, level: number) => recognised(c, level, availableCommands(level));
 /** Whether Query reads a line at a level, given that level's library of commands. */
 function recognised(c: string, level: number, allowed: readonly string[]): boolean {
   const sugar = parseSugarWrite(c);

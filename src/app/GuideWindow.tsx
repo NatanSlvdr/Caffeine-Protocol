@@ -110,6 +110,11 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             reset and worked example, one robot at a time, and <strong>Redo</strong> (
             <kbd>{RUN_MODIFIER} + Shift + Z</kbd>) steps forward again.
           </p>
+          <p>
+            Worth keeping? The <strong>Notebook</strong> beside Help keeps the open robot’s routine under a name, to
+            bring back on any shift in its place or after it. A page says when it uses blocks the shift doesn’t have
+            yet, or another robot’s. The notebook stays in this browser; export it to carry it to another.
+          </p>
         </section>
         <section className="settings-block">
           <h3>

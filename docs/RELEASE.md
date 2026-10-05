@@ -7,7 +7,7 @@ What ships in a release of Caffeine Protocol, who and what made it, how to play 
 The first release: the whole campaign, start to finish.
 
 - **21 shifts** in a prologue and four acts ([ADR 005](adr/005-21-shifts.md)). The opening day is watched; from Shift 02 you program Query at the counter, from Shift 09 Brew in the kitchen, and from Shift 14 Porter on the floor. Act IV runs all three together.
-- **Two ways to write a routine:** blocks you drag or move from the keyboard, and a text editor that round-trips with them.
+- **Two ways to write a routine:** blocks you drag or move from the keyboard, and a text editor that round-trips with them. A routine notebook keeps the ones worth keeping under a name, to bring back on any shift, and travels as a file.
 - **Seeing what happened:** a replay timeline with the crew's events, pause marks on blocks, a robot inspector, the receipt's wait breakdown, and two runs of the same rounds side by side.
 - **Help without spoilers first:** each shift's lesson, then hints one at a time, then a worked example; the crew react to a failed run and point at the block where the service stopped.
 - **The café remembers:** stars and routines per shift, four regulars who come back for their usual and are greeted by name at the counter, their guestbook, a shelf of keepsakes for finishing each act, and a café that is put back together as the story goes, from the sidewalk board to Lou's postcard on the wall.

@@ -24,6 +24,7 @@ import {
 } from '@/features/campaign/save/persistence';
 import { count, type DialoguePace, type ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
+import { isNotebookFile } from '@/features/workspace/notebook';
 import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { updateNow, useUpdateReady } from './offlineUpdate';
@@ -229,6 +230,8 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                   try {
                     if (file.size > 2_000_000) throw new Error('It is too large to be a café export.');
                     const text = await file.text();
+                    if (isNotebookFile(text))
+                      throw new Error('It’s a routine notebook: import it from the Notebook on a shift.');
                     setPending({ save: parseSave(text, lessons), changes: migrationChanges(text, lessons) });
                     setError('');
                   } catch (err) {
@@ -265,7 +268,10 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             <h3>
               <Leaf size={16} aria-hidden="true" /> A fresh start
             </h3>
-            <p>Open the doors all over again. Progress and routines are cleared; these settings stay.</p>
+            <p>
+              Open the doors all over again. Progress and routines are cleared; these settings and your routine notebook
+              stay.
+            </p>
             <Button variant="outline-danger" className="settings-chip" aria-haspopup="dialog" onClick={onNew}>
               Start a new café
             </Button>

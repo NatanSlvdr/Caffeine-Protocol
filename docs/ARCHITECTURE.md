@@ -91,6 +91,13 @@ lives inside the payload (`version: 1 | 2 | 3 | 4`). Schema bumps migrate via
 Historical `tests/fixtures/save-v1.json` + `save-v2.json` (pinned by
 `save-fixtures.test.ts`) prove compat with real serialized history.
 
+Two keys live beside the save and never in it, so a fresh start or an import
+leaves them alone: `caffeine-protocol.v1.seen` (which shelf and guestbook
+entries this browser has shown) and `caffeine-protocol.v1.notebook` (the
+routine notebook, `features/workspace/notebook.ts`). The notebook is stored in
+the same format it exports as, and its pages are checked against the open
+robot and shift when shown (`unreadableLine`), not when kept.
+
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 

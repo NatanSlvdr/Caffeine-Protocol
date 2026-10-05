@@ -31,7 +31,7 @@ describe('starting a new café', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Start a new café' }));
     expect(
       screen.getByText(
-        'This clears 3 served shifts, 5 stars, every routine and the story so far. Your audio and display settings will stay.',
+        'This clears 3 served shifts, 5 stars, every routine and the story so far. Your audio and display settings, and your routine notebook, will stay.',
       ),
     ).toBeTruthy();
     const dialog = screen.getByRole('dialog', { name: 'Start a new café?' });
