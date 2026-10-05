@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { lessons, levels } from '../../../src/data';
-import { createLiveRun, recordRun } from '../../../src/domain';
+import { createLiveRun, keepRecord, recordRun } from '../../../src/domain';
 import type { RobotPrograms, RunRecord } from '../../../src/domain';
 import {
   comparableTo,
@@ -73,5 +73,21 @@ describe('comparing two runs', () => {
       'MOVE LEFT 1',
     ]);
     expect(routineChanges(['query'], served, served)[0]).toMatchObject({ added: 0, removed: 0 });
+  });
+
+  it('compares and names a run the same once a newer one has let go of its steps', () => {
+    const steps = (record: RunRecord) => record.result.execution!.reduce((n, round) => n + round.events.length, 0);
+    let records: RunRecord[] = [];
+    for (const record of [failed, served, practice, bigger]) records = keepRecord(records, record);
+    const [oldFailed, oldServed, oldPractice, newest] = records;
+    expect(newest).toBe(bigger);
+    expect([oldFailed, oldServed, oldPractice].map(steps)).toEqual([0, 0, 0]);
+    expect(steps(served)).toBeGreaterThan(0);
+    expect(compareRuns(level, oldFailed, oldServed)).toEqual(compareRuns(level, failed, served));
+    expect(compareRuns(level, oldServed, newest)).toEqual(compareRuns(level, served, bigger));
+    expect(records.map((r) => runName(level, r))).toEqual(
+      [failed, served, practice, bigger].map((r) => runName(level, r)),
+    );
+    expect(latestPair(records)?.map((r) => r.id)).toEqual([2, 4]);
   });
 });

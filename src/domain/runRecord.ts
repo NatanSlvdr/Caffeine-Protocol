@@ -24,6 +24,7 @@ export interface RunRecord {
   readonly programs: Readonly<RobotPrograms>;
   /** The rules and shift content it ran under; see `runVersion`. */
   readonly version: string;
+  /** In full on the newest record; an older one has let go of each round's step-by-step events (see `keepRecord`). */
   readonly result: RunResult;
 }
 
@@ -58,6 +59,23 @@ export function recordRun(
   });
 }
 
-/** Keep the newest records, up to `RUN_HISTORY`. */
-export const keepRecord = (records: readonly RunRecord[], record: RunRecord): RunRecord[] =>
-  [...records, record].slice(-RUN_HISTORY);
+/**
+ * A record once a newer one is kept. Only the newest run is played back, followed or inspected step by step; an older
+ * one is only compared and named, which reads its outcome, numbers, guests and how long each round took. So it lets
+ * go of the robots' step-by-step events, nearly all of a run's memory: about 4 MiB on a busy shift, against 0.1 MiB
+ * without them.
+ */
+function settled(record: RunRecord): RunRecord {
+  const execution = record.result.execution;
+  if (!execution?.some((round) => round.events.length)) return record;
+  return Object.freeze({
+    ...record,
+    result: { ...record.result, execution: execution.map((round) => ({ ...round, events: [] })) },
+  });
+}
+
+/** Keep the newest records, up to `RUN_HISTORY`, only the newest of them in full. */
+export const keepRecord = (records: readonly RunRecord[], record: RunRecord): RunRecord[] => [
+  ...records.slice(1 - RUN_HISTORY).map(settled),
+  record,
+];
