@@ -7,6 +7,7 @@ What each document is for, and which ones describe the game as it ships. The gam
 - [Campaign shifts](campaign/README.md): the shift table, and a page per shift with its story, lesson, customers and reference programs. Generated from `src/data/` by `npm run docs:gen`; authoritative for anything about a shift. Don't edit by hand.
 - [Architecture](ARCHITECTURE.md): how the code is laid out, the simulation and validation pipeline, saves and their migrations, and the offline build.
 - [Roadmap](ROADMAP.md): the improvement backlog and its progress log.
+- [Release playtest matrix](PLAYTEST.md): the browsers, screens, inputs and accessibility paths a release is played on, what the browser tests cover, and the pass a person plays by hand before shipping.
 - [Decision records](adr/): why the campaign, the Query language, asset sync and the CSS are the way they are. [ADR 001](adr/001-32-shifts.md) is superseded in part by [ADR 005](adr/005-21-shifts.md).
 - Game design notes that are kept up to date:
   - [Programming](game_design/programming.md): the routine language, the editor, the runtime and save migration.
