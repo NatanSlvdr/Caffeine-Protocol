@@ -6,6 +6,7 @@ import {
   type RobotRole,
   type RunRecord,
 } from '@/domain';
+import { guestCalled } from './route';
 import { lineDiff, type DiffLine } from './versions';
 
 /**
@@ -57,7 +58,7 @@ const guestsIn = (level: LevelDefinition, record: RunRecord) =>
     0,
   );
 
-/** Where a stopped run stopped: "Query · Round 2 · Guest 3", or "Query’s routine won’t run". */
+/** Where a stopped run stopped: "Query · Round 2 · Guest 3", "Query · Round 1 · Juno", or "Query’s routine won’t run". */
 function stoppedAt(level: LevelDefinition, record: RunRecord): string {
   const failure = record.result.first_failure;
   if (!failure) return 'Stopped';
@@ -68,7 +69,7 @@ function stoppedAt(level: LevelDefinition, record: RunRecord): string {
   return [
     `${robot} stopped`,
     record.seeds.length > 1 && seed >= 0 && `Round ${seed + 1}`,
-    guest >= 0 ? `Guest ${guest + 1}` : seed >= 0 && 'Closing time',
+    guest >= 0 ? guestCalled(level, failure.seed_id, failure.customer_id) : seed >= 0 && 'Closing time',
   ]
     .filter(Boolean)
     .join(' · ');

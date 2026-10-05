@@ -5,7 +5,7 @@ import { legWords } from './route';
 import { whenWords } from './timeline';
 
 export interface OrderRouteProps {
-  /** The guest, as the failure card counts them: "Guest 3". */
+  /** The guest, as the café knows them: "Guest 3", or a regular by name. */
   name: string;
   guest: ReplayEvent;
   /** The order's way so far. */

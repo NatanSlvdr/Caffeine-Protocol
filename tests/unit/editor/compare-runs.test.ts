@@ -42,7 +42,7 @@ describe('comparing two runs', () => {
     const rows = compareRuns(level, failed, served);
     const row = (label: string) => rows.find((r) => r.label === label)!;
     expect(row('Outcome')).toMatchObject({
-      before: 'Query stopped · Round 1 · Guest 1',
+      before: 'Query stopped · Round 1 · Mr. Albert',
       after: 'Served',
       change: 'better',
       delta: 'Now served',

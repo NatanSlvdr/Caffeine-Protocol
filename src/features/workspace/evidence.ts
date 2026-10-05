@@ -1,5 +1,6 @@
 import { count, evaluateQueryComparison, parseConditionExpression, spokenBlock } from '@/domain';
 import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord, TraceStep } from '@/domain';
+import { guestCalled } from './route';
 
 /**
  * A failed run, kept beside the code after the café moves on: what stopped, where, and the routines it stopped on.
@@ -15,6 +16,8 @@ export interface RunEvidence {
   round: number;
   /** Which guest of that round, counting from 1; nothing for the closing call, which belongs to no guest. */
   guest?: number;
+  /** That guest as the café knows them: a regular by name, anyone else by number, "Guest 3". */
+  name?: string;
   /** The IFs Query tested for that guest, in order, each with why it went the way it did. */
   decisions: Decision[];
 }
@@ -73,6 +76,7 @@ export function evidenceOf(level: LevelDefinition, record: RunRecord): RunEviden
     practice: record.mode === 'practice',
     round: Math.max(seed, 0) + 1,
     guest: guest < 0 ? undefined : guest + 1,
+    name: guest < 0 ? undefined : guestCalled(level, failure.seed_id, failure.customer_id),
   };
 }
 

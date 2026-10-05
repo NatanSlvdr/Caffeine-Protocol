@@ -1,4 +1,5 @@
 import type { CastId } from '../../domain/dialogue';
+import { REGULAR_NAMES } from '../../domain/regulars';
 
 export interface CastMember {
   name: string;
@@ -60,22 +61,27 @@ export const cast: Record<CastId, CastMember> = {
       'The little delivery stand-in. A kid from the flat upstairs saving his pocket money. Fast, kind, easily excited.',
   },
   albert: {
-    name: 'Mr. Albert',
+    name: REGULAR_NAMES.albert,
     color: '#8a7f6f',
     about: 'Elderly regular. Always orders “the usual”. It is coffee.',
     customer: true,
   },
   juno: {
-    name: 'Juno',
+    name: REGULAR_NAMES.juno,
     color: '#6f86b5',
     about: 'Student with a laptop. Tea, never sugar, mildly exasperated.',
     customer: true,
   },
-  dot: { name: 'Dot', color: '#c77aa0', about: 'Sweet-toothed regular. Counts her sugars exactly.', customer: true },
+  dot: {
+    name: REGULAR_NAMES.dot,
+    color: '#c77aa0',
+    about: 'Sweet-toothed regular. Counts her sugars exactly.',
+    customer: true,
+  },
   rosa: {
-    name: 'Rosa',
+    name: REGULAR_NAMES.rosa,
     color: '#d0894f',
-    about: 'Arrives with friends and orders for the whole group.',
+    about: 'Arrives with friends and orders for the whole group; alone, a tea in a rush before a meeting.',
     customer: true,
   },
   guest: { name: 'Guest', color: '#9b8bb4', about: 'Any customer at the counter.', customer: true },

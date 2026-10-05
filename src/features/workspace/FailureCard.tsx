@@ -79,14 +79,18 @@ export function FailureCard({
   const heading = useId(),
     body = useId(),
     decisionsHeading = useId();
-  const { failure, round, guest } = evidence;
+  const { failure, round, guest, name } = evidence;
   const robot = ROBOT_DISPLAY_NAMES[failure.role ?? 'query'],
     routine = ROUTINE_CODES.has(failure.code),
     comparison = comparisonOf(failure);
   const title = failure.code === 'compile' ? `${robot}’s routine won’t run` : `${robot} stopped`;
   const when = routine
     ? undefined
-    : [evidence.practice && 'Practice', rounds > 1 && `Round ${round}`, guest ? `Guest ${guest}` : 'Closing time']
+    : [
+        evidence.practice && 'Practice',
+        rounds > 1 && `Round ${round}`,
+        guest ? (name ?? `Guest ${guest}`) : 'Closing time',
+      ]
         .filter(Boolean)
         .join(' · ');
   // One round of several can be played on its own to check a fix; a routine that won't run has no round to play.
@@ -185,7 +189,7 @@ export function FailureCard({
             {followable && (
               <button type="button" className="failure-card-show" onClick={onFollow}>
                 <Route size={14} aria-hidden="true" />
-                Follow Guest {guest}’s order
+                Follow {name ?? `Guest ${guest}`}’s order
               </button>
             )}
             {practisable && (

@@ -22,6 +22,7 @@ export function Cafe({
   follow,
   preview,
   restored = level,
+  counterLines,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -46,6 +47,8 @@ export function Cafe({
    * aprons on their hooks, the lights and the herbs. The shift played by default; the shell's views show the furthest.
    */
   restored?: number;
+  /** What the counter says back to the regulars it recognises, by round and guest: `"L06_B/C1"`. */
+  counterLines?: ReadonlyMap<string, string>;
 }) {
   return (
     <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
@@ -67,6 +70,7 @@ export function Cafe({
           follow={follow}
           preview={preview}
           restored={restored}
+          counterLines={counterLines}
         />
         {pixelArt && <PixelArtEffect />}
       </SceneCanvas>

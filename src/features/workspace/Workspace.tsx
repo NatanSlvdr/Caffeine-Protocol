@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Captions, Footprints, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
@@ -26,6 +26,7 @@ import { useBlockPreview } from './blockPreview';
 import { ServiceSummary } from './ServiceSummary';
 import { summarize, useServiceAnnouncements } from './serviceWords';
 import { followable, guestName, routeDone } from './route';
+import { counterLines } from './counterLines';
 import { whenWords } from './timeline';
 import { markCount, pauseReason } from './breakpoints';
 import { handoverFor } from './handover';
@@ -178,6 +179,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const firstRoutine = index + 1 === UNLOCKS.query && save.stars[index] === undefined;
   // A robot's first shift sets out the job it takes over from a helper, on its own tab, until the shift is served.
   const handover = save.stars[index] === undefined ? handoverFor(index + 1) : undefined;
+  // The regulars the counter recognises, and what it says back to them.
+  const regularLines = useMemo(() => counterLines(level, index + 1), [level, index]);
   const setTips = (on: boolean) => update((s) => ({ ...s, settings: { ...s.settings, first_routine_tips: on } }));
   // The card that started a run goes with it: focus carries on at the run button, which now stops the run.
   const startFromCard = (start: () => void) => {
@@ -406,6 +409,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               level={index + 1}
               follow={serviceView && following ? following : undefined}
               preview={preview}
+              counterLines={regularLines}
             />
             {previewing && <BlockPreviewNote note={note} textMode={textMode} />}
             {summary && (

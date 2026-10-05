@@ -1,5 +1,7 @@
 import {
+  REGULAR_NAMES,
   ROBOT_DISPLAY_NAMES,
+  regularsOf,
   robotActorName,
   type Leg,
   type LevelDefinition,
@@ -45,10 +47,20 @@ export function legWords(leg: Leg, guest: ReplayEvent, level: number): string {
   }
 }
 
-/** A guest by their place in their round's line, as the failure card counts them: "Guest 3". */
+/**
+ * A guest as the café knows them: a regular by name, "Mr. Albert", anyone else by their place in their round's line,
+ * "Guest 3". The failure card, the comparison and the order card all call a guest the same.
+ */
+export function guestCalled(level: LevelDefinition, seedId: string, customerId: string): string {
+  const seed = level.seeds.find((s) => s.id === seedId);
+  const regular = seed && regularsOf(seed.customers).get(customerId);
+  if (regular) return REGULAR_NAMES[regular];
+  return `Guest ${(seed?.customers.findIndex((c) => c.customer_id === customerId) ?? -1) + 1}`;
+}
+
+/** A guest of a run, as the café knows them. */
 export function guestName(level: LevelDefinition, guest: ReplayEvent): string {
-  const seed = level.seeds.find((s) => s.id === guest.seed_id);
-  return `Guest ${(seed?.customers.findIndex((c) => c.customer_id === guest.customer.customer_id) ?? -1) + 1}`;
+  return guestCalled(level, guest.seed_id, guest.customer.customer_id);
 }
 
 /**

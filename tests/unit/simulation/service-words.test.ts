@@ -10,7 +10,7 @@ const served = (shift: number, programs: RobotPrograms = referencePrograms(shift
 describe('the café told in words', () => {
   it('follows a guest from walking up to heading out', () => {
     const run = served(14);
-    // Guest 3 comes in while both tables are taken, so waits for one before sitting down.
+    // Dot, third in, comes in while both tables are taken, so waits for one before sitting down.
     const guest = run.events.find((e) => e.seed_id === 'L14_A' && e.customer.customer_id === 'C3')!;
     const { arrival, created, seating, seated, served: out, left } = guest.timing;
     const at = [arrival - 1, arrival, created, seating!, seated, out, left].map((t) => guestDoing(guest, t, false));
@@ -30,10 +30,10 @@ describe('the café told in words', () => {
     const run = served(14);
     const summary = summarize(run, sampleReplay(run, 30), levels[13], 14);
     expect(summary.guests).toEqual([
-      { who: 'Guest 1 · “coffee, 0 sugars”', what: 'At table 1, waiting for their coffee' },
+      { who: 'Mr. Albert · “coffee, 0 sugars”', what: 'At table 1, waiting for their coffee' },
       { who: 'Guest 2 · “tea, 1 sugar”', what: 'At table 2, waiting for their tea' },
-      { who: 'Guest 3 · “coffee, 2 sugars”', what: 'Waiting for a table' },
-      { who: 'Guest 4 · “tea, 0 sugars”', what: 'Ordering at the register' },
+      { who: 'Dot · “coffee, 2 sugars”', what: 'Waiting for a table' },
+      { who: 'Juno · “tea, 0 sugars”', what: 'Ordering at the register' },
     ]);
     expect([summary.served, summary.total]).toEqual([0, 4]);
     expect(summary.crew.map((line) => line.who)).toEqual(['Query', 'Brew', 'Porter']);
@@ -69,16 +69,16 @@ describe('the café told in words', () => {
     const run = served(14);
     const say = (from: number, to: number) => happenings(run, levels[13], 14, from, to);
     const guest = (id: string) => run.events.find((e) => e.seed_id === 'L14_A' && e.customer.customer_id === id)!;
-    expect(say(-5, 0.5)).toBe('Guest 1 walks in.');
+    expect(say(-5, 0.5)).toBe('Mr. Albert walks in.');
     expect(say(0.5, 9)).toBe('');
     const first = guest('C1').timing;
-    expect(say(first.served - 1, first.served)).toBe('Guest 1 is served at table 1.');
-    expect(say(first.left - 1, first.left)).toBe('Guest 1 leaves.');
+    expect(say(first.served - 1, first.served)).toBe('Mr. Albert is served at table 1.');
+    expect(say(first.left - 1, first.left)).toBe('Mr. Albert leaves.');
     const second = run.execution![1].start;
     expect(say(second - 1, second + 0.5)).toBe('Round 2 of 3 begins. Guest 1 walks in.');
     // A long stretch is cut short, but always says how much more happened.
-    expect(say(-5, 60)).toBe('Guest 1 walks in. Guest 2 walks in. Guest 3 walks in. Guest 4 walks in.');
-    expect(say(-5, 80)).toBe('Guest 1 walks in. Guest 2 walks in. Guest 3 walks in. And 3 more.');
+    expect(say(-5, 60)).toBe('Mr. Albert walks in. Guest 2 walks in. Dot walks in. Juno walks in.');
+    expect(say(-5, 80)).toBe('Mr. Albert walks in. Guest 2 walks in. Dot walks in. And 3 more.');
   });
 
   it('never leaves a robot stopping uncounted', () => {

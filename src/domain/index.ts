@@ -20,6 +20,7 @@ export * from './orders';
 export * from './pricing';
 export * from './program';
 export * from './queryMovement';
+export * from './regulars';
 export * from './replay';
 export * from './robotConditions';
 export * from './robotProgram';

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { crewLook } from '@/components/cafe/World';
-import { BREW, CUSTOMER_LOOKS, MOKA, NIKO, PIP, PORTER, QUERY, customerLook } from '@/components/cafe/looks';
+import { BREW, MOKA, NIKO, PIP, PORTER, QUERY, REGULAR_LOOKS, customerLook } from '@/components/cafe/looks';
 import { ROBOT_UNLOCK_LEVELS } from '@/domain';
 
 describe('cast looks in the café', () => {
@@ -14,10 +14,16 @@ describe('cast looks in the café', () => {
     expect(crewLook('floor', ROBOT_UNLOCK_LEVELS.floor)).toEqual({ robot: PORTER });
   });
 
-  it('gives each customer a stable look, cycling through the regulars', () => {
+  it('gives each guest a stable look, varied among the plain guests and never a regular’s', () => {
     expect(customerLook('C1')).toBe(customerLook('C1'));
-    const firstFive = ['C1', 'C2', 'C3', 'C4', 'C5'].map(customerLook);
-    expect(new Set(firstFive).size).toBe(CUSTOMER_LOOKS.length);
-    expect(firstFive[0].hat?.kind).toBe('flat-cap');
+    const guests = ['C1', 'C2', 'C3', 'C4'].map((id) => customerLook(id));
+    expect(new Set(guests).size).toBe(4);
+    for (const look of guests) expect(Object.values(REGULAR_LOOKS)).not.toContain(look);
+  });
+
+  it('draws a regular as themselves, whoever’s id they arrive under', () => {
+    expect(customerLook('C3', 'albert')).toBe(REGULAR_LOOKS.albert);
+    expect(customerLook('C9', 'albert').hat?.kind).toBe('flat-cap');
+    expect(customerLook('C1', 'juno').headphones).toBeDefined();
   });
 });

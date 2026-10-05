@@ -426,16 +426,16 @@ describe('live workspace lifecycle', () => {
     const bar = screen.getByRole('group', { name: 'Look back through the run' });
     const cafe = screen.getByTestId('cafe');
     const picker = within(bar).getByRole('combobox', { name: 'Follow an order' }) as HTMLSelectElement;
-    expect(within(picker).getByRole('option', { name: 'Guest 1 · “coffee”' })).toBeTruthy();
+    expect(within(picker).getByRole('option', { name: 'Mr. Albert · “coffee”' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: /^Following/ })).toBeNull();
     fireEvent.change(picker, {
       target: {
         value: within(picker)
-          .getByRole('option', { name: /^Guest 1/ })
+          .getByRole('option', { name: /^Mr. Albert/ })
           .getAttribute('value'),
       },
     });
-    const card = screen.getByRole('region', { name: 'Following Guest 1’s order' });
+    const card = screen.getByRole('region', { name: 'Following Mr. Albert’s order' });
     expect(cafe.getAttribute('data-follow')).toMatch(/\/.+/);
     expect(card.textContent).toContain('“coffee”');
     expect(within(picker).getByRole('option', { name: 'Stop following' })).toBeTruthy();
@@ -542,9 +542,9 @@ describe('live workspace lifecycle', () => {
     expect(within(crew).getAllByRole('listitem')[0].textContent).toMatch(/^Query/);
     expect(within(panel).getByRole('region', { name: 'Counters' }).textContent).toContain('Tickets for Moka');
     // What happens is said a little at a time, not every frame.
-    playUntil(() => /Guest 1 walks in\./.test(told()), 20);
-    expect(told()).toMatch(/^Guest 1 walks in\./);
-    expect(within(panel).getByRole('region', { name: /^Guests/ }).textContent).toContain('Guest 1 · “');
+    playUntil(() => /Mr. Albert walks in\./.test(told()), 20);
+    expect(told()).toMatch(/^Mr. Albert walks in\./);
+    expect(within(panel).getByRole('region', { name: /^Guests/ }).textContent).toContain('Mr. Albert · “');
     playUntil(() => /served/.test(told()) || /to go/.test(told()), 90);
     expect(within(panel).getByRole('heading', { name: /^Guests · [1-9]\d* of \d+ served$/ })).toBeTruthy();
     // Paused, it says the moment it is on.
@@ -591,7 +591,7 @@ describe('live workspace lifecycle', () => {
     fireEvent.change(picker, {
       target: { value: within(picker).getAllByRole('option')[1].getAttribute('value') },
     });
-    const card = screen.getByRole('region', { name: /^Following Guest 1/ });
+    const card = screen.getByRole('region', { name: /^Following Mr. Albert/ });
     fireEvent.click(within(card).getByRole('button', { name: /Brew takes the ticket/ }));
     expect(tab()).toMatch(/Brew/);
     // Brew takes a ticket by listening for one.
@@ -866,7 +866,7 @@ describe('live workspace lifecycle', () => {
       within(outcome)
         .getAllByRole('cell')
         .map((cell) => cell.textContent),
-    ).toEqual(['Query stopped · Round 1 · Guest 1', 'Served', 'Now served, better']);
+    ).toEqual(['Query stopped · Round 1 · Mr. Albert', 'Served', 'Now served, better']);
     expect(within(compare).getByRole('row', { name: /^Steps run/ }).textContent).toMatch(/—/);
     // Each run keeps the routine it ran: the fix, line by line.
     const diff = within(compare).getByRole('list', { name: 'Query’s routine, run 1 to run 2' });
@@ -1049,7 +1049,7 @@ describe('the failure card', () => {
     fireEvent.keyDown(window, { key: 'Escape' });
     const kept = card()!;
     expect(kept.getAttribute('aria-labelledby')).toBeTruthy();
-    expect(within(kept).getByText('Query stopped').textContent).toBe('Query stopped · Round 1 · Guest 2');
+    expect(within(kept).getByText('Query stopped').textContent).toBe('Query stopped · Round 1 · Juno');
     expect(kept.textContent).toContain('“tea”');
     const row = within(kept).getByRole('row', { name: /Drink/ });
     expect(
@@ -1072,8 +1072,8 @@ describe('the failure card', () => {
   it('follows the failed guest’s order, to the slip that ended it', () => {
     failRun();
     fireEvent.keyDown(window, { key: 'Escape' });
-    fireEvent.click(within(card()!).getByRole('button', { name: 'Follow Guest 2’s order' }));
-    const route = screen.getByRole('region', { name: 'Following Guest 2’s order' });
+    fireEvent.click(within(card()!).getByRole('button', { name: 'Follow Juno’s order' }));
+    const route = screen.getByRole('region', { name: 'Following Juno’s order' });
     expect(route.textContent).toContain('“tea”');
     const legs = within(route).getAllByRole('listitem');
     expect(legs.at(-1)!.textContent).toMatch(/Query stopped: /);
@@ -1160,7 +1160,7 @@ describe('the failure card', () => {
     expect(status.textContent).toBe('Practising round 1 of 3, for no stars. The routines are locked until it stops.');
     play();
     fireEvent.keyDown(window, { key: 'Escape' });
-    expect(within(card()!).getByText('Query stopped').textContent).toBe('Query stopped · Practice · Round 1 · Guest 2');
+    expect(within(card()!).getByText('Query stopped').textContent).toBe('Query stopped · Practice · Round 1 · Juno');
     // Fixed, the card says to check it, and practice that goes right says so beside the code: no cheer, no receipt.
     fireEvent.change(screen.getByRole('textbox', { name: 'Routine text' }), { target: { value: lessons[3].solution } });
     expect(card()!.textContent).toContain('practise this round to check it, or run the whole service.');

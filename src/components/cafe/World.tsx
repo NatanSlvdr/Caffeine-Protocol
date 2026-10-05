@@ -13,6 +13,7 @@ import {
   STAFF_ENTRY,
   TABLE_LAYOUT,
   sampleReplay,
+  roundRegulars,
   orderWhereabouts,
   robotUnlocked,
   robotActorName,
@@ -94,6 +95,7 @@ export function World({
   follow,
   preview,
   restored,
+  counterLines,
 }: {
   evening: boolean;
   result?: RunResult;
@@ -114,6 +116,8 @@ export function World({
   preview?: BlockPreview;
   /** The shift whose café is dressed: what the story has put back by then. */
   restored: number;
+  /** What the counter says back to the regulars it recognises, by round and guest. */
+  counterLines?: ReadonlyMap<string, string>;
 }) {
   const state = result ? sampleReplay(result, time) : undefined;
   const followed =
@@ -122,6 +126,7 @@ export function World({
       : undefined;
   const whereabouts = state && followed ? orderWhereabouts(state, followed) : undefined;
   const actors = state?.actors ?? fallbackActors(level);
+  const regulars = result && state?.seed ? roundRegulars(result, state.seed.seed_id) : undefined;
   const gateOpen = isGateOpen(state);
   const bubbleShown = (id: string, actor: ActorSnapshot) =>
     serviceView &&
@@ -287,6 +292,9 @@ export function World({
           const event = result?.events.find(
             (event) => event.seed_id === state.seed?.seed_id && event.customer.customer_id === c.id,
           );
+          const atCounter =
+            !c.sit &&
+            Math.hypot(c.position[0] - STATIONS.orders.floor[0], c.position[1] - STATIONS.orders.floor[1]) < 0.5;
           const clarified = !!state.seed?.events.some(
             (log) =>
               log.role === 'query' && log.command === 'HELP' && log.customerId === c.id && log.end <= state.local,
@@ -298,7 +306,7 @@ export function World({
               )}
               <Character
                 at={c.position}
-                look={{ human: customerLook(c.id) }}
+                look={{ human: customerLook(c.id, regulars?.get(c.id)) }}
                 sit={c.sit}
                 walking={moving && c.walking}
                 animate={moving}
@@ -318,11 +326,8 @@ export function World({
                   <CustomerSpeech
                     customer={event.customer}
                     clarified={clarified}
-                    atCounter={
-                      !c.sit &&
-                      Math.hypot(c.position[0] - STATIONS.orders.floor[0], c.position[1] - STATIONS.orders.floor[1]) <
-                        0.5
-                    }
+                    atCounter={atCounter}
+                    counterLine={atCounter ? counterLines?.get(`${event.seed_id}/${c.id}`) : undefined}
                   />
                 </SceneHtml>
               )}

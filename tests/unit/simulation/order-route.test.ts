@@ -47,7 +47,9 @@ describe('following an order', () => {
       'Pip clears the cup',
     ]);
     expect(routeDone(route, true, false)).toBe(true);
-    expect(guestName(levels[2], guest)).toBe('Guest 1');
+    // A regular is called by name; anyone else by their place in their round's line.
+    expect(guestName(levels[2], guest)).toBe('Mr. Albert');
+    expect(guestName(levels[2], { ...guest, customer: { ...guest.customer, customer_id: 'C2' } })).toBe('Guest 2');
   });
 
   it('keeps each cup of a two-drink order on its own way', () => {
@@ -124,8 +126,9 @@ describe('following an order', () => {
     const { result } = played(3, solution(3));
     const all = followable(level, result, Infinity);
     expect(all).toHaveLength(result.events.length);
-    expect(all[0]).toMatchObject({ round: 1, label: 'Guest 1 · “coffee”' });
+    expect(all[0]).toMatchObject({ round: 1, label: 'Mr. Albert · “coffee”' });
+    expect(all[1]).toMatchObject({ round: 1, label: 'Guest 2 · “coffee please”' });
     expect(new Set(all.map((f) => f.round))).toEqual(new Set([1, 2, 3]));
-    expect(followable(level, result, 0).map((f) => f.label)).toEqual(['Guest 1 · “coffee”']);
+    expect(followable(level, result, 0).map((f) => f.label)).toEqual(['Mr. Albert · “coffee”']);
   });
 });
