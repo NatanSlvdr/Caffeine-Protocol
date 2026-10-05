@@ -30,7 +30,7 @@ import {
 } from '@/domain/robotConditions';
 import { MAX_ITEM_QUANTITY, MAX_MOVE_COUNT } from '@/domain/constants';
 import { BlockSelect, DirectionSelect } from '../BlockSelect';
-import { keepKeysInBlock } from '../selects/blockKeys';
+import { isRunShortcut, keepKeysInBlock } from '../selects/blockKeys';
 import { BlockIcon } from '../BlockIcon';
 import { conditionLabels, conditionOption, operandOption } from './blockMeta';
 
@@ -66,7 +66,17 @@ function CountInput({
       // A field disabled mid-edit, as a service starts, may never see its blur: it shows the block's number.
       value={disabled ? value : (draft ?? value)}
       disabled={disabled}
-      onKeyDown={keepKeysInBlock}
+      enterKeyHint="done"
+      onKeyDown={(event) => {
+        keepKeysInBlock(event);
+        // Enter, or a touch keyboard's Done, settles the number and steps back out to the block, which puts the
+        // keyboard away; a library tile's field just lets go.
+        if (event.key !== 'Enter' || isRunShortcut(event)) return;
+        event.preventDefault();
+        const block = event.currentTarget.parentElement?.closest<HTMLElement>('[data-line]');
+        if (block) block.focus();
+        else event.currentTarget.blur();
+      }}
       onChange={(event) => {
         const text = event.target.value,
           count = Number(text);

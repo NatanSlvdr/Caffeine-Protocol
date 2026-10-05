@@ -32,7 +32,7 @@ The first release: the whole campaign, start to finish.
 | Dialogue       | Back to the line before                     | <kbd>←</kbd>                                                                  |
 | Dialogue       | Move between a scene's buttons              | <kbd>Tab</kbd>, <kbd>Shift + Tab</kbd>                                        |
 
-With a mouse: drag blocks from the library or by their grip, drop one outside the code to remove it, and scrub the replay timeline. On a tablet: tap to add a block, press and drag to move it, and tap through dialogue.
+With a mouse: drag a block from the library or within the routine (a group by its first block), drop one outside the code to remove it, and scrub the replay timeline. On a tablet: tap to add a block, rest a finger on one until it rises and then drag it, swipe to scroll a long routine, and tap through dialogue.
 
 ## Credits
 

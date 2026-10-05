@@ -67,6 +67,10 @@ describe('how to play', () => {
       'Drag a branch, loop or function by its first block to move it whole, or drag a block out of the code to remove it.',
     );
     expect(guide.textContent).not.toContain('grip');
+    // A tablet player learns the hold that lifts a block, and that a swipe scrolls instead.
+    expect(guide.textContent).toContain(
+      'On a touch screen, rest a finger on a block until it rises, then drag; a quicker swipe scrolls the routine.',
+    );
     // The keyboard way to move a block names every key the editor's own instructions do.
     expect(guide.textContent).toContain(
       'Space to lift, arrow keys to move, Space to drop, Esc to put it back, Delete to remove it, Enter to pick it as the place new blocks go.',

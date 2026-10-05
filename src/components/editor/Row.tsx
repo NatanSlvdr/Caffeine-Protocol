@@ -5,6 +5,7 @@ import { blockFields, count, parseStore, spokenBlock, type VisualBlock } from '@
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+import { useLifting } from './lifting';
 
 /** A button on a jump or a call that goes to its landing spot or its function. */
 export interface GoTo {
@@ -65,6 +66,7 @@ export function Row({
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
   const { attributes, listeners, setNodeRef } = useDraggable({ id: String(id), data: { at: id }, disabled: locked });
+  const lifting = useLifting(String(id));
   const rowRef = useRef<HTMLDivElement | null>(null),
     target = command.startsWith('POSITION ');
   useEffect(() => {
@@ -145,6 +147,7 @@ export function Row({
           failure ? 'failure' : '',
           flagged && !failure ? 'flagged' : '',
           picked ? 'picked' : '',
+          lifting ? 'lifting' : '',
         ].join(' ')}
         aria-current={active && !failure ? 'step' : undefined}
         data-line={id}

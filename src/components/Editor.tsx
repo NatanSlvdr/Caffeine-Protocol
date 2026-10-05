@@ -19,7 +19,7 @@ import {
   type RobotRole,
   type VisualBlock,
 } from '@/domain';
-import { BlockPointerSensor } from '@/hooks/useBlockPointerSensor';
+import { BlockPointerSensor, BlockTouchSensor, TOUCH_LIFT_MS, TOUCH_LIFT_TOLERANCE } from '@/hooks/blockSensors';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { useKeyboardCoordinates } from '@/hooks/useKeyboardDropSlot';
 import { useDropCollision } from '@/hooks/useCodeCollision';
@@ -36,6 +36,7 @@ import { scopeAround } from './editor/textScope';
 import { BlockActions, type BlockAction } from './editor/BlockActions';
 import { copyBlock, copyBlocker, moveBlock } from './editor/blockEdits';
 import { ProgramSurface } from './editor/ProgramSurface';
+import { Lifting } from './editor/lifting';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
 import { ExecutionCursor } from './ExecutionCursor';
@@ -119,12 +120,15 @@ export function Editor({
   const keyboardCoordinates = useKeyboardCoordinates(root, dragScope, lastSlot);
   const sensors = useSensors(
     useSensor(BlockPointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(BlockTouchSensor, { activationConstraint: { delay: TOUCH_LIFT_MS, tolerance: TOUCH_LIFT_TOLERANCE } }),
     // Space alone lifts a block, so Enter on a library block adds it like a click.
     useSensor(KeyboardSensor, {
       coordinateGetter: keyboardCoordinates,
       keyboardCodes: { start: ['Space'], cancel: ['Escape'], end: ['Space', 'Enter'] },
     }),
   );
+  // The block a finger rests on shows it is about to lift, so a hold reads as one and a swipe as a scroll.
+  const [lifting, setLifting] = useState<string | null>(null);
   const collisionDetection = useDropCollision({ root, codeArea, pointer, dragScope, lastSlot });
   const change = (value: string) => {
     if (!disabled) onChange(value);
@@ -416,219 +420,226 @@ export function Editor({
         announcements: dragAnnouncements(rows, () => droppedOutside({ codeArea, pointer })),
         screenReaderInstructions: dragInstructions,
       }}
-      onDragStart={onDragStart}
+      onDragPending={({ id, constraint }) => setLifting('delay' in constraint ? String(id) : null)}
+      onDragAbort={() => setLifting(null)}
+      onDragStart={(event) => {
+        setLifting(null);
+        onDragStart(event);
+      }}
       onDragCancel={onDragCancel}
       onDragEnd={onDragEnd}
     >
-      <DragPreview.Provider value={{ blocks: previewBlocks, options }}>
-        <section className="palette compact-palette" aria-label="Available code blocks">
-          <div className="command-library">
-            {blockPrototypes(options).map((c) => (
-              <CommandTile
-                key={role + ':' + level + ':' + c}
-                initial={c}
-                options={options}
-                disabled={disabled}
-                help={spokenHelp(blockHelp(c, role, level))}
-                onExplain={explain}
-                onChange={insert}
-              />
-            ))}
-          </div>
-          {/* The buttons already say this to screen readers; this is the same words for the eye. */}
-          {help && (
-            <p className="library-help" aria-hidden="true">
-              <strong>{help.name}</strong> {help.text}
-              {help.example && <span className="library-help-example">For example: {help.example}</span>}
-            </p>
-          )}
-        </section>
-        <div
-          className="editor-body"
-          ref={codeArea}
-          onFocus={(e) => {
-            const block = (e.target as Element).closest<HTMLElement>('.block[data-line]');
-            if (block) onSelect?.(Number(block.dataset.line));
-          }}
-          onKeyDown={(e) => {
-            // Only from a block or the pane itself: Escape in a value's menu just closes the menu.
-            if (e.key !== 'Escape' || !picked || !(e.target as Element).matches('.block, .editor-body')) return;
-            setPick(null);
-            say('New blocks go at the end of the routine again.');
-          }}
-          {...(tabbed
-            ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
-            : { role: 'group', 'aria-label': 'Code zone' })}
-        >
-          {observation ? (
-            // Without this the watch-only shift's code zone is a blank pane with nothing to say why.
-            <p className="observation-note">
-              No routine to write today: the crew serves this shift by hand. {ROBOT_DISPLAY_NAMES[role]} joins on Shift{' '}
-              {pad2(ROBOT_UNLOCK_LEVELS[role])}.
-            </p>
-          ) : textMode ? (
-            <div className="code-text">
-              {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
-              <div className="code-text-lines" aria-hidden="true">
-                {lines.map((line, i) => (
-                  <div
-                    key={i}
-                    className={
-                      [
-                        i === failureLine
-                          ? 'failed'
-                          : i === markerLine
-                            ? 'active'
-                            : i === problem?.line
-                              ? 'flagged'
-                              : '',
-                        marks.has(i) ? 'marked' : '',
-                        scope.includes(i) ? 'scope-edge' : i > scope[0] && i < scope.at(-1)! ? 'in-scope' : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ') || undefined
-                    }
-                  >
-                    {line || ' '}
-                  </div>
-                ))}
+      <Lifting.Provider value={lifting}>
+        <DragPreview.Provider value={{ blocks: previewBlocks, options }}>
+          <section className="palette compact-palette" aria-label="Available code blocks">
+            <div className="command-library">
+              {blockPrototypes(options).map((c) => (
+                <CommandTile
+                  key={role + ':' + level + ':' + c}
+                  initial={c}
+                  options={options}
+                  disabled={disabled}
+                  help={spokenHelp(blockHelp(c, role, level))}
+                  onExplain={explain}
+                  onChange={insert}
+                />
+              ))}
+            </div>
+            {/* The buttons already say this to screen readers; this is the same words for the eye. */}
+            {help && (
+              <p className="library-help" aria-hidden="true">
+                <strong>{help.name}</strong> {help.text}
+                {help.example && <span className="library-help-example">For example: {help.example}</span>}
+              </p>
+            )}
+          </section>
+          <div
+            className="editor-body"
+            ref={codeArea}
+            onFocus={(e) => {
+              const block = (e.target as Element).closest<HTMLElement>('.block[data-line]');
+              if (block) onSelect?.(Number(block.dataset.line));
+            }}
+            onKeyDown={(e) => {
+              // Only from a block or the pane itself: Escape in a value's menu just closes the menu.
+              if (e.key !== 'Escape' || !picked || !(e.target as Element).matches('.block, .editor-body')) return;
+              setPick(null);
+              say('New blocks go at the end of the routine again.');
+            }}
+            {...(tabbed
+              ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
+              : { role: 'group', 'aria-label': 'Code zone' })}
+          >
+            {observation ? (
+              // Without this the watch-only shift's code zone is a blank pane with nothing to say why.
+              <p className="observation-note">
+                No routine to write today: the crew serves this shift by hand. {ROBOT_DISPLAY_NAMES[role]} joins on
+                Shift {pad2(ROBOT_UNLOCK_LEVELS[role])}.
+              </p>
+            ) : textMode ? (
+              <div className="code-text">
+                {/* A copy of the lines under the textarea marks the running or failing line without touching the text. */}
+                <div className="code-text-lines" aria-hidden="true">
+                  {lines.map((line, i) => (
+                    <div
+                      key={i}
+                      className={
+                        [
+                          i === failureLine
+                            ? 'failed'
+                            : i === markerLine
+                              ? 'active'
+                              : i === problem?.line
+                                ? 'flagged'
+                                : '',
+                          marks.has(i) ? 'marked' : '',
+                          scope.includes(i) ? 'scope-edge' : i > scope[0] && i < scope.at(-1)! ? 'in-scope' : '',
+                        ]
+                          .filter(Boolean)
+                          .join(' ') || undefined
+                      }
+                    >
+                      {line || ' '}
+                    </div>
+                  ))}
+                </div>
+                <textarea
+                  onClick={failureLine >= 0 ? onDismissFailure : undefined}
+                  // Routine words aren't English: a touch keyboard must not capitalise or "correct" them.
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  autoCorrect="off"
+                  autoComplete="off"
+                  ref={textInput}
+                  aria-label="Routine text"
+                  // The text view's own empty-routine hint: it says what goes here.
+                  placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
+                  aria-description={
+                    (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
+                    (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
+                    (onMark ? 'F9 marks the line for the service to pause at. ' : '') +
+                    'Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.'
+                  }
+                  onKeyDown={onTextKey}
+                  // The gutter, where the numbers are, marks a line to pause at, as a block's number does.
+                  onMouseDown={(e) => {
+                    if (!onMark || e.button !== 0 || e.clientX - e.currentTarget.getBoundingClientRect().left > 44)
+                      return;
+                    const numbered = [...(e.currentTarget.previousElementSibling?.children ?? [])];
+                    const line = numbered.findIndex((row) => {
+                      const box = row.getBoundingClientRect();
+                      return e.clientY >= box.top && e.clientY < box.bottom;
+                    });
+                    if (line < 0) return;
+                    e.preventDefault();
+                    mark(line);
+                  }}
+                  onSelect={(e) => trackCaret(e.currentTarget)}
+                  onFocus={(e) => trackCaret(e.currentTarget)}
+                  onBlur={() => setCaretLine(null)}
+                  value={source}
+                  onChange={(e) => {
+                    typed.current = e.target.value;
+                    change(e.target.value);
+                  }}
+                  readOnly={locked}
+                  className="code-input"
+                />
               </div>
-              <textarea
-                onClick={failureLine >= 0 ? onDismissFailure : undefined}
-                // Routine words aren't English: a touch keyboard must not capitalise or "correct" them.
-                spellCheck={false}
-                autoCapitalize="off"
-                autoCorrect="off"
-                autoComplete="off"
-                ref={textInput}
-                aria-label="Routine text"
-                // The text view's own empty-routine hint: it says what goes here.
-                placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
-                aria-description={
-                  (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
-                  (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
-                  (onMark ? 'F9 marks the line for the service to pause at. ' : '') +
-                  'Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.'
-                }
-                onKeyDown={onTextKey}
-                // The gutter, where the numbers are, marks a line to pause at, as a block's number does.
-                onMouseDown={(e) => {
-                  if (!onMark || e.button !== 0 || e.clientX - e.currentTarget.getBoundingClientRect().left > 44)
-                    return;
-                  const numbered = [...(e.currentTarget.previousElementSibling?.children ?? [])];
-                  const line = numbered.findIndex((row) => {
-                    const box = row.getBoundingClientRect();
-                    return e.clientY >= box.top && e.clientY < box.bottom;
-                  });
-                  if (line < 0) return;
-                  e.preventDefault();
-                  mark(line);
-                }}
-                onSelect={(e) => trackCaret(e.currentTarget)}
-                onFocus={(e) => trackCaret(e.currentTarget)}
-                onBlur={() => setCaretLine(null)}
-                value={source}
-                onChange={(e) => {
-                  typed.current = e.target.value;
-                  change(e.target.value);
-                }}
-                readOnly={locked}
-                className="code-input"
-              />
-            </div>
-          ) : (
-            <ProgramSurface root={root}>
-              <ExecutionCursor
-                root={root}
-                line={failureLine >= 0 ? visibleFailureLine : markerLine}
-                stepSeconds={stepSeconds}
-              />
-              {/* An empty routine names both ways in, as the Guide does: a tablet player may never think to drag. */}
-              <Insertion
-                at={0}
-                disabled={disabled}
-                hint={rows.length ? '' : 'Tap or click a block in the library, or drag one here'}
-              />
-              <ProgramRows
-                tree={tree}
-                rows={rows}
-                elseBlock={elseBlock}
-                options={options}
-                disabled={disabled}
-                source={source}
-                activeLine={activeLine}
-                visibleFailureLine={visibleFailureLine}
-                onDismissFailure={onDismissFailure}
-                inLoop={inLoop}
-                dragged={dragged}
-                draggedLine={draggedLine}
-                change={blockChange}
-                remove={remove}
-                picked={picked?.line ?? null}
-                nextAt={spot ? spot.at : null}
-                onPick={choose}
-                isFolded={isFolded}
-                inside={inside}
-                onFold={fold}
-                goTo={goTo}
-                flaggedLine={problem?.line ?? -1}
-                marks={marks}
-                onMark={onMark && mark}
-                actions={(block) => (
-                  <BlockActions
-                    block={block}
-                    ordinal={ordinalOf(block.line)}
-                    source={source}
-                    onAct={(action) => act(block, action)}
-                  />
+            ) : (
+              <ProgramSurface root={root}>
+                <ExecutionCursor
+                  root={root}
+                  line={failureLine >= 0 ? visibleFailureLine : markerLine}
+                  stepSeconds={stepSeconds}
+                />
+                {/* An empty routine names both ways in, as the Guide does: a tablet player may never think to drag. */}
+                <Insertion
+                  at={0}
+                  disabled={disabled}
+                  hint={rows.length ? '' : 'Tap or click a block in the library, or drag one here'}
+                />
+                <ProgramRows
+                  tree={tree}
+                  rows={rows}
+                  elseBlock={elseBlock}
+                  options={options}
+                  disabled={disabled}
+                  source={source}
+                  activeLine={activeLine}
+                  visibleFailureLine={visibleFailureLine}
+                  onDismissFailure={onDismissFailure}
+                  inLoop={inLoop}
+                  dragged={dragged}
+                  draggedLine={draggedLine}
+                  change={blockChange}
+                  remove={remove}
+                  picked={picked?.line ?? null}
+                  nextAt={spot ? spot.at : null}
+                  onPick={choose}
+                  isFolded={isFolded}
+                  inside={inside}
+                  onFold={fold}
+                  goTo={goTo}
+                  flaggedLine={problem?.line ?? -1}
+                  marks={marks}
+                  onMark={onMark && mark}
+                  actions={(block) => (
+                    <BlockActions
+                      block={block}
+                      ordinal={ordinalOf(block.line)}
+                      source={source}
+                      onAct={(action) => act(block, action)}
+                    />
+                  )}
+                />
+                <JumpArrows root={root} source={source} dragging={!!dragged} />
+              </ProgramSurface>
+            )}
+          </div>
+          {textMode && !observation && (
+            <div className="text-tools">
+              <p className="text-help">
+                {lineHelp?.text && (
+                  <>
+                    <strong>{lineHelp.name}</strong> {lineHelp.text}
+                  </>
                 )}
-              />
-              <JumpArrows root={root} source={source} dragging={!!dragged} />
-            </ProgramSurface>
-          )}
-        </div>
-        {textMode && !observation && (
-          <div className="text-tools">
-            <p className="text-help">
-              {lineHelp?.text && (
-                <>
-                  <strong>{lineHelp.name}</strong> {lineHelp.text}
-                </>
+              </p>
+              {!disabled && (
+                <button type="button" onClick={() => tidy()} aria-keyshortcuts="Shift+Alt+F" title="Shift+Alt+F">
+                  <WandSparkles size={13} aria-hidden="true" />
+                  Tidy up
+                </button>
               )}
-            </p>
-            {!disabled && (
-              <button type="button" onClick={() => tidy()} aria-keyshortcuts="Shift+Alt+F" title="Shift+Alt+F">
-                <WandSparkles size={13} aria-hidden="true" />
-                Tidy up
-              </button>
-            )}
-          </div>
-        )}
-        {problem && (
-          <div className="routine-check">
-            <TriangleAlert size={14} aria-hidden="true" />
-            <p>
-              {problemAt && <strong>{problemAt}: </strong>}
-              {problem.message}
-            </p>
-            {(textMode || ordinalOf(problem.line) > 0) && (
-              <button type="button" onClick={showProblem}>
-                Show
-              </button>
-            )}
-          </div>
-        )}
-        <p className="sr-only" role="status">
-          {said}
-        </p>
-        <DragOverlay dropAnimation={null}>
-          {dragged && (
-            <div className={'drag-preview floating-code-preview' + (draggedLine === null ? ' from-shop' : '')}>
-              <ProjectedBlocks blocks={previewBlocks} />
             </div>
           )}
-        </DragOverlay>
-      </DragPreview.Provider>
+          {problem && (
+            <div className="routine-check">
+              <TriangleAlert size={14} aria-hidden="true" />
+              <p>
+                {problemAt && <strong>{problemAt}: </strong>}
+                {problem.message}
+              </p>
+              {(textMode || ordinalOf(problem.line) > 0) && (
+                <button type="button" onClick={showProblem}>
+                  Show
+                </button>
+              )}
+            </div>
+          )}
+          <p className="sr-only" role="status">
+            {said}
+          </p>
+          <DragOverlay dropAnimation={null}>
+            {dragged && (
+              <div className={'drag-preview floating-code-preview' + (draggedLine === null ? ' from-shop' : '')}>
+                <ProjectedBlocks blocks={previewBlocks} />
+              </div>
+            )}
+          </DragOverlay>
+        </DragPreview.Provider>
+      </Lifting.Provider>
     </DndContext>
   );
 }

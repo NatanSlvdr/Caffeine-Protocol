@@ -923,6 +923,43 @@ html[data-motion='reduced'] *:after {
 .editor-panel .block .block-go:focus-visible {
   background: #ffffffa6;
 }
+/* A finger resting on a block, about to lift it (`TOUCH_LIFT_MS`): the block rises under it over the hold, so a hold
+   reads as one before the block comes away. With reduced motion it is simply raised. */
+.editor-panel .code-row .block.lifting,
+.editor-panel .command-library .command-tile.lifting {
+  transform: translateY(-3px);
+  filter: drop-shadow(0 5px 4px #4a352040);
+  animation: block-lift 250ms ease-out;
+}
+@keyframes block-lift {
+  from {
+    transform: none;
+    filter: none;
+  }
+}
+/* A fingertip is wider than the editor's smallest buttons, so on a touch screen each answers a little way around
+   itself, short of its neighbours, without taking any more room. */
+@media (pointer: coarse) {
+  .editor-panel .block .block-fold,
+  .editor-panel .block .block-go,
+  .editor-panel .block-actions button {
+    position: relative;
+  }
+  .editor-panel .block .block-fold::before,
+  .editor-panel .block .block-go::before,
+  .editor-panel .block-actions button::before,
+  .workspace-main .editor-panel button.line-number::before {
+    content: '';
+    position: absolute;
+    inset: -5px -4px;
+  }
+  .editor-panel .block-actions button::before {
+    inset: -5px -1.5px;
+  }
+  .workspace-main .editor-panel button.line-number::before {
+    inset: -8px -4px -8px -10px;
+  }
+}
 /* Folded, the group's edge stays as a short stub under its first block, so it still reads as a group. */
 .editor-panel .code-scope.folded > .code-row::after {
   content: '';

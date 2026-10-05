@@ -3,6 +3,7 @@ import { blockFields, spokenBlock } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+import { useLifting } from './lifting';
 
 export function CommandTile({
   initial,
@@ -27,6 +28,7 @@ export function CommandTile({
     data: { command },
     disabled,
   });
+  const lifting = useLifting('library:' + initial);
   const fields = blockFields(command);
   const insertButton = (
     <button
@@ -46,7 +48,7 @@ export function CommandTile({
   return (
     <div
       ref={setNodeRef}
-      className={'command-tile ' + category(command)}
+      className={'command-tile ' + category(command) + (lifting ? ' lifting' : '')}
       style={{ opacity: isDragging ? 0.4 : 1 }}
       onPointerEnter={() => onExplain(command)}
       onPointerLeave={() => onExplain(null)}
