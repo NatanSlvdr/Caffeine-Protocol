@@ -1,6 +1,7 @@
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { SceneBoundary } from '@/shared/ui/SceneBoundary';
+import { reclaimFocus } from '@/shared/lib/focus';
 
 /** Three's renderer requires WebGL 2; probe before its asynchronous creation can throw. */
 function webglSupported(): boolean {
@@ -25,6 +26,17 @@ export function SceneCanvas({
 }) {
   const [supported] = useState(webglSupported);
   const [lost, setLost] = useState(false);
+  // Each try builds the renderer afresh. The scene draws from its props alone, so it comes back at the same moment
+  // of service, and nothing outside the canvas (routines, the run) is touched.
+  const [attempt, setAttempt] = useState(0);
+  const retry = () => {
+    setLost(false);
+    setAttempt((n) => n + 1);
+  };
+  // The button that asked goes with the notice, so focus carries on from the screen's title.
+  useEffect(() => {
+    if (attempt) reclaimFocus();
+  }, [attempt]);
   if (fallback !== undefined && (!supported || lost)) return <>{fallback}</>;
   if (!supported)
     return (
@@ -40,10 +52,17 @@ export function SceneCanvas({
     <>
       {lost ? (
         <div className="webgl-fallback">
-          The graphics context was interrupted. Your program and service results are safe. Reload to restore the café.
+          <strong>The café’s picture went dark.</strong>
+          <p>
+            The browser took back the graphics for a moment, as it can when a device is busy or wakes from sleep. Your
+            routines and this service are safe.
+          </p>
+          <button className="webgl-retry" onClick={retry}>
+            Draw the café again
+          </button>
         </div>
       ) : (
-        <SceneBoundary fallback={fallback}>
+        <SceneBoundary key={attempt} fallback={fallback} onRetry={fallback === undefined ? retry : undefined}>
           <Suspense
             fallback={fallback !== undefined ? fallback : <div className="scene-loading">Warming up the café…</div>}
           >

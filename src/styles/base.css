@@ -1042,3 +1042,7 @@ html[data-motion='reduced'] *:after {
   outline: 2px solid #f4c95d;
   outline-offset: 2px;
 }
+/* The way back after the 3D café drops out: plain, but the one thing to press. */
+.webgl-retry {
+  font-weight: 700;
+}
