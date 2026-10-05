@@ -162,7 +162,9 @@ Stills go in `assets/cutscenes/<scene>/<nn>.png`, numbered from `01`. Run
 `python3 tools/cutscenes.py` (needs Pillow) to crop them to 16:9 and write
 1920 × 1080 WebPs to `src/assets/cutscenes/`, which are bundled and precached
 automatically. A still that isn't drawn yet shows a placeholder card with its
-description. The prompts are in `cutscene_prompts.md`.
+description, but a release ships every panel: `tests/unit/assets/art.test.ts`
+wants one still per panel of every scene. The prompts are in
+`cutscene_prompts.md`.
 
 ### Portraits
 
@@ -177,3 +179,9 @@ a character with no art shows a coloured initial card instead.
 Suggested framing: transparent background, bust from the chest up, about
 3:4 (for example 600 × 800), facing right toward the speech box, with the
 bottom edge cut flat.
+
+`npm run validate:data` (and so `npm run build`) checks the converted art with
+`tools/art-check.mjs`: every source has its WebP and every WebP its source,
+stills are opaque 1920 × 1080, portraits are 768 × 1024 with transparency,
+panels are numbered from `01` without gaps, and every character has `neutral`.
+Re-run the conversion tool it names to fix what it reports.

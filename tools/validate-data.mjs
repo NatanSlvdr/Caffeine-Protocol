@@ -20,6 +20,7 @@ import { campaignNarrative } from '../src/data/campaign/narrative.ts';
 import { extensionSeed } from '../src/data/campaign/generators/extensionCustomers.ts';
 import { shiftId } from '../src/data/campaign/extension-config.ts';
 import { UNLOCKS } from '../src/domain/unlocks.ts';
+import { artErrors } from './art-check.mjs';
 
 const root = new URL('../src/data/campaign/', import.meta.url);
 const readJson = (url) => JSON.parse(readFileSync(url, 'utf8'));
@@ -125,6 +126,8 @@ if (!existsSync(iconSrc)) failures.push('missing source assets/icon.png');
 else if (!existsSync(iconDst)) failures.push('missing public/icon.png');
 else if (sha256(iconSrc) !== sha256(iconDst))
   failures.push('stale public/icon.png (diverges from assets/icon.png; run npm run audio:sync)');
+// Portraits and cutscene stills likewise: each converted from its source, and the size the game frames it at.
+for (const error of artErrors(fileURLToPath(new URL('..', import.meta.url)))) failures.push(error);
 if (failures.length) {
   console.error('validate:data failed:');
   for (const failure of failures) console.error(` - ${failure}`);
