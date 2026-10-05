@@ -97,6 +97,11 @@ const PAIRS: [label: string, text: string, ground: string][] = [
     declared('shell.css', '.guestbook-notes cite', 'color'),
     'var(--slip-paper)',
   ],
+  [
+    'a keepsake that is on the shelf',
+    declared('shell.css', '.shelf-keepsakes li.earned small', 'color'),
+    'var(--slip-paper)',
+  ],
   ['a guest’s quiet line in their bubble', 'var(--bubble-quiet)', 'var(--bubble-paper)'],
   ['a guest’s quiet line on the bubble’s well', 'var(--bubble-quiet)', 'var(--bubble-well)'],
   [

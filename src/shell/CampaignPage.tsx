@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BookOpen, CircleHelp, Clapperboard, Play } from 'lucide-react';
+import { Award, BookOpen, CircleHelp, Clapperboard, Play } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
@@ -13,6 +13,8 @@ import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
 import { GuestbookWindow } from './GuestbookWindow';
+import { keepsakes, shelved } from './shelf';
+import { ShelfWindow } from './ShelfWindow';
 import { ShellBar } from './ShellBar';
 
 /** How long "Order up!" stays on the specials board before the shift opens. */
@@ -47,6 +49,8 @@ export function CampaignPage() {
   const gated = waitingScene(save, save.unlocked)?.before;
   const notes = guestbookNotes(save);
   const [reading, setReading] = useState(false);
+  const earned = shelved(save);
+  const [looking, setLooking] = useState(false);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -211,8 +215,21 @@ export function CampaignPage() {
             <BookOpen size={18} aria-hidden="true" />
           </button>
         )}
+        {/* The shelf goes up with its first keepsake; from then on it shows what is left to earn too. */}
+        {earned.length > 0 && (
+          <button
+            className="shell-icon"
+            aria-label={`Shelf, ${earned.length} of ${keepsakes.length} keepsakes`}
+            aria-haspopup="dialog"
+            title="Shelf"
+            onClick={() => setLooking(true)}
+          >
+            <Award size={18} aria-hidden="true" />
+          </button>
+        )}
       </ShellBar>
       {reading && <GuestbookWindow notes={notes} onClose={() => setReading(false)} />}
+      {looking && <ShelfWindow earned={earned} onClose={() => setLooking(false)} />}
 
       <header className="pass-title">
         <p className="pass-kicker">{shop} · Order rail</p>

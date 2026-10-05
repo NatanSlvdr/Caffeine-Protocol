@@ -1246,6 +1246,57 @@ html[data-motion='reduced'] .front-page *::after {
   font-style: italic;
   text-align: center;
 }
+/* The shelf: a keepsake per card, the ones still to earn printed faint. */
+.shelf-keepsakes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.shelf-keepsakes li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  height: 100%;
+  padding: 12px 14px;
+  border: 1px dashed #392b2440;
+  color: var(--slip-muted);
+}
+.shelf-keepsakes li.earned {
+  border: 1px solid #392b2440;
+  border-left: 3px solid var(--slip-clay);
+  color: var(--slip-coffee);
+}
+.shelf-keepsakes svg {
+  flex: none;
+  margin-top: 2px;
+}
+.shelf-keepsakes h3 {
+  display: inline;
+  margin: 0 10px 0 0;
+  color: var(--slip-ink);
+  font-size: 15px;
+}
+.shelf-keepsakes small {
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.shelf-keepsakes li.earned small {
+  color: var(--slip-coffee);
+}
+.settings-window .shelf-keepsakes p {
+  margin: 4px 0 0;
+  color: var(--slip-ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.settings-window .shelf-keepsakes li:not(.earned) p {
+  color: var(--slip-muted);
+}
 .settings-volume {
   display: block;
   margin: 14px 0 18px;
