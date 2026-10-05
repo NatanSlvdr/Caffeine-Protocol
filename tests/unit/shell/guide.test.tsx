@@ -1,7 +1,9 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { GuideWindow } from '../../../src/app/GuideWindow';
+import { UNLOCKS } from '../../../src/domain';
 import { GameProvider } from '../../../src/state/GameStore';
+import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
 
@@ -14,7 +16,44 @@ describe('how to play', () => {
       this.removeAttribute('open');
     };
   });
+  afterEach(() => localStorage.clear());
+
+  /** The guide as a café opened up to `unlocked` reads it. */
+  const guideAt = (unlocked: number) => {
+    seedLocalStorage(makeSave({ unlocked, selected: unlocked }));
+    const { unmount } = render(
+      <GameProvider>
+        <GuideWindow onClose={() => {}} />
+      </GameProvider>,
+    );
+    const text = screen.getByRole('dialog', { name: 'How the café runs.' }).textContent;
+    unmount();
+    return text;
+  };
+
+  it('names each robot only once its act has opened, as the rail does', () => {
+    const fresh = guideAt(0);
+    expect(fresh).not.toMatch(/Query|Brew|Porter|three/);
+    expect(fresh).toContain('you program secondhand robots until it runs by itself. The first of them turns up');
+    // Until a robot joins, the ticket is carried by whoever does its job by hand.
+    expect(fresh).toContain(
+      'Niko writes down what the guest asked for, Moka makes exactly what the ticket says, and Pip takes it to the table it names.',
+    );
+    const actII = guideAt(UNLOCKS.prep - 1);
+    expect(actII).toContain(
+      'until it runs by itself: Query takes orders from Shift 02 and Brew runs the kitchen from Shift 09. More of the crew turn up',
+    );
+    expect(actII).not.toMatch(/Porter|three/);
+    expect(actII).toContain(
+      'Query writes down what the guest asked for, Brew makes exactly what the ticket says, and Pip',
+    );
+    // One shift before Porter's act opens, it still isn't named.
+    expect(guideAt(UNLOCKS.floor - 2)).not.toContain('Porter');
+    expect(guideAt(UNLOCKS.floor - 1)).toContain('and Porter takes it to the table it names.');
+  });
+
   it('names blocks and stars the way the game shows them', () => {
+    seedLocalStorage(makeSave({ unlocked: UNLOCKS.floor - 1 }));
     render(
       <GameProvider>
         <GuideWindow onClose={() => {}} />
@@ -38,7 +77,7 @@ describe('how to play', () => {
     );
     // Shift numbers read as they do on the campaign rail and in the workspace.
     expect(guide.textContent).toContain(
-      'Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',
+      'you program three secondhand robots until it runs by itself: Query takes orders from Shift 02, Brew runs the kitchen from Shift 09, and Porter works the floor from Shift 14.',
     );
     expect(guide.textContent).toContain('Niko writes the tickets, Moka brews and Pip serves.');
     // The toolbar's own buttons come first, so a tablet without a keyboard can follow along.

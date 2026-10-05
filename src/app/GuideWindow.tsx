@@ -3,7 +3,7 @@ import { Modal } from '@/components';
 import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
 import { pad2, RUN_MODIFIER } from '@/shared/lib/format';
-import { useCafeName } from '@/state/GameStore';
+import { useCafeName, useGame } from '@/state/GameStore';
 
 /** A star count drawn as glyphs and read aloud in words. */
 function Stars({ n }: { n: 1 | 2 | 3 }) {
@@ -17,9 +17,51 @@ function Stars({ n }: { n: 1 | 2 | 3 }) {
   );
 }
 
-/** How to play, printed on the same slip of order paper as the house settings. */
+/** "a", "a and b", "a, b, and c". */
+const list = (parts: readonly string[]) =>
+  parts.length < 3 ? parts.join(' and ') : `${parts.slice(0, -1).join(', ')}, and ${parts.at(-1)}`;
+
+/** Each robot, the shift it starts, its job, and who does that job by hand until it does. */
+const CREW = [
+  {
+    robot: 'Query',
+    from: UNLOCKS.query,
+    job: 'takes orders',
+    hand: 'Niko',
+    ticket: 'writes down what the guest asked for',
+  },
+  {
+    robot: 'Brew',
+    from: UNLOCKS.prep,
+    job: 'runs the kitchen',
+    hand: 'Moka',
+    ticket: 'makes exactly what the ticket says',
+  },
+  {
+    robot: 'Porter',
+    from: UNLOCKS.floor,
+    job: 'works the floor',
+    hand: 'Pip',
+    ticket: 'takes it to the table it names',
+  },
+];
+
+/**
+ * How to play, printed on the same slip of order paper as the house settings. It names a robot once its act has opened
+ * on the rail, as the act's ticket does, so the handbook never tells who joins the crew before the story does.
+ */
 export function GuideWindow({ onClose }: { onClose: () => void }) {
   const cafe = useCafeName();
+  const { save } = useGame();
+  // An act opens on the rail once its first shift is unlocked; each robot's act starts on the shift it does.
+  const met = CREW.filter(({ from }) => save.unlocked >= from - 1);
+  const starts = met.map(({ robot, job, from }) => `${robot} ${job} from Shift ${pad2(from)}`);
+  const all = met.length === CREW.length;
+  const crew = `Over ${CAMPAIGN_LENGTH} shifts, you program ${all ? 'three ' : ''}secondhand robots until it runs by itself${
+    starts.length > 0 ? `: ${list(starts)}` : ''
+  }.${all ? '' : met.length > 0 ? ' More of the crew turn up as the café comes back.' : ' The first of them turns up after the opening day.'}`;
+  // Whoever does each job now: the robot once it has joined, the one doing it by hand until then.
+  const ticket = list(CREW.map((job) => `${met.includes(job) ? job.robot : job.hand} ${job.ticket}`));
   return (
     <Modal
       className="settings-window guide-window"
@@ -33,11 +75,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           <h3>
             <Bot size={16} aria-hidden="true" /> The crew
           </h3>
-          <p>
-            The café has more guests than one pair of hands can serve. Over {CAMPAIGN_LENGTH} shifts, you program three
-            secondhand robots until it runs by itself: Query takes orders from Shift {pad2(UNLOCKS.query)}, Brew runs
-            the kitchen from Shift {pad2(UNLOCKS.prep)}, and Porter works the floor from Shift {pad2(UNLOCKS.floor)}.
-          </p>
+          <p>The café has more guests than one pair of hands can serve. {crew}</p>
           <p>Until a robot takes over, its job is done by hand: Niko writes the tickets, Moka brews and Pip serves.</p>
         </section>
         <section className="settings-block">
@@ -80,10 +118,7 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
             Move counts whole tiles in screen directions. A blocked move stops early, and customers never block the way.
             Station actions only work beside the matching equipment.
           </p>
-          <p>
-            The ticket ties the crew together: Query writes down what the guest asked for, Brew makes exactly what the
-            ticket says, and Porter takes it to the table it names. So a slip at the counter ends up at the table.
-          </p>
+          <p>The ticket ties the crew together: {ticket}. So a slip at the counter ends up at the table.</p>
         </section>
         <section className="settings-block">
           <h3>
