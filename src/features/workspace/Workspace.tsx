@@ -31,6 +31,8 @@ import { OptionsModal } from './modals/OptionsModal';
 import { RestoreModal } from './modals/RestoreModal';
 import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal } from './modals/ReceiptModal';
+import { CompareModal } from './modals/CompareModal';
+import { comparableTo, latestPair } from './compare';
 import { problemReport } from './report';
 import { failureLines, successLines } from './reactions';
 
@@ -282,6 +284,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       : scene === 'success' && result?.passed
         ? successLines(result, role, index, level, outro, briefSuccess)
         : undefined;
+  // The latest run before the one just served that played the same rounds, for the receipt to compare with.
+  const latest = records.at(-1);
+  const receiptPair = latest && comparableTo(records, latest).find((r) => r.id < latest.id);
   // The run can be looked back through: paused, or slipped once the crew has had their say.
   const lookBack = ((running && paused) || (failed && !reaction)) && !observation && !!result && head > 0;
   return (
@@ -572,6 +577,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           onToggleShortRepeats={(value) => update((s) => ({ ...s, settings: { ...s.settings, short_repeats: value } }))}
           tips={firstRoutine ? { on: save.settings.first_routine_tips, onToggle: setTips } : undefined}
           onRequestRestore={() => setModal('restore')}
+          onCompare={latestPair(records) ? () => setModal('compare') : undefined}
           report={() =>
             problemReport({
               index,
@@ -601,6 +607,16 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           }}
         />
       )}
+      {(modal === 'compare' || modal === 'compare-last') && (
+        <CompareModal
+          level={level}
+          records={records}
+          crew={crew}
+          initial={modal === 'compare-last' ? records.at(-1) : undefined}
+          // Opened from the receipt, it goes back to the receipt, which still has the way on to the next shift.
+          onClose={() => setModal(modal === 'compare-last' ? 'receipt' : '')}
+        />
+      )}
       {modal === 'receipt' && result?.passed && (
         <ReceiptModal
           index={index}
@@ -609,6 +625,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           observation={observation}
           nextShift={nextShift}
           best={live.bestBefore}
+          compareWith={observation ? undefined : receiptPair?.id}
+          onCompare={() => setModal('compare-last')}
           onNext={onNext}
           onClose={() => setModal('')}
         />

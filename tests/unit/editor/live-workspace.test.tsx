@@ -697,6 +697,52 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByRole('button', { name: /Next shift/ })).toBeTruthy();
     expect(screen.getByText('Coffee or Tea?')).toBeTruthy();
   });
+  it('compares a fixed service with the run that slipped, from the receipt and from Options', () => {
+    ready('LISTEN\nITEM coffee', { text_editor: true });
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    // Nothing to compare before two runs of the same rounds.
+    const none = screen.getByRole('button', { name: 'Compare runs' });
+    expect(none.hasAttribute('disabled')).toBe(true);
+    expect(document.getElementById(none.getAttribute('aria-describedby')!)?.textContent).toMatch(/twice/);
+    fireEvent.click(screen.getByRole('button', { name: 'Close dialog' }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    playUntil(() => screen.queryByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Routine text' }), { target: { value: lessons[2].solution } });
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });
+    playUntil(() => screen.queryByRole('dialog', { name: 'Dialogue' }), 120);
+    while (screen.queryByRole('button', { name: 'Next' }))
+      fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'See the receipt' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Compare with run 1' }));
+    const compare = screen.getByRole('dialog', { name: 'Compare runs' });
+    expect((within(compare).getByRole('combobox', { name: 'After' }) as HTMLSelectElement).value).toBe('2');
+    expect((within(compare).getByRole('combobox', { name: 'Before' }) as HTMLSelectElement).value).toBe('1');
+    const outcome = within(compare).getByRole('row', { name: /^Outcome/ });
+    expect(
+      within(outcome)
+        .getAllByRole('cell')
+        .map((cell) => cell.textContent),
+    ).toEqual(['Query stopped · Round 1 · Guest 1', 'Served', 'Now served, better']);
+    expect(within(compare).getByRole('row', { name: /^Steps run/ }).textContent).toMatch(/—/);
+    // Each run keeps the routine it ran: the fix, line by line.
+    const diff = within(compare).getByRole('list', { name: 'Query’s routine, run 1 to run 2' });
+    const lines = within(diff).getAllByRole('listitem');
+    expect(lines.filter((line) => line.classList.contains('add')).map((line) => line.textContent)).toContain(
+      '+In: TAKE UP',
+    );
+    // Done goes back to the receipt, which still leads on to the next shift.
+    fireEvent.click(within(compare).getByRole('button', { name: 'Done' }));
+    expect(screen.getByText('Service complete')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Stay on this shift' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Compare runs' }));
+    expect(screen.getByRole('dialog', { name: 'Compare runs' })).toBeTruthy();
+  });
   it('puts the crew’s reaction away when the service runs again from under it', () => {
     open();
     fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });

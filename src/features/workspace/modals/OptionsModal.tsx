@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bug, Download, History } from 'lucide-react';
+import { Bug, Download, GitCompareArrows, History } from 'lucide-react';
 import { Modal } from '@/components';
 import { download, saveFileName } from '@/shared/lib/download';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
@@ -20,6 +20,8 @@ export interface OptionsModalProps {
   /** The first-routine tips' switch, on the shift that has them; they go once the shift is served. */
   tips?: { on: boolean; onToggle: (value: boolean) => void };
   onRequestRestore: () => void;
+  /** Set two runs of the same rounds side by side; nothing until this visit has two. */
+  onCompare?: () => void;
   /** A problem report on this shift, its routines and its last run, built when the player asks to see it. */
   report: () => string;
   onClose: () => void;
@@ -27,7 +29,7 @@ export interface OptionsModalProps {
 
 /**
  * Workspace options: shader, text editor, shorter repeats, the first routine's tips, restoring an earlier version of
- * the open robot’s routine, and a problem report to save.
+ * the open robot’s routine, comparing two runs, and a problem report to save.
  */
 export function OptionsModal({
   robot,
@@ -42,6 +44,7 @@ export function OptionsModal({
   onToggleShortRepeats,
   tips,
   onRequestRestore,
+  onCompare,
   report,
   onClose,
 }: OptionsModalProps) {
@@ -101,6 +104,24 @@ export function OptionsModal({
         <History size={15} aria-hidden="true" /> Restore {robot}’s routine
       </button>
       {note && <p id="restore-note">{note}</p>}
+      {!observation && (
+        <>
+          <button
+            className="settings-chip"
+            disabled={!onCompare}
+            aria-describedby={onCompare ? undefined : 'compare-note'}
+            aria-haspopup="dialog"
+            onClick={onCompare}
+          >
+            <GitCompareArrows size={15} aria-hidden="true" /> Compare runs
+          </button>
+          {!onCompare && (
+            <p id="compare-note">
+              Run the same rounds twice, two services or one round practised twice, to compare them.
+            </p>
+          )}
+        </>
+      )}
       <section className="options-report" aria-labelledby="options-report-title">
         <h3 id="options-report-title">Something wrong with the game?</h3>
         <p>

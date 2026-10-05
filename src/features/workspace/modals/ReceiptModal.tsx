@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, GitCompareArrows } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { count, type LevelDefinition, type RunResult } from '@/domain';
@@ -14,6 +14,9 @@ export interface ReceiptModalProps {
   nextShift?: string;
   /** This shift's stars before the run, if it had been served before. */
   best?: number;
+  /** The run before this one that played the same rounds, to compare with; nothing on a first run. */
+  compareWith?: number;
+  onCompare?: () => void;
   onNext: () => void;
   onClose: () => void;
 }
@@ -26,6 +29,8 @@ export function ReceiptModal({
   observation,
   nextShift,
   best,
+  compareWith,
+  onCompare,
   onNext,
   onClose,
 }: ReceiptModalProps) {
@@ -102,6 +107,14 @@ export function ReceiptModal({
         )}
       </dl>
       {nextStar && <p className="receipt-note">{nextStar}</p>}
+      {compareWith !== undefined && onCompare && (
+        <p className="receipt-compare">
+          <button type="button" aria-haspopup="dialog" onClick={onCompare}>
+            <GitCompareArrows size={14} aria-hidden="true" />
+            Compare with run {compareWith}
+          </button>
+        </p>
+      )}
       {waits.length > 0 && (
         <section className="receipt-waits" aria-labelledby="receipt-waits-lead">
           <p id="receipt-waits-lead">{WAIT_LEADS[waits[0].stage]}</p>
