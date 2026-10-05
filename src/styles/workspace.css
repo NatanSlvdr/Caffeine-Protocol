@@ -666,6 +666,174 @@
   color: var(--draft-muted);
   font-style: italic;
 }
+/* Why the service paused itself, when it did: a mark, a handoff or a slip. */
+.inspector-reason {
+  margin-left: auto;
+  padding: 1px 8px;
+  border-radius: 999px;
+  background: #8f78d64d;
+  color: #e4dcfb;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.inspector-reason + .inspector-when {
+  margin-left: 0;
+}
+
+/* A block's number marks it to pause at. A marked one wears the inspector's violet, so the mark and the card it
+   opens read as one thing; the text view's line numbers do the same. */
+.workspace-main .editor-panel button.line-number {
+  top: 7px;
+  width: 24px;
+  height: 18px;
+  margin-left: -2px;
+  padding: 0 4px 0 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #bca58b;
+  justify-content: flex-end;
+  pointer-events: auto;
+  transition: none;
+}
+.workspace-main .editor-panel button.line-number:hover {
+  background: #b9a5f033;
+  color: #e4dcfb;
+}
+.workspace-main .editor-panel button.line-number:active {
+  transform: none;
+}
+.workspace-main .editor-panel button.line-number.marked {
+  justify-content: center;
+  padding: 0;
+  background: #8f78d6;
+  color: #fff;
+  font-weight: 700;
+}
+.workspace-main .editor-panel .code-text-lines > .marked::after {
+  left: 10px;
+  width: 24px;
+  border-radius: 999px;
+  background: #8f78d6;
+  color: #fff;
+  font-weight: 700;
+  text-align: center;
+}
+
+/* Where the service pauses by itself: a menu over the café, opened from the playback strip. */
+.workspace-main .pause-at {
+  position: relative;
+}
+.workspace-main .pause-at-button {
+  gap: 5px;
+  min-height: 40px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--desk-ink);
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
+}
+.workspace-main .pause-at-button:hover:not(:disabled),
+.workspace-main .pause-at-button[aria-expanded='true'] {
+  background: #f1e6d2;
+}
+.workspace-main .pause-at-count {
+  min-width: 17px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: #8f78d6;
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 750;
+  line-height: 17px;
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 1180px) {
+  .workspace-main .pause-at-button {
+    padding: 0 10px;
+  }
+}
+.workspace-main .pause-at-menu {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  z-index: 30;
+  display: grid;
+  gap: 2px;
+  width: 290px;
+  padding: 12px;
+  border: 1px solid var(--desk-rule);
+  border-radius: 16px;
+  background: #fffcf4;
+  box-shadow: 0 12px 32px #392b2433;
+  color: var(--desk-ink);
+  font-size: 13px;
+  transform: translateX(-50%);
+}
+.workspace-main .pause-at-title {
+  margin: 0 4px 6px;
+  color: var(--desk-muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.workspace-main .pause-at-marks {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+  padding: 8px 10px;
+  border-radius: 11px;
+  background: #8f78d614;
+}
+.workspace-main .pause-at-marks p {
+  display: grid;
+  gap: 1px;
+  margin: 0;
+  line-height: 1.35;
+}
+.workspace-main .pause-at-marks p span,
+.workspace-main .pause-at-menu label small {
+  color: var(--desk-muted);
+  font-size: 11.5px;
+  font-weight: 500;
+}
+.workspace-main .pause-at-marks button {
+  flex: none;
+  margin-left: auto;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.workspace-main .pause-at-menu label {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  padding: 7px 10px;
+  border-radius: 11px;
+  font-weight: 650;
+  line-height: 1.35;
+  cursor: pointer;
+}
+.workspace-main .pause-at-menu label:hover {
+  background: #f1e6d2;
+}
+.workspace-main .pause-at-menu label > span {
+  display: grid;
+  gap: 1px;
+}
+.workspace-main .pause-at-menu input[type='checkbox'] {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin: 2px 0 0;
+  accent-color: #7a62c9;
+}
 .failure-card {
   flex: none;
   max-height: 45%;

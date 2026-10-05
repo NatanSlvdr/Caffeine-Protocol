@@ -31,6 +31,8 @@ export function Row({
   fold,
   goTo,
   flagged = false,
+  marked = false,
+  onMark,
 }: {
   block: VisualBlock;
   depth: number;
@@ -55,6 +57,10 @@ export function Row({
   goTo?: GoTo;
   /** Where the routine would stop as soon as it ran, marked before Run. */
   flagged?: boolean;
+  /** Marked to pause the service at, as the robot starts it. */
+  marked?: boolean;
+  /** The block's number, or F9 on the block, marks it or takes its mark off; even while the service runs. */
+  onMark?: () => void;
 }) {
   const pickable = !locked && !!onPick;
   const { line: id, command } = block;
@@ -66,9 +72,25 @@ export function Row({
   }, [failure]);
   return (
     <div className="code-row" onClickCapture={failure ? onDismissFailure : undefined}>
-      <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">
-        {String(ordinal).padStart(2, '0')}
-      </span>
+      {onMark ? (
+        // Out of the tab order, so the routine isn't twice as many stops long: F9 on the block does the same.
+        <button
+          type="button"
+          tabIndex={-1}
+          className={'line-number' + (marked ? ' marked' : '')}
+          style={{ left: -(depth * 42 + 35) }}
+          aria-pressed={marked}
+          aria-label={`Pause at block ${ordinal}`}
+          title={marked ? 'The service pauses here. Click to take the mark off.' : 'Pause the service here'}
+          onClick={onMark}
+        >
+          {String(ordinal).padStart(2, '0')}
+        </button>
+      ) : (
+        <span className="line-number" style={{ left: -(depth * 42 + 35) }} aria-hidden="true">
+          {String(ordinal).padStart(2, '0')}
+        </span>
+      )}
       <div
         ref={(node) => {
           setNodeRef(node);
@@ -94,8 +116,14 @@ export function Row({
             e.preventDefault();
             onRemove();
           }
+          if (e.key === 'F9' && e.target === e.currentTarget && onMark) {
+            e.preventDefault();
+            onMark();
+          }
         }}
-        aria-keyshortcuts={locked || !onRemove ? undefined : 'Delete Backspace'}
+        aria-keyshortcuts={
+          [onMark && 'F9', !locked && onRemove && 'Delete Backspace'].filter(Boolean).join(' ') || undefined
+        }
         // The failure's red is drawn only, so the name says it too, once the crew's dialogue has gone.
         aria-label={
           (target
@@ -103,6 +131,7 @@ export function Row({
             : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
           (failure ? ', where the service stopped' : '') +
           (flagged && !failure ? ', which needs a fix before Run' : '') +
+          (marked ? ', marked to pause at' : '') +
           (fold?.folded ? `, folded with ${count(fold.inside, 'block')} inside` : '') +
           (picked ? ', where new blocks go' : '')
         }

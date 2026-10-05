@@ -62,6 +62,50 @@ export function visualProgram(source: string): VisualBlock[] {
   return readRange(0, lines.length);
 }
 
+/** The code pane's rows in order, as the lines they start on, Else rows included, each with the block it shows. */
+function paneRows(source: string): { line: number; block: VisualBlock }[] {
+  const flatten = (blocks: VisualBlock[]): { line: number; block: VisualBlock }[] =>
+    blocks.flatMap((block) => [
+      { line: block.line, block },
+      ...flatten(block.children ?? []),
+      ...(block.alternative?.length ? [{ line: block.elseLine!, block }, ...flatten(block.alternative)] : []),
+    ]);
+  return flatten(visualProgram(source));
+}
+
+/** A block's number in the code pane, counted as the pane counts them, Else rows included; 0 for a line it hides. */
+export function blockOrdinal(source: string, line: number): number {
+  return paneRows(source).findIndex((row) => row.line === line) + 1;
+}
+
+/**
+ * The code pane's row for a line of the routine: the line's own, or for an End, which the pane draws as the bottom of
+ * a group, the row of the block that opens it. Nothing for a line the pane leaves out, such as a comment.
+ */
+export function paneRow(
+  source: string,
+  line: number,
+): { ordinal: number; block: VisualBlock; closes: boolean } | undefined {
+  const rows = paneRows(source);
+  const own = rows.findIndex((row) => row.line === line);
+  if (own >= 0) return { ordinal: own + 1, block: rows[own].block, closes: false };
+  const opener = rows.findIndex(
+    (row) => row.line === row.block.line && row.block.end === line && row.block.end > row.line,
+  );
+  return opener >= 0 ? { ordinal: opener + 1, block: rows[opener].block, closes: true } : undefined;
+}
+
+/**
+ * Whether a run can stop as a line's block starts: any block the pane shows but an Else, a jump's landing spot or a
+ * function's name, which only say where the routine goes and never start anything themselves.
+ */
+export function canPauseAt(source: string, line: number): boolean {
+  return (
+    paneRows(source).some((row) => row.line === line) &&
+    !/^(ELSE|POSITION|FUNCTION)\b/.test(source.split('\n')[line]?.trim() ?? '')
+  );
+}
+
 /** Deduplicate a repeated jump command by allocating a fresh destination label. */
 function dedupeJump(lines: string[], command: string): string {
   if (command.startsWith('JUMP ') && lines.some((l) => l.trim() === command)) {

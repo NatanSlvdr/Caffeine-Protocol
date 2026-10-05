@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { VisualBlock } from '@/domain';
+import { canPauseAt, type VisualBlock } from '@/domain';
 import { category } from './blockMeta';
 import { Insertion } from './Insertion';
 import { Row, type GoTo } from './Row';
@@ -33,6 +33,9 @@ export interface ProgramRowsProps {
   flaggedLine: number;
   /** The picked block's own buttons. */
   actions: (block: VisualBlock) => React.ReactNode;
+  /** Blocks marked to pause the service at, by line, and a mark put on or taken off one. */
+  marks: ReadonlySet<number>;
+  onMark?: (line: number) => void;
 }
 
 /** Recursive visual rows with insertion anchors, else branches, and jump slots. */
@@ -60,6 +63,8 @@ export function ProgramRows({
   onFold,
   goTo,
   flaggedLine,
+  marks,
+  onMark,
 }: ProgramRowsProps) {
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
@@ -104,6 +109,8 @@ export function ProgramRows({
             actions={picked === block.line ? actions(block) : undefined}
             fold={foldable ? { folded, inside: inside(block), onToggle: () => onFold(block) } : undefined}
             goTo={goTo(block)}
+            marked={marks.has(block.line)}
+            onMark={onMark && canPauseAt(source, block.line) ? () => onMark(block.line) : undefined}
           />
           {block.children && !folded && (
             <div className="scope-body">

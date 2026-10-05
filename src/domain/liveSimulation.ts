@@ -4,7 +4,9 @@ import { countProgramBlocks } from './scoring';
 import { createLivePumpState, pumpQuery, queryFinished } from './live/pump';
 import { finishLiveRun } from './live/finish';
 import { initializeLiveRun } from './live/initialize';
-import { startsBetween } from './live/steps';
+import { startTracker } from './live/steps';
+import type { Start } from './live/steps';
+export type { Start } from './live/steps';
 import type { ExecutionEvent, LevelDefinition, RobotPrograms, RobotRole, RunResult } from './types';
 
 export interface LiveRunOptions {
@@ -15,15 +17,20 @@ export interface LiveRunOptions {
   practice?: number;
 }
 
-/** A frame of a live run; a step also says what started at the moment it stopped on. */
+/** A frame of a live run; a step, or play that stopped early, also says what started at the moment it stopped on. */
 export interface LiveFrame {
   result: RunResult;
   time: number;
   done: boolean;
   started?: ExecutionEvent[];
+  /** What met the condition play was asked to stop at, when it stopped there. */
+  stopped?: Start[];
 }
 
-/** Clock ticks a single step may play through: a whole service, with room to spare. */
+/** A moment to stop playing at, such as a robot reaching a marked block. */
+export type StopWhen = (start: Start) => boolean;
+
+/** Clock ticks a single step, or play watching for a stop, may play through: a whole service, with room to spare. */
 const MAX_STEP_TICKS = 1_000_000;
 
 /** A suspended interpreter: constructing a run executes no player instruction. */
@@ -58,6 +65,8 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, o
     offset = 0,
     blockCountSet = false;
   let service: ReturnType<typeof streamService> | undefined;
+  // What has started, read off the log as it grows.
+  const track = startTracker();
 
   function startSeed(index: number) {
     const seed = level.seeds[index];
@@ -93,9 +102,28 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, o
     nextGlobal = offset;
   }
 
-  /** Advance only to the requested game time; future instructions stay suspended. */
-  function advance(seconds: number) {
-    return advanceTo(time + Math.max(0, seconds));
+  /**
+   * Advance only to the requested game time; future instructions stay suspended. Given a moment to stop at, play
+   * stops there instead, if it comes first, after the clock tick it happens on: the same ticks a run left to play
+   * would take, so stopping never changes how the run goes.
+   */
+  function advance(seconds: number, stopWhen?: StopWhen): LiveFrame {
+    const until = time + Math.max(0, seconds);
+    for (let ticks = 0; stopWhen && !done && nextGlobal <= until && ticks < MAX_STEP_TICKS; ticks++) {
+      const frame = stopAt(playTo(nextGlobal), stopWhen);
+      if (frame) return frame;
+    }
+    return stopAt(playTo(until), stopWhen) ?? snapshot();
+  }
+  /** Play to a moment, and say what started on the way. */
+  function playTo(until: number) {
+    advanceTo(until);
+    return track(result.execution!, time);
+  }
+  function stopAt(started: Start[], stopWhen: StopWhen | undefined): LiveFrame | undefined {
+    const stopped = stopWhen ? started.filter(stopWhen) : [];
+    if (!stopped.length) return undefined;
+    return { ...snapshot(), started: started.map((s) => s.event), stopped };
   }
   function advanceTo(until: number) {
     if (done) return snapshot();
@@ -134,9 +162,7 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, o
     const watched =
       robots === undefined ? undefined : new Set<RobotRole>(typeof robots === 'string' ? [robots] : robots);
     for (let ticks = 0; !done && ticks < MAX_STEP_TICKS; ticks++) {
-      const before = time;
-      advanceTo(nextGlobal);
-      const started = startsBetween(result.execution!, before, time);
+      const started = playTo(nextGlobal).map((s) => s.event);
       if (done || started.some((event) => !watched || watched.has(event.role))) return { ...snapshot(), started };
     }
     return { ...snapshot(), started: [] };

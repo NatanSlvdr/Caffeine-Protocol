@@ -1,6 +1,7 @@
 import { ChevronsRight, Pause, Play, Square, StepForward } from 'lucide-react';
 import { BLOCK_SECONDS, MAX_PLAYBACK_SPEED } from '@/domain';
 import { RUN_MODIFIER } from '@/shared/lib/format';
+import { PauseAtMenu, type PauseAtMenuProps } from './PauseAtMenu';
 
 export interface PlaybackToolbarProps {
   running: boolean;
@@ -24,6 +25,8 @@ export interface PlaybackToolbarProps {
   onStepCrew?: () => void;
   /** What started at the moment the last step stopped on, said for a screen reader. */
   stepped?: string;
+  /** Where the service pauses by itself; for a service with routines to follow. */
+  pauseMenu?: PauseAtMenuProps;
 }
 
 /** Run/stop, pause, and speed controls for the live simulation clock. */
@@ -43,6 +46,7 @@ export function PlaybackToolbar({
   onStep,
   onStepCrew,
   stepped,
+  pauseMenu,
 }: PlaybackToolbarProps) {
   // A shift of one round has nothing to count.
   const counted = running && rounds > 1;
@@ -86,6 +90,7 @@ export function PlaybackToolbar({
           )}
         </>
       )}
+      {pauseMenu && <PauseAtMenu {...pauseMenu} />}
       {counted && (
         <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
           {/* A service stops at its first slip, so every round before this one went right. */}

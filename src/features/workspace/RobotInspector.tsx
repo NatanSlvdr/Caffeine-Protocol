@@ -8,6 +8,8 @@ export interface RobotInspectorProps {
   reads: 'guest' | 'ticket';
   /** When the service is paused, like "Round 2 · 42.0 s". */
   when: string;
+  /** Why the service paused itself, when it did, like "At Brew’s mark". */
+  reason?: string;
 }
 
 const Unset = ({ children }: { children: string }) => <span className="inspector-unset">{children}</span>;
@@ -17,7 +19,7 @@ const Unset = ({ children }: { children: string }) => <span className="inspector
  * carries, what its memory holds, and where it is in a For loop. Everything comes from the run's records, so a slot
  * the robot has stored nothing in says "not set" rather than showing a guess.
  */
-export function RobotInspector({ state, reads, when }: RobotInspectorProps) {
+export function RobotInspector({ state, reads, when, reason }: RobotInspectorProps) {
   const heading = useId();
   return (
     <aside className="robot-inspector" aria-labelledby={heading}>
@@ -26,6 +28,7 @@ export function RobotInspector({ state, reads, when }: RobotInspectorProps) {
           <ScanEye size={14} aria-hidden="true" />
           {state.robot}, paused
         </p>
+        {reason && <span className="inspector-reason">{reason}</span>}
         <span className="inspector-when">{when}</span>
       </header>
       <dl>
@@ -33,7 +36,7 @@ export function RobotInspector({ state, reads, when }: RobotInspectorProps) {
           <dt>Doing</dt>
           <dd>
             {state.doing}
-            {state.block !== undefined && <span className="inspector-block">Block {state.block}</span>}
+            {state.at && <span className="inspector-block">{state.at}</span>}
           </dd>
         </div>
         <div>

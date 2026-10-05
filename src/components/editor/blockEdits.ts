@@ -88,14 +88,3 @@ export function copyBlock(source: string, block: VisualBlock): Edited {
   lines.splice(block.end + 1, 0, ...lines.slice(block.line, block.end + 1));
   return { source: indentSource(lines.join('\n')), line: block.end + 1 };
 }
-
-/** A block's number in the code pane, counted as the pane counts them, else rows included. */
-export function ordinalIn(source: string, line: number): number {
-  const flatten = (blocks: VisualBlock[]): number[] =>
-    blocks.flatMap((b) => [
-      b.line,
-      ...flatten(b.children ?? []),
-      ...(b.alternative?.length ? [b.elseLine!, ...flatten(b.alternative)] : []),
-    ]);
-  return flatten(visualProgram(source)).indexOf(line) + 1;
-}

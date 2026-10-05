@@ -3,6 +3,7 @@ import {
   belongsToPaper,
   count,
   heldLabel,
+  paneRow,
   paperLabel,
   placeLabel,
   spokenBlock,
@@ -13,6 +14,7 @@ import type {
   ExecutionEvent,
   HeardOrder,
   OrderTicket,
+  RobotPrograms,
   RobotRole,
   RunResult,
   VariableValue,
@@ -45,8 +47,8 @@ export interface MemorySlot {
 export interface RobotState {
   robot: string;
   doing: string;
-  /** The block it is on or waiting at, counting from 1. */
-  block?: number;
+  /** Where the block it is on or waiting at sits, as the code pane numbers it: "Block 7", or "Line 9" in the text view. */
+  at?: string;
   /** For Query, what the guest it is serving said; for Brew and Porter, the ticket the block is for. */
   order?: string;
   holding: string[];
@@ -78,6 +80,22 @@ export const ticketWords = (ticket: OrderTicket) =>
     .filter(Boolean)
     .join(' · ');
 
+/**
+ * Where a line of a routine is, as the code pane numbers it: "Block 7", or "Line 9" in the text view. An End is the
+ * bottom of the block that opens its group.
+ */
+export function placeOf(source: string, line: number, textMode: boolean): string {
+  const row = textMode ? undefined : paneRow(source, line);
+  return row ? `Block ${row.ordinal}` : `Line ${line + 1}`;
+}
+
+/** What a block does, said the way the editor reads it out; an End is the end of the block that opens its group. */
+function blockWords(command: string, source: string, line: number) {
+  if (command !== 'END') return spokenBlock(command);
+  const row = paneRow(source, line);
+  return row?.closes ? `end of ${spokenBlock(row.block.command)}` : 'end';
+}
+
 /** The memory slots a routine uses, Var A first. */
 const slotsIn = (source: string) => [...new Set(source.match(/\bvar[1-4]\b/g) ?? [])].sort();
 
@@ -99,6 +117,7 @@ export function inspectRobot(
   sampled: ReturnType<typeof sampleReplay>,
   role: RobotRole,
   source: string,
+  textMode: boolean,
 ): RobotState | undefined {
   const actor = sampled.actors[role];
   if (!actor) return undefined;
@@ -111,12 +130,12 @@ export function inspectRobot(
       ? 'Stopped for the night'
       : !last
         ? 'Waiting for the doors to open'
-        : capital(spokenBlock(action?.command ?? last.command));
+        : capital(blockWords(action?.command ?? last.command, source, last.line));
   const loop = actor.loop;
   return {
     robot: ROBOT_DISPLAY_NAMES[role],
     doing,
-    block: last && !stopped ? last.line + 1 : undefined,
+    at: last && !stopped ? placeOf(source, last.line, textMode) : undefined,
     order: orderOf(role, last, result, sampled.seed?.seed_id ?? ''),
     holding: [...(actor.heldPaper ? [paperLabel(actor.heldPaper)] : []), ...actor.inventory.map(heldLabel)],
     memory: slotsIn(source).map((slot) => {
@@ -127,7 +146,7 @@ export function inspectRobot(
       loop &&
       (loop.item
         ? `Item ${loop.pass} of ${loop.passes}: ${heardWords(loop.item)}`
-        : `Lap ${loop.pass} of ${loop.passes}`) + ` · block ${loop.line + 1}`,
+        : `Lap ${loop.pass} of ${loop.passes}`) + ` · ${placeOf(source, loop.line, textMode).toLowerCase()}`,
   };
 }
 
@@ -135,15 +154,23 @@ export function inspectRobot(
  * What a step stopped on, for a screen reader: "Query: waiting for a guest, block 2. Brew: take up, block 8." Only the
  * crew the player writes routines for is told.
  */
-export function startedWords(started: readonly ExecutionEvent[], crew: readonly RobotRole[]): string {
+export function startedWords(
+  started: readonly ExecutionEvent[],
+  crew: readonly RobotRole[],
+  programs: RobotPrograms,
+  textMode: boolean,
+): string {
   const told = started.filter((event) => event.actor !== 'niko' && crew.includes(event.role));
   if (!told.length) return 'Service paused.';
   return told
     .map((event) => {
       const who = ROBOT_DISPLAY_NAMES[event.role];
       if (event.error) return `${who} stopped: ${event.error}`;
-      const what = event.waiting ? WAIT_LABELS[event.waiting].toLowerCase() : spokenBlock(event.command);
-      return `${who}: ${what}, block ${event.line + 1}.`;
+      const source = programs[event.role];
+      const what = event.waiting
+        ? WAIT_LABELS[event.waiting].toLowerCase()
+        : blockWords(event.command, source, event.line);
+      return `${who}: ${what}, ${placeOf(source, event.line, textMode).toLowerCase()}.`;
     })
     .join(' ');
 }

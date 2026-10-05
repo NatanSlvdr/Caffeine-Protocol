@@ -30,16 +30,29 @@ afterEach(() => {
   vi.useRealTimers();
   localStorage.clear();
 });
-function open(source = lessons[2].solution) {
+/** Shift 3, with Query's routine set and the scene skipped, ready to run. */
+function ready(source = lessons[2].solution, settings: Partial<ReturnType<typeof makeSave>['settings']> = {}) {
+  const save = makeSave();
   seedLocalStorage({
-    ...makeSave(),
+    ...save,
     unlocked: 2,
     selected: 2,
+    settings: { ...save.settings, ...settings },
     robotDrafts: { 2: { query: source, prep: '', floor: '' } },
   });
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+}
+function open(source = lessons[2].solution) {
+  ready(source);
   fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+}
+/** Let the service play, a second at a time, until the check holds. */
+function playUntil(check: () => unknown, seconds = 60) {
+  for (let i = 0; i < seconds && !check(); i++)
+    act(() => {
+      vi.advanceTimersByTime(1000);
+    });
 }
 function savedStars() {
   return JSON.parse(localStorage.getItem(SAVE_KEY)!).stars;
@@ -239,6 +252,84 @@ describe('live workspace lifecycle', () => {
       /^Round 1 · 0\.0 s\. Query: .+\. Brew: waiting for a ticket, block \d+\. Porter: /,
     );
     expect(screen.getByRole('complementary', { name: /, paused$/ })).toBeTruthy();
+  });
+  it('pauses by itself as Query starts a marked block, and keeps the mark for the next run', () => {
+    ready();
+    const toolbar = screen.getByRole('group', { name: 'Simulation controls' });
+    const status = toolbar.querySelector('[role="status"]')!;
+    // A jump's landing spot starts nothing, so it has no mark to give.
+    expect(screen.queryByRole('button', { name: 'Pause at block 1' })).toBeNull();
+    const mark = screen.getByRole('button', { name: 'Pause at block 3' });
+    fireEvent.click(mark);
+    expect(mark.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByText('Marked block 3: the service pauses as Query starts it.')).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Drag block 3 .*, marked to pause at$/ })).toBeTruthy();
+    // The menu counts the mark, and Escape closes it without leaving the shift.
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Pause at, 1 setting on' }));
+    const menu = screen.getByRole('group', { name: 'Pause the service by itself' });
+    expect(within(menu).getByText('At 1 marked block')).toBeTruthy();
+    fireEvent.keyDown(within(menu).getByRole('checkbox', { name: /A slip/ }), { key: 'Escape' });
+    expect(screen.queryByRole('group', { name: 'Pause the service by itself' })).toBeNull();
+    expect(window.location.hash).toBe('#/shift/3');
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    const inspector = () => screen.queryByRole('complementary', { name: 'Query, paused' });
+    playUntil(inspector);
+    expect(within(inspector()!).getByText('At Query’s mark')).toBeTruthy();
+    expect(status.textContent).toMatch(/^Round 1 · \d+\.\d s\. At Query’s mark\. Query: .+, block 3\.$/);
+    // The mark stays for the next run, until it is taken off.
+    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    expect(screen.getByRole('button', { name: 'Pause at block 3' }).getAttribute('aria-pressed')).toBe('true');
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Pause at, 1 setting on' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Clear marks' }));
+    expect(screen.getByRole('button', { name: 'Pause at block 3' }).getAttribute('aria-pressed')).toBe('false');
+    expect(within(toolbar).getByRole('button', { name: 'Pause at' })).toBeTruthy();
+  });
+  it('holds a slip before the crew reacts, when asked, and lets them react on Resume', () => {
+    ready('LISTEN\nITEM coffee');
+    fireEvent.click(screen.getByRole('button', { name: 'Pause at' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /A slip/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    const inspector = () => screen.queryByRole('complementary', { name: 'Query, paused' });
+    playUntil(inspector);
+    expect(within(inspector()!).getByText('Query’s slip, before the crew reacts')).toBeTruthy();
+    const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
+    expect(status.textContent).toMatch(/Query’s slip, before the crew reacts\. Query stopped: /);
+    // The crew waits, and the block that slipped is the one marked as running.
+    expect(screen.queryByRole('button', { name: 'Skip' })).toBeNull();
+    expect(document.querySelector('.block.active')?.getAttribute('data-line')).toBe('1');
+    fireEvent.click(screen.getByRole('button', { name: 'Resume playback' }));
+    expect(screen.getByRole('button', { name: 'Skip' })).toBeTruthy();
+    expect(inspector()).toBeNull();
+  });
+  it('marks the caret’s line with F9 in the text view', () => {
+    ready(lessons[2].solution, { text_editor: true });
+    const text = screen.getByRole('textbox', { name: 'Routine text' });
+    expect(text.getAttribute('aria-description')).toMatch(/F9 marks the line/);
+    const numbered = () => [...document.querySelectorAll('.code-text-lines > div')].map((line) => line.className);
+    (text as HTMLTextAreaElement).setSelectionRange(0, 0);
+    fireEvent.keyDown(text, { key: 'F9' });
+    // The jump's landing spot on line 1 starts nothing.
+    expect(screen.getByText('Nothing starts on line 1 for the service to pause at.')).toBeTruthy();
+    const second = lessons[2].solution.indexOf('LISTEN');
+    (text as HTMLTextAreaElement).setSelectionRange(second, second);
+    fireEvent.keyDown(text, { key: 'F9' });
+    expect(numbered()[1]).toBe('marked');
+    fireEvent.keyDown(text, { key: 'F9' });
+    expect(numbered()[1]).toBe('');
+  });
+  it('pauses a crew at each handoff, on the robot taking it', () => {
+    window.location.hash = '/shift/14';
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13, robotDrafts: { 13: referencePrograms(14) } });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Pause at' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /Every handoff/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    const inspector = () => screen.queryByRole('complementary', { name: /^(Brew|Porter), paused$/ });
+    playUntil(inspector);
+    const brew = inspector()!.textContent!.startsWith('Brew');
+    expect(within(inspector()!).getByText(brew ? 'Brew takes a ticket' : 'Porter takes a drink')).toBeTruthy();
+    expect(screen.getByRole('tab', { selected: true }).textContent).toMatch(brew ? /Brew/ : /Porter/);
   });
   it('counts the rounds of guests a shift sends in', () => {
     open();

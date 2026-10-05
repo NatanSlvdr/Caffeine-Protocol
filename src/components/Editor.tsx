@@ -1,6 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { DndContext, DragOverlay, KeyboardSensor, MeasuringStrategy, useSensor, useSensors } from '@dnd-kit/core';
 import {
+  blockOrdinal,
+  canPauseAt,
   compileRobot,
   robotCommands,
   blockPrototypes,
@@ -32,7 +34,7 @@ import { insertSpot, spotWords } from './editor/insertSpot';
 import { carryFolds } from './editor/folds';
 import { scopeAround } from './editor/textScope';
 import { BlockActions, type BlockAction } from './editor/BlockActions';
-import { copyBlock, copyBlocker, moveBlock, ordinalIn } from './editor/blockEdits';
+import { copyBlock, copyBlocker, moveBlock } from './editor/blockEdits';
 import { ProgramSurface } from './editor/ProgramSurface';
 import { JumpArrows } from './editor/JumpArrows';
 import { dragAnnouncements, dragInstructions } from './editor/dragAnnouncements';
@@ -41,6 +43,8 @@ import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { pad2 } from '@/shared/lib/format';
 import { TriangleAlert, WandSparkles } from 'lucide-react';
+
+const NO_MARKS: ReadonlySet<number> = new Set();
 
 /** How long typing pauses before the text is checked for what would stop it on Run. */
 const CHECK_PAUSE_MS = 900;
@@ -73,6 +77,8 @@ export function Editor({
   onDismissFailure,
   stepSeconds = 1.5,
   tabbed = false,
+  marks = NO_MARKS,
+  onMark,
 }: {
   role?: RobotRole;
   source: string;
@@ -89,6 +95,10 @@ export function Editor({
   onDismissFailure?: () => void;
   /** Under the robot tabs, the code zone is the panel they switch. */
   tabbed?: boolean;
+  /** Blocks marked to pause the service at, by line. */
+  marks?: ReadonlySet<number>;
+  /** A mark put on a block, or taken off it: by its number, F9, or a click in the text view's gutter. */
+  onMark?: (line: number) => void;
 }) {
   const root = useRef<HTMLDivElement>(null),
     codeArea = useRef<HTMLDivElement>(null),
@@ -178,6 +188,11 @@ export function Editor({
     say('Laid the routine out by depth.');
   };
   const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'F9' && onMark && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+      e.preventDefault();
+      const { value, selectionStart } = e.currentTarget;
+      return mark(value.slice(0, selectionStart).split('\n').length - 1);
+    }
     if (e.code === 'KeyF' && e.altKey && e.shiftKey && !e.ctrlKey && !e.metaKey && !disabled) {
       e.preventDefault();
       return tidy(e.currentTarget.selectionStart);
@@ -192,6 +207,18 @@ export function Editor({
   };
   // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
   const [said, say] = useAnnouncement();
+  /** Mark a block to pause the service at, or take its mark off, and say which. */
+  const mark = (line: number) => {
+    if (!onMark) return;
+    const name = textMode ? `line ${line + 1}` : `block ${blockOrdinal(source, line)}`;
+    if (!canPauseAt(source, line)) return say(`Nothing starts on ${name} for the service to pause at.`);
+    onMark(line);
+    say(
+      marks.has(line)
+        ? `Took the mark off ${name}.`
+        : `Marked ${name}: the service pauses as ${ROBOT_DISPLAY_NAMES[role]} starts it.`,
+    );
+  };
   // A routine block tapped, or picked with Enter, is where library blocks go next instead of the end. It holds only
   // while the routine is the one it was picked in: a drag, an undo or a typed edit moves the lines out from under it.
   const [pick, setPick] = useState<{ line: number; source: string } | null>(null);
@@ -353,12 +380,12 @@ export function Editor({
       const blocker = copyBlocker(source, block);
       if (blocker) return say(`Block ${ordinal} can’t be copied: ${blocker}.`);
       edited = copyBlock(source, block);
-      say(`Copied ${name}. The copy is block ${ordinalIn(edited.source, edited.line)}.`);
+      say(`Copied ${name}. The copy is block ${blockOrdinal(edited.source, edited.line)}.`);
     } else {
       edited = moveBlock(source, block, action);
       if (!edited)
         return say(`Block ${ordinal} is already at the ${action === 'up' ? 'top' : 'bottom'} of the routine.`);
-      say(`Moved ${name} ${action}. It is block ${ordinalIn(edited.source, edited.line)} now.`);
+      say(`Moved ${name} ${action}. It is block ${blockOrdinal(edited.source, edited.line)} now.`);
     }
     setPick(edited);
     setPressed({ action });
@@ -445,6 +472,7 @@ export function Editor({
                             : i === problem?.line
                               ? 'flagged'
                               : '',
+                        marks.has(i) ? 'marked' : '',
                         scope.includes(i) ? 'scope-edge' : i > scope[0] && i < scope.at(-1)! ? 'in-scope' : '',
                       ]
                         .filter(Boolean)
@@ -469,9 +497,23 @@ export function Editor({
                 aria-description={
                   (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
                   (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
+                  (onMark ? 'F9 marks the line for the service to pause at. ' : '') +
                   'Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.'
                 }
                 onKeyDown={onTextKey}
+                // The gutter, where the numbers are, marks a line to pause at, as a block's number does.
+                onMouseDown={(e) => {
+                  if (!onMark || e.button !== 0 || e.clientX - e.currentTarget.getBoundingClientRect().left > 44)
+                    return;
+                  const numbered = [...(e.currentTarget.previousElementSibling?.children ?? [])];
+                  const line = numbered.findIndex((row) => {
+                    const box = row.getBoundingClientRect();
+                    return e.clientY >= box.top && e.clientY < box.bottom;
+                  });
+                  if (line < 0) return;
+                  e.preventDefault();
+                  mark(line);
+                }}
                 onSelect={(e) => trackCaret(e.currentTarget)}
                 onFocus={(e) => trackCaret(e.currentTarget)}
                 onBlur={() => setCaretLine(null)}
@@ -520,6 +562,8 @@ export function Editor({
                 onFold={fold}
                 goTo={goTo}
                 flaggedLine={problem?.line ?? -1}
+                marks={marks}
+                onMark={onMark && mark}
                 actions={(block) => (
                   <BlockActions
                     block={block}

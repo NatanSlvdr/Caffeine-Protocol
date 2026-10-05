@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { levels } from '../../../src/data';
 import { referencePrograms } from '../../../src/data/extension';
 import { createLiveRun } from '../../../src/domain/liveSimulation';
-import { startsBetween } from '../../../src/domain/live/steps';
+import { startsIn } from '../../../src/domain/live/steps';
 import { sampleReplay } from '../../../src/domain/replay';
 import type { ExecutionEvent, RobotPrograms } from '../../../src/domain/types';
 
@@ -76,7 +76,10 @@ describe('stepping a live run', () => {
       told.push(...(frame.started ?? []));
     }
     expect(frame.done).toBe(true);
-    expect(told).toEqual(startsBetween(frame.result.execution!, -Infinity, Infinity));
+    // Rounds follow one another, so the log read straight through holds every start, in order but for ties.
+    const all = frame.result.execution!.flatMap((round) => startsIn(round.events));
+    expect(new Set(told)).toEqual(new Set(all));
+    expect(told).toHaveLength(all.length);
     expect(told.every((e) => (e.completed ?? 1) <= 1)).toBe(true);
     expect(told.some((e) => e.command.startsWith('MOVE ') && e.end - e.start > 0)).toBe(true);
   });

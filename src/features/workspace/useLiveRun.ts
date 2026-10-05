@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay } from '@/domain';
+import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay, splitByUnlock } from '@/domain';
 import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type {
@@ -18,6 +18,8 @@ import type { EditKind } from './history';
 import { evidenceOf, isStale } from './evidence';
 import { crewActivity } from './crew';
 import { inspectRobot } from './inspector';
+import { carryMarks, noMarks, pauseNowhere, pauseWhen, pausedBy, toggleMark } from './breakpoints';
+import type { Marks, PauseAt, PausedBy } from './breakpoints';
 import type { RunEvidence } from './evidence';
 
 export interface LiveRunArgs {
@@ -49,8 +51,17 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [speed, setSpeed] = useState(save.settings.speed),
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
-  // What started at the moment the last step stopped on; playing on, or another run, puts it away.
-  const [stepped, setStepped] = useState<ExecutionEvent[] | null>(null);
+  // What started at the moment the last step, or a pause the service took itself, stopped on, and why it paused
+  // itself; playing on, or another run, puts it away.
+  const [stepped, setStepped] = useState<{ started: ExecutionEvent[]; by?: PausedBy } | null>(null);
+  // The robots the player writes routines for; the stand-ins covering the rest go unstepped and unpaused at.
+  const crew = splitByUnlock(index + 1).unlocked;
+  // Blocks marked to pause at, and what else pauses the service, for this visit. Marks follow their blocks through
+  // edits, and go when a block does, so they never point at code the player didn't mark.
+  const [marks, setMarks] = useState<Marks>(noMarks),
+    [pauseAt, setPauseAt] = useState<PauseAt>(pauseNowhere);
+  // A slip the service is paused on, before the crew reacts: playing on, stepping or stopping lets them.
+  const [held, setHeld] = useState<RunRecord | null>(null);
   // The round being practised, counting from 0, or nothing for a full service.
   const [practising, setPractising] = useState<number | null>(null);
   // Every finished run this shift, frozen with the routines it ran, newest last; the oldest drop off past a few.
@@ -74,13 +85,16 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // Who is busy and who is waiting, while the run plays: the robot tabs show it.
   const activity = running && sampled ? crewActivity(sampled) : undefined;
   // The open robot, while the service is paused on it.
-  const inspected = running && paused && result && sampled ? inspectRobot(result, sampled, role, source) : undefined;
+  const inspected =
+    running && paused && result && sampled
+      ? inspectRobot(result, sampled, role, source, save.settings.text_editor)
+      : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
   // instruction waiting for the next customer when no action is in flight.
   const activeLine =
-    running && (!result || result.passed)
+    running && (!result || result.passed || held)
       ? (displayedTrace?.line ?? (waitingLine >= 0 ? waitingLine : firstInstructionLine))
       : -1;
   // A failed run stops at once so the code can be fixed, but its last frame stays up until the code changes.
@@ -96,6 +110,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // Any edit puts the last run's result away: it no longer describes this routine.
   const apply = (next: string) => {
     const updated = { ...programs, [role]: next };
+    setMarks((m) => ({ ...m, [role]: carryMarks(source, next, m[role]) }));
     setPrograms(updated);
     setResult(null);
     setShowFailure(false);
@@ -116,6 +131,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     return true;
   };
   const stop = () => {
+    if (release()) return;
     liveRun.current = null;
     setRunning(false);
     setPaused(false);
@@ -134,6 +150,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setRunning(false);
     setPaused(false);
     setStepped(null);
+    setHeld(null);
     setShowFailure(true);
     setEvidence(evidenceOf(level, record));
     if (record.result.first_failure?.role) setRole(record.result.first_failure.role);
@@ -164,6 +181,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setShowFailure(false);
     setPaused(false);
     setStepped(null);
+    setHeld(null);
     setRunning(true);
   };
   /** Put a frame of the live run on screen, and see a finished run through, passed or failed. */
@@ -180,13 +198,36 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       // Practice can pass, but only the whole service counts.
       if (record.mode === 'service') onComplete(frame.result.stars, programs.query, programs);
       onFinish(record);
+    } else if (pauseAt.slips) {
+      // Paused on the moment it went wrong, with the slip open beside the code.
+      const slipped = frame.result.execution?.flatMap((round) => round.events.filter((e) => e.error)) ?? [];
+      setHeld(record);
+      setPaused(true);
+      const robot = frame.result.first_failure?.role ?? 'query';
+      setStepped({ started: slipped, by: { reason: 'slip', robot } });
+      setRole(robot);
     } else fail(record);
   };
+  /** Let the crew react to the slip the service is paused on; false when it isn't paused on one. */
+  const release = () => {
+    if (!held) return false;
+    fail(held);
+    return true;
+  };
+  const stopWhen = pauseWhen(crew, marks, pauseAt);
   usePlaybackClock(
     running && !paused,
     (elapsed) => {
       const live = liveRun.current;
-      if (live) show(live.advance(elapsed * speed));
+      if (!live) return;
+      const frame = live.advance(elapsed * speed, stopWhen);
+      show(frame);
+      if (!frame.stopped || frame.done) return;
+      // Paused itself, at a mark or a handoff: on the robot that got there, unless the open one did too.
+      const by = pausedBy(marks, frame.stopped);
+      setPaused(true);
+      setStepped({ started: frame.started ?? [], by });
+      if (!frame.stopped.some((s) => s.event.role === role)) setRole(by.robot);
     },
     [speed, index, level, programs, practising],
   );
@@ -196,9 +237,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
    */
   const stepTo = (robots: readonly RobotRole[]) => {
     const live = liveRun.current;
-    if (!live || !paused) return;
+    if (!live || !paused || release()) return;
     const frame = live.step(robots);
-    setStepped(frame.started ?? []);
+    setStepped({ started: frame.started ?? [] });
     show(frame);
   };
   return {
@@ -210,11 +251,20 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     running,
     failed,
     paused,
-    /** Pause or play on; playing on puts away what the last step stopped on. */
+    /** Pause or play on; playing on puts away what the last step stopped on, or lets the crew react to a slip. */
     setPaused: (next: boolean | ((paused: boolean) => boolean)) => {
+      if (!(typeof next === 'function' ? next(paused) : next) && release()) return;
       setStepped(null);
       setPaused(next);
     },
+    held: !!held,
+    crew,
+    marks,
+    /** Mark the open robot's block to pause at, or take its mark off. */
+    toggleMark: (line: number) => setMarks((m) => toggleMark(m, role, line)),
+    clearMarks: () => setMarks(noMarks),
+    pauseAt,
+    setPauseAt,
     stepTo,
     stepped,
     speed,

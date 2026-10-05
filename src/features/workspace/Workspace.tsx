@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked, splitByUnlock } from '@/domain';
+import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -19,6 +19,7 @@ import { firstRoutineStep } from './firstRoutine';
 import { HandoverCard } from './HandoverCard';
 import { RobotInspector } from './RobotInspector';
 import { startedWords } from './inspector';
+import { markCount, pauseReason } from './breakpoints';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
@@ -130,6 +131,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     inspected,
     roundTime,
     stepped,
+    held,
+    crew,
+    marks,
     change,
     run,
     practise,
@@ -254,8 +258,6 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
   });
-  // The robots the player writes routines for; the stand-ins covering the rest go unstepped and unsaid.
-  const crew = splitByUnlock(index + 1).unlocked;
   // When the service is paused: the round, if the shift has more than one, and the time into it.
   const pausedAt =
     (level.seeds.length > 1 ? `Round ${round} · ` : '') +
@@ -329,7 +331,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             running={running}
             observation={observation}
             paused={paused}
-            pausable={running && !!result?.passed}
+            pausable={running && (!!result?.passed || held)}
             speed={speed}
             round={round}
             rounds={level.seeds.length}
@@ -341,7 +343,23 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             robot={observation ? undefined : ROBOT_DISPLAY_NAMES[role]}
             onStep={() => live.stepTo([role])}
             onStepCrew={crew.length > 1 ? () => live.stepTo(crew) : undefined}
-            stepped={stepped ? `${pausedAt}. ${startedWords(stepped, crew)}` : undefined}
+            stepped={
+              stepped
+                ? `${pausedAt}. ${stepped.by ? `${pauseReason(stepped.by)}. ` : ''}${startedWords(stepped.started, crew, programs, textMode)}`
+                : undefined
+            }
+            pauseMenu={
+              observation
+                ? undefined
+                : {
+                    pauseAt: live.pauseAt,
+                    onPauseAt: live.setPauseAt,
+                    marks: markCount(marks, crew),
+                    onClearMarks: live.clearMarks,
+                    handoffs: crew.length > 1,
+                    textMode,
+                  }
+            }
             onSpeed={(value) => {
               setSpeed(value);
               // The next shift opens at the same pace.
@@ -386,9 +404,16 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             failureLine={failureLine}
             textMode={textMode}
             tabbed
+            marks={marks[role]}
+            onMark={observation ? undefined : live.toggleMark}
           />
           {inspected && !observation && (
-            <RobotInspector state={inspected} reads={role === 'query' ? 'guest' : 'ticket'} when={pausedAt} />
+            <RobotInspector
+              state={inspected}
+              reads={role === 'query' ? 'guest' : 'ticket'}
+              when={pausedAt}
+              reason={stepped?.by && pauseReason(stepped.by)}
+            />
           )}
           {firstRoutine && save.settings.first_routine_tips && (
             <FirstRoutineTips
