@@ -4,6 +4,7 @@ import App from '../../../src/App';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons } from '../../../src/data';
+import { referencePrograms } from '../../../src/data/extension';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { OptionsModal } from '../../../src/features/workspace/modals/OptionsModal';
 import { RestoreModal } from '../../../src/features/workspace/modals/RestoreModal';
@@ -188,6 +189,57 @@ describe('live workspace lifecycle', () => {
     fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
     expect(status.textContent).toBe('');
   });
+  it('steps a paused service to the open robot’s next block, and shows what the robot knows there', () => {
+    open();
+    const toolbar = screen.getByRole('group', { name: 'Simulation controls' });
+    const status = toolbar.querySelector('[role="status"]')!;
+    const stepQuery = () => within(toolbar).getByRole('button', { name: 'Step Query' });
+    const inspector = () => screen.queryByRole('complementary', { name: 'Query, paused' });
+    // Stepping is for a paused service: while it plays, the button waits, and nothing is inspected.
+    expect(stepQuery().hasAttribute('disabled')).toBe(true);
+    expect(inspector()).toBeNull();
+    // Query works alone here, so there is no one else to step to.
+    expect(within(toolbar).queryByRole('button', { name: 'Next event' })).toBeNull();
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    expect(stepQuery().hasAttribute('disabled')).toBe(false);
+    expect(within(inspector()!).getByText('No Vars in this routine')).toBeTruthy();
+    fireEvent.click(stepQuery());
+    // The step says when it stopped and what Query started there; the stand-ins in the kitchen go unsaid.
+    expect(status.textContent).toBe('Round 1 · 0.0 s. Query: wait for orders, block 2.');
+    const row = (name: string) => within(inspector()!).getByText(name).nextElementSibling!.textContent;
+    expect(row('Doing')).toBe('Wait for ordersBlock 2');
+    expect(row('Guest')).toBe('“coffee”');
+    expect(row('Holding')).toBe('Nothing');
+    expect(row('Loop')).toBe('Not in a loop');
+    fireEvent.click(stepQuery());
+    expect(status.textContent).toMatch(/^Round 1 · [1-9]\d*\.\d s\. Query: .+, block \d+\.$/);
+    // Playing on puts the inspector and the step's words away.
+    fireEvent.click(screen.getByRole('button', { name: 'Resume playback' }));
+    expect(inspector()).toBeNull();
+    expect(status.textContent).toMatch(/^Service running/);
+  });
+  it('steps a crew to the next block any of its robots starts', () => {
+    window.location.hash = '/shift/14';
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13, robotDrafts: { 13: referencePrograms(14) } });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    const toolbar = screen.getByRole('group', { name: 'Simulation controls' });
+    const status = toolbar.querySelector('[role="status"]')!;
+    act(() => {
+      vi.advanceTimersByTime(100);
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    fireEvent.click(within(toolbar).getByRole('button', { name: 'Next event' }));
+    // Everyone who starts at that moment is told, in the order an order travels.
+    expect(status.textContent).toMatch(
+      /^Round 1 · 0\.0 s\. Query: .+\. Brew: waiting for a ticket, block \d+\. Porter: /,
+    );
+    expect(screen.getByRole('complementary', { name: /, paused$/ })).toBeTruthy();
+  });
   it('counts the rounds of guests a shift sends in', () => {
     open();
     const toolbar = screen.getByRole('group', { name: 'Simulation controls' });
@@ -216,7 +268,7 @@ describe('live workspace lifecycle', () => {
       vi.advanceTimersByTime(100);
     });
     expect(tab().getAttribute('data-activity')).toBe('waiting');
-    expect(tab().getAttribute('aria-description')).toBe('Waiting for orders');
+    expect(tab().getAttribute('aria-description')).toBe('Waiting for a guest');
     expect(tab().textContent).toContain('waiting');
     fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '4' } });
     const seen = new Set<string>();

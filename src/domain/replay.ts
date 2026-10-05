@@ -31,7 +31,8 @@ export function sampleReplay(result: RunResult, time: number) {
         actors.query &&
         (/^\s*LISTEN(?:\s*#.*)?$/m.test(result.programs?.query ?? '') ||
           logs.find((e) => e.actor === 'query')?.command === 'LISTEN');
-      if (waitingForOrders) actors.query!.action = { command: 'LISTEN', progress: 0, start: -STREET_APPROACH_SECONDS };
+      if (waitingForOrders)
+        actors.query!.action = { command: 'LISTEN', progress: 0, start: -STREET_APPROACH_SECONDS, waiting: 'guest' };
       continue;
     }
     const motion = history.filter((e) => e.from[0] !== e.to[0] || e.from[1] !== e.to[1]).at(-1),
@@ -77,14 +78,14 @@ export function sampleReplay(result: RunResult, time: number) {
     const waiting =
       !last.error &&
       last.start === last.end &&
-      (last.command === 'LISTEN' || last.command.startsWith('WAIT ')) &&
+      (!!last.waiting || last.command === 'LISTEN' || last.command.startsWith('WAIT ')) &&
       local < (seed?.duration ?? Infinity);
     actors[id] = {
       position,
       facing,
       reach,
       action: waiting
-        ? { command: last.command, progress: 0, start: last.start }
+        ? { command: last.command, progress: 0, start: last.start, ...(last.waiting && { waiting: last.waiting }) }
         : last.end > local
           ? {
               command: last.command,
@@ -93,6 +94,7 @@ export function sampleReplay(result: RunResult, time: number) {
             }
           : undefined,
       variables: settled?.variables,
+      loop: settled?.loop,
       walking: !!motion && motion.end > local,
       inventory: settled?.inventory ?? [],
       heldPaper: settled?.heldPaper,

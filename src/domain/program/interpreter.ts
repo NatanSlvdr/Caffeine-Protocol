@@ -337,6 +337,13 @@ export function* streamCustomerEvent(
       }
     out.heldPaper = ticket;
     out.variables = { ...vars };
+    const loop = loops.at(-1);
+    out.loop = loop && {
+      line: p.source_lines[loop.start],
+      pass: loop.index + 1,
+      passes: loop.values.length,
+      item: structuredClone(loop.values[loop.index]),
+    };
     out.state.pc = next;
   }
   out.state.stopped = true;

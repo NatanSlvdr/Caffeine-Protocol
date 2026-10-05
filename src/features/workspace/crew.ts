@@ -1,6 +1,7 @@
 import { spokenBlock } from '@/domain';
 import type { RobotRole, sampleReplay } from '@/domain';
 import type { RobotTabActivity } from '@/components';
+import { WAIT_LABELS } from './inspector';
 
 const ROLES: readonly RobotRole[] = ['query', 'prep', 'floor'];
 const isWait = (command: string) => command === 'LISTEN' || command.startsWith('WAIT ');
@@ -16,7 +17,8 @@ export function crewActivity(sampled: ReturnType<typeof sampleReplay>): Partial<
     if (!actor) continue;
     const last = sampled.seed?.events.findLast((e) => e.actor === role && e.start <= sampled.local && !e.error);
     const action = actor.action?.command;
-    if (action && isWait(action))
+    if (actor.action?.waiting) activity[role] = { state: 'waiting', label: WAIT_LABELS[actor.action.waiting] };
+    else if (action && isWait(action))
       activity[role] = { state: 'waiting', label: `Waiting ${spokenBlock(action).replace(/^wait /, '')}` };
     else if (last?.command === 'STOP' && last.end <= sampled.local)
       activity[role] = { state: 'stopped', label: 'Stopped for the night' };

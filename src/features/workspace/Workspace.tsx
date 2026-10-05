@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
+import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked, splitByUnlock } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -17,6 +17,8 @@ import { PracticeCard } from './PracticeCard';
 import { FirstRoutineTips } from './FirstRoutineTips';
 import { firstRoutineStep } from './firstRoutine';
 import { HandoverCard } from './HandoverCard';
+import { RobotInspector } from './RobotInspector';
+import { startedWords } from './inspector';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
@@ -125,6 +127,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     instructionProgress,
     round,
     activity,
+    inspected,
+    roundTime,
+    stepped,
     change,
     run,
     practise,
@@ -249,6 +254,12 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     window.addEventListener('keydown', keys);
     return () => window.removeEventListener('keydown', keys);
   });
+  // The robots the player writes routines for; the stand-ins covering the rest go unstepped and unsaid.
+  const crew = splitByUnlock(index + 1).unlocked;
+  // When the service is paused: the round, if the shift has more than one, and the time into it.
+  const pausedAt =
+    (level.seeds.length > 1 ? `Round ${round} · ` : '') +
+    (roundTime < 0 ? 'Before opening' : `${roundTime.toFixed(1)} s`);
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
   const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
@@ -327,6 +338,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             onTogglePause={() => {
               setPaused((p) => !p);
             }}
+            robot={observation ? undefined : ROBOT_DISPLAY_NAMES[role]}
+            onStep={() => live.stepTo([role])}
+            onStepCrew={crew.length > 1 ? () => live.stepTo(crew) : undefined}
+            stepped={stepped ? `${pausedAt}. ${startedWords(stepped, crew)}` : undefined}
             onSpeed={(value) => {
               setSpeed(value);
               // The next shift opens at the same pace.
@@ -372,6 +387,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             textMode={textMode}
             tabbed
           />
+          {inspected && !observation && (
+            <RobotInspector state={inspected} reads={role === 'query' ? 'guest' : 'ticket'} when={pausedAt} />
+          )}
           {firstRoutine && save.settings.first_routine_tips && (
             <FirstRoutineTips
               step={firstRoutineStep(programs.query, records.length > 0)}

@@ -1,4 +1,4 @@
-import { Pause, Play, Square } from 'lucide-react';
+import { ChevronsRight, Pause, Play, Square, StepForward } from 'lucide-react';
 import { BLOCK_SECONDS, MAX_PLAYBACK_SPEED } from '@/domain';
 import { RUN_MODIFIER } from '@/shared/lib/format';
 
@@ -16,6 +16,14 @@ export interface PlaybackToolbarProps {
   onRun: () => void;
   onTogglePause: () => void;
   onSpeed: (speed: number) => void;
+  /** The open robot, which Step plays on to; stepping is for a service with routines to follow. */
+  robot?: string;
+  /** While paused, play on to the open robot's next block or wait. */
+  onStep?: () => void;
+  /** While paused, play on to the next block or wait any of the player's robots starts; for a crew of more than one. */
+  onStepCrew?: () => void;
+  /** What started at the moment the last step stopped on, said for a screen reader. */
+  stepped?: string;
 }
 
 /** Run/stop, pause, and speed controls for the live simulation clock. */
@@ -31,6 +39,10 @@ export function PlaybackToolbar({
   onRun,
   onTogglePause,
   onSpeed,
+  robot,
+  onStep,
+  onStepCrew,
+  stepped,
 }: PlaybackToolbarProps) {
   // A shift of one round has nothing to count.
   const counted = running && rounds > 1;
@@ -50,6 +62,30 @@ export function PlaybackToolbar({
         {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}{' '}
         {paused ? 'Resume' : 'Pause'}
       </button>
+      {running && robot && onStep && (
+        <>
+          <button
+            className="step-button"
+            disabled={!paused}
+            title={paused ? `Play on until ${robot} starts its next block, or starts waiting` : 'Pause to step'}
+            onClick={onStep}
+          >
+            <StepForward size={15} aria-hidden="true" />
+            <span className="step-label">Step {robot}</span>
+          </button>
+          {onStepCrew && (
+            <button
+              className="step-button"
+              disabled={!paused}
+              title={paused ? 'Play on until any of your robots starts a block, or starts waiting' : 'Pause to step'}
+              onClick={onStepCrew}
+            >
+              <ChevronsRight size={15} aria-hidden="true" />
+              <span className="step-label">Next event</span>
+            </button>
+          )}
+        </>
+      )}
       {counted && (
         <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
           {/* A service stops at its first slip, so every round before this one went right. */}
@@ -85,7 +121,7 @@ export function PlaybackToolbar({
       <p className="sr-only" role="status">
         {running &&
           (paused
-            ? 'Service paused.'
+            ? (stepped ?? 'Service paused.')
             : `${practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>

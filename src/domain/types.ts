@@ -106,6 +106,8 @@ export interface OrderPayment {
 export interface CustomerExecution {
   variables?: Record<string, number | undefined>;
   heldPaper?: OrderTicket;
+  /** Query's innermost For loop after the step, if it is in one. */
+  loop?: LoopPosition;
   payment?: OrderPayment;
   tickets: OrderTicket[];
   asked_help: boolean;
@@ -221,9 +223,26 @@ export interface Cargo {
 }
 /** A number, or for Porter a place on the floor it stored with Store from here. */
 export type VariableValue = number | readonly [number, number];
+/**
+ * What a robot is waiting for when its block can't go ahead yet: a guest at the register, a ticket, a drink at pickup,
+ * a used cup to clear, a used cup to wash when every clean one is out, or the guest to sit down before serving.
+ */
+export type WaitReason = 'guest' | 'ticket' | 'drink' | 'used-cup' | 'cup-to-wash' | 'seated';
+/**
+ * Where a robot is in its innermost For loop: the loop's line, the lap it is on of how many, and for Query the item
+ * that lap is on.
+ */
+export interface LoopPosition {
+  line: number;
+  pass: number;
+  passes: number;
+  item?: HeardOrder;
+}
 export interface ActorSnapshot {
-  action?: { command: string; progress: number; start: number };
+  action?: { command: string; progress: number; start: number; waiting?: WaitReason };
   variables?: Record<string, VariableValue | undefined>;
+  /** The innermost For loop as of the last finished block. */
+  loop?: LoopPosition;
   facing?: number;
   walking?: boolean;
   reach?: number;
@@ -251,6 +270,10 @@ export interface ExecutionEvent {
   error?: string;
   customerId?: string;
   /** What a robot's Take or Deposit did at the station it reached, like SERVE. */ action?: string;
+  /** On a zero-length wait record: what the robot is waiting for. */
+  waiting?: WaitReason;
+  /** The robot's innermost For loop once the block is done, if it is in one. */
+  loop?: LoopPosition;
 }
 export interface SeedExecution {
   seed_id: string;

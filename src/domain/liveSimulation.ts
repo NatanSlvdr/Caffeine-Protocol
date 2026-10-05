@@ -4,7 +4,8 @@ import { countProgramBlocks } from './scoring';
 import { createLivePumpState, pumpQuery, queryFinished } from './live/pump';
 import { finishLiveRun } from './live/finish';
 import { initializeLiveRun } from './live/initialize';
-import type { LevelDefinition, RobotPrograms, RunResult } from './types';
+import { startsBetween } from './live/steps';
+import type { ExecutionEvent, LevelDefinition, RobotPrograms, RobotRole, RunResult } from './types';
 
 export interface LiveRunOptions {
   /**
@@ -13,6 +14,17 @@ export interface LiveRunOptions {
    */
   practice?: number;
 }
+
+/** A frame of a live run; a step also says what started at the moment it stopped on. */
+export interface LiveFrame {
+  result: RunResult;
+  time: number;
+  done: boolean;
+  started?: ExecutionEvent[];
+}
+
+/** Clock ticks a single step may play through: a whole service, with room to spare. */
+const MAX_STEP_TICKS = 1_000_000;
 
 /** A suspended interpreter: constructing a run executes no player instruction. */
 export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, options: LiveRunOptions = {}) {
@@ -83,8 +95,11 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, o
 
   /** Advance only to the requested game time; future instructions stay suspended. */
   function advance(seconds: number) {
+    return advanceTo(time + Math.max(0, seconds));
+  }
+  function advanceTo(until: number) {
     if (done) return snapshot();
-    let target = time + Math.max(0, seconds);
+    let target = Math.max(time, until);
     if (!service) startSeed(rounds[at]);
     while (!done && (rushing || nextGlobal <= target)) {
       if (!service) startSeed(rounds[at]);
@@ -108,8 +123,26 @@ export function createLiveRun(level: LevelDefinition, programs: RobotPrograms, o
     time = done && !(rushing && result.passed) ? offset : target;
     return snapshot();
   }
-  function snapshot() {
+  /**
+   * Play on to the next moment something starts: a block, a slip, or a robot beginning to wait, by one of the robots
+   * asked about or, asked about none, by anyone. It plays the same clock ticks a continuous run does, only stopping between them, so a run
+   * stepped through ends exactly as one played straight through. Everything that starts at that moment is one step,
+   * told in the order work travels through the café; whatever starts before it, by others, plays on through. The
+   * end of the service stops a step too.
+   */
+  function step(robots?: RobotRole | readonly RobotRole[]): LiveFrame {
+    const watched =
+      robots === undefined ? undefined : new Set<RobotRole>(typeof robots === 'string' ? [robots] : robots);
+    for (let ticks = 0; !done && ticks < MAX_STEP_TICKS; ticks++) {
+      const before = time;
+      advanceTo(nextGlobal);
+      const started = startsBetween(result.execution!, before, time);
+      if (done || started.some((event) => !watched || watched.has(event.role))) return { ...snapshot(), started };
+    }
+    return { ...snapshot(), started: [] };
+  }
+  function snapshot(): LiveFrame {
     return { result: { ...result }, time, done };
   }
-  return { advance, snapshot };
+  return { advance, step, snapshot };
 }

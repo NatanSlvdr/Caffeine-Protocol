@@ -299,6 +299,28 @@
 .workspace-main .playback-toolbar > button:not(.run-button):hover:not(:disabled) {
   background: #f1e6d2;
 }
+/* Stepping, while paused: to the open robot's next block, or to the next thing anyone starts. On a narrower stage
+   the buttons keep their icons, and their names for a screen reader and a tooltip. */
+.workspace-main .playback-toolbar > .step-button {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+@media (max-width: 1180px) {
+  .workspace-main .playback-toolbar > .step-button {
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+  }
+  .workspace-main .playback-toolbar .step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 .workspace-main .playback-round {
   color: var(--desk-muted);
   font-size: 12px;
@@ -376,7 +398,7 @@
 }
 /* The last failed run, kept under the code: a warm red record while it still describes the routine, quiet once
    an edit has moved past it. It takes the board's bottom corners, so the code above it squares off. */
-.workspace-main .editor-panel:has(.failure-card, .first-routine-tips, .handover) .editor-body {
+.workspace-main .editor-panel:has(.failure-card, .first-routine-tips, .handover, .robot-inspector) .editor-body {
   border-radius: 0;
 }
 /* The first routine's tips: a quiet gold strip under the code, one step at a time. A card under it takes the
@@ -572,6 +594,77 @@
 .handover:not(:has(li.missing)) .handover-status {
   color: #8fe0b4;
   font-weight: 650;
+}
+/* The open robot while the service is paused: what it is doing and what it knows, read off the run, in a soft
+   violet so it doesn't read as the tips, the handover, or a failure. A card under it takes the corners. */
+.robot-inspector {
+  flex: none;
+  padding: 10px 16px 12px;
+  border-top: 1px solid #b9a5f040;
+  border-radius: 0 0 17px 17px;
+  background: color-mix(in srgb, var(--draft-deep) 92%, #b9a5f0);
+  color: var(--draft-text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.robot-inspector:has(+ .first-routine-tips, + .handover, + .failure-card, + .practice-card) {
+  border-radius: 0;
+}
+.robot-inspector header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.robot-inspector header p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #d5c9f7;
+  font-weight: 750;
+}
+.inspector-when {
+  margin-left: auto;
+  color: var(--draft-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.robot-inspector dl {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 3px 14px;
+  margin: 6px 0 0 21px;
+}
+/* Each row's label and value sit in the grid's two columns. */
+.robot-inspector dl > div {
+  display: contents;
+}
+.robot-inspector dt {
+  color: var(--draft-muted);
+  font-weight: 650;
+}
+.robot-inspector dd {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 12px;
+  min-width: 0;
+  margin: 0;
+  color: var(--draft-text);
+}
+.robot-inspector dd strong {
+  color: #d5c9f7;
+  font-weight: 700;
+}
+.inspector-block {
+  color: var(--draft-muted);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+.inspector-unset {
+  color: var(--draft-muted);
+  font-style: italic;
 }
 .failure-card {
   flex: none;

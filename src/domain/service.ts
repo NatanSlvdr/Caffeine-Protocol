@@ -47,6 +47,7 @@ import type {
   RobotRole,
   SeedExecution,
   VariableValue,
+  WaitReason,
 } from './types';
 
 type Job = {
@@ -69,8 +70,8 @@ type Worker = {
   program: Program;
   pc: number;
   stack: number[];
-  /** Open For-times loops: the FOR line, the laps left, and the call depth that opened it. */
-  loops: { start: number; remaining: number; depth: number }[];
+  /** Open For-times loops: the FOR line, the laps left of how many, and the call depth that opened it. */
+  loops: { start: number; remaining: number; passes: number; depth: number }[];
   vars: Record<string, VariableValue>;
   position: Point;
   inventory: Cargo[];
@@ -300,7 +301,20 @@ export function* streamService(
         rushFirst(w.inventory.filter((c) => c.stage === 'brewed')) ??
         rushFirst(w.inventory));
   const currentJob = (w: Worker) => (w.role === 'floor' && w.job ? w.job : jobOf(currentCargo(w)));
-  const memory = (w: Worker) => (Object.keys(w.vars).length ? { variables: { ...w.vars } } : {});
+  /** What the robot knows: its memory, and the lap of the For loop it is in. */
+  const memory = (w: Worker) => {
+    const loop = w.loops.at(-1);
+    return {
+      ...(Object.keys(w.vars).length && { variables: { ...w.vars } }),
+      ...(loop && {
+        loop: {
+          line: w.program.source_lines[loop.start],
+          pass: loop.passes - loop.remaining + 1,
+          passes: loop.passes,
+        },
+      }),
+    };
+  };
   const moveNext = (w: Worker, move = w.move!): Point =>
     move.path?.[move.completed] ?? [w.position[0] + move.direction[0], w.position[1] + move.direction[1]];
   const record = (
@@ -507,7 +521,7 @@ export function* streamService(
   /** Clean cups on the shelf, and used ones in the sink waiting for Brew to wash them. */
   let cleanCups = config.cups || Infinity,
     sinkCups = 0;
-  const markWaiting = (w: Worker, line: number, command: string) => {
+  const markWaiting = (w: Worker, line: number, command: string, waiting: WaitReason) => {
     if (!live) return;
     const previous = log.at(-1);
     if (
@@ -530,6 +544,8 @@ export function* streamService(
       to: w.position,
       inventory: structuredClone(w.inventory),
       customerId: currentJob(w)?.event.customer.customer_id,
+      ...memory(w),
+      waiting,
     });
   };
   const step = (w: Worker): boolean => {
@@ -568,13 +584,13 @@ export function* streamService(
         return false;
       }
       if (!closedFor(w, c)) {
-        markWaiting(w, line, c);
+        markWaiting(w, line, c, c === 'WAIT DIRTY' ? 'used-cup' : w.role === 'prep' ? 'ticket' : 'drink');
         return false;
       }
     }
     // With every clean cup in use, washing waits at the sink for the next used one.
     if (config.cups && !cleanCups && !sinkCups && !w.move && handAction(w.role, w.position, c)?.verb === 'WASH') {
-      markWaiting(w, line, c);
+      markWaiting(w, line, c, 'cup-to-wash');
       return false;
     }
     if (w.move) {
@@ -752,7 +768,7 @@ export function* streamService(
       }
       return control(() => {
         if (count > 0) {
-          w.loops.push({ start: w.pc, remaining: count, depth: w.stack.length });
+          w.loops.push({ start: w.pc, remaining: count, passes: count, depth: w.stack.length });
           w.pc++;
         } else w.pc = end + 1;
       });
@@ -912,7 +928,7 @@ export function* streamService(
         return false;
       }
       if (a === 'SERVE' && served.event.timing.seated > now) {
-        markWaiting(w, line, c);
+        markWaiting(w, line, c, 'seated');
         return false;
       }
       const paper = served.event.tickets.find((t) => belongsToPaper(served.ticketId, t))!;

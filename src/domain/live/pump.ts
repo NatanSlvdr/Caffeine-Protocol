@@ -87,6 +87,7 @@ function markWaiting(now: number, log: ExecutionEvent[], state: LivePumpState, d
     from: state.position,
     to: state.position,
     inventory: [],
+    waiting: 'guest',
   });
 }
 
@@ -155,6 +156,7 @@ export function pumpQuery(now: number, log: ExecutionEvent[], state: LivePumpSta
   if (state.pending) {
     state.pending.variables = { ...actual.variables };
     state.pending.heldPaper = actual.heldPaper ? structuredClone(actual.heldPaper) : undefined;
+    state.pending.loop = actual.loop;
     state.position = state.pending.to;
     state.pending = undefined;
   }

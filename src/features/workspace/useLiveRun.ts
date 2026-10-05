@@ -2,12 +2,22 @@ import { useEffect, useRef, useState } from 'react';
 import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay } from '@/domain';
 import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
-import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunRecord, RunResult } from '@/domain';
+import type {
+  ExecutionEvent,
+  LevelDefinition,
+  LiveFrame,
+  ProgressSave,
+  RobotPrograms,
+  RobotRole,
+  RunRecord,
+  RunResult,
+} from '@/domain';
 import { usePlaybackClock } from './usePlaybackClock';
 import { keepHistories, keptHistories, record, redo, undo } from './history';
 import type { EditKind } from './history';
 import { evidenceOf, isStale } from './evidence';
 import { crewActivity } from './crew';
+import { inspectRobot } from './inspector';
 import type { RunEvidence } from './evidence';
 
 export interface LiveRunArgs {
@@ -39,6 +49,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [speed, setSpeed] = useState(save.settings.speed),
     [replayTime, setReplayTime] = useState(0);
   const liveRun = useRef<ReturnType<typeof createLiveRun> | null>(null);
+  // What started at the moment the last step stopped on; playing on, or another run, puts it away.
+  const [stepped, setStepped] = useState<ExecutionEvent[] | null>(null);
   // The round being practised, counting from 0, or nothing for a full service.
   const [practising, setPractising] = useState<number | null>(null);
   // Every finished run this shift, frozen with the routines it ran, newest last; the oldest drop off past a few.
@@ -61,6 +73,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     : (practising ?? 0) + 1;
   // Who is busy and who is waiting, while the run plays: the robot tabs show it.
   const activity = running && sampled ? crewActivity(sampled) : undefined;
+  // The open robot, while the service is paused on it.
+  const inspected = running && paused && result && sampled ? inspectRobot(result, sampled, role, source) : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));
   // Keep the marker visible during startup and idle gaps: LISTEN is the real
@@ -105,6 +119,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     liveRun.current = null;
     setRunning(false);
     setPaused(false);
+    setStepped(null);
     setShowFailure(false);
   };
   /** Freeze a finished run with the routines and rounds it played, and keep it. */
@@ -118,6 +133,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     liveRun.current = null;
     setRunning(false);
     setPaused(false);
+    setStepped(null);
     setShowFailure(true);
     setEvidence(evidenceOf(level, record));
     if (record.result.first_failure?.role) setRole(record.result.first_failure.role);
@@ -147,29 +163,44 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setReplayTime(-STREET_APPROACH_SECONDS);
     setShowFailure(false);
     setPaused(false);
+    setStepped(null);
     setRunning(true);
+  };
+  /** Put a frame of the live run on screen, and see a finished run through, passed or failed. */
+  const show = (frame: LiveFrame) => {
+    setResult(frame.result);
+    setReplayTime(frame.time);
+    if (!frame.done) return;
+    const record = keep(frame.result, practising);
+    if (frame.result.passed) {
+      liveRun.current = null;
+      setRunning(false);
+      setPaused(false);
+      setStepped(null);
+      // Practice can pass, but only the whole service counts.
+      if (record.mode === 'service') onComplete(frame.result.stars, programs.query, programs);
+      onFinish(record);
+    } else fail(record);
   };
   usePlaybackClock(
     running && !paused,
     (elapsed) => {
       const live = liveRun.current;
-      if (!live) return;
-      const frame = live.advance(elapsed * speed);
-      setResult(frame.result);
-      setReplayTime(frame.time);
-      if (!frame.done) return;
-      const record = keep(frame.result, practising);
-      if (frame.result.passed) {
-        liveRun.current = null;
-        setRunning(false);
-        setPaused(false);
-        // Practice can pass, but only the whole service counts.
-        if (record.mode === 'service') onComplete(frame.result.stars, programs.query, programs);
-        onFinish(record);
-      } else fail(record);
+      if (live) show(live.advance(elapsed * speed));
     },
     [speed, index, level, programs, practising],
   );
+  /**
+   * While paused, play on to the next moment one of the robots starts a block or a wait. It plays the clock a
+   * continuous run would, so the run ends the same however it was stepped.
+   */
+  const stepTo = (robots: readonly RobotRole[]) => {
+    const live = liveRun.current;
+    if (!live || !paused) return;
+    const frame = live.step(robots);
+    setStepped(frame.started ?? []);
+    show(frame);
+  };
   return {
     programs,
     role,
@@ -179,7 +210,13 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     running,
     failed,
     paused,
-    setPaused,
+    /** Pause or play on; playing on puts away what the last step stopped on. */
+    setPaused: (next: boolean | ((paused: boolean) => boolean)) => {
+      setStepped(null);
+      setPaused(next);
+    },
+    stepTo,
+    stepped,
     speed,
     setSpeed,
     time,
@@ -190,6 +227,9 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     instructionProgress,
     round,
     activity,
+    inspected,
+    /** The time on screen, counted from the start of its round. */
+    roundTime: sampled?.local ?? time,
     change,
     undo: () => step('undo'),
     redo: () => step('redo'),

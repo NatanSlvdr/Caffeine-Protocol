@@ -1,5 +1,5 @@
 import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain';
-import { blockFields, cargoLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
+import { blockFields, heldLabel, paperLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
 import type { CastId } from '@/domain/dialogue';
 import { cast } from '@/data/campaign/cast';
 import { Coffee, Settings } from 'lucide-react';
@@ -60,18 +60,7 @@ export function RobotHolding({
         : fields
           ? variableLabels(`${fields.verb} ${fields.value}`).trim()
           : '';
-  const paperLabel = paper
-    ? (paper.item ? `${paper.item === 'tea' ? 'Tea' : 'Coffee'} order paper` : 'Blank order paper') +
-      (paper.sugar_count !== null
-        ? ` · ${paper.sugar_count} sugar`
-        : paper.with_sugar !== null
-          ? paper.with_sugar
-            ? ' · With sugar'
-            : ' · No sugar'
-          : '') +
-      (paper.to_go ? ' · To go' : '') +
-      (paper.rush ? ' · Rush' : '')
-    : '';
+  const paperText = paper ? paperLabel(paper) : '';
   // Robots carry their selector icon; Niko, covering the counter, carries a cup.
   const CrewIcon = (crew && robotIcons[crew as keyof typeof robotIcons]) || Coffee;
   const color = cast[name.toLowerCase() as CastId]?.color ?? '#ecd29b';
@@ -120,8 +109,8 @@ export function RobotHolding({
           {paper && (
             <li
               key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`}
-              title={paperLabel}
-              aria-label={paperLabel}
+              title={paperText}
+              aria-label={paperText}
             >
               <span className="holding-item-icon">
                 <HoldingIcon item={paper.item} stage="paper" />
@@ -137,7 +126,7 @@ export function RobotHolding({
             </li>
           )}
           {inventory.map((cargo) => {
-            const label = cargoLabel(cargo) + (cargo.table > 0 ? ` · Table ${cargo.table}` : ' · To go');
+            const label = heldLabel(cargo);
             return (
               <li key={`${cargo.ticketId}:${cargo.stage}:${cargo.sugar}`} title={label} aria-label={label}>
                 <span className="holding-item-icon">
