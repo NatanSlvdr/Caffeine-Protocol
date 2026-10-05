@@ -7,7 +7,8 @@ import { cast } from '../../../src/data/campaign/cast';
 import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
 import type { DialogueLine } from '../../../src/domain/dialogue';
-import { levels } from '../../../src/data';
+import { lessons, levels } from '../../../src/data';
+import { compileProgram, runLevel } from '../../../src/domain';
 import { failureLines, successLines } from '../../../src/features/workspace/reactions';
 import type { FailureCode } from '../../../src/domain/failures';
 import type { RunFailure, RunResult } from '../../../src/domain/types';
@@ -261,6 +262,7 @@ describe('reactions', () => {
       passed: false,
       observation: false,
       stars: 0,
+      events: [] as RunResult['events'],
       first_failure: { role: 'query', phrase: 'Two teas, please.', code, reason, ...extra },
     }) as RunResult;
 
@@ -273,6 +275,16 @@ describe('reactions', () => {
     expect(guest.text).toContain('Two teas, please.');
     expect(niko.who).toBe('niko');
     expect(niko.text).toContain('has the wrong item');
+  });
+
+  it('has a regular who got the wrong thing react as themselves', () => {
+    const level = levels[3];
+    const query = lessons[3].solution.replace('ITEM tea', 'ITEM coffee');
+    const result = runLevel(level, compileProgram(query, 4), { query, prep: '', floor: '' });
+    expect(result.first_failure?.code).toBe('ticket-item');
+    const [juno] = failureLines(result, 'query');
+    expect(juno).toMatchObject({ who: 'juno', mood: 'worried' });
+    expect(cast[juno.who!].name).toBe('Juno');
   });
 
   it('explains why the common Query and robot mistakes matter', () => {

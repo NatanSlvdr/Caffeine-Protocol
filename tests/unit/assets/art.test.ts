@@ -3,8 +3,11 @@ import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cutscenes } from '../../../src/data/campaign/cutscenes';
+import { levels } from '../../../src/data';
+import { cutscenes, sceneLines } from '../../../src/data/campaign/cutscenes';
+import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, MOODS } from '../../../src/domain/dialogue';
+import { REGULAR_NAMES } from '../../../src/domain/regulars';
 import { artErrors, webpInfo } from '../../../tools/art-check.mjs';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../../..');
@@ -30,6 +33,29 @@ describe('the art the game ships', () => {
     expect(shipped('src/assets/portraits').sort()).toEqual([...CAST_IDS].sort());
     for (const id of CAST_IDS)
       for (const mood of shipped(`src/assets/portraits/${id}`)) expect(MOODS, `${id}/${mood}`).toContain(mood);
+  });
+
+  it('has a face for every mood the story asks for, but the few still to draw, and none it never shows', () => {
+    const lines = [
+      ...cutscenes.flatMap((scene) => sceneLines(scene).lines),
+      ...levels.flatMap((_, shift) => [...shiftIntro(shift), ...shiftOutro(shift)]),
+    ];
+    const asked = new Set(lines.flatMap((l) => (l.who && l.mood ? [`${l.who}/${l.mood}`] : [])));
+    // A guest who got the wrong thing reacts worried, as themselves if they're a regular.
+    for (const who of ['guest', ...Object.keys(REGULAR_NAMES)]) asked.add(`${who}/worried`);
+    const drawn = new Set(
+      CAST_IDS.flatMap((id) => shipped(`src/assets/portraits/${id}`).map((mood) => `${id}/${mood}`)),
+    );
+    // These fall back to neutral until they're drawn: see docs/game_design/art_audit.md.
+    expect([...asked].filter((mood) => !drawn.has(mood)).sort()).toEqual([
+      'albert/worried',
+      'guest/happy',
+      'pip/happy',
+      'pip/surprised',
+      'pip/worried',
+      'rosa/worried',
+    ]);
+    expect([...drawn].filter((mood) => !mood.endsWith('/neutral') && !asked.has(mood))).toEqual([]);
   });
 });
 
@@ -63,7 +89,7 @@ describe('checking the art', () => {
     expect(artErrors(dir)).toEqual([]);
   });
 
-  it('names a source never converted, a conversion with no source, and a gap in the panels', () => {
+  it('names a source never converted, a conversion with no source, a gap in the panels, and a picture twice', () => {
     const dir = sample();
     writeFileSync(join(dir, 'assets/portraits/niko/worried.png'), '');
     rmSync(join(dir, 'assets/cutscenes/the-keys/01.png'));
@@ -75,6 +101,7 @@ describe('checking the art', () => {
     );
     rmSync(join(dir, 'assets/portraits/niko/happy.png'));
     expect(artErrors(dir)).toEqual([
+      'src/assets/cutscenes/the-keys/03.webp is the same image as src/assets/cutscenes/the-keys/02.webp',
       'src/assets/cutscenes/the-keys/02.webp is out of order: expected 01',
       'src/assets/cutscenes/the-keys/03.webp is out of order: expected 02',
       'assets/portraits/niko/worried.png isn’t converted (run python3 tools/portraits.py)',

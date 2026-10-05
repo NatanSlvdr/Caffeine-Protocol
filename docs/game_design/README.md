@@ -17,6 +17,7 @@ generated into [../campaign/shifts/](../campaign/shifts/README.md) by
 - `robots.md` - role ownership and what each robot can do.
 - `story.md` and `vision.md` - cast, arc, tone and pillars.
 - `cutscene_prompts.md` and `portrait_prompts.md` - art prompts for the story.
+- `art_audit.md` - the shipped art against the story, and what is still to draw.
 
 ## Historical
 

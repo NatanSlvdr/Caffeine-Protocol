@@ -1,4 +1,4 @@
-import { count, line, ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
+import { count, line, ROBOT_DISPLAY_NAMES, roundRegulars, variableLabels } from '@/domain';
 import type { CastId, DialogueLine, FailureCode, LevelDefinition, RobotPrograms, RobotRole, RunResult } from '@/domain';
 
 const ROBOT_CAST: Record<RobotRole, CastId> = { query: 'query', prep: 'brew', floor: 'porter' };
@@ -308,8 +308,9 @@ const stuck: Record<RobotRole, string> = {
 export const failureHint = (code: FailureCode): string => kinds[code].hint;
 
 /**
- * A failed run told as a scene: the guest or robot reacts, then Niko names the problem and nudges. Told `brief`ly,
- * for a slip the crew has already reacted to, only the reaction stays: the card under the routine says the rest.
+ * A failed run told as a scene: the guest (a regular as themselves) or robot reacts, then Niko names the problem and
+ * nudges. Told `brief`ly, for a slip the crew has already reacted to, only the reaction stays: the card under the
+ * routine says the rest.
  * On a shift that went right before, Niko also points at the routine that was `served`, so a setback can be undone.
  */
 export function failureLines(
@@ -322,9 +323,10 @@ export function failureLines(
   if (!failure) return [];
   const role = failure.role ?? fallbackRole;
   const kind = kinds[failure.code];
+  const guest = () => roundRegulars(result, failure.seed_id).get(failure.customer_id) ?? 'guest';
   const reaction =
     kind.by === 'guest' && kind.react && failure.phrase
-      ? line('guest:worried', kind.react(failure.phrase))
+      ? line(`${guest()}:worried`, kind.react(failure.phrase))
       : line(ROBOT_CAST[role], kind.by === 'robot' && kind.react ? kind.react(failure.phrase) : stuck[role]);
   if (brief) return [reaction];
   const lines = [reaction, line('niko:worried', `${variableLabels(failure.reason)} ${failureHint(failure.code)}`)];

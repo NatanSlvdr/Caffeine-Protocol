@@ -18,6 +18,7 @@ What each document is for, and which ones describe the game as it ships. The gam
   - [Robots](game_design/robots.md): who owns each role and what every robot can do, through Act IV.
   - [Story](game_design/story.md) and [Vision](game_design/vision.md): the cast, the arc and the tone.
   - [Cutscene prompts](game_design/cutscene_prompts.md) and [Portrait prompts](game_design/portrait_prompts.md): prompts for the story stills and dialogue portraits.
+  - [Art audit](game_design/art_audit.md): the shipped art checked against the story, and the stills and moods still to draw.
 
 ## Historical
 

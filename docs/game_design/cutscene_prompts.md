@@ -833,3 +833,7 @@ before the final receipt.
 | `the-floor-robot`        | `01` `02` `03` `04` `05` `06` `07` `08`           |
 | `back-to-school`         | `01` `02` `03` `04` `05` `06`                     |
 | `closing-time`           | `01` `02` `03` `04` `05` `06` `07` `08`           |
+
+All 56 are in place, but 22 of them are still the first story's art and show a
+later beat of their scene: the [art audit](art_audit.md) lists which, and
+what each should show instead.

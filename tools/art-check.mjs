@@ -1,9 +1,10 @@
 /**
  * The art the game ships, checked against its sources and the frames the game puts it in. `tools/cutscenes.py` and
  * `tools/portraits.py` turn assets/<kind>/<folder>/<name>.png into src/assets/<kind>/<folder>/<name>.webp; a run that
- * succeeded is no proof the result is there, current, or the shape the game expects. Sync conflict copies
- * ("01 2.webp") are skipped, as the game skips them.
+ * succeeded is no proof the result is there, current, or the shape the game expects, or that it isn't another
+ * picture saved over again. Sync conflict copies ("01 2.webp") are skipped, as the game skips them.
  */
+import { createHash } from 'node:crypto';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -39,6 +40,8 @@ export function webpInfo(bytes) {
 export function artErrors(root) {
   const errors = [];
   for (const [kind, frame] of Object.entries(KINDS)) {
+    /** The first file shipped with each image, so a copy of one shown somewhere else is caught. */
+    const firstWith = new Map();
     const shippedDir = join(root, 'src/assets', kind),
       sourceDir = join(root, 'assets', kind);
     const folders = [...new Set([...list(shippedDir), ...list(sourceDir)])].sort();
@@ -53,9 +56,13 @@ export function artErrors(root) {
       for (const name of shipped) {
         const path = `src/assets/${kind}/${folder}/${name}`;
         if (!sourceStems.has(stem(name))) errors.push(`${path} has no source in assets/${kind}/${folder}`);
+        const bytes = readFileSync(join(shippedDir, folder, name));
+        const hash = createHash('sha256').update(bytes).digest('hex');
+        if (firstWith.has(hash)) errors.push(`${path} is the same image as ${firstWith.get(hash)}`);
+        else firstWith.set(hash, path);
         let info;
         try {
-          info = webpInfo(readFileSync(join(shippedDir, folder, name)));
+          info = webpInfo(bytes);
         } catch (error) {
           errors.push(`${path}: ${error.message}`);
           continue;

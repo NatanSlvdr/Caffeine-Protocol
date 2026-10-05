@@ -1,7 +1,8 @@
 # Portrait prompts
 
-Prompts for the 21 dialogue portraits: a `neutral` for each of the 11
-characters, plus the 10 other moods the scripts actually use. Save each image
+Prompts for the 27 dialogue portraits: a `neutral` for each of the 11
+characters, plus the 16 other moods the scripts actually use. Six of those
+moods aren't drawn yet; the [art audit](art_audit.md) lists them. Save each image
 as `assets/portraits/<id>/<mood>.png`, for example `assets/portraits/niko/happy.png`,
 then run `python3 tools/portraits.py` to make the WebPs the game loads.
 
@@ -186,9 +187,9 @@ prompt with:
 > outline weight, framing, crop, head position and transparent background
 > exactly. Change only the facial expression and the small gesture described:
 
-### People (`niko`, `albert`, `juno`, `dot`, `rosa`, `guest`)
+### People (`niko`, `pip`, `albert`, `juno`, `dot`, `rosa`, `guest`)
 
-The robots (Query, Brew, Porter), Moka and Pip only have a neutral portrait.
+The robots (Query, Brew, Porter) and Moka only have a neutral portrait.
 
 - **happy:** a broad, open, genuine smile showing a little of the upper teeth,
   eyes curved into happy crescents, cheeks lifted with a light blush, head
@@ -203,16 +204,21 @@ Character-specific touches (only the moods in the checklist):
 
 - `niko` · happy: a thumbs-up at chest height. · worried: rubbing the back of
   the neck. · surprised: the pencil half-falling from the apron pocket.
+- `pip` · happy: a gap-toothed laugh, eyes squeezed shut, both fists up. ·
+  surprised: the cap knocked askew, mouth wide open. · worried: arms folded
+  tight, chin tucked, frowning up from under the cap.
 - `albert` · happy: a warm chuckle with the eyes crinkled shut and one finger
-  touching the cap brim.
+  touching the cap brim. · worried: peering over his glasses at the cup,
+  polite and puzzled.
 - `juno` · happy: a small, reluctant but real grin and a raised mug. ·
   worried: a flat, exasperated look with one eyebrow raised and the mug held
   close.
 - `dot` · happy: beaming, holding up two sugar cubes. · worried: counting on
   her fingers with a small frown.
-- `rosa` · happy: laughing, with the phone held high like a trophy.
-- `guest` · worried: the base line only, with no extra gesture. This one is
-  shown on most failed runs.
+- `rosa` · happy: laughing, with the phone held high like a trophy. ·
+  worried: the phone lowered, glancing at the time.
+- `guest` · happy: the base line only. · worried: the base line only, with no
+  extra gesture. This one is shown on most failed runs.
 
 ## File checklist
 
@@ -223,13 +229,13 @@ assets/portraits/
   brew/    neutral.png
   porter/  neutral.png
   moka/    neutral.png
-  pip/     neutral.png
-  albert/  neutral.png happy.png
+  pip/     neutral.png happy.png* surprised.png* worried.png*
+  albert/  neutral.png happy.png worried.png*
   juno/    neutral.png happy.png worried.png
   dot/     neutral.png happy.png worried.png
-  rosa/    neutral.png happy.png
-  guest/   neutral.png worried.png
+  rosa/    neutral.png happy.png worried.png*
+  guest/   neutral.png happy.png* worried.png
 ```
 
-Only the 11 neutrals are required. A missing mood falls back to the neutral,
+\* Not drawn yet. Only the 11 neutrals are required. A missing mood falls back to the neutral,
 so you can ship the neutrals first and add expressions later.

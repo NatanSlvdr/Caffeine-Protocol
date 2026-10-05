@@ -45,3 +45,7 @@ exports/
 *.exe
 *.dmg
 *.app/
+
+# iCloud sync conflict copies ("01 2.webp", "notes 3.md")
+* [0-9].*
+* [0-9][0-9].*
