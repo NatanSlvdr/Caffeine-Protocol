@@ -1,4 +1,5 @@
-import type { ProgressSave, RobotPrograms } from '@/domain/types';
+import type { ProgressSave, RobotPrograms, RobotRole } from '@/domain/types';
+import { ROBOT_ROLES, robotForLevel, robotUnlocked } from '@/domain/robots';
 import { UNLOCKS } from '@/domain/unlocks';
 import { cleanFloor, cleanQuery } from './migration';
 import type { LessonCatalog } from './migration';
@@ -50,4 +51,23 @@ export function saveRobotDraft(save: ProgressSave, index: number, programs: Robo
     drafts: { ...save.drafts, [index]: programs.query },
     robotDrafts: { ...save.robotDrafts, [index]: programs },
   };
+}
+
+/**
+ * The robots whose routines, as the workspace would open them, differ from the ones the shift was served with, or,
+ * while it's still to serve, from how it opened.
+ */
+export function changedRoles(save: ProgressSave, index: number, lessons: LessonCatalog): RobotRole[] {
+  const programs = save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons);
+  const kept =
+    save.robotSolutions[index] ??
+    (save.stars[index] === undefined ? resetRobotPrograms(save, index, lessons) : programs);
+  return ROBOT_ROLES.filter((role) => robotUnlocked(role, index + 1) && programs[role].trim() !== kept[role].trim());
+}
+
+/** The robot a shift opens on: its lead, unless the player was working on another robot's routine and not the lead's. */
+export function openingRole(save: ProgressSave, index: number, lessons: LessonCatalog): RobotRole {
+  const lead = robotForLevel(index + 1),
+    changed = changedRoles(save, index, lessons);
+  return changed.length && !changed.includes(lead) ? changed[0] : lead;
 }

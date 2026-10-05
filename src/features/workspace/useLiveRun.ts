@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { STREET_APPROACH_SECONDS, createLiveRun, keepRecord, recordRun, sampleReplay } from '@/domain';
-import { robotForLevel } from '@/domain/robots';
-import { incomingRobotPrograms } from '@/features/campaign/save/persistence';
+import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type { LevelDefinition, ProgressSave, RobotPrograms, RobotRole, RunRecord, RunResult } from '@/domain';
 import { usePlaybackClock } from './usePlaybackClock';
@@ -27,7 +26,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const [programs, setPrograms] = useState(
       () => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons),
     ),
-    [role, setRole] = useState<RobotRole>(robotForLevel(index + 1));
+    // A returning player picks up on the robot they were working on.
+    [role, setRole] = useState<RobotRole>(() => openingRole(save, index, lessons));
   const source = programs[role];
   // Every robot keeps its own undo history, so undoing on Brew's tab never reaches back into Query's routine.
   const [histories, setHistories] = useState(() => keptHistories(index, programs));

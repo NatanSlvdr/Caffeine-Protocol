@@ -103,6 +103,40 @@
   font-size: clamp(15px, 2dvh, 17px);
   line-height: 1.6;
 }
+/* A returning player's shift, where the welcome stood: a docket clipped under the title. */
+.front-resume {
+  max-width: 420px;
+  padding: 12px 14px;
+  border-left: 3px solid var(--front-clay);
+  border-radius: 4px;
+  background: #f6ecdb;
+}
+.front-resume-kicker {
+  color: var(--front-clay);
+  font-family: var(--front-mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.front-resume h2 {
+  margin: 4px 0 6px;
+  color: var(--front-ink);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.front-resume p:not(.front-resume-kicker) {
+  margin: 0;
+  color: var(--front-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+.front-resume p.front-resume-standing {
+  margin-top: 6px;
+  color: var(--front-ink);
+  font-weight: 650;
+}
 .front-actions {
   display: flex;
   flex-wrap: wrap;
