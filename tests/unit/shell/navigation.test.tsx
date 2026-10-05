@@ -145,6 +145,45 @@ describe('shift entry navigation', () => {
     expect(await screen.findByText('No. 05')).toBeTruthy();
   });
 
+  it('prints the day act by act on the closing receipt, without counting what a one-star café missed', () => {
+    const row = (name: string) => {
+      const value = screen.getByText(name, { exact: false, selector: 'dt' }).nextElementSibling!;
+      return [value.querySelector('[aria-hidden="true"]')?.textContent, value.querySelector('.sr-only')?.textContent];
+    };
+    const ending = (stars: Record<number, number>) => {
+      localStorage.setItem(
+        'caffeine-protocol.v1',
+        JSON.stringify({ ...newSave(), unlocked: 20, complete: true, stars }),
+      );
+      window.location.hash = '#/ending';
+      const view = render(<App />);
+      fireEvent.click(screen.getByRole('button', { name: /Skip/ }));
+      return view;
+    };
+    // Shift 5 is Query's and shift 10 is Brew's: each act's line carries its own missing star.
+    const { unmount } = ending(
+      Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 || i === 9 ? 2 : 3])),
+    );
+    expect([...document.querySelectorAll('.story-milestone dt')].map((term) => term.textContent)).toEqual([
+      'Act I · Query took the orders, stars',
+      'Act II · Brew learned every recipe, stars',
+      'Act III · Porter learned the room, stars',
+      'Act IV · The whole crew ran the day, stars',
+    ]);
+    expect(row('Query took the orders')).toEqual(['20/21 ★', '20 of 21']);
+    expect(row('Brew learned every recipe')).toEqual(['14/15 ★', '14 of 15']);
+    expect(row('Porter learned the room')).toEqual(['9/9 ★', '9 of 9']);
+    expect(row('The whole crew ran the day')).toEqual(['15/15 ★', '15 of 15']);
+    expect(row('Stars earned')).toEqual(['58/60 ★', '58 of 60']);
+    expect(screen.getByText(/Every guest went home with the right drink/)).toBeTruthy();
+    unmount();
+    // Every shift served on one star: the receipt counts what was done, and doesn't print "0/20" three-star shifts.
+    ending(Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 1])));
+    expect(row('Query took the orders')).toEqual(['7/21 ★', '7 of 21']);
+    expect(screen.queryByText('Three-star shifts')).toBeNull();
+    expect(screen.getByText(/the stars still out there will keep/)).toBeTruthy();
+  });
+
   it('goes back a screen on Escape, once the open window or story scene has had it', async () => {
     HTMLDialogElement.prototype.showModal = function () {
       this.setAttribute('open', '');

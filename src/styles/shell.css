@@ -1983,6 +1983,20 @@ html[data-motion='reduced'] .modal.settings-window {
   margin: 0;
   font-weight: 700;
 }
+.story-receipt .story-milestone dt {
+  letter-spacing: 0.6px;
+}
+/* The totals under the act lines, the way a till prints them under the items. */
+.story-receipt .story-total {
+  margin-top: 4px;
+  padding-top: 8px;
+  border-top: 1px dashed #392b242e;
+}
+@media (max-height: 820px) {
+  .story-receipt {
+    gap: 2px;
+  }
+}
 .story-thanks {
   display: grid;
   justify-items: center;
