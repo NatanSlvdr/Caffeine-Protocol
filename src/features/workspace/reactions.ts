@@ -107,6 +107,11 @@ const kinds: Record<FailureCode, FailureKind> = {
     react: () => '*tap tap* Still waiting…',
     hint: 'The work it’s waiting for stopped somewhere before it: follow it back to the robot that should have passed it on.',
   },
+  'wrong-wait': {
+    by: 'robot',
+    react: () => '*tap tap* Any cups yet? …No?',
+    hint: 'Each Wait brings one kind of work: Wait for Orders the next drink to serve, Wait for Dirty cups a cup a guest left behind. Serve first, then clear.',
+  },
   'out-of-reach': {
     by: 'robot',
     react: () => '*bonk* Too far. Arms not that long.',

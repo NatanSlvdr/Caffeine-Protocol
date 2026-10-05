@@ -33,6 +33,8 @@ export type FailureCode =
   | 'unfinished-work'
   /** A robot is waiting for work that got stuck somewhere else. */
   | 'starved'
+  /** A robot waits for one kind of work while work of its other kind is waiting for it. */
+  | 'wrong-wait'
   /** A robot used a station it isn’t standing at. */
   | 'out-of-reach'
   /** A robot faced the wrong way at the right station. */

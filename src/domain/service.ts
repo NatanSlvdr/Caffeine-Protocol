@@ -248,7 +248,11 @@ export function* streamService(
     w: Worker,
     code: FailureCode,
     message: string,
-    { line = w.program.source_lines[w.pc] ?? -1, context }: { line?: number; context?: FailureContext } = {},
+    {
+      line = w.program.source_lines[w.pc] ?? -1,
+      context,
+      event,
+    }: { line?: number; context?: FailureContext; event?: ReplayEvent } = {},
   ) => {
     // After closing, a robot that still acts as if more work were coming only needed to finish up and stop.
     const name = ROBOT_DISPLAY_NAMES[w.role];
@@ -265,7 +269,7 @@ export function* streamService(
       code: closed ? 'open-after-closing' : code,
       context,
       reason,
-      event: w.job?.event ?? jobs.find((j) => j.ticketId === w.inventory[0]?.ticketId)?.event ?? events[0],
+      event: event ?? w.job?.event ?? jobs.find((j) => j.ticketId === w.inventory[0]?.ticketId)?.event ?? events[0],
     };
     log.push({
       seed_id: seed,
@@ -1343,10 +1347,32 @@ export function* streamService(
       ...jobs.filter((j) => j.status === 'served' && j.dirtyAt > now).map((j) => j.dirtyAt),
     ].filter((t) => Number.isFinite(t) && t > now);
     if (!future.length) {
+      // Porter waiting for a used cup while drinks wait at pickup: no guest has a drink to leave one, so the robot to
+      // fix is Porter, not Brew at the sink or idle at its counter.
+      const atPickup = jobs.filter((j) => j.status === 'ready');
+      const clearer = workers.find(
+        (w) =>
+          w.role === 'floor' &&
+          number >= ROBOT_UNLOCK_LEVELS.floor &&
+          !w.done &&
+          !w.inventory.length &&
+          w.program.instructions[w.pc] === 'WAIT DIRTY',
+      );
       const washer = workers.find(
         (w) => w.role === 'prep' && handAction('prep', w.position, w.program.instructions[w.pc] ?? '')?.verb === 'WASH',
       );
-      if (washer && config.cups && !cleanCups && !sinkCups)
+      // Nor is Brew at the sink the one to fix while Porter still carries what it should have put down.
+      const carrier = workers.find(
+        (w) => w.role === 'floor' && number >= ROBOT_UNLOCK_LEVELS.floor && !w.done && w.inventory.length,
+      );
+      if (clearer && atPickup.length)
+        fail(
+          clearer,
+          'wrong-wait',
+          `Porter is waiting for a used cup, but no guest has a drink to leave one: ${atPickup.length === 1 ? 'a drink is' : `${atPickup.length} drinks are`} still at pickup. Wait for Orders brings Porter the next drink to serve; Wait for Dirty cups comes after a guest has had one.`,
+          { context: { expected: 'a drink to serve', actual: 'waiting for a used cup' }, event: atPickup[0].event },
+        );
+      else if (washer && !carrier && config.cups && !cleanCups && !sinkCups)
         fail(
           washer,
           'no-clean-cups',
