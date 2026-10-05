@@ -354,9 +354,21 @@ html[data-motion='reduced'] .front-page *::after {
   transition: background 0.15s ease;
 }
 .shell-icon {
+  position: relative;
   justify-content: center;
   width: 38px;
   padding: 0;
+}
+/* Something new in the book or on the shelf since it was last opened. */
+.shell-icon-new {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 9px;
+  height: 9px;
+  border: 2px solid #fffcf4;
+  border-radius: 50%;
+  background: #b96847;
 }
 .shell-stars svg {
   color: #d4962c;
@@ -1241,6 +1253,18 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 11px;
   letter-spacing: 0.4px;
 }
+.guestbook-new {
+  margin-right: auto;
+  color: var(--slip-coffee);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.guestbook-notes li.new figure {
+  border-left-color: var(--slip-coffee);
+  background-color: #b968470f;
+}
 .settings-window p.guestbook-blank {
   margin: 18px 0 0;
   font-style: italic;
@@ -1287,6 +1311,10 @@ html[data-motion='reduced'] .front-page *::after {
 }
 .shelf-keepsakes li.earned small {
   color: var(--slip-coffee);
+}
+.shelf-keepsakes li.new {
+  border-left-color: var(--slip-coffee);
+  background: #b968470f;
 }
 .settings-window .shelf-keepsakes p {
   margin: 4px 0 0;

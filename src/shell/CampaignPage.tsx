@@ -15,6 +15,7 @@ import { Ticket, type ActState } from './rail/Ticket';
 import { GuestbookWindow } from './GuestbookWindow';
 import { keepsakes, shelved } from './shelf';
 import { ShelfWindow } from './ShelfWindow';
+import { useUnseen } from './unseen';
 import { ShellBar } from './ShellBar';
 
 /** How long "Order up!" stays on the specials board before the shift opens. */
@@ -48,9 +49,18 @@ export function CampaignPage() {
   const [scene, setScene] = useState<Cutscene | undefined>(() => waitingScene(save, save.selected));
   const gated = waitingScene(save, save.unlocked)?.before;
   const notes = guestbookNotes(save);
-  const [reading, setReading] = useState(false);
   const earned = shelved(save);
-  const [looking, setLooking] = useState(false);
+  // What came in since the book or the shelf was last opened is marked on its button, and in it while it is open.
+  const newNotes = useUnseen(
+    'guestbook',
+    notes.map((note) => String(note.shift)),
+  );
+  const newKeepsakes = useUnseen(
+    'shelf',
+    earned.map((keepsake) => keepsake.id),
+  );
+  const [reading, setReading] = useState<readonly string[] | null>(null);
+  const [looking, setLooking] = useState<readonly string[] | null>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -207,29 +217,31 @@ export function CampaignPage() {
         {notes.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Guestbook, ${count(notes.length, 'note')}`}
+            aria-label={`Guestbook, ${count(notes.length, 'note')}${newNotes.fresh.length ? `, ${newNotes.fresh.length} new` : ''}`}
             aria-haspopup="dialog"
             title="Guestbook"
-            onClick={() => setReading(true)}
+            onClick={() => setReading(newNotes.markSeen())}
           >
             <BookOpen size={18} aria-hidden="true" />
+            {newNotes.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
         {/* The shelf goes up with its first keepsake; from then on it shows what is left to earn too. */}
         {earned.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Shelf, ${earned.length} of ${keepsakes.length} keepsakes`}
+            aria-label={`Shelf, ${earned.length} of ${keepsakes.length} keepsakes${newKeepsakes.fresh.length ? `, ${newKeepsakes.fresh.length} new` : ''}`}
             aria-haspopup="dialog"
             title="Shelf"
-            onClick={() => setLooking(true)}
+            onClick={() => setLooking(newKeepsakes.markSeen())}
           >
             <Award size={18} aria-hidden="true" />
+            {newKeepsakes.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
       </ShellBar>
-      {reading && <GuestbookWindow notes={notes} onClose={() => setReading(false)} />}
-      {looking && <ShelfWindow earned={earned} onClose={() => setLooking(false)} />}
+      {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}
+      {looking && <ShelfWindow earned={earned} fresh={looking} onClose={() => setLooking(null)} />}
 
       <header className="pass-title">
         <p className="pass-kicker">{shop} · Order rail</p>

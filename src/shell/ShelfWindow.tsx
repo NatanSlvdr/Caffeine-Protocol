@@ -13,7 +13,16 @@ const ICONS: Record<KeepsakeId, LucideIcon> = {
 };
 
 /** The shelf behind the counter: every keepsake, those earned with what they mark, the rest with what earns them. */
-export function ShelfWindow({ earned, onClose }: { earned: readonly Keepsake[]; onClose: () => void }) {
+export function ShelfWindow({
+  earned,
+  fresh = [],
+  onClose,
+}: {
+  earned: readonly Keepsake[];
+  /** The keepsakes that weren't there when the shelf was last opened. */
+  fresh?: readonly string[];
+  onClose: () => void;
+}) {
   const cafe = useCafeName();
   return (
     <Modal
@@ -26,13 +35,14 @@ export function ShelfWindow({ earned, onClose }: { earned: readonly Keepsake[]; 
       <ul className="shelf-keepsakes">
         {keepsakes.map((keepsake) => {
           const on = earned.includes(keepsake);
+          const arrived = on && fresh.includes(keepsake.id);
           const Icon = ICONS[keepsake.id];
           return (
-            <li key={keepsake.id} className={on ? 'earned' : ''}>
+            <li key={keepsake.id} className={on ? `earned${arrived ? ' new' : ''}` : ''}>
               <Icon size={22} aria-hidden="true" />
               <div>
                 <h3>{keepsake.name}</h3>
-                <small>{on ? 'On the shelf' : 'Not yet'}</small>
+                <small>{arrived ? 'New on the shelf' : on ? 'On the shelf' : 'Not yet'}</small>
                 <p>{on ? keepsake.story : keepsake.goal}</p>
               </div>
             </li>

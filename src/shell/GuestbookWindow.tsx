@@ -6,7 +6,16 @@ import { pad2 } from '@/shared/lib/format';
 import { useCafeName } from '@/state/GameStore';
 
 /** The guestbook by the till: what the regulars wrote after the shifts they were part of, oldest first. */
-export function GuestbookWindow({ notes, onClose }: { notes: readonly GuestbookNote[]; onClose: () => void }) {
+export function GuestbookWindow({
+  notes,
+  fresh = [],
+  onClose,
+}: {
+  notes: readonly GuestbookNote[];
+  /** The notes, by shift, written since the book was last opened. */
+  fresh?: readonly string[];
+  onClose: () => void;
+}) {
   const cafe = useCafeName();
   return (
     <Modal
@@ -20,12 +29,13 @@ export function GuestbookWindow({ notes, onClose }: { notes: readonly GuestbookN
         {notes.map((note) => {
           const name = cast[note.who].name;
           return (
-            <li key={note.shift}>
+            <li key={note.shift} className={fresh.includes(String(note.shift)) ? 'new' : undefined}>
               <figure>
                 <blockquote>
                   <p>{note.text}</p>
                 </blockquote>
                 <figcaption>
+                  {fresh.includes(String(note.shift)) && <strong className="guestbook-new">New</strong>}
                   <cite>{note.sign}</cite>
                   <small>
                     {name === note.sign ? '' : `${name} · `}After Shift {pad2(note.shift)}, {titleFor(note.shift - 1)}

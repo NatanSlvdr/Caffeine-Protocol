@@ -89,12 +89,12 @@ describe('the shelf', () => {
         <CampaignPage />
       </GameProvider>,
     );
-    fireEvent.click(screen.getByRole('button', { name: `Shelf, 1 of ${keepsakes.length} keepsakes` }));
+    fireEvent.click(screen.getByRole('button', { name: `Shelf, 1 of ${keepsakes.length} keepsakes, 1 new` }));
     const shelf = screen.getByRole('dialog', { name: 'The shelf.' });
     const items = within(shelf).getAllByRole('listitem');
     expect(items).toHaveLength(keepsakes.length);
     expect(within(items[0]).getByRole('heading', { name: 'Query’s order pad' })).toBeTruthy();
-    expect(within(items[0]).getByText('On the shelf')).toBeTruthy();
+    expect(within(items[0]).getByText('New on the shelf')).toBeTruthy();
     expect(within(items[0]).getByText(keepsakes[0].story)).toBeTruthy();
     expect(within(items[1]).getByText('Not yet')).toBeTruthy();
     expect(within(items[1]).getByText('Serve every shift of Act II.')).toBeTruthy();
