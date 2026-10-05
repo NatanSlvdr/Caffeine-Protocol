@@ -16,6 +16,8 @@ import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
 import { FirstRoutineTips } from './FirstRoutineTips';
 import { firstRoutineStep } from './firstRoutine';
+import { HandoverCard } from './HandoverCard';
+import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
@@ -146,6 +148,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const briefSuccess = shortRepeats && live.bestBefore !== undefined;
   // The first shift with a routine to write teaches it step by step, until it's served or the player hides the tips.
   const firstRoutine = index + 1 === UNLOCKS.query && save.stars[index] === undefined;
+  // A robot's first shift sets out the job it takes over from a helper, on its own tab, until the shift is served.
+  const handover = save.stars[index] === undefined ? handoverFor(index + 1) : undefined;
   const setTips = (on: boolean) => update((s) => ({ ...s, settings: { ...s.settings, first_routine_tips: on } }));
   // The card that started a run goes with it: focus carries on at the run button, which now stops the run.
   const startFromCard = (start: () => void) => {
@@ -378,6 +382,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               }}
             />
           )}
+          {handover?.role === role && <HandoverCard handover={handover} source={source} />}
           {/* The crew tells the failure first; the card keeps it once they're done. */}
           {evidence && scene !== 'failure' && (
             <FailureCard

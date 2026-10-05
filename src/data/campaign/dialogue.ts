@@ -133,6 +133,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
       'New command: [USE UP|Use]. Next to a machine, Use runs it. The coffee machine grinds the beans, then brews them once the water is in.',
     ],
     ['moka', 'That one’s yours to program now. Its recipe is nearly there, but it never grinds the beans.'],
+    ['moka', 'My steps are under Brew’s routine. Every one of them, in order.'],
   ],
   10: [
     ['juno', 'Tea, please. And tell the new robot: no grinding the leaves.'],
@@ -184,6 +185,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
       'New command: [MOVE var1|Move to]. Give it a place, like the table stored in Var A, and Porter finds the way there by itself. [STORE var1 FROM here|Store here] saves the spot it’s standing on, so it can come back.',
     ],
     ['pip', 'Your turn to program the floor! Porter just has to read which table the drink is for. Easy! Probably!'],
+    ['pip:happy', 'I wrote down how I do it, under Porter’s routine. Step by step!'],
   ],
   15: [
     ['albert', 'Lovely coffee. I’ll leave the cup for your young robot friend.'],

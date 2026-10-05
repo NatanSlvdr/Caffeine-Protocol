@@ -376,7 +376,7 @@
 }
 /* The last failed run, kept under the code: a warm red record while it still describes the routine, quiet once
    an edit has moved past it. It takes the board's bottom corners, so the code above it squares off. */
-.workspace-main .editor-panel:has(.failure-card, .first-routine-tips) .editor-body {
+.workspace-main .editor-panel:has(.failure-card, .first-routine-tips, .handover) .editor-body {
   border-radius: 0;
 }
 /* The first routine's tips: a quiet gold strip under the code, one step at a time. A card under it takes the
@@ -453,6 +453,125 @@
 }
 .first-routine-text strong {
   color: #f5d68f;
+}
+/* A robot's first shift: the helper's job as a short checklist under the code, in a cool blue so it doesn't read
+   as the gold tips or the red record of a failure. A card under it takes the corners. */
+.handover {
+  flex: none;
+  padding: 10px 16px 12px;
+  border-top: 1px solid #8fbce840;
+  border-radius: 0 0 17px 17px;
+  background: color-mix(in srgb, var(--draft-deep) 92%, #8fbce8);
+  color: var(--draft-text);
+  font-size: 12px;
+  line-height: 1.45;
+}
+.handover:has(+ .failure-card, + .practice-card) {
+  border-radius: 0;
+}
+.handover header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.handover header p {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  color: #b9d7f2;
+  font-weight: 750;
+}
+.handover-count {
+  color: var(--draft-muted);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.handover header button {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--draft-muted);
+}
+.handover header button:hover {
+  background: #ffffff10;
+  color: var(--draft-text);
+}
+.handover header button svg {
+  transition: transform 160ms ease;
+}
+.handover header button[aria-expanded='false'] svg {
+  transform: rotate(-90deg);
+}
+.workspace-main .handover-lead {
+  margin: 4px 0 6px 21px;
+  color: var(--draft-muted);
+}
+.handover-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 0;
+  margin: 0 0 0 21px;
+  padding: 0;
+  list-style: none;
+}
+.handover-steps li {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--draft-muted);
+  font-weight: 650;
+  white-space: nowrap;
+}
+/* A small chevron after each step but the last: the job runs left to right, and a row that wraps ends on one. */
+.handover-steps li:not(:last-child)::after {
+  content: '›';
+  margin: 0 6px 0 1px;
+  color: var(--draft-line);
+  font-weight: 400;
+}
+.handover-mark {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border: 1px solid var(--draft-line);
+  border-radius: 999px;
+  font-size: 9.5px;
+  font-weight: 800;
+}
+.handover-steps li.done {
+  color: var(--draft-text);
+}
+.handover-steps li.done .handover-mark {
+  border-color: #4fbf85;
+  background: #4fbf85;
+  color: var(--draft-deep);
+}
+.handover-steps li.missing {
+  color: #f5d68f;
+}
+.handover-steps li.missing .handover-mark {
+  border-color: #f5d68f;
+}
+.workspace-main .handover-status {
+  margin: 6px 0 0 21px;
+  color: var(--draft-muted);
+}
+.handover-status strong {
+  color: #f5d68f;
+  font-weight: 700;
+}
+.handover:not(:has(li.missing)) .handover-status {
+  color: #8fe0b4;
+  font-weight: 650;
 }
 .failure-card {
   flex: none;
