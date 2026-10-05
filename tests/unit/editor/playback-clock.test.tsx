@@ -1,6 +1,6 @@
 import { renderHook } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { usePlaybackClock } from '../../../src/features/workspace/usePlaybackClock';
+import { MAX_TICK_SECONDS, usePlaybackClock } from '../../../src/features/workspace/usePlaybackClock';
 
 let hidden = false;
 beforeEach(() => {
@@ -39,6 +39,21 @@ describe('the playback clock', () => {
     expect(ticks.length).toBeGreaterThan(away);
     expect(Math.max(...ticks)).toBeLessThan(0.1);
     expect(ticks.reduce((sum, t) => sum + t, 0)).toBeCloseTo(0.66, 1);
+  });
+
+  it('picks up where it froze after a stall with the page still showing', () => {
+    const ticks: number[] = [];
+    renderHook(() => usePlaybackClock(true, (elapsed) => ticks.push(elapsed), []));
+    vi.advanceTimersByTime(330);
+    const before = ticks.reduce((sum, t) => sum + t, 0);
+    // The laptop sleeps for five minutes without the page being hidden: the wall clock moves, no tick runs.
+    vi.setSystemTime(Date.now() + 300_000);
+    vi.advanceTimersByTime(33);
+    expect(ticks.at(-1)).toBe(MAX_TICK_SECONDS);
+    expect(ticks.reduce((sum, t) => sum + t, 0) - before).toBeLessThanOrEqual(MAX_TICK_SECONDS + 1e-9);
+    // Then it plays on at the normal pace.
+    vi.advanceTimersByTime(330);
+    expect(Math.max(...ticks.slice(-5))).toBeLessThan(0.1);
   });
 
   it('stops listening once the run ends', () => {
