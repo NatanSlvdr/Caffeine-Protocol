@@ -3,6 +3,7 @@ import {
   STREET_APPROACH_SECONDS,
   createLiveRun,
   keepRecord,
+  orderRoute,
   recordRun,
   runMoments,
   sampleReplay,
@@ -70,6 +71,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // edits, and go when a block does, so they never point at code the player didn't mark.
   const [marks, setMarks] = useState<Marks>(noMarks),
     [pauseAt, setPauseAt] = useState<PauseAt>(pauseNowhere);
+  // The guest whose order is followed through the café, by round and id, until the run is put away.
+  const [following, setFollowing] = useState<{ seed: string; guest: string } | null>(null);
   // A slip the service is paused on, before the crew reacts: playing on, stepping or stopping lets them.
   const [held, setHeld] = useState<RunRecord | null>(null);
   // The round being practised, counting from 0, or nothing for a full service.
@@ -125,6 +128,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setPrograms(updated);
     setResult(null);
     setViewTime(null);
+    setFollowing(null);
     setShowFailure(false);
     onDraft(updated);
   };
@@ -184,6 +188,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       setResult(opening.result);
       setReplayTime(opening.time);
       setViewTime(null);
+      setFollowing(null);
       fail(keep(opening.result, practice));
       return;
     }
@@ -194,6 +199,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setEvidence(null);
     setReplayTime(-STREET_APPROACH_SECONDS);
     setViewTime(null);
+    setFollowing(null);
     setShowFailure(false);
     setPaused(false);
     setStepped(null);
@@ -233,6 +239,14 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   };
   // Everything that has happened in the run so far, to jump between.
   const moments = useMemo(() => (result ? runMoments(result, replayTime) : []), [result, replayTime]);
+  const followed = following
+    ? result?.events.find((e) => e.seed_id === following.seed && e.customer.customer_id === following.guest)
+    : undefined;
+  // The followed order's way so far.
+  const route = useMemo(
+    () => (result && followed ? orderRoute(result, followed, replayTime) : []),
+    [result, followed, replayTime],
+  );
   const stopWhen = pauseWhen(crew, marks, pauseAt);
   usePlaybackClock(
     running && !paused,
@@ -297,6 +311,12 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     /** Look at a moment of the run up to the latest, or back at the latest with nothing. */
     view: (at: number | null) => setViewTime(at === null || at >= replayTime ? null : Math.max(at, 0)),
     moments,
+    following,
+    /** The followed guest's record, while their order is followed. */
+    followed,
+    route,
+    /** Follow a guest's order through the café, or stop with nothing. */
+    follow: setFollowing,
     activeLine,
     failureLine,
     evidence,

@@ -13,6 +13,7 @@ import {
   STAFF_ENTRY,
   TABLE_LAYOUT,
   sampleReplay,
+  orderWhereabouts,
   robotUnlocked,
   robotActorName,
   ROBOT_DISPLAY_NAMES,
@@ -25,6 +26,7 @@ import { Room } from './Room';
 import { Character } from './Character';
 import { CameraFit } from './CameraFit';
 import { Steam, machineSteaming } from './Steam';
+import { FollowRing } from './FollowRing';
 import { BREW, MOKA, NIKO, PIP, PORTER, QUERY, customerLook, type HumanLook, type RobotLook } from './looks';
 
 /** Each crew post is drawn as whoever holds it: the robot once it is unlocked, otherwise its human stand-in. */
@@ -87,6 +89,7 @@ export function World({
   zoomScale,
   cameraTarget,
   cameraAngleDegrees,
+  follow,
 }: {
   evening: boolean;
   result?: RunResult;
@@ -101,8 +104,15 @@ export function World({
   zoomScale: number;
   cameraTarget?: readonly [number, number, number];
   cameraAngleDegrees: number;
+  /** The guest whose order is followed, by round and id; it is ringed wherever it is. */
+  follow?: { seed: string; guest: string };
 }) {
   const state = result ? sampleReplay(result, time) : undefined;
+  const followed =
+    follow && state?.seed?.seed_id === follow.seed
+      ? result?.events.find((e) => e.seed_id === follow.seed && e.customer.customer_id === follow.guest)
+      : undefined;
+  const whereabouts = state && followed ? orderWhereabouts(state, followed) : undefined;
   const actors = state?.actors ?? fallbackActors(level);
   const gateOpen = isGateOpen(state);
   const bubbleShown = (id: string, actor: ActorSnapshot) =>
@@ -131,6 +141,9 @@ export function World({
         ([id, actor]) =>
           actor && (
             <group key={id}>
+              {whereabouts?.holders.includes(id as ActorId) && (
+                <FollowRing at={actor.position} phase={time} reduced={reduced || !moving} />
+              )}
               <Character
                 at={actor.position}
                 look={crewLook(id, level)}
@@ -196,6 +209,18 @@ export function World({
           <OrderQueueBubble tickets={state.waitingTickets} />
         </SceneHtml>
       )}
+      {whereabouts?.counter && (
+        <FollowRing
+          at={[STATIONS.orders.cell[0] + 0.2, STATIONS.orders.cell[1] + 0.18]}
+          height={1.1}
+          radius={0.36}
+          phase={time}
+          reduced={reduced || !moving}
+        />
+      )}
+      {whereabouts?.pickup && (
+        <FollowRing at={STATIONS.pickup.cell} height={1.14} radius={0.5} phase={time} reduced={reduced || !moving} />
+      )}
       {state?.waitingTickets.slice(0, 4).map((ticket, i) => (
         <group
           key={ticket.ticket_id}
@@ -259,6 +284,9 @@ export function World({
           );
           return (
             <group key={c.id}>
+              {c.id === followed?.customer.customer_id && (
+                <FollowRing at={c.position} phase={time} reduced={reduced || !moving} />
+              )}
               <Character
                 at={c.position}
                 look={{ human: customerLook(c.id) }}

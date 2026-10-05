@@ -10,6 +10,7 @@ import {
   History,
   Receipt,
   RotateCcw,
+  Route,
   ShoppingBag,
   TriangleAlert,
   Zap,
@@ -57,13 +58,23 @@ export interface FailureCardProps {
   onPractise: () => void;
   /** Set the routine against the last one that served this shift, to go back to it; only when they differ. */
   onCompareServed?: () => void;
+  /** Follow the guest's order through the run that failed; only while that run is still on screen. */
+  onFollow?: () => void;
 }
 
 /**
  * The last failed run, kept beside the code: where it stopped, why, what was wanted against what happened, and what
  * to try next. It stays while the player fixes, dimmed once the routines change, and goes when the next run starts.
  */
-export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, onCompareServed }: FailureCardProps) {
+export function FailureCard({
+  evidence,
+  stale,
+  rounds,
+  onShowLine,
+  onPractise,
+  onCompareServed,
+  onFollow,
+}: FailureCardProps) {
   const [open, setOpen] = useState(true);
   const heading = useId(),
     body = useId(),
@@ -81,6 +92,7 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, o
   // One round of several can be played on its own to check a fix; a routine that won't run has no round to play.
   const practisable = rounds > 1 && !routine;
   const showable = !stale && failure.error_line >= 0;
+  const followable = !routine && guest && onFollow;
   // Query's choices for the guest, when Query is the one who stopped: the latest few, which led to the slip.
   const decisions = routine || (failure.role ?? 'query') !== 'query' ? [] : evidence.decisions.slice(-DECISIONS_SHOWN);
   const earlier = evidence.decisions.length - decisions.length;
@@ -162,12 +174,18 @@ export function FailureCard({ evidence, stale, rounds, onShowLine, onPractise, o
         <p className="failure-card-next">
           <strong>Try</strong> {failureHint(failure.code)}
         </p>
-        {(showable || practisable || onCompareServed) && (
+        {(showable || practisable || onCompareServed || followable) && (
           <div className="failure-card-actions">
             {showable && (
               <button type="button" className="failure-card-show" onClick={onShowLine}>
                 <Crosshair size={14} aria-hidden="true" />
                 Show where {robot} stopped
+              </button>
+            )}
+            {followable && (
+              <button type="button" className="failure-card-show" onClick={onFollow}>
+                <Route size={14} aria-hidden="true" />
+                Follow Guest {guest}’s order
               </button>
             )}
             {practisable && (

@@ -1109,7 +1109,7 @@ html[data-motion='reduced'] .failure-card-chevron {
   z-index: 20;
   display: grid;
   gap: 4px;
-  width: min(620px, calc(100% - 24px));
+  width: min(720px, calc(100% - 24px));
   padding: 8px 10px 6px;
   border-radius: 16px;
   background: var(--desk-pill);
@@ -1218,6 +1218,7 @@ html[data-motion='reduced'] .failure-card-chevron {
 }
 .workspace-main .replay-controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 4px;
   min-width: 0;
@@ -1284,6 +1285,196 @@ html[data-motion='reduced'] .failure-card-chevron {
 }
 .workspace-main .replay-controls .replay-now:hover:not(:disabled) {
   background: #5c47a3;
+}
+.workspace-main .replay-follow {
+  max-width: 190px;
+  min-height: 28px;
+  padding: 0 24px 0 10px;
+  border: 1px solid var(--desk-rule);
+  border-radius: 999px;
+  background: var(--desk-paper)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23766659' stroke-width='1.5'/%3E%3C/svg%3E")
+    no-repeat right 9px center;
+  color: var(--desk-ink);
+  font-size: 12px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  appearance: none;
+}
+.workspace-main .replay-follow:hover {
+  border-color: #8f78d6;
+}
+.workspace-main .replay-follow:focus-visible {
+  outline: 2px solid #8f78d6;
+  outline-offset: 1px;
+}
+
+/* One guest's order followed through the café: a paper slip in the café's top corner, its way so far as a line of
+   stops, with the one on screen ringed in the violet the café rings the order with. */
+.workspace-main .order-route {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  display: grid;
+  gap: 4px;
+  width: min(280px, calc(100% - 24px));
+  max-height: calc(100% - 120px);
+  padding: 9px 10px 8px;
+  overflow: auto;
+  border-radius: 14px;
+  background: var(--desk-pill);
+  box-shadow: 0 6px 20px #392b241f;
+  color: var(--desk-ink);
+  backdrop-filter: blur(6px);
+  scrollbar-width: thin;
+}
+.workspace-main .order-route header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #6b55b3;
+}
+.workspace-main .order-route h3 {
+  flex: 1;
+  margin: 0;
+  color: var(--desk-ink);
+  font-size: 13px;
+  font-weight: 750;
+}
+.workspace-main .order-route h3 span {
+  color: var(--desk-muted);
+  font-weight: 650;
+}
+.workspace-main .order-route-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--desk-muted);
+}
+.workspace-main .order-route-stop:hover {
+  background: #f1e6d2;
+  color: var(--desk-ink);
+}
+.workspace-main .order-route-phrase,
+.workspace-main .order-route-wait {
+  margin: 0 0 2px;
+  color: var(--desk-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+.workspace-main .order-route ol {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.workspace-main .order-route li {
+  position: relative;
+  padding-left: 16px;
+}
+/* The line the stops hang on, and each stop's dot. */
+.workspace-main .order-route li::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 4px;
+  width: 2px;
+  background: var(--desk-rule);
+  content: '';
+}
+.workspace-main .order-route li:first-child::before {
+  top: 11px;
+}
+.workspace-main .order-route li:last-child::before {
+  bottom: calc(100% - 11px);
+}
+.workspace-main .order-route li::after {
+  position: absolute;
+  top: 7px;
+  left: 1px;
+  width: 8px;
+  height: 8px;
+  box-sizing: border-box;
+  border: 2px solid var(--desk-muted);
+  border-radius: 50%;
+  background: var(--desk-muted);
+  content: '';
+}
+.workspace-main .order-route li.later::after,
+.workspace-main .order-route li.order-route-more::after {
+  background: var(--desk-paper);
+}
+.workspace-main .order-route li.current::after {
+  top: 5px;
+  left: -1px;
+  width: 12px;
+  height: 12px;
+  border-color: #8f78d6;
+  background: var(--desk-paper);
+  box-shadow: inset 0 0 0 2px #8f78d6;
+}
+.workspace-main .order-route li.slip::after {
+  border-color: #c4553d;
+  background: #c4553d;
+}
+.workspace-main .order-route li > button {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  padding: 3px 6px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.workspace-main .order-route li > button:hover {
+  background: #f1e6d2;
+}
+.workspace-main .order-route li:not(:has(> button)) {
+  display: flex;
+  gap: 8px;
+  padding-block: 3px;
+  padding-right: 6px;
+}
+.workspace-main .order-route li:not(:has(> button)) > :first-child {
+  margin-left: 6px;
+}
+.workspace-main .order-route-time {
+  flex: none;
+  min-width: 42px;
+  color: var(--desk-muted);
+  font-size: 11.5px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.workspace-main .order-route-words {
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.workspace-main .order-route li.later .order-route-words {
+  color: var(--desk-muted);
+}
+.workspace-main .order-route li.current .order-route-words {
+  font-weight: 700;
+}
+.workspace-main .order-route li.current .order-route-time {
+  color: #6b55b3;
+}
+.workspace-main .order-route li.slip .order-route-words {
+  color: #a8412b;
+}
+.workspace-main .order-route-more .order-route-words {
+  color: var(--desk-muted);
+  font-style: italic;
 }
 @container cafe-panel (max-width: 620px) {
   .workspace-main .replay-when {

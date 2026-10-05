@@ -19,6 +19,7 @@ export function Cafe({
   zoomScale = 1,
   cameraTarget,
   cameraAngleDegrees = 0,
+  follow,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -34,6 +35,8 @@ export function Cafe({
   zoomScale?: number;
   cameraTarget?: readonly [number, number, number];
   cameraAngleDegrees?: number;
+  /** The guest whose order is followed, by round and id; it is ringed wherever it is. */
+  follow?: { seed: string; guest: string };
 }) {
   return (
     <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
@@ -52,6 +55,7 @@ export function Cafe({
           zoomScale={zoomScale}
           cameraTarget={cameraTarget}
           cameraAngleDegrees={cameraAngleDegrees}
+          follow={follow}
         />
         {pixelArt && <PixelArtEffect />}
       </SceneCanvas>

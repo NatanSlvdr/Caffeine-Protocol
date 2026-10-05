@@ -20,6 +20,8 @@ import { HandoverCard } from './HandoverCard';
 import { RobotInspector } from './RobotInspector';
 import { startedWords } from './inspector';
 import { ReplayTimeline } from './ReplayTimeline';
+import { OrderRoute } from './OrderRoute';
+import { followable, guestName, routeDone } from './route';
 import { whenWords } from './timeline';
 import { markCount, pauseReason } from './breakpoints';
 import { handoverFor } from './handover';
@@ -145,6 +147,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
     practising,
     records,
     programs,
+    following,
+    followed,
+    route,
+    follow,
   } = live;
   // Practice that went right, while the routines are still the ones it ran.
   const practised = records.at(-1);
@@ -267,6 +273,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const pausedAt = whenWords(level.seeds.length, round, roundTime);
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
+  // The round the followed guest came in, to time their order's way from its start.
+  const followedRound = followed && (result?.execution ?? []).find((r) => r.seed_id === followed.seed_id);
   const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
   const reaction =
     scene === 'failure' && failed && result
@@ -274,6 +282,8 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
       : scene === 'success' && result?.passed
         ? successLines(result, role, index, level, outro, briefSuccess)
         : undefined;
+  // The run can be looked back through: paused, or slipped once the crew has had their say.
+  const lookBack = ((running && paused) || (failed && !reaction)) && !observation && !!result && head > 0;
   return (
     <main className="workspace-main">
       <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
@@ -318,7 +328,27 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               serviceView={serviceView}
               focusRole={focused ? role : undefined}
               level={index + 1}
+              follow={serviceView && following ? following : undefined}
             />
+            {serviceView && followed && followedRound && result && (
+              <OrderRoute
+                name={guestName(level, followed)}
+                guest={followed}
+                route={route}
+                done={routeDone(
+                  route,
+                  level.service?.clearing ?? true,
+                  followedRound.start + followedRound.duration <= head,
+                )}
+                round={level.seeds.findIndex((seed) => seed.id === followed.seed_id) + 1}
+                rounds={level.seeds.length}
+                start={followedRound.start}
+                time={time}
+                level={index + 1}
+                onView={lookBack ? live.view : undefined}
+                onStop={() => follow(null)}
+              />
+            )}
             {reaction && (
               <DialogueBox
                 key={`${scene}-${result?.first_failure?.reason}`}
@@ -329,7 +359,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 onDone={closeReaction}
               />
             )}
-            {((running && paused) || (failed && !reaction)) && !observation && result && head > 0 && (
+            {lookBack && result && (
               <ReplayTimeline
                 head={head}
                 time={time}
@@ -343,6 +373,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 programs={programs}
                 textMode={textMode}
                 onView={live.view}
+                followable={followable(level, result, head)}
+                following={following ?? undefined}
+                onFollow={follow}
               />
             )}
           </div>
@@ -464,6 +497,11 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                       setRole(evidence.failure.role ?? 'query');
                       setModal('restore');
                     }
+                  : undefined
+              }
+              onFollow={
+                failed && !stale && result?.events.some((e) => e.customer.customer_id === evidence.failure.customer_id)
+                  ? () => follow({ seed: evidence.failure.seed_id, guest: evidence.failure.customer_id })
                   : undefined
               }
             />

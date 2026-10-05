@@ -10,8 +10,21 @@ import { OptionsModal } from '../../../src/features/workspace/modals/OptionsModa
 import { RestoreModal } from '../../../src/features/workspace/modals/RestoreModal';
 
 vi.mock('../../../src/components/Cafe', () => ({
-  Cafe: ({ serviceView, focusRole }: { serviceView?: boolean; focusRole?: string }) => (
-    <div data-testid="cafe" data-service-view={serviceView} data-focus-role={focusRole} />
+  Cafe: ({
+    serviceView,
+    focusRole,
+    follow,
+  }: {
+    serviceView?: boolean;
+    focusRole?: string;
+    follow?: { seed: string; guest: string };
+  }) => (
+    <div
+      data-testid="cafe"
+      data-service-view={serviceView}
+      data-focus-role={focusRole}
+      data-follow={follow && `${follow.seed}/${follow.guest}`}
+    />
   ),
 }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
@@ -402,6 +415,48 @@ describe('live workspace lifecycle', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
     expect(screen.queryByRole('group', { name: 'Look back through the run' })).toBeNull();
     expect(screen.queryByRole('complementary', { name: /^Query, / })).toBeNull();
+  });
+  it('follows one guest’s order through a paused service, and back to any leg of it', () => {
+    open();
+    playUntil(() => false, 25);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    const bar = screen.getByRole('group', { name: 'Look back through the run' });
+    const cafe = screen.getByTestId('cafe');
+    const picker = within(bar).getByRole('combobox', { name: 'Follow an order' }) as HTMLSelectElement;
+    expect(within(picker).getByRole('option', { name: 'Guest 1 · “coffee”' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: /^Following/ })).toBeNull();
+    fireEvent.change(picker, {
+      target: {
+        value: within(picker)
+          .getByRole('option', { name: /^Guest 1/ })
+          .getAttribute('value'),
+      },
+    });
+    const card = screen.getByRole('region', { name: 'Following Guest 1’s order' });
+    expect(cafe.getAttribute('data-follow')).toMatch(/\/.+/);
+    expect(card.textContent).toContain('“coffee”');
+    expect(within(picker).getByRole('option', { name: 'Stop following' })).toBeTruthy();
+    // Each leg so far, who did it and when; the latest is the one on screen.
+    const legs = within(card).getAllByRole('listitem');
+    expect(legs[0].textContent).toBe('0.0 sWalks in');
+    expect(legs.map((leg) => leg.textContent)).toContainEqual(expect.stringMatching(/Moka makes the coffee$/));
+    const current = () => card.querySelector('[aria-current="step"]')!.textContent;
+    const latest = current();
+    // A leg is a way back to it, on the timeline too.
+    fireEvent.click(within(card).getByRole('button', { name: /Query writes the ticket/ }));
+    expect(current()).toMatch(/Query writes the ticket$/);
+    expect(bar.querySelector('.replay-when')!.textContent).toMatch(/^Round 1 · \d+\.\d s$/);
+    expect(within(card).getByText(/^\d+\.\d s\. Query writes the ticket\.$/)).toBeTruthy();
+    fireEvent.click(within(bar).getByRole('button', { name: 'Back to now' }));
+    expect(current()).toBe(latest);
+    // Followed on through the service; the legs are only a way back while it is paused.
+    fireEvent.click(screen.getByRole('button', { name: 'Resume playback' }));
+    expect(within(card).queryAllByRole('button', { name: /Query writes/ })).toHaveLength(0);
+    playUntil(() => /Leaves/.test(card.textContent!), 60);
+    expect(card.textContent).toContain('Leaves');
+    fireEvent.click(within(card).getByRole('button', { name: 'Stop following' }));
+    expect(screen.queryByRole('region', { name: /^Following/ })).toBeNull();
+    expect(cafe.getAttribute('data-follow')).toBeNull();
   });
   it('jumps between a crew’s handoffs, and one robot’s blocks', () => {
     window.location.hash = '/shift/14';
@@ -827,6 +882,27 @@ describe('the failure card', () => {
     expect(within(kept).queryByRole('table')).toBeNull();
     fireEvent.click(toggle);
     expect(within(kept).getByRole('table')).toBeTruthy();
+  });
+
+  it('follows the failed guest’s order, to the slip that ended it', () => {
+    failRun();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    fireEvent.click(within(card()!).getByRole('button', { name: 'Follow Guest 2’s order' }));
+    const route = screen.getByRole('region', { name: 'Following Guest 2’s order' });
+    expect(route.textContent).toContain('“tea”');
+    const legs = within(route).getAllByRole('listitem');
+    expect(legs.at(-1)!.textContent).toMatch(/Query stopped: /);
+    expect(legs.at(-1)!.getAttribute('aria-current')).toBe('step');
+    expect(route.textContent).not.toContain('On its way');
+    // Each leg is a way back through the run that slipped.
+    fireEvent.click(within(legs[0]).getByRole('button'));
+    expect(legs[0].getAttribute('aria-current')).toBe('step');
+    // An edit puts the run, and the order followed through it, away.
+    fireEvent.click(screen.getByRole('button', { name: 'Options' }));
+    fireEvent.click(screen.getByRole('button', { name: /Restore Query’s routine/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Restore this version' }));
+    expect(screen.queryByRole('region', { name: /^Following/ })).toBeNull();
+    expect(within(card()!).queryByRole('button', { name: /^Follow/ })).toBeNull();
   });
 
   it('shows where it stopped, goes stale on an edit, comes back on undo, and leaves when the next run starts', () => {

@@ -13,6 +13,7 @@ export * from './failures';
 export * from './layout';
 export * from './liveSimulation';
 export * from './timeline';
+export * from './orderRoute';
 export * from './operandKind';
 export * from './orders';
 export * from './pricing';
