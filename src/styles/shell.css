@@ -1731,6 +1731,50 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 11px;
   text-align: center;
 }
+/* Where the guests' wait went: the part that held them up most leads, in amber. */
+.receipt-slip .receipt-waits {
+  margin: 14px 0 0;
+  font-family: var(--slip-mono);
+  font-size: 12px;
+}
+.settings-window.receipt-slip .receipt-waits p {
+  margin: 0 0 8px;
+  color: var(--slip-ink);
+  font-size: 12px;
+  text-align: center;
+}
+.receipt-slip .receipt-waits dl {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+}
+.receipt-slip .receipt-waits dl > div {
+  display: grid;
+  grid-template-columns: 11em 1fr;
+  gap: 10px;
+  align-items: center;
+}
+.receipt-slip .receipt-waits dt {
+  color: var(--slip-muted);
+}
+.receipt-slip .receipt-waits dd {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0;
+  font-weight: 700;
+}
+.receipt-slip .receipt-wait-bar {
+  min-inline-size: 2px;
+  block-size: 6px;
+  border-radius: 3px;
+  background: var(--slip-muted);
+  opacity: 0.45;
+}
+.receipt-slip .receipt-waits dl > div:first-child .receipt-wait-bar {
+  background: #d4962c;
+  opacity: 1;
+}
 .settings-window.receipt-slip p.receipt-thanks {
   margin: 16px 0 0;
   color: var(--slip-muted);

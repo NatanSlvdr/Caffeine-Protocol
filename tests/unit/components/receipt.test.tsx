@@ -89,4 +89,23 @@ describe('service receipt', () => {
     receipt(3, undefined, false, result(3, block_target, instruction_target));
     expect(screen.queryByText(/One more star/)).toBeNull();
   });
+  it('says where the guests’ wait went, the part that held them up most first', () => {
+    const timing = { arrival: 0, created: 10, seating: 10, seated: 16, ready: 70, served: 90, left: 100, cleaned: 0 };
+    const run = { ...result(3), events: [{ seed_id: 'A', table: 1, tickets: [{}], timing }] } as unknown as RunResult;
+    const { unmount } = receipt(3, undefined, false, run);
+    const waits = screen.getByRole('region', { name: 'Most of the guests’ wait was for their drinks to be made.' });
+    expect([...waits.querySelectorAll('dl > div')].map((row) => row.textContent)).toEqual([
+      'Making drinks67%',
+      'Carrying drinks out22%',
+      'Ordering11%',
+    ]);
+    expect(waits.querySelector('.receipt-wait-bar')?.getAttribute('aria-hidden')).toBe('true');
+    unmount();
+    // The opening day was served by hand, and a run with no guests to read has nothing to say.
+    const opening = receipt(0, undefined, true, run);
+    expect(screen.queryByText(/guests’ wait/)).toBeNull();
+    opening.unmount();
+    receipt(3);
+    expect(screen.queryByText(/guests’ wait/)).toBeNull();
+  });
 });

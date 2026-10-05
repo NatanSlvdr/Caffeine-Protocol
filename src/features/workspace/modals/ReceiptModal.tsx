@@ -3,6 +3,7 @@ import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { count, type LevelDefinition, type RunResult } from '@/domain';
 import { pad2, starRow } from '@/shared/lib/format';
+import { guestWaits, WAIT_LABELS, WAIT_LEADS } from '../waits';
 
 export interface ReceiptModalProps {
   index: number;
@@ -57,6 +58,8 @@ export function ReceiptModal({
         : result.stars < best
           ? `Your best stays at ${count(best, 'star')}.`
           : '';
+  // Where the guests' time went, so a slow service says which part to look at. The opening day was served by hand.
+  const waits = observation ? [] : guestWaits(result.events ?? []);
   return (
     <Modal
       title="Service complete"
@@ -99,6 +102,22 @@ export function ReceiptModal({
         )}
       </dl>
       {nextStar && <p className="receipt-note">{nextStar}</p>}
+      {waits.length > 0 && (
+        <section className="receipt-waits" aria-labelledby="receipt-waits-lead">
+          <p id="receipt-waits-lead">{WAIT_LEADS[waits[0].stage]}</p>
+          <dl>
+            {waits.map(({ stage, percent }) => (
+              <div key={stage}>
+                <dt>{WAIT_LABELS[stage]}</dt>
+                <dd>
+                  <span className="receipt-wait-bar" style={{ inlineSize: `${percent}%` }} aria-hidden="true" />
+                  {percent}%
+                </dd>
+              </div>
+            ))}
+          </dl>
+        </section>
+      )}
       <p className="receipt-thanks">
         {nextShift ? (
           <>
