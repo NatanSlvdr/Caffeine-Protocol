@@ -9,6 +9,7 @@ What each document is for, and which ones describe the game as it ships. The gam
 - [Roadmap](ROADMAP.md): the improvement backlog and its progress log.
 - [Performance](PERFORMANCE.md): what the café costs to load and to simulate, measured, and the budgets the build and the tests hold it to.
 - [Release playtest matrix](PLAYTEST.md): the browsers, screens, inputs and accessibility paths a release is played on, what the browser tests cover, and the pass a person plays by hand before shipping.
+- [Release notes and credits](RELEASE.md): what version 1.0.0 contains, its controls, the libraries it is built on, where every asset came from, and its known limitations.
 - [Decision records](adr/): why the campaign, the Query language, asset sync and the CSS are the way they are. [ADR 001](adr/001-32-shifts.md) is superseded in part by [ADR 005](adr/005-21-shifts.md).
 - Game design notes that are kept up to date:
   - [Programming](game_design/programming.md): the routine language, the editor, the runtime and save migration.
