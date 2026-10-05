@@ -14,7 +14,7 @@ export type FailureCode =
   | 'jump-across-block'
   /** A Return ran outside any Call. */
   | 'return-outside-call'
-  /** A function called itself. */
+  /** A function called itself, or another function. */
   | 'recursive-call'
   /** A block read a variable no Store had filled. */
   | 'unset-variable'

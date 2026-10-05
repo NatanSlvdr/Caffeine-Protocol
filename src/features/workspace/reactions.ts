@@ -69,8 +69,8 @@ const kinds: Record<FailureCode, FailureKind> = {
   },
   'recursive-call': {
     by: 'robot',
-    react: () => '*ring ring* …Calling myself?',
-    hint: 'A function runs when a Call outside it asks: inside the function, finish its steps and let it reach End.',
+    react: () => '*ring ring* …Line busy. I’m already in a call.',
+    hint: 'A function runs when a Call in the main routine asks: inside the function, finish its steps and let it reach End. Calls to other functions go in the main routine too.',
   },
   'unset-variable': {
     by: 'robot',

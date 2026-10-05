@@ -278,7 +278,7 @@ describe('reactions', () => {
     expect(niko('no-number', 'This item has no number to store. Check If Number IN item first.')).toContain(
       'inside an If',
     );
-    expect(niko('recursive-call', 'A function can’t call itself.')).toContain('a Call outside it');
+    expect(niko('recursive-call', 'A function can’t call itself.')).toContain('a Call in the main routine');
     expect(niko('recipe-order', 'The coffee machine can’t work on this coffee yet. Next step: Grind.')).toContain(
       'one step at a time',
     );

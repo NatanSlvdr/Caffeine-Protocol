@@ -3,8 +3,12 @@ import { extensionShiftConfig, shiftId } from '../extension-config.ts';
 
 /**
  * Deterministic extension customers: drinks alternate by seed, sugar counts cycle, finales group up.
- * Act IV shifts turn some of them into take-away or rush orders, and a finale has every kind.
+ * Act IV shifts turn some of them into take-away or rush orders, and a finale has every kind, a rush order to go
+ * among them.
  */
+/** "1 sugar", "2 sugars", as a guest says it. */
+const sugars = (n: number) => `${n} sugar${n === 1 ? '' : 's'}`;
+
 export function extensionSeed(level: number, seed: number): ValidationSeed {
   const config = extensionShiftConfig(level);
   const count = config.customers;
@@ -20,7 +24,7 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
         intent: { confidence: 'ambiguous' },
         heard_orders: [{ tokens: ['ambiguous'] }],
         clarification_heard_orders: [{ tokens: [drink, 'sugar', 'number'], number: sugar_count }],
-        clarification: `${drink}, ${sugar_count} sugars`,
+        clarification: `${drink}, ${sugars(sugar_count)}`,
         clarification_intent: intent,
         expected: { item: drink, sugar_count, ask_help: true },
       };
@@ -46,13 +50,14 @@ export function extensionSeed(level: number, seed: number): ValidationSeed {
           ],
         },
       };
-    const toGo = config.toGo && (config.finale ? n % 4 === 2 : n % 3 === 1),
+    // In a finale every other rush order is also to go, so the two marks meet on one ticket at least once.
+    const toGo = config.toGo && (config.finale ? n % 4 === 2 || n % 8 === 7 : n % 3 === 1),
       rush = config.rush && (config.finale ? n % 4 === 3 : n % 3 === 2);
     const marks = { ...(toGo ? { to_go: true } : {}), ...(rush ? { rush: true } : {}) };
     return {
       customer_id: `C${n + 1}`,
       arrival: n * config.arrivalGap,
-      phrase: `${rush ? 'A quick ' : ''}${drink}, ${sugar_count} sugars${toGo ? ', to go' : ''}${rush ? '. I’m in a rush!' : ''}`,
+      phrase: `${rush ? 'A quick ' : ''}${drink}, ${sugars(sugar_count)}${toGo ? ', to go' : ''}${rush ? '. I’m in a rush!' : ''}`,
       heard_orders: [
         {
           tokens: [drink, 'sugar', 'number', ...(toGo ? ['togo'] : []), ...(rush ? ['rush'] : [])],

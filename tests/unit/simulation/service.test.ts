@@ -141,9 +141,10 @@ describe('recipes, handoffs, and capacities', () => {
     );
   });
   it('validates sugar on deposited drinks', () => {
-    // Skipping the sugar loop deposits a drink that still needs its cubes.
-    const prep = referencePrograms(levels.length).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
-    const r = service({ prep });
+    // Skipping the sugar loop deposits a drink that still needs its cubes. On the sugar shift there are no lids to
+    // catch it sooner.
+    const prep = referencePrograms(UNLOCKS.prepSugar).prep.replace('FOR var1 TIMES\nTAKE UP\nEND', '# omitted');
+    const r = service({ prep }, UNLOCKS.prepSugar);
     expect(r.first_failure?.reason).toMatch(/takes \d sugar cubes?, but it has 0/);
     expect(r.first_failure).toMatchObject({ role: 'prep', code: 'sugar-count', context: { actual: 0 } });
   });
@@ -162,6 +163,18 @@ describe('recipes, handoffs, and capacities', () => {
       'Wait for Orders or Wait for Dirty cups first: Porter has no job yet, so there’s no table to store.',
     );
     expect(r.first_failure?.code).toBe('no-job');
+  });
+  it('says whether a function called itself or another function', () => {
+    // Porter's deliver ends by walking home; a Call there runs while deliver is still going.
+    const floor = referencePrograms(UNLOCKS.clearing).floor;
+    const calling = (call: string) =>
+      service({ floor: floor.replace('MOVE var2\nRETURN', `MOVE var2\n${call}\nRETURN`) }, UNLOCKS.clearing)
+        .first_failure;
+    expect(calling('CALL clear')).toMatchObject({
+      code: 'recursive-call',
+      reason: 'A function can’t call another function. Call clear from the main routine, after deliver returns.',
+    });
+    expect(calling('CALL deliver')).toMatchObject({ code: 'recursive-call', reason: 'A function can’t call itself.' });
   });
   it('blames the robot holding an undelivered drink, not the one waiting for work', () => {
     // Without Call deliver, Porter takes a drink down and goes straight to clearing cups that never come.

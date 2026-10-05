@@ -13,6 +13,14 @@ import { collectionSelectors, parseFor, parseMarkWrite, parseStore, parseSugarWr
 export const RETURN_OUTSIDE_CALL = 'Return only works inside a function that was called.';
 export const FUNCTION_END_OUTSIDE_CALL =
   'This function’s End was reached without a Call: run a function with Call, not by jumping into it.';
+/** What's wrong with the Call at `pc`, made while a function is running: calling itself, or calling another one. */
+export function nestedCallMessage(program: Program, pc: number): string {
+  const called = program.instructions[pc].slice(5);
+  const inside = Object.entries(program.functions).find(([, start]) => start < pc && program.ends[start] > pc)?.[0];
+  return !inside || inside === called
+    ? 'A function can’t call itself.'
+    : `A function can’t call another function. Call ${called} from the main routine, after ${inside} returns.`;
+}
 const FOR_END_OUTSIDE_LOOP =
   'This For loop’s End was reached without its For: jump to the For line, not into the loop.';
 
@@ -140,7 +148,7 @@ export function* streamCustomerEvent(
       }
     } else if (c.startsWith('FUNCTION ')) next = p.ends[pc] + 1;
     else if (c.startsWith('CALL ')) {
-      if (calls.length) return fail('recursive-call', 'A function can’t call itself.');
+      if (calls.length) return fail('recursive-call', nestedCallMessage(p, pc));
       calls.push({ return: next, variables: { ...vars }, loop_depth: loops.length });
       vars = {};
       next = p.functions[c.slice(5)] + 1;

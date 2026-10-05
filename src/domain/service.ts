@@ -8,7 +8,7 @@ import {
   SIM_DURATION_SECONDS,
 } from './constants';
 import { compileRobot } from './robotProgram';
-import { FUNCTION_END_OUTSIDE_CALL, RETURN_OUTSIDE_CALL } from './program/interpreter';
+import { FUNCTION_END_OUTSIDE_CALL, nestedCallMessage, RETURN_OUTSIDE_CALL } from './program/interpreter';
 import { floorSource, preparationSource } from './defaultPrograms';
 import { gridRoute, isWalkable, samePoint, MANUAL_INTAKE, STARTS, STATIONS, TABLE_LAYOUT, tableFront } from './layout';
 import type { Point } from './layout';
@@ -780,7 +780,7 @@ export function* streamService(
     }
     if (c.startsWith('CALL ')) {
       if (w.stack.length) {
-        fail(w, 'recursive-call', 'A function can’t call itself.');
+        fail(w, 'recursive-call', nestedCallMessage(p, w.pc));
         return false;
       }
       return control(() => {
