@@ -22,8 +22,8 @@ Each shift has a page with its story, lesson, customers and reference programs i
 | L14 | Special Delivery | 2 | 3 | 73 | 647 | Porter takes over the room. |
 | L15 | Cups and Robbers | 2 | 3 | 85 | 766 | Wait for Dirty cups picks a used cup. |
 | L16 | Tea for Two | 4 | 3 | 89 | 1505 | Porter now holds two items. |
-| L17 | To Go | 16 | 3 | 96 | 2413 | Some customers order to go. |
-| L18 | Four Cups | 16 | 3 | 98 | 2611 | There are only four café cups. |
-| L19 | In a Hurry | 16 | 3 | 101 | 2677 | Customers in a rush say so: Query writes Rush on their ticket. |
-| L20 | Last Orders | 16 | 3 | 110 | 3043 | After the last customer, Wait for Orders reports Closed instead of waiting. |
-| L21 | Espresso Yourself | 16 | 3 | 110 | 3403 | Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time. |
+| L17 | To Go | 16 | 3 | 98 | 2413 | Some customers order to go. |
+| L18 | Four Cups | 16 | 3 | 100 | 2611 | There are only four café cups. |
+| L19 | In a Hurry | 16 | 3 | 110 | 2677 | Customers in a rush say so: Query writes Rush on their ticket. |
+| L20 | Last Orders | 16 | 3 | 127 | 3043 | After the last customer, Wait for Orders reports Closed instead of waiting. |
+| L21 | Espresso Yourself | 16 | 3 | 127 | 3403 | Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time. |

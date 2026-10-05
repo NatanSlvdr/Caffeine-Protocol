@@ -12,12 +12,15 @@ import { UNLOCKS } from '../../../src/domain/unlocks';
 /**
  * A shift's seeds have to tell right from wrong for more than its worked example. docs/campaign/AUDIT.md lists, for
  * each shift, the other routines that serve it and the slips players are likely to make. Here every way in has to
- * pass every seed, and every slip has to be turned away, for the reason the slip is about.
+ * pass every seed, and every slip has to be turned away, for the reason the slip is about. The star targets have to
+ * be fair to the ways in as well: each one earns every star, unless it goes the long way round the shift's lesson.
  */
 interface Routine {
   name: string;
   /** The robots' routines that differ from the reference. */
   programs: Partial<RobotPrograms>;
+  /** The lesson this way in skips, which the shift's brief asks for and the block target holds it to. */
+  skips?: string;
 }
 interface Slip extends Routine {
   code: FailureCode;
@@ -187,6 +190,7 @@ const WAYS_IN: Record<string, Routine[]> = {
   L10: [
     {
       name: 'writes a whole recipe for each drink',
+      skips: 'branching only around the grinder',
       programs: {
         prep: [
           'POSITION listen',
@@ -206,6 +210,7 @@ const WAYS_IN: Record<string, Routine[]> = {
   L11: [
     {
       name: 'uses a ladder of Ifs on the count',
+      skips: 'counting with For Var A times',
       programs: {
         prep: edit(prep(11), SUGAR_LOOP, 'IF count = 1\nTAKE UP\nEND\nIF count = 2\nTAKE UP\nTAKE UP\nEND'),
       },
@@ -515,11 +520,28 @@ const SLIPS: Record<string, Slip[]> = {
 const cases = <T extends Routine>(table: Record<string, T[]>) =>
   Object.entries(table).flatMap(([id, routines]) => routines.map((routine) => [id, routine.name, routine] as const));
 
+/** How many blocks over the longest routine that earns two stars the target allows: room for one stray line. */
+const STAR_MARGIN = 2;
+
 describe('the ways into each shift', () => {
-  it.each(cases(WAYS_IN))('%s is served by a routine that %s', (id, _, { programs }) => {
+  it.each(cases(WAYS_IN))('%s is served by a routine that %s', (id, _, { programs, skips }) => {
     const result = run(Number(id.slice(1)), programs);
     expect(result.first_failure).toBeNull();
     expect(result.passed_seeds).toBe(levels[Number(id.slice(1)) - 1].seeds.length);
+    // A way in that skips the lesson still serves the shift, but the block target says there is a shorter one.
+    expect(result.stars).toBe(skips ? 1 : 3);
+  });
+
+  it('sets each block target just above the longest routine that should meet it', () => {
+    for (const level of levels.filter((level) => level.programming_enabled)) {
+      const longest = Math.max(
+        level.reference_block_count,
+        ...(WAYS_IN[level.id] ?? [])
+          .filter((way) => !way.skips)
+          .map((way) => run(Number(level.id.slice(1)), way.programs).block_count!),
+      );
+      expect(level.block_target, level.id).toBe(longest + STAR_MARGIN);
+    }
   });
 });
 

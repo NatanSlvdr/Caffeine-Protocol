@@ -13,7 +13,9 @@ Where a shift lists more than one routine, the reference comes first. The others
 `tests/unit/data/ways-in.test.ts` serves every seed with each of them, and runs each likely slip that can be written
 to check that it fails, and on the right rule. It also checks what the seeds hold: every drink and sugar count from
 L13 on, a to-go order in every L17 seed and a rush in every L19 seed, an order that is both in every finale seed, and
-an odd number of tickets at closing so a half-full batch is always tested.
+an odd number of tickets at closing so a half-full batch is always tested. Every way in has to earn all three stars
+unless it skips the lesson its brief asks for, and each block target sits two blocks above the longest way in that
+should earn it.
 
 ## Prologue
 
@@ -269,6 +271,11 @@ and rules only add work, so code for a rule that isn't active stays harmless.
   written as an else-if after To go got through; every finale seed now has one. Two slips were wrong: never walking
   back on L02 isn't harmless, and Negation tested first on L05 is a way in, not a slip. A nested Call said "A function
   can't call itself" even when it called another function; it now says which, and where the Call belongs.
-- **For C04.** The alternatives fit their two-star targets except the per-drink recipe on L10 (55 against 49), the
-  If ladder on L11 (55 against 54), and batched routines from L19 on: 105–108 against 101 on L19, and 115–125 against
-  110 on L20 and L21.
+- **Targets (C04).** Each block target is two blocks above the longest routine that should earn two stars, which is
+  usually the reference. Batched routines carried in from Act III used to miss it from L19 on (105–108 against 101,
+  and 115–125 against 110 on L20 and L21), and sat right on it on L17, so a player who kept batching lost a star for a
+  valid approach. The targets are now 98, 100, 110, 127 and 127 from L17 to L21, and the shift pages say why they sit
+  further above the reference. Batching costs blocks and saves steps: batched routines run fewer steps than the
+  reference, inside every step target. Two ways in still miss on purpose, because they skip what the brief asks for:
+  a recipe per drink on L10 and an If ladder on L11. The test holds both rules, so a new way in that runs longer
+  moves the target with it.

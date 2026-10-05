@@ -12,6 +12,8 @@ export interface LevelSeed {
   todo?: string;
   /** The robot whose starter loses the line; defaults to the robot the shift introduces. */
   robot?: 'prep' | 'floor';
+  /** The two-star block target: two above the longest routine that should earn it, the reference or one of the ways
+   * in, such as Act III's batches carried into Act IV. tests/unit/data/ways-in.test.ts holds it there. */
   blocks: number;
   instructions: number;
 }
@@ -93,35 +95,35 @@ export const extensionSeeds: LevelSeed[] = [
     id: 'L17',
     title: 'To Go',
     note: 'Some customers order to go. Query writes To go on their ticket: If To go IN item, then Write To go. Brew puts a lid on those drinks: Take up at the lids, between the sugar and pickup. Porter leaves them on the to-go shelf by the door: walk there and Deposit down. They go in paper cups, so there’s nothing to clear.',
-    blocks: 96,
+    blocks: 98,
     instructions: 2413,
   },
   {
     id: 'L18',
     title: 'Four Cups',
     note: 'There are only four café cups. Taking beans or leaves at storage uses a clean cup, and Porter drops the used ones in the sink. Use up at the sink washes them. When no clean cup is left, Brew waits at the sink until a used one comes back.',
-    blocks: 98,
+    blocks: 100,
     instructions: 2611,
   },
   {
     id: 'L19',
     title: 'In a Hurry',
     note: 'Customers in a rush say so: Query writes Rush on their ticket. Rush orders jump the queue, and whoever holds one handles it first. Brew can’t wait for another ticket while it holds a rush order, and Porter can’t wait or pick up another drink while it carries one.',
-    blocks: 101,
+    blocks: 110,
     instructions: 2677,
   },
   {
     id: 'L20',
     title: 'Last Orders',
     note: 'After the last customer, Wait for Orders reports Closed instead of waiting. Check If Closed IN Orders, and Stop. Every robot has to stop, after finishing whatever it’s holding. A robot that keeps waiting keeps the café open.',
-    blocks: 110,
+    blocks: 127,
     instructions: 3043,
   },
   {
     id: 'L21',
     title: 'Espresso Yourself',
     note: 'Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time.',
-    blocks: 110,
+    blocks: 127,
     instructions: 3403,
   },
 ];

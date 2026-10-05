@@ -48,7 +48,11 @@ function renderShift(index: number): string {
     out.push(
       `**Stars.** One for serving every seed, two for ${level.block_target} blocks or fewer, three for also ` +
         `finishing in ${level.instruction_target} executed steps or fewer. The reference uses ` +
-        `${level.reference_block_count} blocks.`,
+        `${level.reference_block_count} blocks.` +
+        // Past the usual two blocks of room, the target is set by a longer way in (tests/unit/data/ways-in.test.ts).
+        (level.block_target > level.reference_block_count + 2
+          ? ' The target leaves room for the longer ways in listed in the [audit](../AUDIT.md), such as robots that keep batching.'
+          : ''),
       '',
     );
   out.push('## Customers in the first seed', '');
