@@ -25,6 +25,8 @@ export interface ReplayTimelineProps {
   textMode: boolean;
   /** Look at a moment, or back at the latest with nothing. */
   onView: (at: number | null) => void;
+  /** A moment jumped to, so the routine of the robot it belongs to can be opened at it. */
+  onMoment?: (moment: Moment) => void;
   /** The guests whose orders can be followed, and the one that is, by round and id. */
   followable: readonly Followable[];
   following?: { seed: string; guest: string };
@@ -53,6 +55,7 @@ export function ReplayTimeline({
   programs,
   textMode,
   onView,
+  onMoment,
   followable,
   following,
   onFollow,
@@ -93,6 +96,7 @@ export function ReplayTimeline({
       return;
     }
     onView(landOn(moment));
+    onMoment?.(moment);
     const words = momentsAt(targets, moment.at)
       .map((m) => momentWords(m, programs, textMode))
       .join('. ');

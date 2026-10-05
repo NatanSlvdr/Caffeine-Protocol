@@ -1,5 +1,5 @@
 import { UNLOCKS } from '@/domain';
-import type { RobotRole, RunResult } from '@/domain';
+import type { BlockPreview, RobotRole, RunResult } from '@/domain';
 import { PixelArtEffect } from './cafe/PixelArtEffect';
 import { SceneCanvas } from './three/SceneCanvas';
 import { World } from './cafe/World';
@@ -20,6 +20,7 @@ export function Cafe({
   cameraTarget,
   cameraAngleDegrees = 0,
   follow,
+  preview,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -37,6 +38,8 @@ export function Cafe({
   cameraAngleDegrees?: number;
   /** The guest whose order is followed, by round and id; it is ringed wherever it is. */
   follow?: { seed: string; guest: string };
+  /** The block picked in the routine, drawn where it goes. */
+  preview?: BlockPreview;
 }) {
   return (
     <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
@@ -56,6 +59,7 @@ export function Cafe({
           cameraTarget={cameraTarget}
           cameraAngleDegrees={cameraAngleDegrees}
           follow={follow}
+          preview={preview}
         />
         {pixelArt && <PixelArtEffect />}
       </SceneCanvas>

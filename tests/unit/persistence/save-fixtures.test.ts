@@ -50,6 +50,7 @@ describe('historical save fixtures', () => {
       text_editor: false,
       first_routine_tips: true,
       short_repeats: false,
+      block_preview: false,
       speed: 1,
       dialogue_pace: 'typed',
     });
@@ -96,6 +97,7 @@ describe('historical save fixtures', () => {
       text_editor: false,
       first_routine_tips: true,
       short_repeats: false,
+      block_preview: false,
       speed: 1,
       dialogue_pace: 'typed',
     });

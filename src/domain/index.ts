@@ -1,5 +1,6 @@
 /** Single-import surface for the domain layer. UI layers import from here, never via deep relative paths. */
 export * from './blockFields';
+export * from './blockPreview';
 export * from './blockRegistry';
 export * from './cargo';
 export * from './commands';

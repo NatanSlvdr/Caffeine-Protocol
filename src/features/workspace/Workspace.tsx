@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Store } from 'lucide-react';
+import { ArrowLeft, Footprints, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
@@ -21,6 +21,8 @@ import { RobotInspector } from './RobotInspector';
 import { startedWords } from './inspector';
 import { ReplayTimeline } from './ReplayTimeline';
 import { OrderRoute } from './OrderRoute';
+import { BlockPreviewNote } from './BlockPreviewNote';
+import { useBlockPreview } from './blockPreview';
 import { followable, guestName, routeDone } from './route';
 import { whenWords } from './timeline';
 import { markCount, pauseReason } from './breakpoints';
@@ -182,6 +184,10 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   // “Show where it stopped”, or a hint's “Show this block”, opens the robot the block belongs to; once its routine is
   // on screen, focus goes to the block, or in the text view to the start of its line.
   const [seeking, setSeeking] = useState<number | null>(null);
+  // The block last focused in the routine, or the text view's line, by robot: what the café's preview shows.
+  const [selected, setSelected] = useState<{ role: RobotRole; line: number } | null>(null);
+  const select = (line: number) =>
+    setSelected((current) => (current?.role === role && current.line === line ? current : { role, line }));
   useEffect(() => {
     if (seeking === null) return;
     setSeeking(null);
@@ -277,6 +283,22 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
   const serviceView = running || failed;
   // The round the followed guest came in, to time their order's way from its start.
   const followedRound = followed && (result?.execution ?? []).find((r) => r.seed_id === followed.seed_id);
+  // The café can show where the block picked in the routine goes, while the routine is being written.
+  const previewOn = save.settings.block_preview && !observation;
+  const previewing = previewOn && !serviceView;
+  const { preview, note } = useBlockPreview({
+    level,
+    shift: index + 1,
+    programs,
+    role,
+    line: previewing && selected?.role === role ? selected.line : null,
+    textMode,
+  });
+  // An event looked back on, an order's leg or a moment on the timeline, opens the routine of the robot that did it,
+  // where the marker is on the very block it began on.
+  const showRobot = (event: { role?: RobotRole; actor?: string }) => {
+    if (event.role && event.actor !== 'niko' && crew.includes(event.role)) setRole(event.role);
+  };
   const firstHeard = result?.first_failure && heard.get(result.first_failure.code);
   const reaction =
     scene === 'failure' && failed && result
@@ -309,21 +331,37 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               <ArrowLeft size={14} aria-hidden="true" /> Campaign <span aria-hidden="true">/</span> Shift{' '}
               {pad2(index + 1)}
             </button>
-            <div className="view-controls" role="group" aria-label="Camera view">
-              <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>
-                <Store size={16} aria-hidden="true" />
-                Full café
-              </button>
-              <RobotOptions
-                level={index + 1}
-                selected={focused ? role : undefined}
-                labels={ROBOT_AREA_LABELS}
-                onSelect={(robot) => {
-                  setRole(robot);
-                  setZoomToRobot(true);
-                  setWrapUp(false);
-                }}
-              />
+            <div className="heading-tools">
+              {!observation && (
+                <button
+                  type="button"
+                  className="preview-toggle"
+                  aria-pressed={save.settings.block_preview}
+                  title="Show where the picked Move, Take, Deposit or Use block goes in the café"
+                  onClick={() =>
+                    update((s) => ({ ...s, settings: { ...s.settings, block_preview: !s.settings.block_preview } }))
+                  }
+                >
+                  <Footprints size={16} aria-hidden="true" />
+                  <span>Block paths</span>
+                </button>
+              )}
+              <div className="view-controls" role="group" aria-label="Camera view">
+                <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>
+                  <Store size={16} aria-hidden="true" />
+                  Full café
+                </button>
+                <RobotOptions
+                  level={index + 1}
+                  selected={focused ? role : undefined}
+                  labels={ROBOT_AREA_LABELS}
+                  onSelect={(robot) => {
+                    setRole(robot);
+                    setZoomToRobot(true);
+                    setWrapUp(false);
+                  }}
+                />
+              </div>
             </div>
           </div>
           <div className="scene-space">
@@ -339,7 +377,9 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
               focusRole={focused ? role : undefined}
               level={index + 1}
               follow={serviceView && following ? following : undefined}
+              preview={preview}
             />
+            {previewing && <BlockPreviewNote note={note} textMode={textMode} />}
             {serviceView && followed && followedRound && result && (
               <OrderRoute
                 name={guestName(level, followed)}
@@ -355,7 +395,14 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 start={followedRound.start}
                 time={time}
                 level={index + 1}
-                onView={lookBack ? live.view : undefined}
+                onView={
+                  lookBack
+                    ? (at, leg) => {
+                        live.view(at);
+                        showRobot(leg);
+                      }
+                    : undefined
+                }
                 onStop={() => follow(null)}
               />
             )}
@@ -383,6 +430,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
                 programs={programs}
                 textMode={textMode}
                 onView={live.view}
+                onMoment={(moment) => showRobot(moment.event)}
                 followable={followable(level, result, head)}
                 following={following ?? undefined}
                 onFollow={follow}
@@ -468,6 +516,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
             tabbed
             marks={marks[role]}
             onMark={observation ? undefined : live.toggleMark}
+            onSelect={select}
           />
           {inspected && !observation && (
             <RobotInspector

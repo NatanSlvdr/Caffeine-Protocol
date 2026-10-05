@@ -79,6 +79,7 @@ export function Editor({
   tabbed = false,
   marks = NO_MARKS,
   onMark,
+  onSelect,
 }: {
   role?: RobotRole;
   source: string;
@@ -99,6 +100,8 @@ export function Editor({
   marks?: ReadonlySet<number>;
   /** A mark put on a block, or taken off it: by its number, F9, or a click in the text view's gutter. */
   onMark?: (line: number) => void;
+  /** The block that took focus, or the line the caret moved to in the text view, for the café to show where it goes. */
+  onSelect?: (line: number) => void;
 }) {
   const root = useRef<HTMLDivElement>(null),
     codeArea = useRef<HTMLDivElement>(null),
@@ -169,8 +172,11 @@ export function Editor({
   }, [source]);
   // The line the caret is on while the text view has focus, to match the group around it.
   const [caretLine, setCaretLine] = useState<number | null>(null);
-  const trackCaret = (input: HTMLTextAreaElement) =>
-    setCaretLine(input.value.slice(0, input.selectionStart).split('\n').length - 1);
+  const trackCaret = (input: HTMLTextAreaElement) => {
+    const line = input.value.slice(0, input.selectionStart).split('\n').length - 1;
+    setCaretLine(line);
+    onSelect?.(line);
+  };
   // Tidy up lays the typed routine out by depth again, as one edit that Undo takes back. From the keyboard
   // (Shift+Alt+F, as in code editors), the caret stays on its line, at the same place in the line's words.
   const tidy = (caret?: number) => {
@@ -440,6 +446,10 @@ export function Editor({
         <div
           className="editor-body"
           ref={codeArea}
+          onFocus={(e) => {
+            const block = (e.target as Element).closest<HTMLElement>('.block[data-line]');
+            if (block) onSelect?.(Number(block.dataset.line));
+          }}
           onKeyDown={(e) => {
             // Only from a block or the pane itself: Escape in a value's menu just closes the menu.
             if (e.key !== 'Escape' || !picked || !(e.target as Element).matches('.block, .editor-body')) return;

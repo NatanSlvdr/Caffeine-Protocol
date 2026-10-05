@@ -14,16 +14,19 @@ vi.mock('../../../src/components/Cafe', () => ({
     serviceView,
     focusRole,
     follow,
+    preview,
   }: {
     serviceView?: boolean;
     focusRole?: string;
     follow?: { seed: string; guest: string };
+    preview?: { role: string; kind: string; visits: readonly unknown[] };
   }) => (
     <div
       data-testid="cafe"
       data-service-view={serviceView}
       data-focus-role={focusRole}
       data-follow={follow && `${follow.seed}/${follow.guest}`}
+      data-preview={preview && `${preview.role}:${preview.kind}:${preview.visits.length}`}
     />
   ),
 }));
@@ -457,6 +460,96 @@ describe('live workspace lifecycle', () => {
     fireEvent.click(within(card).getByRole('button', { name: 'Stop following' }));
     expect(screen.queryByRole('region', { name: /^Following/ })).toBeNull();
     expect(cafe.getAttribute('data-follow')).toBeNull();
+  });
+  it('shows where a picked block goes in the café, once the block paths are on', () => {
+    ready();
+    const cafe = screen.getByTestId('cafe');
+    const toggle = screen.getByRole('button', { name: 'Block paths' });
+    const note = () => screen.queryByRole('region', { name: 'The picked block in the café' });
+    const block = (line: number) => document.querySelector<HTMLElement>(`.editor-panel .block[data-line="${line}"]`)!;
+    // Off, as it starts: picking a block draws nothing.
+    expect(toggle.getAttribute('aria-pressed')).toBe('false');
+    act(() => block(4).focus());
+    expect(note()).toBeNull();
+    expect(cafe.getAttribute('data-preview')).toBeNull();
+    // On, the block already picked is drawn where it walks, and said, round 1 being the one shown.
+    fireEvent.click(toggle);
+    expect(toggle.getAttribute('aria-pressed')).toBe('true');
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!).settings.block_preview).toBe(true);
+    expect(cafe.getAttribute('data-preview')).toBe('query:move:1');
+    expect(within(note()!).getByRole('heading').textContent).toMatch(/^Block \d+ · move right 1In round 1$/);
+    expect(note()!.textContent).toContain(
+      'Query walks 1 tile right, from the register to the order handoff. · 4 times',
+    );
+    // A reach is drawn to what it reaches.
+    act(() => block(5).focus());
+    expect(cafe.getAttribute('data-preview')).toBe('query:reach:1');
+    expect(note()!.textContent).toContain('Query reaches right to the order handoff, and puts the ticket down.');
+    // A block that goes nowhere says which do.
+    act(() => block(1).focus());
+    expect(cafe.getAttribute('data-preview')).toBeNull();
+    expect(note()!.textContent).toBe('Pick a Move, Take, Deposit or Use block to see where it goes in the café.');
+    // While the service runs, the café shows the run itself.
+    act(() => block(4).focus());
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    expect(note()).toBeNull();
+    expect(cafe.getAttribute('data-preview')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: /Stop & edit/ }));
+    expect(cafe.getAttribute('data-preview')).toBe('query:move:1');
+    // Off again, nothing is drawn.
+    fireEvent.click(toggle);
+    expect(note()).toBeNull();
+    expect(cafe.getAttribute('data-preview')).toBeNull();
+  });
+  it('previews the line the caret is on in the text view, and why a block never runs', () => {
+    ready(lessons[2].solution.replace('DEPOSIT RIGHT', 'DEPOSIT DOWN'), { text_editor: true, block_preview: true });
+    const text = screen.getByRole('textbox', { name: 'Routine text' }) as HTMLTextAreaElement;
+    const caretOn = (line: number) => {
+      const at = text.value.split('\n').slice(0, line).join('\n').length + 1;
+      act(() => text.focus());
+      text.setSelectionRange(at, at);
+      fireEvent.select(text);
+    };
+    const note = () => screen.getByRole('region', { name: 'The picked block in the café' });
+    caretOn(5);
+    expect(within(note()).getByRole('heading').textContent).toBe('Line 6 · deposit downIn round 1');
+    expect(note().textContent).toMatch(/Query reaches down, but nothing is there\. The run stops here: .+\.$/);
+    expect(screen.getByTestId('cafe').getAttribute('data-preview')).toBe('query:reach:1');
+    caretOn(6);
+    expect(note().textContent).toMatch(/The round stops before it runs: .+\.$/);
+    expect(screen.getByTestId('cafe').getAttribute('data-preview')).toBeNull();
+  });
+  it('opens the routine of the robot behind a moment or an order’s leg, at the block it began on', () => {
+    window.location.hash = '/shift/14';
+    seedLocalStorage({ ...makeSave(), unlocked: 13, selected: 13, robotDrafts: { 13: referencePrograms(14) } });
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /Run service/ }));
+    playUntil(() => false, 40);
+    fireEvent.click(screen.getByRole('button', { name: 'Pause playback' }));
+    const bar = screen.getByRole('group', { name: 'Look back through the run' });
+    const tab = () => screen.getByRole('tab', { selected: true }).textContent;
+    const active = () => document.querySelector('.editor-panel .block.active');
+    fireEvent.click(screen.getByRole('tab', { name: /Query/ }));
+    expect(tab()).toMatch(/Query/);
+    fireEvent.click(within(bar).getByRole('button', { name: 'Handoffs' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous handoff' }));
+    const brew = !!within(bar).queryByText(/^Round 1 · \d+\.\d s\. Brew takes a ticket/);
+    expect(tab()).toMatch(brew ? /Brew/ : /Porter/);
+    expect(active()).toBeTruthy();
+    fireEvent.click(within(bar).getByRole('button', { name: 'Orders' }));
+    fireEvent.click(within(bar).getByRole('button', { name: 'Previous order' }));
+    expect(tab()).toMatch(/Query/);
+    // An order's leg opens the routine of whoever did it, marked where that leg began.
+    const picker = within(bar).getByRole('combobox', { name: 'Follow an order' }) as HTMLSelectElement;
+    fireEvent.change(picker, {
+      target: { value: within(picker).getAllByRole('option')[1].getAttribute('value') },
+    });
+    const card = screen.getByRole('region', { name: /^Following Guest 1/ });
+    fireEvent.click(within(card).getByRole('button', { name: /Brew takes the ticket/ }));
+    expect(tab()).toMatch(/Brew/);
+    // Brew takes a ticket by listening for one.
+    expect(active()?.textContent).toBe('Wait forOrders');
   });
   it('jumps between a crew’s handoffs, and one robot’s blocks', () => {
     window.location.hash = '/shift/14';

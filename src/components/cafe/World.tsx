@@ -19,6 +19,7 @@ import {
   ROBOT_DISPLAY_NAMES,
   type ActorId,
   type ActorSnapshot,
+  type BlockPreview,
   type RobotRole,
   type RunResult,
 } from '@/domain';
@@ -27,6 +28,7 @@ import { Character } from './Character';
 import { CameraFit } from './CameraFit';
 import { Steam, machineSteaming } from './Steam';
 import { FollowRing } from './FollowRing';
+import { BlockPath } from './BlockPath';
 import { BREW, MOKA, NIKO, PIP, PORTER, QUERY, customerLook, type HumanLook, type RobotLook } from './looks';
 
 /** Each crew post is drawn as whoever holds it: the robot once it is unlocked, otherwise its human stand-in. */
@@ -90,6 +92,7 @@ export function World({
   cameraTarget,
   cameraAngleDegrees,
   follow,
+  preview,
 }: {
   evening: boolean;
   result?: RunResult;
@@ -106,6 +109,8 @@ export function World({
   cameraAngleDegrees: number;
   /** The guest whose order is followed, by round and id; it is ringed wherever it is. */
   follow?: { seed: string; guest: string };
+  /** The block picked in the routine, drawn where it goes. */
+  preview?: BlockPreview;
 }) {
   const state = result ? sampleReplay(result, time) : undefined;
   const followed =
@@ -137,6 +142,7 @@ export function World({
       />
       <SceneLights evening={evening} />
       <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} />
+      {preview && <BlockPath preview={preview} />}
       {Object.entries(actors).map(
         ([id, actor]) =>
           actor && (

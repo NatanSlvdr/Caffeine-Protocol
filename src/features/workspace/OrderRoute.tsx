@@ -19,8 +19,8 @@ export interface OrderRouteProps {
   /** The moment on screen, to mark the leg the order is on. */
   time: number;
   level: number;
-  /** Look at a leg as it began, while the run can be looked back through. */
-  onView?: (at: number) => void;
+  /** Look at a leg as it began, while the run can be looked back through, and at the routine of whoever did it. */
+  onView?: (at: number, leg: Leg) => void;
   onStop: () => void;
 }
 
@@ -87,7 +87,7 @@ export function OrderRoute({
                   <button
                     type="button"
                     onClick={() => {
-                      onView(leg.at + 1e-4);
+                      onView(leg.at + 1e-4, leg);
                       setSaid(`${when(leg)}. ${words}.`);
                     }}
                   >

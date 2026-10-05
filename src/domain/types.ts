@@ -192,6 +192,8 @@ export interface Settings {
   first_routine_tips: boolean;
   /** Skip the intro of a shift already worked on, and keep the crew's reactions already heard to one line. */
   short_repeats: boolean;
+  /** Draw the block picked in the routine where it goes in the café: its walk, or what it reaches. */
+  block_preview: boolean;
   /** How the crew's lines appear. Reduced motion shows them whole, whatever this says. */
   dialogue_pace: DialoguePace;
 }
