@@ -29,6 +29,7 @@ The first release: the whole campaign, start to finish.
 | Shift          | Run the service                             | <kbd>Ctrl/⌘ + Enter</kbd>                                                     |
 | Shift          | Stop and edit; with the café idle, leave    | <kbd>Esc</kbd>                                                                |
 | Dialogue       | Next line                                   | <kbd>Enter</kbd> or <kbd>Space</kbd>                                          |
+| Dialogue       | Back to the line before                     | <kbd>←</kbd>                                                                  |
 | Dialogue       | Move between a scene's buttons              | <kbd>Tab</kbd>, <kbd>Shift + Tab</kbd>                                        |
 
 With a mouse: drag blocks from the library or by their grip, drop one outside the code to remove it, and scrub the replay timeline. On a tablet: tap to add a block, press and drag to move it, and tap through dialogue.

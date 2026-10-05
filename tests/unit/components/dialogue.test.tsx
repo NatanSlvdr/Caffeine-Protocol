@@ -85,6 +85,49 @@ describe('DialogueBox', () => {
     expect(onDone).not.toHaveBeenCalled();
   });
 
+  it('goes back a line to re-read it whole, and on again without typing it twice', () => {
+    const onDone = vi.fn();
+    const onLine = vi.fn();
+    render(<DialogueBox lines={lines} onDone={onDone} onLine={onLine} />);
+    const unread = () => document.querySelector('.dialogue-text .dialogue-unread')?.textContent;
+    const finish = () =>
+      act(() => {
+        vi.advanceTimersByTime(5000);
+      });
+    // On the first line there is nothing to go back to, so ← is left to whatever else wants it.
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    const outer = vi.fn();
+    window.addEventListener('keydown', outer);
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(outer).toHaveBeenCalledOnce();
+    finish();
+    fireEvent.keyDown(window, { key: 'Enter' });
+    finish();
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(screen.getByText('Query')).toBeTruthy();
+    expect(unread()).not.toBe('');
+    // Mid-line, back still goes back: the line before comes up whole, and so does the scene's art with it.
+    const back = screen.getByRole('button', { name: 'Back' });
+    expect(back.getAttribute('aria-keyshortcuts')).toBe('ArrowLeft');
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(outer).toHaveBeenCalledOnce();
+    window.removeEventListener('keydown', outer);
+    expect(screen.getByText('Niko')).toBeTruthy();
+    expect(screen.getByText('Line 2 of 3')).toBeTruthy();
+    expect(unread()).toBe('');
+    fireEvent.click(screen.getByRole('button', { name: 'Back' }));
+    expect(screen.getByText('Line 1 of 3')).toBeTruthy();
+    expect(unread()).toBe('');
+    expect(onLine.mock.calls.map(([index]) => index)).toEqual([1, 2, 1, 0]);
+    // Lines read once already come back whole on the way forward; the next new one types out as usual.
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(unread()).toBe('');
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(screen.getByText('Query')).toBeTruthy();
+    expect(unread()).toBe('');
+    expect(onDone).not.toHaveBeenCalled();
+  });
+
   it('leaves the keyboard alone for an aside unless focus is inside it', () => {
     const onDone = vi.fn();
     const Host = ({ aside }: { aside: boolean }) => (
@@ -100,6 +143,10 @@ describe('DialogueBox', () => {
     expect(document.activeElement).toBe(screen.getByRole('textbox', { name: 'Routine' }));
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onDone).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Next' }));
+    // ← moves the caret in the code, not the crew's reaction back a line.
+    expect(fireEvent.keyDown(screen.getByRole('textbox', { name: 'Routine' }), { key: 'ArrowLeft' })).toBe(true);
+    expect(screen.getByText('Niko')).toBeTruthy();
     expect(screen.getByRole('dialog').getAttribute('aria-modal')).toBeNull();
     screen.getByRole('button', { name: 'Next' }).focus();
     fireEvent.keyDown(document.activeElement!, { key: 'Escape' });

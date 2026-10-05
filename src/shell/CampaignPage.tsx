@@ -425,7 +425,7 @@ function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; 
           </dl>
           <p className="board-story">{scene.logline}</p>
           <p className="board-note">
-            <strong>Chef’s note</strong> Skip, or Esc, ends the scene early.
+            <strong>Chef’s note</strong> Back, or ←, goes over a line again; Skip, or Esc, ends the scene early.
           </p>
         </div>
         <div className="board-launch">

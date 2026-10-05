@@ -189,7 +189,7 @@ describe('campaign order rail', () => {
     const board = within(screen.getByRole('complementary', { name: 'Selected scene' }));
     expect(board.getByText('The last shift')).toBeTruthy();
     // The note names the on-screen Skip button, which a touch-only tablet has, not just the Esc key.
-    expect(board.getByText('Skip, or Esc, ends the scene early.')).toBeTruthy();
+    expect(board.getByText('Back, or ←, goes over a line again; Skip, or Esc, ends the scene early.')).toBeTruthy();
     fireEvent.click(board.getByRole('button', { name: 'Watch again' }));
     expect(window.location.hash).toBe('#/ending');
   });

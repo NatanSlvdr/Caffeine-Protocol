@@ -188,6 +188,7 @@
   font-size: 11px;
   letter-spacing: 1.4px;
 }
+.dialogue button.dialogue-back,
 .dialogue button.dialogue-skip {
   display: inline-flex;
   align-items: center;
@@ -202,6 +203,7 @@
   font-weight: 700;
   cursor: pointer;
 }
+.dialogue button.dialogue-back:hover,
 .dialogue button.dialogue-skip:hover {
   border-color: var(--dialogue-ink);
   color: var(--dialogue-ink);

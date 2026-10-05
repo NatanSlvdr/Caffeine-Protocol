@@ -1,5 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react';
-import { ArrowRight, FastForward } from 'lucide-react';
+import { ArrowLeft, ArrowRight, FastForward } from 'lucide-react';
 import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueLine } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
@@ -45,7 +45,7 @@ export interface DialogueBoxProps {
   onLine?: (index: number) => void;
 }
 
-/** Characters talk one line at a time: click, Enter or Space advances, Escape skips the rest. */
+/** Characters talk one line at a time: click, Enter or Space advances, ← goes back a line, Escape skips the rest. */
 export function DialogueBox({
   lines,
   onDone,
@@ -57,6 +57,8 @@ export function DialogueBox({
 }: DialogueBoxProps) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
+  // The furthest line reached: a line gone back over is printed whole, since it has been read once already.
+  const [reached, setReached] = useState(0);
   const next = useRef<HTMLButtonElement>(null);
   const current = lines[Math.min(index, lines.length - 1)];
   const parts = segments(current?.text ?? '');
@@ -91,9 +93,19 @@ export function DialogueBox({
     else if (last) onDone();
     else {
       setIndex(index + 1);
-      setTyped(0);
+      setTyped(index + 1 <= reached ? Infinity : 0);
+      setReached(Math.max(reached, index + 1));
       onLine?.(index + 1);
     }
+  };
+
+  /** Steps back to re-read the line before, whole. Gives false on the first line, where there is nothing to go back to. */
+  const back = () => {
+    if (index === 0) return false;
+    setIndex(index - 1);
+    setTyped(Infinity);
+    onLine?.(index - 1);
+    return true;
   };
 
   // A scene takes focus. So does an aside, so the crew's reaction to a run started from the keyboard is one key away,
@@ -103,8 +115,8 @@ export function DialogueBox({
   }, [scene]);
 
   // A scene owns the keyboard; an aside only answers while focus is inside it, so typing code is never hijacked.
-  const handlers = useRef({ advance, onDone });
-  handlers.current = { advance, onDone };
+  const handlers = useRef({ advance, back, onDone });
+  handlers.current = { advance, back, onDone };
   const box = useRef<HTMLDivElement>(null);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
@@ -116,7 +128,9 @@ export function DialogueBox({
         const to = e.shiftKey ? (at <= 0 ? stops.length : at) - 1 : (at + 1) % stops.length;
         stops[to]?.focus({ preventScroll: true });
       } else if (e.key === 'Escape') handlers.current.onDone();
-      else if ((e.key === 'Enter' || e.key === ' ') && !e.metaKey && !e.ctrlKey) {
+      else if (e.key === 'ArrowLeft' && !e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+        if (!handlers.current.back()) return;
+      } else if ((e.key === 'Enter' || e.key === ' ') && !e.metaKey && !e.ctrlKey) {
         // A held key moves on one line, not through the rest of the scene and past its last button.
         // Its repeats are swallowed, so a focused button doesn't click on them either.
         if (!e.repeat) {
@@ -193,6 +207,20 @@ export function DialogueBox({
                 Line {index + 1} of {lines.length}
               </span>
             </span>
+            {index > 0 && (
+              <button
+                type="button"
+                className="dialogue-back"
+                aria-keyshortcuts="ArrowLeft"
+                title="The line before · ←"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  back();
+                }}
+              >
+                <ArrowLeft size={14} aria-hidden="true" /> Back
+              </button>
+            )}
             {!last && (
               <button
                 type="button"

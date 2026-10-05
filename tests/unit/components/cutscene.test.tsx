@@ -112,6 +112,12 @@ describe('Cutscene', () => {
     expect(described()).toBe(scene.panels[1].art);
     // The first photo stays on the pile under the new one.
     expect(container.querySelector('.cutscene-still')!.matches('.under')).toBe(true);
+    // Going back a line goes back to the photo it was said over.
+    fireEvent.keyDown(window, { key: 'ArrowLeft' });
+    expect(shown()).toBe(0);
+    expect(described()).toBe(scene.panels[0].art);
+    fireEvent.keyDown(window, { key: 'Enter' });
+    expect(shown()).toBe(1);
     fireEvent.keyDown(window, { key: 'Escape' });
     expect(onDone).toHaveBeenCalledOnce();
   });
