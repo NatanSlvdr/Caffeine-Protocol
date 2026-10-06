@@ -6,6 +6,7 @@ import { shiftNumber } from '@/domain/unlocks';
 import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepMemory, projectMemory } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
+import { useMusicMood } from '@/hooks/useMusicMood';
 import { go } from '@/shared/lib/navigation';
 
 /**
@@ -15,6 +16,8 @@ import { go } from '@/shared/lib/navigation';
  */
 export function MemoryShift({ memory }: { memory: Memory }) {
   const { save, update } = useGame();
+  // Lou's café, two winters ago, plays like an old record.
+  useMusicMood('memory');
   const { id } = memory;
   const slot = shiftNumber(memory.level.id) - 1;
   const played = useMemo(() => projectMemory(save, id, slot), [save, id, slot]);

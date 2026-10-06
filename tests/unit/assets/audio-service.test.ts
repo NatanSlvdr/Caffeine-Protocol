@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AudioService, MUSIC_DELAY, MUSIC_FADE_IN } from '../../../src/shared/lib/audio';
+import { AudioService, MOODS, MOOD_GLIDE, MUSIC_DELAY, MUSIC_FADE_IN } from '../../../src/shared/lib/audio';
 import type { Settings } from '../../../src/domain';
 
 const settings: Settings = {
@@ -48,12 +48,19 @@ class FakeNode {
   }
 }
 
+class FakeFilter extends FakeNode {
+  type = 'lowpass';
+  readonly frequency = new FakeParam();
+  readonly Q = new FakeParam();
+}
+
 class FakeContext {
   static last?: FakeContext;
   currentTime = 10;
   readonly destination = new FakeNode();
   readonly gains: FakeNode[] = [];
   readonly sources: FakeNode[] = [];
+  readonly filters: FakeFilter[] = [];
   suspended = false;
   constructor() {
     FakeContext.last = this;
@@ -61,6 +68,11 @@ class FakeContext {
   createGain() {
     const node = new FakeNode();
     this.gains.push(node);
+    return node;
+  }
+  createBiquadFilter() {
+    const node = new FakeFilter();
+    this.filters.push(node);
     return node;
   }
   createBufferSource() {
@@ -124,7 +136,7 @@ describe('AudioService', () => {
     audio.start();
     await flush();
     const ctx = FakeContext.last!;
-    expect(ctx.gains).toHaveLength(2);
+    expect(ctx.gains).toHaveLength(3);
     const [, music] = ctx.gains;
     expect(music.gain.value).toBe(0.4);
     audio.configure({ ...settings, music: 0 });
@@ -146,5 +158,74 @@ describe('AudioService', () => {
     const [fade] = ctx.gains;
     expect(fade.gain.calls.at(-1)?.[0]).toBe('ramp');
     hidden.mockRestore();
+  });
+
+  describe('the mood the music is heard in', () => {
+    /** The voicing as heard now: the band the filters pass and the mood's level. */
+    const voicing = (ctx: FakeContext) => {
+      const [low, high] = ctx.filters;
+      const [, , level] = ctx.gains;
+      return { low: low.frequency.value, high: high.frequency.value, level: level.gain.value };
+    };
+
+    it('plays the loop untouched in the café, through filters flat to their cutoffs', async () => {
+      const audio = new AudioService();
+      audio.configure(settings);
+      audio.start();
+      await flush();
+      const ctx = FakeContext.last!;
+      expect(ctx.filters.map((f) => [f.type, f.Q.value])).toEqual([
+        ['highpass', -3.01],
+        ['lowpass', -3.01],
+      ]);
+      expect(audio.mood).toBe('cafe');
+      expect(voicing(ctx)).toEqual(MOODS.cafe);
+      // The source goes through the slider, the band and the mood's level before the fades.
+      const [fade, music, level] = ctx.gains;
+      expect(ctx.sources[0].outputs).toEqual([music]);
+      expect(music.outputs).toEqual([ctx.filters[0]]);
+      expect(ctx.filters[0].outputs).toEqual([ctx.filters[1]]);
+      expect(ctx.filters[1].outputs).toEqual([level]);
+      expect(level.outputs).toEqual([fade]);
+    });
+
+    it('starts in the mood already asked for, without a glide', async () => {
+      const audio = new AudioService();
+      audio.configure(settings);
+      audio.hold('memory');
+      audio.start();
+      await flush();
+      const ctx = FakeContext.last!;
+      expect(voicing(ctx)).toEqual(MOODS.memory);
+      expect(ctx.filters[1].frequency.calls).toEqual([]);
+    });
+
+    it('glides into a mood asked for, and back to the one before once it is let go', async () => {
+      const audio = new AudioService();
+      audio.configure(settings);
+      audio.start();
+      await flush();
+      const ctx = FakeContext.last!;
+      const memory = audio.hold('memory');
+      const bay = audio.hold('after-hours');
+      expect(audio.mood).toBe('after-hours');
+      expect(voicing(ctx)).toEqual(MOODS['after-hours']);
+      expect(ctx.filters[1].frequency.calls.at(-1)).toEqual(['target', MOODS['after-hours'].high, 10]);
+      memory();
+      expect(audio.mood).toBe('after-hours');
+      bay();
+      bay();
+      expect(audio.mood).toBe('cafe');
+      expect(voicing(ctx)).toEqual(MOODS.cafe);
+      expect(MOOD_GLIDE).toBeGreaterThanOrEqual(1);
+    });
+
+    it('keeps every mood in the loop’s range: a band that passes something, at a level no louder than the café', () => {
+      for (const { low, high, level } of Object.values(MOODS)) {
+        expect(low).toBeLessThan(high);
+        expect(level).toBeGreaterThan(0);
+        expect(level).toBeLessThanOrEqual(MOODS.cafe.level);
+      }
+    });
   });
 });

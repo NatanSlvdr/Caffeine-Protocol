@@ -901,7 +901,8 @@ describe('live workspace lifecycle', () => {
     expect(screen.getByRole('button', { name: /Run service/ })).toBeTruthy();
     expect(screen.queryByText('Service complete')).toBeNull();
   });
-  it('keeps the crew’s cheer when a robot’s camera is picked during the pull-back', () => {
+  // Plays a whole service through, a step at a time: over three seconds alone, more beside the rest of the suite.
+  it('keeps the crew’s cheer when a robot’s camera is picked during the pull-back', { timeout: 15_000 }, () => {
     open();
     fireEvent.change(screen.getByLabelText('Playback speed'), { target: { value: '12' } });
     for (let i = 0; i < 1200 && !screen.queryByRole('button', { name: /Run service/ }); i++)

@@ -27,7 +27,7 @@ By 2026-10-06 the features added since had brought the startup to 538 KiB, two s
 | **Startup**        |          | **478 KiB** |
 | `Workspace-*.js`   | 185 KiB  | 64 KiB      |
 
-The 3D chunk is preloaded because the front door already shows the café. The rest of the build loads as it's needed: 77 WebP stills and portraits (10.0 MiB) as their scenes open, and the music (2.2 MiB WAV) once the player starts it. The offline worker stores the whole build, 14.1 MiB, in the background on the first visit, so a first visit on a slow connection pays for it once.
+The 3D chunk is preloaded because the front door already shows the café. The rest of the build loads as it's needed: 77 WebP stills and portraits (10.0 MiB) as their scenes open, and the music (2.2 MiB WAV) once the player starts it. That is why the music is one loop voiced for each place (an old record in a memory, the café through the wall in the repair bay and at closing time) rather than several arrangements: another recording of the same length would take 2.2 MiB more, beyond what the 16 MiB budget leaves. The offline worker stores the whole build, 14.1 MiB, in the background on the first visit, so a first visit on a slow connection pays for it once.
 
 ### Simulating a service
 

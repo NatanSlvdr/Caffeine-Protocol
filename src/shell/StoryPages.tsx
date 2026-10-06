@@ -7,6 +7,7 @@ import { Tally } from '@/shared/ui/Tally';
 import { cutscenes, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
+import { useMusicMood } from '@/hooks/useMusicMood';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ShellBar } from './ShellBar';
 import { acts } from './rail/acts';
@@ -76,6 +77,8 @@ export function EndingPage() {
   const progress = useProgress();
   const { save, select, choose } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
+  // Closing time: the café heard from the next room.
+  useMusicMood('after-hours');
   const [talking, setTalking] = useState(true);
   // The receipt replaces the scene that held focus, so focus lands on its heading, once, as it appears.
   const heading = useRef<HTMLHeadingElement>(null);

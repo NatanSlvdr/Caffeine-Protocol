@@ -16,6 +16,24 @@ export const MUSIC_FADE_IN = 9;
 const RESUME_FADE = 1.5;
 const VOLUME_SMOOTHING = 0.08;
 
+/**
+ * Where the music is heard from. One loop, voiced for the place rather than recorded again: a second recording would
+ * cost the build as much again as the whole loop. `cafe` is the loop as recorded; `memory` is an old record, thin at
+ * both ends, for a morning from Lou's café; `after-hours` is the café heard from the next room, darker and softer, in
+ * the repair bay and at closing time.
+ */
+export type MusicMood = 'cafe' | 'memory' | 'after-hours';
+/** Each mood's band (Hz) and level. The café's band is wider than the loop, so the filters leave it untouched. */
+export const MOODS: Record<MusicMood, { low: number; high: number; level: number }> = {
+  cafe: { low: 20, high: 20000, level: 1 },
+  memory: { low: 320, high: 2600, level: 0.85 },
+  'after-hours': { low: 20, high: 900, level: 0.7 },
+};
+/** A filter's resonance in decibels for a Butterworth response: flat up to the cutoff, with no peak at it. */
+const FLAT = -3.01;
+/** How slowly one mood eases into the next: about four times this, in seconds, to settle. */
+export const MOOD_GLIDE = 1.2;
+
 type AudioContextCtor = new () => AudioContext;
 
 function audioContextCtor(): AudioContextCtor | undefined {
@@ -33,6 +51,9 @@ export class AudioService {
   private music?: GainNode;
   /** Fades the music in and out (launch, tab hidden) independently of the sliders. */
   private loopFade?: GainNode;
+  private voicing?: { low: BiquadFilterNode; high: BiquadFilterNode; level: GainNode };
+  /** The moods asked for, the latest last: it is the one heard, and letting it go returns to the one before. */
+  private readonly holds: { mood: MusicMood }[] = [];
   private started = false;
 
   configure(next: Settings): void {
@@ -50,9 +71,21 @@ export class AudioService {
     this.loopFade = ctx.createGain();
     this.loopFade.gain.value = 0;
     this.loopFade.connect(ctx.destination);
+    // The slider, then the mood's voicing, then the fades.
     this.music = ctx.createGain();
-    this.music.connect(this.loopFade);
+    const low = ctx.createBiquadFilter();
+    low.type = 'highpass';
+    const high = ctx.createBiquadFilter();
+    high.type = 'lowpass';
+    for (const filter of [low, high]) filter.Q.value = FLAT;
+    const level = ctx.createGain();
+    this.music.connect(low);
+    low.connect(high);
+    high.connect(level);
+    level.connect(this.loopFade);
+    this.voicing = { low, high, level };
     this.applyVolume(true);
+    this.applyMood(true);
     void ctx.resume?.();
     void this.startMusic();
     document.addEventListener('visibilitychange', this.onVisibility);
@@ -70,6 +103,37 @@ export class AudioService {
     source.start(begin);
     loopFade.gain.setValueAtTime(0, begin);
     loopFade.gain.linearRampToValueAtTime(1, begin + MUSIC_FADE_IN);
+  }
+
+  /** Asks for a mood until the returned release is called; the latest mood asked for is the one heard. */
+  hold(mood: MusicMood): () => void {
+    const hold = { mood };
+    this.holds.push(hold);
+    this.applyMood();
+    return () => {
+      const at = this.holds.indexOf(hold);
+      if (at < 0) return;
+      this.holds.splice(at, 1);
+      this.applyMood();
+    };
+  }
+
+  /** The mood heard now. */
+  get mood(): MusicMood {
+    return this.holds.at(-1)?.mood ?? 'cafe';
+  }
+
+  private applyMood(immediate = false): void {
+    const { ctx, voicing } = this;
+    if (!ctx || !voicing) return;
+    const { low, high, level } = MOODS[this.mood];
+    const glide = (param: AudioParam, value: number) => {
+      if (immediate) param.value = value;
+      else param.setTargetAtTime(value, ctx.currentTime, MOOD_GLIDE);
+    };
+    glide(voicing.low.frequency, low);
+    glide(voicing.high.frequency, high);
+    glide(voicing.level.gain, level);
   }
 
   private async load(name: SoundName): Promise<AudioBuffer | undefined> {
@@ -109,3 +173,4 @@ export class AudioService {
 export const audioService = new AudioService();
 export const configureAudio = (next: Settings): void => audioService.configure(next);
 export const startAudio = (): void => audioService.start();
+export const holdMusicMood = (mood: MusicMood): (() => void) => audioService.hold(mood);

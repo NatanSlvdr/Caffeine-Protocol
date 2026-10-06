@@ -5,6 +5,7 @@ import type { Repair } from '@/data/repairs';
 import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
 import { exampleHolds, firedActions, TERMINALS, type Terminal, type Wiring } from '@/domain/repair';
 import { Button } from '@/shared/ui/Button';
+import { useMusicMood } from '@/hooks/useMusicMood';
 
 /**
  * The repair bay: the back room where Niko opens a robot's panel after closing. Each bench's card says what is wrong
@@ -29,6 +30,8 @@ export function RepairBayWindow({
   onMend: (repair: Repair) => void;
   onClose: () => void;
 }) {
+  // The back room, after hours: the café's music comes through the wall.
+  useMusicMood('after-hours');
   const [open, setOpen] = useState<Repair>();
   // Back from a bench, its own card's button takes focus again.
   const [left, setLeft] = useState<string>();
