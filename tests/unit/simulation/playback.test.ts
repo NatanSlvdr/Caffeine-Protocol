@@ -3,6 +3,8 @@ import { levels, lessons } from '../../../src/data';
 import { compileProgram } from '../../../src/domain/program';
 import { runLevel } from '../../../src/domain/simulation';
 import { sampleReplay } from '../../../src/domain/replay';
+import { referencePrograms } from '../../../src/data/extension';
+import type { ActorId } from '../../../src/domain/types';
 
 const base = runLevel(levels[1], compileProgram(lessons[1].solution, 2));
 describe('Query paper handoff', () => {
@@ -26,5 +28,31 @@ describe('Query paper handoff', () => {
     expect(sampleReplay(base, deposited.end).waitingTickets.map((t) => t.ticket_id)).toContain(
       base.tickets[0].ticket_id,
     );
+  });
+});
+
+describe('the station a hand action reaches', () => {
+  const at = (result: typeof base, actor: ActorId, command: RegExp) =>
+    result
+      .execution![0].events.filter((e) => e.actor === actor && command.test(e.command) && e.end > e.start)
+      .map((e) => sampleReplay(result, (e.start + e.end) / 2).actors[actor]?.action?.at);
+
+  it('is named on the action while it runs, and only on a hand action', () => {
+    expect(at(base, 'query', /^TAKE /)).toEqual(['Paper']);
+    expect(at(base, 'query', /^DEPOSIT /)).toEqual(['Order handoff']);
+    expect(at(base, 'query', /^MOVE /).every((name) => name === undefined)).toBe(true);
+  });
+
+  it('tells Brew’s stations and Porter’s tables apart', () => {
+    const shift = 17;
+    const result = runLevel(
+      levels[shift - 1],
+      compileProgram(referencePrograms(shift).query, shift),
+      referencePrograms(shift),
+    );
+    expect(new Set(at(result, 'prep', /^(TAKE|USE|DEPOSIT) /))).toEqual(
+      new Set(['Storage', 'Coffee machine', 'Sink', 'Sugar', 'Lids', 'Pickup counter']),
+    );
+    expect(at(result, 'floor', /^(TAKE|DEPOSIT) /).some((name) => /^Table \d$/.test(name ?? ''))).toBe(true);
   });
 });

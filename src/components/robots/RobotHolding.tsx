@@ -60,6 +60,8 @@ export function RobotHolding({
         : fields
           ? variableLabels(`${fields.verb} ${fields.value}`).trim()
           : '';
+  // A hand action names the station it reaches, so a Take at the sugar reads apart from one at the lids.
+  const station = !thinking && visibleAction?.at;
   const paperText = paper ? paperLabel(paper) : '';
   // Robots carry their selector icon; Niko, covering the counter, carries a cup.
   const CrewIcon = (crew && robotIcons[crew as keyof typeof robotIcons]) || Coffee;
@@ -81,7 +83,7 @@ export function RobotHolding({
         <div
           className={`robot-action ${category(visibleAction.command)}`}
           role="group"
-          aria-label={`${name}: ${actionLabel}`}
+          aria-label={`${name}: ${actionLabel}${station ? ` at ${station}` : ''}`}
         >
           <span
             className={`robot-action-icon action-${thinking ? 'thinking' : fields?.family.toLowerCase()}`}
@@ -96,7 +98,10 @@ export function RobotHolding({
               <BlockIcon command={visibleAction.command} />
             )}
           </span>
-          <span className="robot-action-label">{actionLabel}</span>
+          <span className="robot-action-label">
+            {actionLabel}
+            {station && <span className="robot-action-at"> · {station}</span>}
+          </span>
           <span
             className={`robot-action-progress${fields?.family === 'WAIT' && !visibleAction.progress ? ' idle' : ''}`}
             aria-hidden="true"

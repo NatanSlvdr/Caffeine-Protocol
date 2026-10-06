@@ -246,7 +246,14 @@ export interface LoopPosition {
   item?: HeardOrder;
 }
 export interface ActorSnapshot {
-  action?: { command: string; progress: number; start: number; waiting?: WaitReason };
+  action?: {
+    command: string;
+    progress: number;
+    start: number;
+    waiting?: WaitReason;
+    /** The station a Take, Deposit or Use reaches into: "Sugar", "Table 3". */
+    at?: string;
+  };
   variables?: Record<string, VariableValue | undefined>;
   /** The innermost For loop as of the last finished block. */
   loop?: LoopPosition;

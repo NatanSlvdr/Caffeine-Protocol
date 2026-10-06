@@ -46,7 +46,6 @@ The live game and offline validation drain the same interpreter. Run, Pause, Ste
 
 Save version 3 replaces incompatible Query programs with the redesigned lesson starters. It clears old Query solutions and Act I stars/story flags while retaining selected/unlocked levels, settings, and kitchen/floor routines. Completed legacy Act I still unlocks the kitchen. Current-version programs continue carrying forward normally. The existing storage key (`caffeine-protocol.v1`) is a stable namespace, not a schema version: it is retained so old saves can be found and migrated, and schema bumps must never rename it. Historical `tests/fixtures/save-v1.json` + `save-v2.json` pin this migration against real serialized payloads.
 
-
 ## Current editor and quantity behavior
 
 Early conditions use `CUSTOMER SPEECH`, which tests the recognized tokens across the heard groups. The `item` source becomes available only inside a `FOR item IN heard orders` body. Compilation enforces that scope, and saved implicit-item conditions outside loops migrate to customer speech.
@@ -54,3 +53,5 @@ Early conditions use `CUSTOMER SPEECH`, which tests the recognized tokens across
 Write displays an editable quantity before the drink, for example `Write 2 Coffee` (`ITEM 2 coffee` in text). Quantities range from 1 to 19. One paper can request several identical drinks with the same modifiers; the kitchen creates individual cup jobs while retaining the original paper and its quantity. Payment and validation count every cup. The original `ITEM coffee` syntax means one coffee.
 
 Customer bubbles retain the original phrase and grouped 3D drink/sugar icons throughout the visit. Sugar uses three cubes. Clarification appears only after HELP. The handoff counter displays its pending order list, updating quantities as the cook claims cups. Service starts at the beginning of the full six-second street approach, before any order instructions execute.
+
+A robot's bubble names the block it is running, and a Take, Deposit or Use also names the station it reaches: “Take · Sugar”, “Deposit · Table 3”, “Use · Coffee machine”. Two Takes in a row, one at the sugar and one at the lids, read apart.

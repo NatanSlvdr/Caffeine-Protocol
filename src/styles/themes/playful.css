@@ -2541,6 +2541,12 @@ html[data-motion='reduced'] .drop-projection {
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
+/* The station a hand action reaches: read second, after the verb. */
+.robot-action-at {
+  font-weight: 600;
+  opacity: 0.78;
+  white-space: nowrap;
+}
 .action-thinking .thinking-gear {
   position: absolute;
   left: 0;

@@ -1,14 +1,23 @@
 import { ticketUnits } from './tickets';
 import { STARTS } from './layout';
-import type { ActorId, ActorSnapshot, RunResult } from './types';
+import type { ActorId, ActorSnapshot, ExecutionEvent, RunResult } from './types';
 import { directionVectors } from './directions';
 import { commandDirection } from './commands';
+import { reachedName } from './blockPreview';
+import { interactionTarget } from './queryMovement';
 import { robotUnlocked } from './robots';
 import { DRINK_SECONDS, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
 import { customerCrowd, isToGo } from './sidewalk';
 import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
 
 /** Sample immutable execution records; presentation never invents a robot route. */
+/** The station a Take, Deposit or Use reaches into, as the action chip names it: "Sugar", "Table 3". */
+function withStation(event: ExecutionEvent): { at?: string } {
+  const direction = /^(TAKE|PICKUP|DEPOSIT|USE) /.test(event.command) ? commandDirection(event.command) : undefined;
+  const name = direction && reachedName(interactionTarget(event.from, direction)!);
+  return name ? { at: name.replace(/^the /, '').replace(/^./, (first) => first.toUpperCase()) } : {};
+}
+
 export function sampleReplay(result: RunResult, time: number) {
   const seed =
     (time < 0
@@ -91,6 +100,7 @@ export function sampleReplay(result: RunResult, time: number) {
               command: last.command,
               progress: Math.max(0, Math.min(1, (local - last.start) / (last.end - last.start))),
               start: last.start,
+              ...withStation(last),
             }
           : undefined,
       variables: settled?.variables,
