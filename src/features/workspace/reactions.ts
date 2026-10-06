@@ -308,6 +308,11 @@ const kinds: Record<FailureCode, FailureKind> = {
     react: () => 'We said together… one of us is still waiting.',
     hint: 'A Together ticket means its table wants both drinks at once: wait for both, carry them on one tray, and serve them on one visit.',
   },
+  'drink-cold': {
+    by: 'guest',
+    react: () => 'It’s gone cold… it must have been sitting there a while.',
+    hint: 'A drink keeps warm only so long once Brew sets it down: have Porter take each one out as it comes, and clear the used cups between deliveries, not before them.',
+  },
   'open-after-closing': CLOSING,
   'stopped-early': CLOSING,
   'closing-ticket': CLOSING,

@@ -126,6 +126,8 @@ export type FailureCode =
   | 'table-not-cleared'
   /** A table that ordered together had its drinks too far apart. */
   | 'table-apart'
+  /** A drink waited past the shift's serving window between pickup and its guest. */
+  | 'drink-cold'
   // Closing time.
   /** A robot kept waiting, or Query kept listening, after the café closed. */
   | 'open-after-closing'

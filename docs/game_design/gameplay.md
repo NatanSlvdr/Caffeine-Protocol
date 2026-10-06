@@ -180,6 +180,23 @@ Its stars and routines are its own and never count toward the campaign's.
 the routines that fall short (no mark, a mark but no wait, two at once without
 the check).
 
+Dot's knitting circle (While It's Hot) is the one special with a serving
+window: a drink keeps warm 20 seconds (`FRESH_SECONDS`) from the moment Brew
+sets it down at pickup to the moment it reaches its guest, and no shift of the
+campaign has the rule. Ten guests come three seconds apart, each with one
+drink and the sugar Dot's friends count. Shift 21's Porter waits at pickup for
+each guest's used cup before it takes the next drink out, so that drink cools
+on the counter; serving the next drink before clearing the cup before it keeps
+every drink inside the window, with the same work in another order. A drink
+past its window fails with where the time went: at pickup while Porter
+cleared cups or before it came, sitting at pickup so long it cooled on the way,
+or on the tray while Porter waited for another drink. Paused, Porter's inspector lists each drink keeping warm, where
+it is and how many seconds it has left, coldest first. The window is measured
+on the live service the player watches; the café preview's dry round paces
+Query faster and leaves it out. `tests/unit/simulation/fresh.test.ts` serves
+the reference and the way in for every star, and turns away Shift 21's
+routines, a Porter that waits at the table, and one that batches two drinks.
+
 A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
 cards side by side on the specials board before any is served, each a special
 of its own with its own save entry and stars: what is on the board, who comes

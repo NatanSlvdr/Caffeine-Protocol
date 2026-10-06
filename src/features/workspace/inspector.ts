@@ -9,6 +9,7 @@ import {
   spokenBlock,
   ticketSugar,
   variableLabels,
+  warmDrinks,
 } from '@/domain';
 import type {
   ExecutionEvent,
@@ -54,6 +55,11 @@ export interface RobotState {
   holding: string[];
   memory: MemorySlot[];
   loop?: string;
+  /**
+   * On a shift where drinks go cold, for Porter: each drink at pickup or on its tray, with the seconds it has left,
+   * the coldest first. Missing on any other shift.
+   */
+  warm?: string[];
 }
 
 const TOKEN_WORDS: Record<string, string> = { togo: 'to go' };
@@ -112,13 +118,26 @@ function orderOf(role: RobotRole, last: ExecutionEvent | undefined, result: RunR
   return ticket ? ticketWords(ticket) : undefined;
 }
 
-/** The open robot at the sampled moment; nothing when the robot isn't in the café. */
+/** A drink keeping warm, as Porter's inspector lists it: "Tea · Table 3 · At pickup · 12 s left". */
+const warmWords = (drink: ReturnType<typeof warmDrinks>[number]) =>
+  [
+    capital(drink.item),
+    drink.table ? `Table ${drink.table}` : 'To go',
+    drink.carried ? 'On the tray' : 'At pickup',
+    `${Math.max(0, Math.ceil(drink.left))} s left`,
+  ].join(' · ');
+
+/**
+ * The open robot at the sampled moment; nothing when the robot isn't in the café. On a shift where a drink goes cold
+ * `fresh` seconds after reaching pickup, Porter's state lists the drinks keeping warm.
+ */
 export function inspectRobot(
   result: RunResult,
   sampled: ReturnType<typeof sampleReplay>,
   role: RobotRole,
   source: string,
   textMode: boolean,
+  fresh?: number,
 ): RobotState | undefined {
   const actor = sampled.actors[role];
   if (!actor) return undefined;
@@ -148,6 +167,10 @@ export function inspectRobot(
       (loop.item
         ? `Item ${loop.pass} of ${loop.passes}: ${heardWords(loop.item)}`
         : `Lap ${loop.pass} of ${loop.passes}`) + ` · ${placeOf(source, loop.line, textMode).toLowerCase()}`,
+    ...(role === 'floor' &&
+      fresh !== undefined && {
+        warm: warmDrinks(sampled.seed?.events ?? [], result.tickets, sampled.local, fresh).map(warmWords),
+      }),
   };
 }
 

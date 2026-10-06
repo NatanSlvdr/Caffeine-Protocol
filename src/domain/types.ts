@@ -319,6 +319,11 @@ export interface ServiceConfig {
    * gives up waiting. Missing on a shift with no such tables.
    */
   together?: number;
+  /**
+   * A drink keeps warm this many seconds from reaching pickup; past that, it goes cold before its guest has it.
+   * Missing on a shift where drinks keep.
+   */
+  fresh?: number;
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;

@@ -180,6 +180,72 @@ function readingGroup(): Special {
   };
 }
 
+/** How long a drink keeps warm at Dot's knitting circle, in seconds from reaching pickup to reaching its guest. */
+export const FRESH_SECONDS = 20;
+
+/**
+ * Dot's knitting circle: guests in a row, each with one drink and the sugar they count, and every drink served hot.
+ * Shift 21's Porter waits for each guest to finish before fetching the next drink, so the next one cools at pickup.
+ */
+function knittingCircle(): Special {
+  const rules: ShiftRules = { closing: true, fresh: true };
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-fresh`,
+    title: 'While It’s Hot',
+    summary: 'Dot’s knitting circle wants every cup hot, and a drink that waits at pickup goes cold.',
+    rules,
+    service: { closing: true, fresh: FRESH_SECONDS },
+    rounds: [0, 1, 2].map((round) =>
+      arriving(10, 3, (n) => ({
+        orders: [{ drink: (n + round) % 2 ? 'tea' : 'coffee', sugar: (n + 2 * round) % 3 }],
+      })),
+    ),
+    // Fair to the way most players in: Shift 21's routines, once Porter serves a drink before clearing the cup before
+    // it. Two blocks above theirs, and a tenth more instructions, as for the reading group.
+    targets: { blocks: 108, instructions: 2280 },
+  });
+  return {
+    id: 'fresh',
+    title: level.title,
+    by: 'dot',
+    hint: 'Nothing waits at pickup.',
+    thanks: 'Thank you, dears. The circle meets again on Tuesday, and so will I.',
+    level,
+    lesson: {
+      note: `Dot’s knitting circle wants every cup hot: a drink keeps warm ${FRESH_SECONDS} seconds once Brew sets it down at pickup. Porter serves the next drink before it clears the cup before it, so no drink waits on a guest still drinking. At closing time, Porter clears the last cup, then stops.`,
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: {
+      story:
+        'Dot’s knitting circle meets on Tuesdays, and the library’s tea was always lukewarm. They’d like theirs the way Dot likes her sugar: exactly right.',
+      objective: `Serve every guest and clear every table, each drink within ${FRESH_SECONDS} seconds of reaching pickup. At closing time, every robot stops.`,
+      concept:
+        'Waiting is something a routine chooses. Porter can wait for a cup while a drink cools, or serve the drink and fetch the cup after: the same work, in another order.',
+    },
+    intro: [
+      line('', 'Tuesday afternoon. Dot comes in with a basket of wool, and her knitting circle behind her.'),
+      line('dot:happy', 'We’ve been meeting at the library, dears, but their tea is always lukewarm.'),
+      line('dot', 'One condition. Every cup arrives hot. Not warm. Hot.'),
+      line(
+        'niko',
+        `A drink keeps warm ${FRESH_SECONDS} seconds once Brew sets it down at pickup. After that, it’s cold before it reaches the table.`,
+      ),
+      line(
+        'niko:worried',
+        'And Porter waits for each guest’s cup before it fetches the next drink. Pause the service and open Porter: it shows how long each drink has left.',
+      ),
+      line('porter', '*ding* Wait less. Understood.'),
+    ],
+    outro: [
+      line('dot:happy', 'Hot, every one of them. The library can keep its lukewarm tea.'),
+      line('porter', '*ding ding* Next cup first. Then the old one.'),
+    ],
+  };
+}
+
 /** A menu's own words, for its place on the specials board: it shows once, with its cards behind it. */
 export interface Menu {
   id: string;
@@ -416,7 +482,7 @@ const saturdayMenu: Special[] = [
   }),
 ];
 
-export const specials: readonly Special[] = [readingGroup(), ...saturdayMenu];
+export const specials: readonly Special[] = [readingGroup(), knittingCircle(), ...saturdayMenu];
 
 /** The menus chalked up for the specials board, each with its cards behind it. */
 const menus: readonly Menu[] = [SATURDAY];

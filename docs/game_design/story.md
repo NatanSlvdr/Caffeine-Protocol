@@ -226,9 +226,20 @@ clip from Lou's drawer for Query's clipboard, a fresh striped towel for Brew,
 Porter's bow tie straightened). Moka and Pip stay out of these scenes, since a
 bench can be opened long after they have left.
 
+### The knitting circle
+
+Dot asks the second special. Her knitting circle has met at the library on
+Tuesdays, and the library's tea is always lukewarm: every cup must arrive hot.
+Niko gives the window in seconds and owns up to the habit that breaks it
+(Porter waits for each guest's cup before it fetches the next drink), and
+points at Porter's inspector, which counts down every drink still keeping
+warm. Porter answers "Wait less. Understood." The outro is Dot pleased and
+Porter's new order of work: "Next cup first. Then the old one." Moka and Pip
+stay out, as in every optional scene.
+
 ### The Saturday menu
 
-Mr. Albert asks the second special: the street market is back on Saturdays, and
+Mr. Albert asks the third special: the street market is back on Saturdays, and
 Lou always chalked one menu for it, all morning. Every card opens on the same
 three lines (stalls going up outside, Albert remembering Lou's board) before
 Niko says what the card means for the crew and the robot it asks most of
@@ -239,7 +250,7 @@ every scene that can be played long after they have left.
 
 ### The Long Day
 
-Juno asks for the third special. It is exam week, the library is shut for
+Juno asks for the fourth special. It is exam week, the library is shut for
 repairs, and she has told everyone, so her whole year revises at the café in
 waves, between exams: the first ones in at eight before the shutters are up,
 the ones running back to the exam hall at ten, a lunch with the spare cups gone

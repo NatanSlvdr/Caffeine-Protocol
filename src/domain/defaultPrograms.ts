@@ -28,6 +28,11 @@ export interface ShiftRules {
   closing?: boolean;
   /** Tables that order together: Porter waits for the rest of the order and serves it on one visit. */
   together?: boolean;
+  /**
+   * Drinks go cold at pickup: Porter serves the next drink before clearing the cup before it. Only with closing time,
+   * when the last cup is cleared.
+   */
+  fresh?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {
@@ -115,6 +120,33 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
     ...movementSource(STATIONS.returns.floor, STARTS.floor, 'floor'),
   ];
   const clearing = level >= UNLOCKS.clearing;
+  if (rules.fresh) {
+    // A cup behind: the first drink goes out on its own, then each one before the cup before it comes back, so no
+    // drink waits at pickup on a guest still drinking. At closing time the last cup is cleared before stopping.
+    if (batch !== 1 || !clearing || !rules.closing || rules.toGo || rules.cups || rules.rush || rules.together)
+      throw new Error('Porter keeps drinks warm one at a time, clearing as it goes, until closing time.');
+    return [
+      'STORE var2 FROM here',
+      'LISTEN',
+      'TAKE DOWN',
+      'CALL deliver',
+      'POSITION listen',
+      'LISTEN',
+      ...STOP_WHEN_CLOSED(['CALL clear']),
+      'TAKE DOWN',
+      'CALL deliver',
+      'CALL clear',
+      'JUMP listen',
+      'FUNCTION deliver',
+      ...serve,
+      'RETURN',
+      'END',
+      'FUNCTION clear',
+      ...clear,
+      'RETURN',
+      'END',
+    ].join('\n');
+  }
   if (rules.toGo || rules.cups || rules.rush || rules.closing || rules.together) {
     // One drink at a time: rush orders never wait on the tray, and every table cup is cleared as it's served.
     if (batch !== 1) throw new Error('Porter handles the odd rules one drink at a time.');

@@ -63,6 +63,15 @@ No `as` casts in loaders — campaign files are `safeParse`d with valibot.
   stays a single-module orchestrator on purpose: splitting the clock across
   modules risks event-ordering drift. Pure pieces (recipes, scoring, seating,
   satisfaction) live in their own modules.
+- Offline validation is not the service the player watches: without
+  presentation delays Query takes orders several times faster, so the waits
+  between floor steps differ. Rules timed in seconds of waiting (the knitting
+  circle's serving window, `ServiceConfig.fresh`) are calibrated and tested on
+  live runs (`finishLiveRun(createLiveRun(...))` in `tests/helpers/run.ts`),
+  and the café preview's dry round (`blockPreview.ts`) leaves the window out.
+  A drink's window runs from `Job.readyAt` (set down at pickup) to its
+  guest; each warm drink's deadline joins the clock's future events, so a
+  drink goes cold at its deadline even while every robot waits.
 - UI never calls the engine directly: `Workspace` drives runs through
   `useLiveRun`, which owns programs, role, result, and the clock.
 

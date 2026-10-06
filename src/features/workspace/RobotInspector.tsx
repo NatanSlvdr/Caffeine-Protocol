@@ -18,7 +18,7 @@ const Unset = ({ children }: { children: string }) => <span className="inspector
 
 /**
  * The open robot at the paused moment, or an earlier one looked back on, under its routine: what it is doing, the guest or ticket it is on, what it
- * carries, what its memory holds, and where it is in a For loop. Everything comes from the run's records, so a slot
+ * carries, what keeps warm on a shift where drinks go cold, what its memory holds, and where it is in a For loop. Everything comes from the run's records, so a slot
  * the robot has stored nothing in says "not set" rather than showing a guess.
  */
 export function RobotInspector({ state, reads, when, earlier, reason }: RobotInspectorProps) {
@@ -55,6 +55,18 @@ export function RobotInspector({ state, reads, when, earlier, reason }: RobotIns
             )}
           </dd>
         </div>
+        {state.warm && (
+          <div>
+            <dt>Keeping warm</dt>
+            <dd>
+              {state.warm.length ? (
+                state.warm.map((drink, i) => <span key={i}>{drink}</span>)
+              ) : (
+                <Unset>Nothing waiting</Unset>
+              )}
+            </dd>
+          </div>
+        )}
         <div>
           <dt>Memory</dt>
           <dd>

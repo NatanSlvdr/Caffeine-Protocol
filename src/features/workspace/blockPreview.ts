@@ -21,9 +21,18 @@ import {
   type RunResult,
 } from '@/domain';
 
-/** The first round, run start to finish with the routines as written: where the café preview's blocks go. */
+/**
+ * The first round, run start to finish with the routines as written: where the café preview's blocks go. It runs
+ * without a serving window: that is timed on the service the player watches, and a dry round paces Query faster.
+ */
 export function dryRound(level: LevelDefinition, shift: number, programs: RobotPrograms): RunResult {
-  return runLevel({ ...level, seeds: [level.seeds[0]] }, compileProgram(programs.query, shift), programs);
+  const service = level.service && { ...level.service };
+  if (service) delete service.fresh;
+  return runLevel(
+    { ...level, seeds: [level.seeds[0]], ...(service && { service }) },
+    compileProgram(programs.query, shift),
+    programs,
+  );
 }
 
 /** What the station a block reaches into made of it, as the robot did it. */

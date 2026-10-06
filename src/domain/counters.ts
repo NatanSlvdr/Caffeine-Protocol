@@ -24,6 +24,48 @@ export function samplePickupCounter(
   return pickup;
 }
 
+/** A drink set down at pickup and not yet served, and how long it keeps warm for. */
+export interface WarmDrink {
+  ticketId: string;
+  item: string;
+  /** The table it goes to; 0 for the to-go shelf. */
+  table: number;
+  /** On Porter's tray rather than at pickup. */
+  carried: boolean;
+  /** Seconds left before it goes cold. */
+  left: number;
+}
+
+/**
+ * The drinks keeping warm at `local` on a shift where a drink goes cold `seconds` after Brew sets it down at pickup:
+ * those at pickup and on Porter's tray, the coldest first.
+ */
+export function warmDrinks(
+  logs: ExecutionEvent[],
+  tickets: OrderTicket[],
+  local: number,
+  seconds: number,
+): WarmDrink[] {
+  const warm = new Map<string, WarmDrink>();
+  for (const e of logs.filter((e) => e.end <= local && e.ticketId)) {
+    const id = e.ticketId!;
+    if (e.role === 'prep' && e.action === 'DEPOSIT') {
+      const ticket = tickets.flatMap(ticketUnits).find((t) => t.ticket_id === id);
+      warm.set(id, {
+        ticketId: id,
+        item: ticket?.item ?? 'coffee',
+        table: ticket?.to_go || !ticket?.table_id ? 0 : Number(ticket.table_id.slice(1)),
+        carried: false,
+        left: e.end + seconds - local,
+      });
+    }
+    const drink = warm.get(id);
+    if (drink && e.role === 'floor' && e.action === 'PICKUP') drink.carried = true;
+    if (e.role === 'floor' && (e.action === 'SERVE' || e.action === 'HAND OVER')) warm.delete(id);
+  }
+  return [...warm.values()].sort((a, b) => a.left - b.left);
+}
+
 /** Ticket units already claimed from the shared counter. */
 export function sampleClaimedTickets(logs: ExecutionEvent[], local: number): Set<string | undefined> {
   return new Set(
