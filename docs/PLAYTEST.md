@@ -140,6 +140,7 @@ Before each release, someone plays through the list below and fills in a row. A 
 | One Brew shift and one Porter shift, to three stars                     |        |         |        |      |       |
 | An Act IV shift with all three robots                                   |        |         |        |      |       |
 | A failed run: the crew's reaction, the timeline, the fix                |        |         |        |      |       |
+| Robot motion at 1× and the fastest speed: reaches, waits, a failure     |        |         |        |      |       |
 | Every viewport above fits without scrolling                             |        |         |        |      |       |
 | Keyboard only, through one shift                                        |        |         |        |      |       |
 | Touch only, through one shift                                           | n/a    | n/a     | n/a    |      |       |

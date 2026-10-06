@@ -178,6 +178,8 @@ export function World({
                 walking={moving && actor.walking}
                 reach={actor.reach}
                 held={actor.inventory}
+                waiting={actor.waiting}
+                failed={actor.failed}
                 animate={moving}
                 phase={time}
                 reduced={reduced}

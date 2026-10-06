@@ -1,3 +1,5 @@
+import type { Ref } from 'react';
+import type { Group } from 'three';
 import { RoundedBox } from '@react-three/drei';
 import type { Cargo } from '@/domain';
 import { Box, Cylinder } from './primitives';
@@ -9,6 +11,10 @@ const CREAM = '#f1e2bd';
 const JOINT = '#3d403c';
 const VISOR = '#1f3a33';
 const EYE = '#9ff0c0';
+/** The eyes once the robot's block has failed: amber, and dimmer. */
+const EYE_WORRIED = '#f2b45a';
+/** The top of the neck, where the head turns and nods. */
+const NECK = 1.17;
 const STRAP = '#6b4128';
 
 function Ball({ at, radius, color }: { at: [number, number, number]; radius: number; color: string }) {
@@ -23,50 +29,59 @@ function Ball({ at, radius, color }: { at: [number, number, number]; radius: num
 /**
  * The crew robots as drawn in their portraits: a wide cream head with a dark visor, two square
  * green eyes, round ear speakers and an orange-tipped antenna, on a jointed body in the robot's colour.
- * Query carries a clipboard, Brew a coffee-bean apron and towel, Porter an apron and bow tie.
+ * Query carries a clipboard, Brew a coffee-bean apron and towel, Porter an apron and bow tie. The head turns on the
+ * neck, through `head`, and the eyes go amber once the robot's block has failed.
  */
 export function RobotModel({
   look = QUERY,
   stride = 0,
   reach = 0,
   held = [],
+  head,
+  worried = false,
 }: {
   look?: RobotLook;
   stride?: number;
   reach?: number;
   /** What the robot carries: one item per hand, held level on the palm. */
   held?: readonly Cargo[];
+  /** The head's pivot on the neck, for whoever turns it. */
+  head?: Ref<Group>;
+  worried?: boolean;
 }) {
   const { body } = look;
+  const eye = worried ? EYE_WORRIED : EYE;
   return (
     <>
-      {/* Head */}
-      <RoundedBox args={[0.86, 0.54, 0.6]} radius={0.17} smoothness={3} position={[0, 1.42, 0]} castShadow>
-        <meshStandardMaterial color={CREAM} roughness={0.55} />
-      </RoundedBox>
-      <RoundedBox args={[0.62, 0.3, 0.06]} radius={0.05} smoothness={2} position={[0, 1.43, 0.29]}>
-        <meshStandardMaterial color={VISOR} roughness={0.3} />
-      </RoundedBox>
-      {[-0.13, 0.13].map((x) => (
-        <mesh key={x} position={[x, 1.44, 0.325]}>
-          <boxGeometry args={[0.08, 0.09, 0.02]} />
-          <meshStandardMaterial color={EYE} emissive={EYE} emissiveIntensity={0.6} />
-        </mesh>
-      ))}
-      {[-1, 1].map((side) => (
-        <group key={side} position={[side * 0.44, 1.42, 0]} rotation-z={Math.PI / 2}>
-          <mesh castShadow>
-            <cylinderGeometry args={[0.13, 0.13, 0.07, 14]} />
-            <meshStandardMaterial color={body} roughness={0.6} />
+      {/* Head, visor, eyes, ear speakers and antenna, on the neck */}
+      <group ref={head} position={[0, NECK, 0]}>
+        <RoundedBox args={[0.86, 0.54, 0.6]} radius={0.17} smoothness={3} position={[0, 1.42 - NECK, 0]} castShadow>
+          <meshStandardMaterial color={CREAM} roughness={0.55} />
+        </RoundedBox>
+        <RoundedBox args={[0.62, 0.3, 0.06]} radius={0.05} smoothness={2} position={[0, 1.43 - NECK, 0.29]}>
+          <meshStandardMaterial color={VISOR} roughness={0.3} />
+        </RoundedBox>
+        {[-0.13, 0.13].map((x) => (
+          <mesh key={x} position={[x, 1.44 - NECK, 0.325]}>
+            <boxGeometry args={[0.08, 0.09, 0.02]} />
+            <meshStandardMaterial color={eye} emissive={eye} emissiveIntensity={worried ? 0.45 : 0.6} />
           </mesh>
-          <mesh position={[0, -side * 0.03, 0]}>
-            <cylinderGeometry args={[0.09, 0.09, 0.03, 12]} />
-            <meshStandardMaterial color={JOINT} roughness={0.9} />
-          </mesh>
-        </group>
-      ))}
-      <Cylinder at={[0, 1.78, 0]} size={[0.025, 0.035, 0.2]} color={body} />
-      <Ball at={[0, 1.9, 0]} radius={0.075} color="#e7a349" />
+        ))}
+        {[-1, 1].map((side) => (
+          <group key={side} position={[side * 0.44, 1.42 - NECK, 0]} rotation-z={Math.PI / 2}>
+            <mesh castShadow>
+              <cylinderGeometry args={[0.13, 0.13, 0.07, 14]} />
+              <meshStandardMaterial color={body} roughness={0.6} />
+            </mesh>
+            <mesh position={[0, -side * 0.03, 0]}>
+              <cylinderGeometry args={[0.09, 0.09, 0.03, 12]} />
+              <meshStandardMaterial color={JOINT} roughness={0.9} />
+            </mesh>
+          </group>
+        ))}
+        <Cylinder at={[0, 1.78 - NECK, 0]} size={[0.025, 0.035, 0.2]} color={body} />
+        <Ball at={[0, 1.9 - NECK, 0]} radius={0.075} color="#e7a349" />
+      </group>
       {/* Neck and torso */}
       <Cylinder at={[0, 1.1, 0]} size={[0.09, 0.1, 0.14]} color={JOINT} />
       <RoundedBox args={[0.56, 0.5, 0.4]} radius={0.1} smoothness={3} position={[0, 0.8, 0]} castShadow>

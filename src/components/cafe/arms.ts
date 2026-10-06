@@ -61,6 +61,18 @@ export function reachArm(rig: ArmRig, side: number, target: Vec3, pole: Vec3 = [
   return { upper, lower, hand: [hand.x, hand.y, hand.z] };
 }
 
+/**
+ * An empty arm reaching for what it will carry: its hand goes from hanging at its side toward `carry`, where a hand
+ * holds a cup at full reach, so a cup taken at the station is met right where the hand already is. Drawing back
+ * (a reach below zero) swings it a little behind instead.
+ */
+function reachFor(rig: ArmRig, side: number, carry: Vec3, reach: number): ArmPose {
+  if (reach <= 0) return swingArm(rig, side, -reach * 0.6);
+  const rest: Vec3 = [side * rig.shoulderX, rig.shoulderY - rig.upper - rig.lower, 0];
+  const toward = (i: 0 | 1 | 2) => rest[i] + (carry[i] - rest[i]) * reach;
+  return reachArm(rig, side, [toward(0), toward(1), toward(2)]);
+}
+
 /** Crew carry one item per hand: the first in the right-hand slot (+x), the second in the left. */
 export function itemsForHand(items: readonly Cargo[], side: number): Cargo[] {
   return items.filter((_, i) => (i % 2 === 0 ? 1 : -1) === side);
@@ -72,15 +84,23 @@ export const HUMAN_ARM: ArmRig = { shoulderX: 0.27, shoulderY: 1, upper: 0.22, l
 export const CARRY_HEIGHT = 1.06;
 export const DRINK_SCALE = 0.72;
 
+/** Where a robot's carrying hand is, `reach` of the way out over the station. */
+const robotCarry = (side: number, reach: number): Vec3 => [
+  side * ROBOT_ARM.shoulderX,
+  CARRY_HEIGHT + reach * 0.05,
+  0.47 + reach * 0.1,
+];
+
 /**
  * A robot arm: a carrying hand sits out in front at counter height, far enough forward that a cup
  * clears the apron and the head's lower edge, and a Take or Deposit pushes it further out over the
- * station. An empty arm swings with the stride and lifts to reach.
+ * station. An empty arm swings with the stride, and reaches out to where it would hold a cup.
  */
 export function robotArmPose(side: number, carrying: boolean, stride: number, reach: number): ArmPose {
-  return carrying
-    ? reachArm(ROBOT_ARM, side, [side * ROBOT_ARM.shoulderX, CARRY_HEIGHT + reach * 0.05, 0.47 + reach * 0.1])
-    : swingArm(ROBOT_ARM, side, -stride * side * 0.35 - reach * 1.15);
+  if (carrying) return reachArm(ROBOT_ARM, side, robotCarry(side, Math.max(0, reach)));
+  return reach
+    ? reachFor(ROBOT_ARM, side, robotCarry(side, 1), reach)
+    : swingArm(ROBOT_ARM, side, -stride * side * 0.35);
 }
 
 /** The sipping cup rests above the table top (or at chest height standing), then tips up to the lips. */
@@ -107,12 +127,13 @@ export function humanArmPose(
     drink,
   }: { carrying: boolean; scale?: number; reach?: number; sit?: number; stride?: number; drink?: Vec3 },
 ): ArmPose {
-  if (carrying)
-    return reachArm(HUMAN_ARM, side, [
-      side * (HUMAN_ARM.shoulderX + 0.05),
-      CARRY_HEIGHT / scale + reach * 0.04,
-      0.38 + reach * 0.1,
-    ]);
+  const carry = (out: number): Vec3 => [
+    side * (HUMAN_ARM.shoulderX + 0.05),
+    CARRY_HEIGHT / scale + out * 0.04,
+    0.38 + out * 0.1,
+  ];
+  if (carrying) return reachArm(HUMAN_ARM, side, carry(Math.max(0, reach)));
   if (drink && side === 1) return reachArm(HUMAN_ARM, side, drink);
-  return swingArm(HUMAN_ARM, side, -sit * 0.75 - stride * side * 0.4 * (1 - sit) - reach * 1.1);
+  if (reach && !sit) return reachFor(HUMAN_ARM, side, carry(1), reach);
+  return swingArm(HUMAN_ARM, side, -sit * 0.75 - stride * side * 0.4 * (1 - sit));
 }

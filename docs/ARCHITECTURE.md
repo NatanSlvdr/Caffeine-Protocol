@@ -74,6 +74,15 @@ No `as` casts in loaders — campaign files are `safeParse`d with valibot.
   drink goes cold at its deadline even while every robot waits.
 - UI never calls the engine directly: `Workspace` drives runs through
   `useLiveRun`, which owns programs, role, result, and the clock.
+- The café's animation follows the replay, never the other way round.
+  `sampleReplay` times a hand's reach (`reachAt`) so it is over the station
+  when the block ends, the moment the service hands a cup over, and brings it
+  back after (`REACH_FOLLOW_THROUGH`); the snapshot also marks a robot that is
+  `waiting` and the one whose block `failed`. The arms (`cafe/arms.ts`) put an
+  empty hand at full reach where a carrying hand holds its cup. A waiting
+  robot's glance and a failed one's head shake (`cafe/headPose.ts`) run on the
+  wall clock, since neither moves anything in the service: they read the same
+  at any speed, and the shake still plays once the replay stops at a failure.
 
 ## Saves
 

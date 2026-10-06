@@ -127,10 +127,11 @@ describe('live service', () => {
     const logs = result.execution![0].events.filter((event) => event.actor === 'query');
     const take = logs.find((event) => event.command === 'TAKE UP')!;
     const move = logs.find((event) => event.command === 'MOVE RIGHT 1')!;
-    const atTake = sampleReplay(result, (take.start + take.end) / 2).actors.query!;
+    // Late in the block, the hand is over the paper, waiting for the handoff at the end.
+    const atTake = sampleReplay(result, take.start + (take.end - take.start) * 0.8).actors.query!;
     expect(atTake.facing).toBe(Math.PI);
     expect(atTake.walking).toBe(false);
-    expect(atTake.reach).toBeCloseTo(1);
+    expect(atTake.reach).toBe(1);
     const atMove = sampleReplay(result, (move.start + move.end) / 2).actors.query!;
     expect(atMove.facing).toBe(Math.PI / 2);
     expect(atMove.walking).toBe(true);

@@ -19,6 +19,36 @@ function withStation(event: ExecutionEvent): { at?: string } {
   return name ? { at: name.replace(/^the /, '').replace(/^./, (first) => first.toUpperCase()) } : {};
 }
 
+/** Blocks that put a hand into a station. */
+const REACHING = /^(TAKE|PICKUP|DEPOSIT|USE)( |$)/;
+/** Seconds a hand takes to come back from a station once its block is done. */
+export const REACH_FOLLOW_THROUGH = 0.35;
+const smooth = (t: number) => t * t * (3 - 2 * t);
+
+/**
+ * How far out a hand is through a reaching block, from 0 at its side to 1 over the station, by the block's progress.
+ * It draws back a little first, is over the station two thirds of the way through and stays there to the end, where
+ * the service hands the cup over: so a cup leaves or meets the hand right at the station, never mid-air.
+ */
+export function reachAt(progress: number): number {
+  if (progress <= 0 || progress >= 1) return progress >= 1 ? 1 : 0;
+  if (progress < 0.15) return -0.12 * Math.sin((Math.PI * progress) / 0.15);
+  return progress < 0.65 ? smooth((progress - 0.15) / 0.5) : 1;
+}
+
+/** A hand's reach at `local`: out through a reaching block, then brought back after it, or straight on to the next. */
+function reachOf(history: readonly ExecutionEvent[], local: number): number {
+  const reaching = history.filter((event) => !event.error && REACHING.test(event.command));
+  const current = reaching.at(-1);
+  if (!current) return 0;
+  const during =
+    current.end > local ? reachAt((local - current.start) / Math.max(0.001, current.end - current.start)) : 0;
+  const before = current.end > local ? reaching.at(-2) : current;
+  const since = before ? local - before.end : Infinity;
+  const back = since < REACH_FOLLOW_THROUGH ? (1 + Math.cos((Math.PI * since) / REACH_FOLLOW_THROUGH)) / 2 : 0;
+  return Math.abs(back) > Math.abs(during) ? back : during;
+}
+
 export function sampleReplay(result: RunResult, time: number) {
   const seed =
     (time < 0
@@ -80,10 +110,7 @@ export function sampleReplay(result: RunResult, time: number) {
           : id === 'query'
             ? -Math.PI / 2
             : 0;
-    const reach =
-      /^(TAKE|PICKUP|DEPOSIT|USE)( |$)/.test(last.command) && last.end > local
-        ? Math.sin((Math.PI * (local - last.start)) / Math.max(0.001, last.end - last.start))
-        : 0;
+    const reach = reachOf(history, local);
     // Zero-duration wait records describe an idle state until another instruction starts.
     const waiting =
       !last.error &&
@@ -110,6 +137,8 @@ export function sampleReplay(result: RunResult, time: number) {
       inventory: settled?.inventory ?? [],
       heldPaper: settled?.heldPaper,
       role: last.role,
+      ...((waiting || (last.end > local && /^WAIT( |$)/.test(last.command))) && { waiting: true }),
+      ...(last.error && { failed: true }),
     };
   }
   const servedTimes = new Map(

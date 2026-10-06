@@ -273,6 +273,10 @@ export interface ActorSnapshot {
   position: readonly [number, number];
   inventory: Cargo[];
   role: RobotRole;
+  /** Waiting on someone or something, or out a timed wait. */
+  waiting?: boolean;
+  /** Its block is the one the service failed on. */
+  failed?: boolean;
 }
 export interface ExecutionEvent {
   variables?: Record<string, VariableValue | undefined>;
