@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { BookmarkPlus, Download, Upload } from 'lucide-react';
+import { BookmarkPlus, Download, PencilLine, Upload } from 'lucide-react';
 import { unreadableLine, type RobotRole } from '@/domain';
 import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
 import { Modal } from '@/components';
@@ -12,8 +12,10 @@ import { sameRoutine } from '../versions';
 import {
   MAX_PAGES,
   NAME_MAX,
+  carryNotes,
   findPage,
   freeName,
+  hasLesson,
   keepPage,
   mergePages,
   notebookFile,
@@ -25,6 +27,7 @@ import {
   type NotebookPage,
 } from '../notebook';
 import { RoutineDiff } from './RoutineDiff';
+import { LessonEditor } from './LessonEditor';
 
 export interface NotebookModalProps {
   /** The open robot, whose routine is kept and whose routine a page goes into. */
@@ -41,6 +44,11 @@ export interface NotebookModalProps {
 }
 
 const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
+/** A page's lesson in a few words, beside its blocks. */
+const lessonWords = (page: NotebookPage) => {
+  const notes = (page.notes ?? []).filter((note) => note.text.trim()).length;
+  return notes ? `lesson, ${count(notes, 'note')}` : 'lesson';
+};
 
 /**
  * The routine notebook: the open robot's routine kept under a name, and kept pages brought back on any shift, in
@@ -61,12 +69,24 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
   const [said, say] = useAnnouncement();
   const [carried, sayCarried] = useAnnouncement();
   const [error, setError] = useState('');
+  // The page being written up as a lesson, which takes the notebook's place until the way back.
+  const [writing, setWriting] = useState<string>();
   const input = useRef<HTMLInputElement>(null),
-    putBackButton = useRef<HTMLButtonElement>(null);
+    putBackButton = useRef<HTMLButtonElement>(null),
+    lessonButton = useRef<HTMLButtonElement>(null),
+    wrote = useRef(false);
   // The last page takes its buttons with it: focus carries on at the way back.
   useEffect(() => {
     if (removed && !pages.length) putBackButton.current?.focus();
   }, [removed]);
+  // Back from a lesson, focus is where it was left: on the button that opened it.
+  useEffect(() => {
+    if (writing) wrote.current = true;
+    else if (wrote.current) {
+      wrote.current = false;
+      lessonButton.current?.focus();
+    }
+  }, [writing]);
 
   const commit = (next: NotebookPage[]) => {
     setPages(next);
@@ -91,11 +111,25 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
     e.preventDefault();
     const named = name.trim();
     if (!named || !blocks || (!replacing && pages.length >= MAX_PAGES)) return;
-    const next = keepPage(pages, { name: named, role, shift, source: current });
+    // A page kept in another's place keeps its lesson, each note following its block into the new routine.
+    const notes = replacing ? carryNotes(replacing, current) : [];
+    const lost = (replacing?.notes ?? []).filter((note) => note.text.trim()).length - notes.length;
+    const lesson = replacing && hasLesson(replacing) && { about: replacing.about, notes };
+    const next = keepPage(pages, { name: named, role, shift, source: current, ...lesson });
     commit(next);
     setChosen(named);
     setName(freeName(next, suggested));
-    say(replacing ? `Replaced “${replacing.name}” with ${robot}’s routine.` : `Kept ${robot}’s routine as “${named}”.`);
+    say(
+      !replacing
+        ? `Kept ${robot}’s routine as “${named}”.`
+        : `Replaced “${replacing.name}” with ${robot}’s routine.${
+            !lesson
+              ? ''
+              : lost > 0
+                ? ` Its lesson stays, but for ${lost === 1 ? 'a note on a block' : `${lost} notes on blocks`} no longer there.`
+                : ' Its lesson stays.'
+          }`,
+    );
   };
   const remove = (gone: NotebookPage) => {
     const at = pages.indexOf(gone);
@@ -110,6 +144,30 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
     setChosen(back.name);
     say(`“${back.name}” is back in the notebook.`);
   };
+
+  const lessonPage = writing === undefined ? undefined : findPage(pages, writing);
+  if (lessonPage)
+    return (
+      <Modal
+        className="settings-window confirm-slip restore-slip notebook-slip"
+        kicker="Kept in this browser"
+        title="Routine notebook"
+        onClose={onClose}
+      >
+        <LessonEditor
+          page={lessonPage}
+          onChange={(lesson) => {
+            commit(pages.map((p) => (p === lessonPage ? { ...p, ...lesson } : p)));
+          }}
+          onBack={() => setWriting(undefined)}
+        />
+        {!kept && (
+          <p role="alert" className="error-text">
+            This browser isn’t keeping the notebook, so it lasts until the café closes. Export it to keep it.
+          </p>
+        )}
+      </Modal>
+    );
 
   const misfit = page && unfit(page);
   const same = !!page && sameRoutine(page.source, current);
@@ -168,6 +226,7 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
                   <strong>{p.name}</strong>
                   <small>
                     {ROBOT_DISPLAY_NAMES[p.role]} · Shift {pad2(p.shift)} · {count(pageBlocks(p.source), 'block')}
+                    {hasLesson(p) && ` · ${lessonWords(p)}`}
                   </small>
                   {problem && <small className="notebook-unfit">{problem.message}</small>}
                 </span>
@@ -198,6 +257,9 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
             <Button variant="outline-danger" className="settings-chip" onClick={() => remove(page)}>
               Remove page
             </Button>
+            <button ref={lessonButton} className="settings-chip" onClick={() => setWriting(page.name)}>
+              <PencilLine size={15} aria-hidden="true" /> {hasLesson(page) ? 'Edit the lesson' : 'Write a lesson'}
+            </button>
             <button
               className="settings-chip"
               disabled={running || !!misfit}

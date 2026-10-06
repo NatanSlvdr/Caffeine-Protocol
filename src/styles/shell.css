@@ -2307,13 +2307,187 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 12px;
 }
 .confirm-slip .notebook-actions {
+  flex-wrap: wrap;
   margin-top: 4px;
 }
-.settings-window .notebook-actions > button:first-child {
+/* Removing the page and its lesson on the left, what the page does to the routine on the right. */
+.settings-window .notebook-actions > button:nth-child(2) {
   margin-right: auto;
 }
 .notebook-carry {
   margin-top: 22px;
+}
+/* A page written up as a lesson: what it shows, then the routine as a column of blocks, each one a note can hang
+   from, numbered in the routine's order. */
+.settings-window button.settings-chip.lesson-back {
+  min-height: 30px;
+  margin-bottom: 12px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.settings-window .lesson-title {
+  margin: 0;
+  font-size: 17px;
+}
+.settings-window.confirm-slip p.lesson-meta {
+  margin: 2px 0 14px;
+  color: var(--slip-muted);
+  font-size: 12px;
+}
+.settings-window.confirm-slip .lesson-label {
+  display: block;
+  margin: 0 0 6px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.lesson textarea,
+.lesson-note input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1.5px solid #392b2433;
+  border-radius: 10px;
+  color: var(--slip-ink);
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+.lesson textarea {
+  margin-bottom: 14px;
+  resize: vertical;
+}
+.lesson textarea:focus-visible,
+.lesson-note input:focus-visible {
+  border-color: var(--slip-coffee);
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 1px;
+}
+.settings-window.confirm-slip p.lesson-hint {
+  margin: -2px 0 8px;
+  color: var(--slip-muted);
+  font-size: 12px;
+}
+.lesson-blocks {
+  display: grid;
+  gap: 2px;
+  max-height: min(320px, 40dvh);
+  margin: 0 0 8px;
+  padding: 6px;
+  overflow: auto;
+  border: 1.5px solid #392b241f;
+  border-radius: 10px;
+  background: #fffaf3;
+  list-style: none;
+}
+.lesson-block {
+  display: grid;
+  grid-template-columns: 2.2em 1fr 22px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 28px;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--slip-ink);
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.lesson-block:hover {
+  background: #392b240d;
+}
+.lesson-block:focus-visible {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: -1px;
+}
+.lesson-block code {
+  overflow: hidden;
+  font-family: var(--slip-mono);
+  font-size: 12.5px;
+  white-space: pre;
+  text-overflow: ellipsis;
+}
+.lesson-line {
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  text-align: right;
+}
+.lesson-step {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  opacity: 0;
+}
+.lesson-block:hover .lesson-step,
+.lesson-block:focus-visible .lesson-step {
+  opacity: 1;
+}
+.lesson-blocks li.noted .lesson-block {
+  background: #c8923a1f;
+}
+.lesson-blocks li.noted .lesson-step {
+  color: #fff;
+  background: var(--slip-coffee);
+  opacity: 1;
+}
+.lesson-note {
+  display: flex;
+  gap: 6px;
+  margin: 4px 0 6px calc(2.2em + 14px);
+}
+.lesson-note input {
+  height: 34px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+.lesson-remove {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--slip-muted);
+  background: transparent;
+  cursor: pointer;
+}
+.lesson-remove:hover {
+  color: #8f3f22;
+  background: #b968471f;
+}
+.lesson-remove:focus-visible {
+  outline: 2px solid var(--slip-coffee);
+}
+.settings-window.confirm-slip p.lesson-status {
+  min-height: 18px;
+  margin: 0 0 6px;
+  color: var(--slip-ink);
+  font-size: 13px;
+}
+.lesson-actions {
+  align-items: center;
+}
+.lesson-actions small {
+  margin-right: auto;
+  color: var(--slip-muted);
+  font-size: 12px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .lesson-step {
+    transition: opacity 120ms ease;
+  }
 }
 /* The test bench: a round of guests written on the slip, one card each, what they say and what they should get
    under their choices. */

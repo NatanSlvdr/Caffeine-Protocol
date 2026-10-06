@@ -113,7 +113,9 @@ export function GuideWindow({ onClose }: { onClose: () => void }) {
           <p>
             Worth keeping? The <strong>Notebook</strong> beside Help keeps the open robot’s routine under a name, to
             bring back on any shift in its place or after it. A page says when it uses blocks the shift doesn’t have
-            yet, or another robot’s. The notebook stays in this browser; export it to carry it to another.
+            yet, or another robot’s. <strong>Write a lesson</strong> on a page to say what it shows and add a note to
+            the blocks worth one, then export it as a text file to share. The notebook stays in this browser; export it
+            to carry it to another.
           </p>
         </section>
         <section className="settings-block">

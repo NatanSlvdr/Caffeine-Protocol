@@ -4,13 +4,19 @@ import {
   MAX_PAGES,
   NAME_MAX,
   NOTEBOOK_KEY,
+  NOTE_MAX,
+  carryNotes,
   freeName,
+  hasLesson,
   keepPage,
+  lessonFileName,
+  lessonText,
   mergePages,
   notebookFile,
   pageBlocks,
   parseNotebook,
   readNotebook,
+  readableFrom,
   removePage,
   writeNotebook,
   type NotebookPage,
@@ -98,5 +104,124 @@ describe('the routine notebook', () => {
     expect(readNotebook()).toEqual([page('Sugar run')]);
     localStorage.setItem(NOTEBOOK_KEY, '{');
     expect(readNotebook()).toEqual([]);
+  });
+});
+
+describe('a page written up as a lesson', () => {
+  const route = 'POSITION listen\nLISTEN\nTAKE UP\nITEM coffee\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen';
+  const lesson: NotebookPage = {
+    ...page('One coffee after another', route),
+    shift: 3,
+    about: 'Every guest gets a coffee, and Query goes back to listen for the next.',
+    notes: [
+      { block: 7, text: 'Back to the top, for the next guest in the queue.' },
+      { block: 2, text: 'A fresh ticket for every guest.' },
+    ],
+  };
+
+  it('reads as plain text: what it shows, the routine with its noted blocks numbered, then the notes in order', () => {
+    expect(lessonText(lesson)).toBe(
+      [
+        'One coffee after another',
+        'A lesson from the Caffeine Protocol routine notebook',
+        '',
+        'Query’s routine, kept on Shift 03. Query can read it from Shift 03 on.',
+        '',
+        'Every guest gets a coffee, and Query goes back to listen for the next.',
+        '',
+        'The routine, with its 2 notes marked:',
+        '',
+        '    POSITION listen',
+        '    LISTEN',
+        '[1] TAKE UP',
+        '    ITEM coffee',
+        '    MOVE RIGHT 1',
+        '    DEPOSIT RIGHT',
+        '    MOVE LEFT 1',
+        '[2] JUMP listen',
+        '',
+        'Walkthrough',
+        '',
+        '1. TAKE UP (line 3)',
+        '   A fresh ticket for every guest.',
+        '',
+        '2. JUMP listen (line 8)',
+        '   Back to the top, for the next guest in the queue.',
+        '',
+        'To try it, type the routine into the café’s text editor on Shift 03 or',
+        'later. The lesson is plain text: nothing in it runs.',
+        '',
+      ].join('\n'),
+    );
+    // Without notes it is the routine alone, and a comment or blank line is never a block to note.
+    const bare = lessonText({
+      ...page('Bare', 'LISTEN\n\n# the counter\nTAKE UP'),
+      notes: [{ block: 1, text: 'Paper.' }],
+    });
+    expect(bare).toContain('\n    LISTEN\n\n    # the counter\n[1] TAKE UP\n');
+    expect(bare).toContain('1. TAKE UP (line 4)\n   Paper.');
+    expect(lessonText(page('Plain'))).toContain('The routine:\n\nLISTEN\nTAKE UP\n\nTo try it');
+  });
+
+  it('says the first shift its robot can read it on, by the blocks the library has by then', () => {
+    expect(readableFrom(page('Coffee', route))).toBe(UNLOCKS.loop);
+    expect(readableFrom(page('Sugar', 'LISTEN\nWRITE 1 sugar'))).toBe(UNLOCKS.sugar);
+    expect(readableFrom(page('Brew’s', 'LISTEN\nWAIT FOR ORDERS', 'query'))).toBeUndefined();
+    expect(lessonText(page('Brew’s', 'WAIT FOR ORDERS', 'query'))).toContain('Query can’t read it on any shift.');
+  });
+
+  it('keeps notes as one line of plain text, on blocks the page has, in the routine’s order', () => {
+    const written: NotebookPage = {
+      ...lesson,
+      about: '  Line one\n\tline two\u0007  ',
+      notes: [
+        { block: 5, text: 'x'.repeat(NOTE_MAX + 20) },
+        { block: 2, text: '   ' },
+        { block: 99, text: 'No such block.' },
+        { block: 0, text: 'First <b>block</b>' },
+        { block: 0, text: 'Twice.' },
+      ],
+    };
+    const [read] = parseNotebook(notebookFile([written])).pages;
+    expect(read.about).toBe('Line one line two');
+    expect(read.notes).toEqual([
+      { block: 0, text: 'First <b>block</b>' },
+      { block: 5, text: 'x'.repeat(NOTE_MAX) },
+    ]);
+    // Notes of the wrong shape are left out, the page still comes in; a page with nothing to say carries no lesson.
+    const odd = JSON.stringify({
+      format: 'caffeine-protocol-notebook',
+      pages: [{ ...page('Odd'), about: 4, notes: [{ block: 'one', text: 'x' }, null, { block: 1, text: 'Kept.' }] }],
+    });
+    expect(parseNotebook(odd).pages).toEqual([{ ...page('Odd'), notes: [{ block: 1, text: 'Kept.' }] }]);
+    expect(parseNotebook(notebookFile([{ ...page('Quiet'), about: ' ', notes: [] }])).pages[0]).toEqual(page('Quiet'));
+    expect(hasLesson(page('Quiet'))).toBe(false);
+    expect(hasLesson({ ...page('Said'), notes: [{ block: 0, text: 'Listen.' }] })).toBe(true);
+  });
+
+  it('carries its notes over to the routine kept in its place, each following its block', () => {
+    const moved = `LISTEN\nPOSITION listen\nLISTEN\nTAKE UP\nITEM tea\nMOVE RIGHT 1\nDEPOSIT RIGHT\nMOVE LEFT 1\nJUMP listen`;
+    expect(carryNotes(lesson, moved)).toEqual([
+      { block: 8, text: 'Back to the top, for the next guest in the queue.' },
+      { block: 3, text: 'A fresh ticket for every guest.' },
+    ]);
+    // The second of two alike stays on the second; a block no longer there takes its note with it.
+    const twice = { ...page('Twice', 'MOVE RIGHT 1\nTAKE UP\nMOVE RIGHT 1'), notes: [{ block: 2, text: 'Again.' }] };
+    expect(carryNotes(twice, 'TAKE UP\nMOVE RIGHT 1\nLISTEN\nMOVE RIGHT 1')).toEqual([{ block: 3, text: 'Again.' }]);
+    expect(carryNotes(twice, 'TAKE UP\nMOVE RIGHT 1')).toEqual([]);
+  });
+
+  it('comes in from a notebook file as a page of its own when its lesson differs', () => {
+    const quiet = { ...lesson, about: undefined, notes: undefined };
+    expect(mergePages([quiet], [lesson]).pages.map((p) => p.name)).toEqual([
+      'One coffee after another',
+      'One coffee after another (2)',
+    ]);
+    expect(mergePages([lesson], [{ ...lesson, notes: [...lesson.notes!].reverse() }]).already).toBe(1);
+  });
+
+  it('goes out as a text file named after its page', () => {
+    expect(lessonFileName('Café — Sugar, every way!')).toBe('caffeine-protocol-lesson-cafe-sugar-every-way.txt');
+    expect(lessonFileName('☕')).toBe('caffeine-protocol-lesson-routine.txt');
   });
 });

@@ -1,6 +1,6 @@
-/** Trigger a JSON download in the browser. */
-export function download(text: string, name: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+/** Trigger a download in the browser: JSON unless said otherwise. */
+export function download(text: string, name: string, type = 'application/json'): void {
+  const url = URL.createObjectURL(new Blob([text], { type }));
   const a = document.createElement('a');
   a.href = url;
   a.download = name;

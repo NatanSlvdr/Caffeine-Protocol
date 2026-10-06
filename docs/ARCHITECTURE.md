@@ -91,12 +91,18 @@ lives inside the payload (`version: 1 | 2 | 3 | 4`). Schema bumps migrate via
 Historical `tests/fixtures/save-v1.json` + `save-v2.json` (pinned by
 `save-fixtures.test.ts`) prove compat with real serialized history.
 
-Two keys live beside the save and never in it, so a fresh start or an import
+Three keys live beside the save and never in it, so a fresh start or an import
 leaves them alone: `caffeine-protocol.v1.seen` (which shelf and guestbook
-entries this browser has shown) and `caffeine-protocol.v1.notebook` (the
-routine notebook, `features/workspace/notebook.ts`). The notebook is stored in
-the same format it exports as, and its pages are checked against the open
-robot and shift when shown (`unreadableLine`), not when kept.
+entries this browser has shown), `caffeine-protocol.v1.notebook` (the routine
+notebook, `features/workspace/notebook.ts`) and `caffeine-protocol.v1.bench`
+(each shift's test bench, `features/workspace/bench.ts`). The notebook is
+stored in the same format it exports as, and its pages are checked against the
+open robot and shift when shown (`unreadableLine`), not when kept. A page's
+lesson (a word on what it shows, notes on its blocks by their place among the
+blocks) is plain text, cleaned of control characters whenever it is read or
+written out, and exported by `lessonText` as a `.txt` file. A kept bench holds
+only what its guests ask for; `benchSeed` (domain) works out what they should
+get each time it runs, and a bench the shift can no longer take is dropped.
 
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.

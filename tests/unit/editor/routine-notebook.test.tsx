@@ -185,3 +185,93 @@ describe('the routine notebook', () => {
     expect(screen.queryByRole('button', { name: 'Notebook' })).toBeNull();
   });
 });
+
+describe('a notebook page written up as a lesson', () => {
+  const pages = () => JSON.parse(localStorage.getItem(NOTEBOOK_KEY)!).pages as NotebookPage[];
+  const block = (line: number) => within(slip()).getByRole('button', { name: new RegExp(`^Line ${line}: `) });
+  const status = () => slip().querySelector('.lesson-status')!.textContent;
+
+  it('takes a word on what the page shows and a note on each block worth one, numbered in the routine’s order', () => {
+    open(served, [page('Both tables', served)]);
+    fireEvent.click(within(slip()).getByRole('button', { name: 'Write a lesson' }));
+    expect(within(slip()).getByRole('heading', { name: 'Lesson · Both tables' })).toBeTruthy();
+    expect(slip().querySelector('.lesson-meta')!.textContent).toBe(
+      'Query · kept on Shift 03 · Query reads it from Shift 03 on',
+    );
+    const about = within(slip()).getByRole('textbox', { name: 'What it shows' });
+    expect(document.activeElement).toBe(about);
+    fireEvent.change(about, { target: { value: 'One coffee after another.' } });
+    // Each block is a button to hang a note from; its note's field takes focus.
+    expect(block(3).getAttribute('aria-label')).toBe('Line 3: TAKE UP, add a note');
+    fireEvent.click(block(3));
+    expect(status()).toBe('Note added on line 3.');
+    const first = within(slip()).getByRole('textbox', { name: 'Note 1, on line 3' });
+    expect(document.activeElement).toBe(first);
+    fireEvent.change(first, { target: { value: 'A fresh ticket.' } });
+    fireEvent.click(block(8));
+    fireEvent.change(document.activeElement!, { target: { value: 'Back for the next guest.' } });
+    // A note on an earlier block comes first: the lesson walks the routine from the top.
+    fireEvent.click(block(1));
+    fireEvent.change(document.activeElement!, { target: { value: 'Where Jump comes back to.' } });
+    expect(block(3).getAttribute('aria-label')).toBe('Line 3: TAKE UP, note 2');
+    expect(pages()[0]).toMatchObject({
+      about: 'One coffee after another.',
+      notes: [
+        { block: 0, text: 'Where Jump comes back to.' },
+        { block: 2, text: 'A fresh ticket.' },
+        { block: 7, text: 'Back for the next guest.' },
+      ],
+    });
+    // A note picked again is gone back to; removed, focus stays on its block.
+    fireEvent.click(block(3));
+    expect(document.activeElement).toBe(within(slip()).getByRole('textbox', { name: 'Note 2, on line 3' }));
+    fireEvent.click(within(slip()).getByRole('button', { name: 'Remove note 2' }));
+    expect(status()).toBe('Note on line 3 removed.');
+    expect(document.activeElement).toBe(block(3));
+    expect(within(slip()).getByRole('textbox', { name: 'Note 2, on line 8' })).toBeTruthy();
+    // Back in the notebook, the page says it carries a lesson, and focus is where it left.
+    fireEvent.click(within(slip()).getByRole('button', { name: 'Back to the notebook' }));
+    const edit = within(slip()).getByRole('button', { name: 'Edit the lesson' });
+    expect(document.activeElement).toBe(edit);
+    expect(choice('Both tables').closest('label')!.textContent).toContain('8 blocks · lesson, 2 notes');
+  });
+
+  it('goes out as a plain text file', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:lesson');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    try {
+      open(served, [{ ...page('Both tables', served), notes: [{ block: 2, text: 'A fresh ticket.' }] }]);
+      fireEvent.click(within(slip()).getByRole('button', { name: 'Edit the lesson' }));
+      fireEvent.click(within(slip()).getByRole('button', { name: 'Export lesson' }));
+      expect(click).toHaveBeenCalledOnce();
+      expect((vi.mocked(URL.createObjectURL).mock.calls[0][0] as Blob).type).toBe('text/plain');
+      expect(status()).toBe(
+        'Lesson exported as caffeine-protocol-lesson-both-tables.txt. Look for it with your downloads.',
+      );
+    } finally {
+      click.mockRestore();
+    }
+  });
+
+  it('stays with its page when the routine is kept in its place, each note on its block', () => {
+    open(broken, [
+      {
+        ...page('Both tables', served),
+        about: 'Two tables.',
+        notes: [
+          { block: 2, text: 'Paper.' },
+          { block: 5, text: 'Set it down.' },
+        ],
+      },
+    ]);
+    fireEvent.change(name(), { target: { value: 'Both tables' } });
+    fireEvent.submit(name().form!);
+    expect(
+      within(slip()).getByText(
+        'Replaced “Both tables” with Query’s routine. Its lesson stays, but for a note on a block no longer there.',
+      ),
+    ).toBeTruthy();
+    expect(pages()[0]).toMatchObject({ source: broken, about: 'Two tables.', notes: [{ block: 2, text: 'Paper.' }] });
+  });
+});

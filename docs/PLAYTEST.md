@@ -50,6 +50,7 @@ The production build is static and caches itself on its first successful load. T
 2. On an earlier shift, open the notebook: a page with blocks that shift doesn't have says so, and can't be used. A page kept for another robot says which blocks the open one doesn't know.
 3. Export the notebook, clear the site data, and import the file: every page comes back. Import it again: nothing is added twice.
 4. Start a new café from Settings: the notebook is still there.
+5. On a page, choose **Write a lesson**: say what it shows, add notes to a few blocks out of order, and check they number from the top. Export the lesson and open the text file: the routine reads with the noted blocks marked, then the notes in order, and says from which shift it can be typed in.
 
 ## Accessibility paths
 
