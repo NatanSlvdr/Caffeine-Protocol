@@ -3,6 +3,7 @@ import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { Workspace } from '@/features/workspace/Workspace';
 import { GuideWindow } from '@/app/GuideWindow';
 import { NewCafeModal } from '@/app/NewCafeModal';
+import { MemoryShift } from '@/app/MemoryShift';
 import { SpecialShift } from '@/app/SpecialShift';
 import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
@@ -11,6 +12,7 @@ import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { drills } from '@/data/drills';
+import { memoryById, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
@@ -45,18 +47,23 @@ function Shell() {
   const watchable = !!scene && sceneOpen(save, scene) && scene.before < CAMPAIGN_LENGTH;
   // The specials open once the campaign is finished.
   const special = page === 'special' && save.complete ? specialById(route.split('/')[2] ?? '') : undefined;
+  // A memory opens once the shift that brings it out is served.
+  const remembered = page === 'memory' ? memoryById(route.split('/')[2] ?? '') : undefined;
+  const memory = remembered && memoryOpen(save, remembered) ? remembered : undefined;
   const screen =
     page === 'shift' && accessible
       ? 'workspace'
       : special
         ? 'special'
-        : page === 'scene' && watchable
-          ? 'scene'
-          : page === 'campaign' || page === 'settings'
-            ? 'campaign'
-            : page === 'ending' && save.complete
-              ? 'ending'
-              : 'home';
+        : memory
+          ? 'memory'
+          : page === 'scene' && watchable
+            ? 'scene'
+            : page === 'campaign' || page === 'settings'
+              ? 'campaign'
+              : page === 'ending' && save.complete
+                ? 'ending'
+                : 'home';
   const shift = useShift(index);
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
@@ -64,6 +71,7 @@ function Shell() {
     campaign: 'Choose a shift',
     workspace: `Shift ${pad2(index + 1)}: ${shift.title}`,
     special: `Special: ${special?.title}`,
+    memory: `Memory: ${memory?.title}`,
     scene: scene?.title ?? '',
     ending: 'Closing time',
   }[screen];
@@ -78,7 +86,8 @@ function Shell() {
     reclaimFocus();
   }, [title]);
   return (
-    <div className={`app ${screen}`}>
+    // A special and a memory are shifts too, and lay out as one.
+    <div className={`app ${screen === 'special' || screen === 'memory' ? `workspace ${screen}` : screen}`}>
       {/* Every dialogue box, in a shift or a scene, keeps to the pace chosen in the house settings. */}
       <DialoguePaceContext value={save.settings.dialogue_pace}>
         <div className="app-body">
@@ -109,6 +118,7 @@ function Shell() {
             />
           )}
           {screen === 'special' && special && <SpecialShift key={special.id} special={special} />}
+          {screen === 'memory' && memory && <MemoryShift key={memory.id} memory={memory} />}
           {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
           {screen === 'ending' && <EndingPage />}
         </div>

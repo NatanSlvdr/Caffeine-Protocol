@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, Play, Sparkles } from 'lucide-react';
+import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
 import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
+import { memories, memoryOpen } from '@/data/memories';
 import { specials } from '@/data/specials';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
@@ -21,6 +22,7 @@ import { GuestbookWindow } from './GuestbookWindow';
 import { keepsakes, shelved } from './shelf';
 import { ShelfWindow } from './ShelfWindow';
 import { SpecialsWindow } from './SpecialsWindow';
+import { MemoriesWindow } from './MemoriesWindow';
 import { useUnseen } from './unseen';
 import { ShellBar } from './ShellBar';
 
@@ -84,6 +86,13 @@ export function CampaignPage() {
     offered.map((special) => special.id),
   );
   const [choosing, setChoosing] = useState<readonly string[] | null>(null);
+  // The crew's memories of Lou's café come out as the shifts that bring them are served.
+  const remembered = memories.filter((memory) => memoryOpen(save, memory));
+  const newMemories = useUnseen(
+    'memories',
+    remembered.map((memory) => memory.id),
+  );
+  const [recalling, setRecalling] = useState<readonly string[] | null>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -274,6 +283,18 @@ export function CampaignPage() {
             {newSpecials.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
+        {remembered.length > 0 && (
+          <button
+            className="shell-icon"
+            aria-label={`Memories, ${remembered.length === 1 ? '1 memory' : `${remembered.length} memories`}${newMemories.fresh.length ? `, ${newMemories.fresh.length} new` : ''}`}
+            aria-haspopup="dialog"
+            title="Memories"
+            onClick={() => setRecalling(newMemories.markSeen())}
+          >
+            <History size={18} aria-hidden="true" />
+            {newMemories.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
+          </button>
+        )}
         {/* Drills come out with the first served shift that has one. */}
         {served.length > 0 && (
           <button
@@ -307,6 +328,15 @@ export function CampaignPage() {
           fresh={choosing}
           onServe={(special) => go(`/special/${special.id}`)}
           onClose={() => setChoosing(null)}
+        />
+      )}
+      {recalling && (
+        <MemoriesWindow
+          memories={remembered}
+          save={save}
+          fresh={recalling}
+          onPlay={(memory) => go(`/memory/${memory.id}`)}
+          onClose={() => setRecalling(null)}
         />
       )}
       {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}

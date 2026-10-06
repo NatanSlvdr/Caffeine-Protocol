@@ -70,6 +70,13 @@ The production build is static and caches itself on its first successful load. T
 3. Run Shift 21's routines as they are: Query is caught out on the first table that orders together. Add the Together mark only: the table's drinks reach it apart, and the card says where the late one is.
 4. Serve it: the receipt counts the tables served together and how close their drinks came, carries Rosa's thanks, and goes back to the campaign. The campaign's stars are unchanged, and the Specials window shows the special's own.
 
+## Memories
+
+1. Before Shift 08 is served, the campaign page has no **Memories** button, and `#/memory/day-one` opens the front page instead.
+2. With Act I served, open **Memories**: Day One is new, from Query's log, with Shift 5's tools. Play it: the café is in faded photo colours, the breadcrumb reads Memory, and Query's routine is Lou's, not yours. No block past Shift 5's is offered.
+3. Run Lou's routine: her three regulars are right, and the first baker's "coffee no sugar" is caught. Mend the coffee side in place: it passes, over the block target. Write the steps once after the End: every star.
+4. Back on the rail, Shift 05's routine and stars are as you left them, and the Memories window shows the memory's own stars.
+
 ## Cafés in one browser
 
 1. With a café under way, open **Settings → Cafés in this browser** and add a café. The page reloads on the new café at the very start, with the same audio and display settings, and the front page names it.

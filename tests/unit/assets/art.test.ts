@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 import { levels } from '../../../src/data';
 import { cutscenes } from '../../../src/data/campaign/cutscenes';
 import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
+import { memories } from '../../../src/data/memories';
+import { specials } from '../../../src/data/specials';
 import { CAST_IDS, MOODS } from '../../../src/domain/dialogue';
 import { REGULAR_NAMES } from '../../../src/domain/regulars';
 import { artErrors, webpInfo } from '../../../tools/art-check.mjs';
@@ -42,6 +44,7 @@ describe('the art the game ships', () => {
         .flatMap((scene) => scene.panels.flatMap((panel) => panel.lines))
         .flatMap((each) => [each, ...(each.choice?.options.flatMap((option) => option.lines) ?? [])]),
       ...levels.flatMap((_, shift) => [...shiftIntro(shift), ...shiftOutro(shift)]),
+      ...[...specials, ...memories].flatMap((extra) => [...extra.intro, ...extra.outro]),
     ];
     const asked = new Set(lines.flatMap((l) => (l.who && l.mood ? [`${l.who}/${l.mood}`] : [])));
     // A guest who got the wrong thing reacts worried, as themselves if they're a regular.

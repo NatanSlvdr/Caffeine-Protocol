@@ -330,13 +330,15 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   drills?: string[];
   /** Each special's own progress, by id; missing in a café that has played none. */
   specials?: Record<string, SpecialProgress>;
+  /** Each memory's own progress, by id, kept like a special's; missing in a café that has played none. */
+  memories?: Record<string, SpecialProgress>;
   /**
    * What Niko said at each choice in the story, by choice id: the latest answer, recalled by later scenes. Missing in
    * a café that has answered none. Nothing is scored or locked by it.
    */
   choices?: Record<string, string>;
 }
-/** A special's progress, kept apart from the campaign's: its stars never count toward the campaign's. */
+/** A special's or a memory's progress, kept apart from the campaign's: its stars never count toward the campaign's. */
 export interface SpecialProgress {
   /** The routines as last written. */
   draft?: RobotPrograms;

@@ -165,6 +165,15 @@ Its stars and routines are its own and never count toward the campaign's.
 the routines that fall short (no mark, a mark but no wait, two at once without
 the check).
 
+Memories are optional shifts from Lou's café, before Niko's time
+(`src/data/memories.ts`; see the story doc). Each plays with an earlier shift's
+toolkit and opens on a routine of its own, so the puzzle is someone else's code.
+In _Day One_, after Act I, it is Lou's: every step written twice, once for tea
+and once for coffee, with the two copies drifted apart. Mending the broken copy
+passes; only writing the shared steps once fits the block target.
+`tests/unit/simulation/memories.test.ts` plays the reference, Lou's routine,
+and the copy mended in place.
+
 Scoring metrics shown after a run:
 
 - Seeds passed.

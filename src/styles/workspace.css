@@ -11,6 +11,10 @@
 .workspace .workbench {
   gap: 14px;
 }
+/* A memory from Lou's café is played back in the warm, faded colours of an old photo. */
+.workspace-main.memory .cafe-canvas canvas {
+  filter: sepia(0.45) saturate(0.8) brightness(1.03);
+}
 .workspace .cafe-panel {
   container: cafe-panel / inline-size;
   gap: 10px;

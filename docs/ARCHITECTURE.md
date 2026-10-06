@@ -140,6 +140,18 @@ the routines carried in are Shift 21's, and serving a special never unlocks,
 finishes or stars anything in the campaign. `parseSave` checks the map (ids,
 star counts, known challenges, at most 100 entries) and drops empty entries.
 
+A memory (`data/memories.ts`) keeps its progress the same way, in `memories`,
+but plays in the place of the shift whose toolkit it borrows (`L05-day-one`
+plays at index 4, with Shift 5's blocks). `app/MemoryShift.tsx` hands the
+workspace a café of its own from `projectMemory`: nothing of the campaign's
+drafts, routines, stars or challenges, only the memory's at that index, and the
+memory's lesson in that index's place in the catalog. So it opens on the
+memory's starter, and its earlier versions are only its own. `keepMemory` folds
+every change back, restoring each map the campaign keeps by shift; anything
+else the workspace changed, like the settings, stays changed. A special and a
+memory lay out as a shift: the app root carries `workspace` beside their own
+screen class.
+
 ## Where to add things
 
 - **Shift L22**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one
@@ -159,6 +171,9 @@ star counts, known challenges, at most 100 entries) and drops empty entries.
   intro, outro and thanks) and a test that serves its reference. Its route
   (`#/special/<id>`), its card in the campaign's Specials window and its save
   entry follow from the id; it validates itself as the module loads.
+- **Memory**: one `Memory` in `data/memories.ts`, with `opens` (the campaign
+  shift whose service brings it out) and a level id naming the toolkit it
+  borrows, plus a test that plays its reference and its starter.
 - **Block**: one `BlockRegistry` entry (family/operands) plus the command in
   the compiler's `availableCommands` and interpreter dispatch — the registry
   is the discovery point; the language core stays explicit.

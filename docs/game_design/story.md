@@ -192,6 +192,26 @@ description, but a release ships every panel: `tests/unit/assets/art.test.ts`
 wants one still per panel of every scene. The prompts are in
 `cutscene_prompts.md`.
 
+### Memories
+
+Once Act I is served, a **Memories** button on the campaign page offers a
+morning from Lou's café, before Niko's time, played back from the crew's logs
+(`src/data/memories.ts`). The first is _Day One_, Query's first Saturday at
+Lou's, two winters ago: Query finds the old log after closing, Niko asks to see
+it, and the scene goes back to six sharp, with Moka at the machine and a smaller
+Pip on empties. Lou still never appears. She is heard only through the notes
+Query logged in her hand ("Same steps for everyone. Only the cup changes."),
+and the receipt ends on the last of them.
+
+A memory plays with the tools of its day: _Day One_ has Shift 05's, and opens on
+Lou's own routine, never the café's. She wrote every step twice, once on each
+side of If Tea, and the coffee copy never learned "no sugar": her three
+regulars are served right, and the bakery's first "coffee no sugar" is not.
+Mending the copy in place passes, over the block target; writing the steps once
+after the End earns every star. The café is drawn in the faded colours of an
+old photo while a memory plays. Its stars and routines are its own, and never
+count toward the campaign's or change the café's routines.
+
 ### Portraits
 
 Put the full-size PNGs in `assets/portraits/<id>/<mood>.png`, then run

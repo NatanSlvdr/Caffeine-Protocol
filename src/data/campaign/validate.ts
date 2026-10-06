@@ -20,9 +20,9 @@ import { extensionShiftConfig, shiftId } from './extension-config.ts';
 export const MAX_TABLES = TABLE_LAYOUT.length;
 
 export const LEVEL_ID_RE = /^L\d+$/;
-/** A special past the campaign, named after the toolkit it borrows: L22-together. */
-const SPECIAL_ID_RE = /^L\d+-[a-z]+$/;
-export const SEED_ID_RE = /^L\d+(-[a-z]+)?_[A-Z]$/;
+/** A shift outside the campaign, named after the toolkit it borrows: the special L22-together, the memory L05-day-one. */
+const SPECIAL_ID_RE = /^L\d+(-[a-z]+)+$/;
+export const SEED_ID_RE = /^L\d+(-[a-z]+)*_[A-Z]$/;
 export const CUSTOMER_ID_RE = /^C\d+$/;
 
 /** Closed concept vocabulary shared with schema.ts for semantic checks. */
@@ -284,7 +284,7 @@ export function collectLevelErrors(level: LevelDefinition): string[] {
   const numeric = shiftNumber(level.id);
   if (!Number.isInteger(numeric) || numeric < 1)
     errors.push(`level id ${JSON.stringify(level.id)} needs a positive number`);
-  // A special goes by its own name, with no shift number in front.
+  // A special or a memory goes by its own name, with no shift number in front.
   else if (special) {
     if (/^Level \d+: /.test(level.title)) errors.push(`${level.id}: a special's title has no shift number`);
   } else {

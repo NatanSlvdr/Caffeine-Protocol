@@ -52,7 +52,7 @@ export function keepSpecial(next: ProgressSave, before: ProgressSave, id: string
 }
 
 /** The map with `key` set to `value`, or without it when there's none. */
-function put<T>(map: Record<string, T>, key: string | number, value: T | undefined): Record<string, T> {
+export function put<T>(map: Record<string, T>, key: string | number, value: T | undefined): Record<string, T> {
   if (value !== undefined) return { ...map, [key]: value };
   if (!Object.hasOwn(map, key)) return map;
   const rest = { ...map };

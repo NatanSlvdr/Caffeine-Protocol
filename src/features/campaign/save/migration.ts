@@ -73,6 +73,7 @@ const SAVED_PART: Record<string, string> = {
   challenges: 'challenges met',
   drills: 'drills done',
   specials: 'specials',
+  memories: 'memories',
   choices: 'story choices',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
@@ -148,16 +149,19 @@ function validateDrills(v: Record<string, unknown>): string[] | undefined {
 }
 
 /**
- * Each special's own progress: its routines, stars and challenges met. Specials no longer in the game are kept,
- * harmlessly, like drills; a special with nothing kept leaves no entry, and a café with none leaves the map out.
+ * Each special's or memory's own progress: its routines, stars and challenges met. Ones no longer in the game are
+ * kept, harmlessly, like drills; one with nothing kept leaves no entry, and a café with none leaves the map out.
  */
-function validateSpecials(v: Record<string, unknown>): Record<string, SpecialProgress> | undefined {
-  if (v.specials === undefined || v.version !== 4) return undefined;
-  const entries = v.specials;
-  if (!isRecord(entries) || Object.keys(entries).length > 100) throw new Error(`Invalid ${SAVED_PART.specials}.`);
+function validateKept(
+  v: Record<string, unknown>,
+  part: 'specials' | 'memories',
+): Record<string, SpecialProgress> | undefined {
+  if (v[part] === undefined || v.version !== 4) return undefined;
+  const entries = v[part];
+  if (!isRecord(entries) || Object.keys(entries).length > 100) throw new Error(`Invalid ${SAVED_PART[part]}.`);
   const kept: Record<string, SpecialProgress> = {};
   for (const [id, progress] of Object.entries(entries)) {
-    if (!/^[a-z][a-z0-9-]{0,47}$/.test(id) || !isRecord(progress)) throw new Error(`Invalid ${SAVED_PART.specials}.`);
+    if (!/^[a-z][a-z0-9-]{0,47}$/.test(id) || !isRecord(progress)) throw new Error(`Invalid ${SAVED_PART[part]}.`);
     const { draft, solution, stars, challenges } = progress;
     if (stars !== undefined && (typeof stars !== 'number' || !Number.isInteger(stars) || stars < 0 || stars > 3))
       throw new Error('Invalid star count.');
@@ -167,7 +171,7 @@ function validateSpecials(v: Record<string, unknown>): Record<string, SpecialPro
       challenges !== undefined &&
       (!Array.isArray(challenges) || !challenges.every(known) || new Set(challenges).size !== challenges.length)
     )
-      throw new Error(`Invalid ${SAVED_PART.specials}.`);
+      throw new Error(`Invalid ${SAVED_PART[part]}.`);
     const entry: SpecialProgress = {
       ...(draft !== undefined && { draft: readPrograms(draft) }),
       ...(solution !== undefined && { solution: readPrograms(solution) }),
@@ -342,7 +346,8 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const robotMaps = validateRobotMaps(v, shifts);
   const challenges = validateChallenges(v, shifts);
   const drills = validateDrills(v);
-  const specials = validateSpecials(v);
+  const specials = validateKept(v, 'specials');
+  const memories = validateKept(v, 'memories');
   const choices = validateChoices(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
@@ -366,6 +371,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     ...(challenges && { challenges }),
     ...(drills && { drills }),
     ...(specials && { specials }),
+    ...(memories && { memories }),
     ...(choices && { choices }),
     settings,
   };

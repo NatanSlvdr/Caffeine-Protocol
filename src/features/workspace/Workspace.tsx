@@ -61,10 +61,12 @@ export interface WorkspaceShift {
   /** The scene that pays a passed shift off, before the star verdict. */
   outro: DialogueLine[];
   title: string;
-  /** What the shift is called beside its title, for a special: the campaign's shifts go by number. */
+  /** What the shift is called beside its title, for a special or a memory: the campaign's shifts go by number. */
   label?: string;
-  /** A special's thanks on the receipt, where a campaign shift names the next one. */
+  /** A special's or a memory's last word on the receipt, where a campaign shift names the next one. */
   thanks?: string;
+  /** A memory from Lou's café, before Niko's time: the café is drawn in the faded colours of an old photo. */
+  memory?: boolean;
 }
 
 export interface WorkspaceProps {
@@ -360,7 +362,7 @@ export function Workspace({
   // The run can be looked back through: paused, or slipped once the crew has had their say.
   const lookBack = ((running && paused) || (failed && !reaction)) && !observation && !!result && head > 0;
   return (
-    <main className="workspace-main">
+    <main className={'workspace-main' + (shift.memory ? ' memory' : '')}>
       <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
         <section className="cafe-panel">
           <div className="workspace-heading">

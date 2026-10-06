@@ -58,6 +58,8 @@ describe('the specials', () => {
     expect(document.title).toBe(`Special: ${special.title} · Caffeine Protocol`);
     expect(screen.getByText(`Special · ${special.title}`)).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Campaign/ }).textContent).toMatch(/Campaign \/ Special$/);
+    // Laid out as a shift.
+    expect(document.querySelector('.app.workspace.special')).toBeTruthy();
   });
 
   it('shows a served special’s own stars on the board', () => {

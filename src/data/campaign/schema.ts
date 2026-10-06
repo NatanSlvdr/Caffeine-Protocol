@@ -19,8 +19,8 @@ const NonNegativeInt = v.pipe(v.number(), v.integer(), v.minValue(0));
 const PositiveInt = v.pipe(v.number(), v.integer(), v.minValue(1));
 const ShiftId = v.pipe(v.string(), v.regex(/^L\d+$/));
 /** A campaign shift, like L05, or a special named after the toolkit it borrows, like L22-together. */
-const LevelId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)?$/));
-const SeedId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)?_[A-Z]$/));
+const LevelId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)*$/));
+const SeedId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)*_[A-Z]$/));
 const CustomerId = v.pipe(v.string(), v.regex(/^C\d+$/));
 const NonEmptyString = v.pipe(v.string(), v.minLength(1));
 
