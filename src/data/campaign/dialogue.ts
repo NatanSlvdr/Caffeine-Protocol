@@ -125,7 +125,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
   ],
   9: [
     ['', 'Brew’s first morning in the kitchen. It squeaks.'],
-    ['brew', '*BEEP BEEP!* Hello! Am Brew! Is espresso machine? So shiny. Touch?'],
+    ['brew', '*BEEP BEEP!* Espresso machine! So shiny. Touch?'],
     ['moka', 'Careful. She bites.'],
     ['niko', 'Brew takes over the kitchen. Query passes the tickets along, and Pip still serves the room.'],
     [
@@ -162,7 +162,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ],
   ],
   13: [
-    ['', 'The first morning without Moka. Her apron hangs on the hook by the kitchen door.'],
+    ['', 'The first morning without Moka. The note on her apron by the door still says 92°.'],
     ['brew', '*beep* Kitchen: mine. Temperature: ninety-two.'],
     ['niko:worried', 'Brew keeps walking back and forth for one cup at a time.'],
     ['brew', '*pant… beep* So. Many. Tiles.'],
@@ -175,9 +175,12 @@ const intros: Record<number, readonly ScriptLine[]> = {
   ],
   14: [
     ['', 'Porter’s first service. It rolls up to the pickup counter, balancing a tray.'],
-    ['porter', '*ding ding!* Hi! Am Porter! Drinks? Everyone? Great!'],
-    ['pip', 'Hi, Porter! I’ve done this job all month. It’s the best job. You’ll love it!'],
-    ['niko:worried', 'Porter doesn’t know where anyone sits, and counting tiles to every table would take all day.'],
+    ['porter', '*ding ding!* Drinks? Everyone? Great!'],
+    ['pip', 'Lesson two: Dot likes the corner, Juno likes it quiet, and Rosa always brings her brother.'],
+    [
+      'niko:worried',
+      'Porter doesn’t know where anyone sits yet, and counting tiles to every table would take all day.',
+    ],
     ['', 'Niko slides a folded floor plan into Porter’s chest panel.'],
     ['porter', '*beep boop* Map! Love map!'],
     [
@@ -204,7 +207,7 @@ const intros: Record<number, readonly ScriptLine[]> = {
     ['porter', '*BEEP!* Two guests! One trip! Zero spills!'],
     ['pip', 'Probably zero spills.'],
     ['niko', 'No new command, but Porter can carry two things now. The tray empties in the order you filled it.'],
-    ['pip', 'Porter’s doing great. Good thing, too: school starts on Monday.'],
+    ['pip', 'Porter’s doing great. Good thing, too: it’s my last week before school.'],
     ['porter', '*sad beep* School? Pip leaving?'],
   ],
   17: [

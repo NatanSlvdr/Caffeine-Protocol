@@ -215,7 +215,7 @@ export const cutscenes: Cutscene[] = [
         ['', 'Moka came in before anyone else, the way she had for forty years.'],
       ]),
       panel('Close-up: Moka’s hand resting on her apron pocket, beside the brass tamper.', [
-        ['', 'Lou’s card sat in that pocket for seven months, next to the tamper. It has been gone since October.'],
+        ['', 'The tamper always rides in that pocket. For a while, something else did too.'],
       ]),
       panel('Niko arrives at the door with Brew. Moka doesn’t turn round from the machine.', [
         ['moka', 'The post wasn’t slow. I had Lou’s card in my apron pocket for seven months.'],

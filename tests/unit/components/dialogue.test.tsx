@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
 import { portraitUrl } from '../../../src/components/dialogue/Portrait';
 import { cast } from '../../../src/data/campaign/cast';
+import { sceneBefore, sceneLines } from '../../../src/data/campaign/cutscenes';
 import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, line } from '../../../src/domain/dialogue';
 import type { DialogueLine } from '../../../src/domain/dialogue';
@@ -249,6 +250,27 @@ describe('scripts', () => {
       for (const who of speakers(outro)) expect(CAST_IDS).toContain(who);
     }
     expect(shiftOutro(levels.length)).toEqual([]);
+  });
+
+  it('gets to the code without a long wait, scene and intro together', () => {
+    const words = (text: string) => text.replace(/\[[^|\]]+\|/g, '[').split(/\s+/).length;
+    for (let i = 0; i < levels.length; i++) {
+      const scene = sceneBefore(i);
+      const intro = shiftIntro(i);
+      expect(intro.length, `shift ${i + 1}`).toBeLessThanOrEqual(9);
+      expect((scene ? sceneLines(scene).lines.length : 0) + intro.length, `shift ${i + 1}`).toBeLessThanOrEqual(24);
+      for (const l of intro) expect(words(l.text), l.text).toBeLessThanOrEqual(40);
+    }
+  });
+
+  it('lets a robot met in a scene get on with it in the intro after, without introducing itself again', () => {
+    for (let i = 0; i < levels.length; i++) {
+      const scene = sceneBefore(i);
+      if (!scene) continue;
+      const met = new Set(speakers(sceneLines(scene).lines));
+      for (const l of shiftIntro(i))
+        if (l.who && met.has(l.who)) expect(l.text, `shift ${i + 1}`).not.toMatch(/\b(Am|I am|I’m) [A-Z][a-z]+!/);
+    }
   });
 
   it('names every cast member', () => {
