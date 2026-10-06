@@ -107,13 +107,26 @@ and reads the block after the pause from the trace, and
 choices. Ten moments cover all four acts: both sides of an If, a For going round
 again, a loop run zero times, and where Return comes back to.
 
-A drill of either kind got right on the first pick is ticked as done. The ticks
-are kept in the save (`drills`, a list of ids, left out of a café with none) and
-never count toward stars. Anything else can be tried as often as it helps.
+The third kind is a limited kit: a gap in a worked example and a handful of
+blocks to build its passage from, each once and End included, that leave out the
+block the example leans on. Two Ifs stand in for an Else, a sugar written later
+replaces the one before, a Jump at the end of an If skips what an Else would
+have, and a function is written out where it was called. The rule (“No Else”,
+“No Call”) and the number of blocks show before anything is placed, the last
+block can be taken back, and serving the build runs the shift with it.
+`tests/unit/data/kits.test.ts` checks each kit can't build the worked example,
+can build a passage the café serves, and isn't served by its blocks in tray
+order.
+
+A drill got right on the first pick, or a kit once served, is ticked as done.
+The ticks are kept in the save (`drills`, a list of ids, left out of a café with
+none) and never count toward stars. Anything else can be tried as often as it
+helps.
 
 Flights gather the drills on one idea from across the acts: where a block goes,
 which way a check sends a robot, listening closely, going round again, out to a
-function and back, and wherever-whenever on the floor. A flight opens with its
+function and back, wherever-whenever on the floor, and the kits' other ways to
+write it. A flight opens with its
 first drill's shift, plays its open drills one after another from the first not
 yet ticked, and counts its own ticks; one still partly shut says which shift
 opens the rest. A flight is only a list of drill ids (`src/data/flights.ts`), so

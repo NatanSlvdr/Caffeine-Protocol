@@ -1581,6 +1581,51 @@ html[data-motion='reduced'] .front-page *::after {
   flex: none;
   margin-left: auto;
 }
+/* A limited kit: what it leaves out, its blocks, and the passage built from them. */
+.settings-window p.kit-rule {
+  margin: -4px 0 12px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+.kit-rule strong {
+  color: var(--slip-ink);
+  text-transform: uppercase;
+}
+.kit-rule em {
+  color: var(--slip-clay);
+  font-style: normal;
+  font-weight: 700;
+}
+.settings-window button.kit-tile {
+  padding: 7px 9px;
+}
+.settings-window button.kit-tile[aria-disabled='true'] {
+  border-style: dashed;
+  background: transparent;
+  cursor: default;
+}
+.settings-window button.kit-tile[aria-disabled='true']:hover {
+  border-color: #392b2433;
+  background: transparent;
+}
+.kit-tile[aria-disabled='true'] .block-lines {
+  opacity: 0.32;
+}
+.kit-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.settings-window .kit-actions button[aria-disabled='true'] {
+  cursor: not-allowed;
+  opacity: 0.42;
+}
+.settings-window button.kit-serve {
+  margin-left: auto;
+  border-color: var(--slip-clay);
+}
 /* A paused moment: what the guest said, and what the robot holds and remembers. */
 .prediction-moment {
   display: flex;

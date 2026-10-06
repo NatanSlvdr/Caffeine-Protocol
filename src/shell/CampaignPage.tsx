@@ -4,6 +4,7 @@ import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
+import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
@@ -66,8 +67,9 @@ export function CampaignPage() {
   const [looking, setLooking] = useState<readonly string[] | null>(null);
   const isServed = ({ shift }: { shift: number }) => save.stars[shift - 1] !== undefined;
   const gaps = drills.filter(isServed),
-    moments = predictions.filter(isServed);
-  const served = [...gaps, ...moments];
+    moments = predictions.filter(isServed),
+    builds = kits.filter(isServed);
+  const served = [...gaps, ...moments, ...builds];
   const newDrills = useUnseen(
     'drills',
     served.map((drill) => drill.id),
@@ -269,7 +271,8 @@ export function CampaignPage() {
         <DrillsWindow
           drills={gaps}
           predictions={moments}
-          waiting={drills.length + predictions.length - served.length}
+          kits={builds}
+          waiting={drills.length + predictions.length + kits.length - served.length}
           fresh={drilling}
           done={save.drills}
           onDone={completeDrill}

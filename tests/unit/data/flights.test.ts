@@ -1,11 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { drills } from '../../../src/data/drills';
 import { drillShift, flights } from '../../../src/data/flights';
+import { kits } from '../../../src/data/kits';
 import { predictions } from '../../../src/data/predictions';
 
 /** A flight only names drills: each must exist, in campaign order, and every drill belongs to some flight. */
 describe('flights', () => {
-  const ids = [...drills, ...predictions].map((each) => each.id);
+  const ids = [...drills, ...predictions, ...kits].map((each) => each.id);
 
   it('have their own ids and titles', () => {
     expect(new Set(flights.map((flight) => flight.id)).size).toBe(flights.length);

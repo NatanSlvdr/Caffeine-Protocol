@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { levels } from '../../../src/data';
 import { drills } from '../../../src/data/drills';
+import { kits } from '../../../src/data/kits';
 import { predictions } from '../../../src/data/predictions';
 import type { RunEvidence } from '../../../src/features/workspace/evidence';
 import { drillFor } from '../../../src/features/workspace/hints';
@@ -54,7 +55,7 @@ describe('drills on the campaign', () => {
     // A drill names what it's on and nothing past it.
     expect(window.textContent).not.toMatch(/Brew|Porter/);
     expect(window.querySelector('.drills-waiting')?.textContent).toBe(
-      `0 of 1 drill done. ${drills.length + predictions.length - 1} more drills open as later shifts are served.`,
+      `0 of 1 drill done. ${drills.length + predictions.length + kits.length - 1} more drills open as later shifts are served.`,
     );
   });
 
@@ -190,6 +191,75 @@ describe('a moment to call', () => {
     fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
     const pick = screen.getByRole('button', { name: new RegExp(`^${moment.title}`) });
     expect(pick.textContent).toContain(`${moment.title}, doneWhat runs next · Shift ${moment.shift}`);
+  });
+});
+
+describe('a limited kit', () => {
+  const kit = kits.find((each) => each.id === 'two-ifs')!;
+  const saved = () => JSON.parse(localStorage.getItem('caffeine-protocol.v1') ?? '{}').drills;
+
+  it('shows what it leaves out, builds from its blocks once each, and is done once the café serves the build', async () => {
+    campaign(kit.shift);
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${kit.title}`) }));
+    const window = screen.getByRole('dialog', { name: kit.title });
+    expect(document.activeElement?.textContent).toBe(kit.question);
+    expect(window.querySelector('.kit-rule')?.textContent).toBe('The kit 6 blocks, each used once · No Else');
+    const tray = within(within(window).getByRole('list', { name: 'The kit' })).getAllByRole('button');
+    expect(tray.map((tile) => tile.getAttribute('aria-label'))).toEqual([
+      'Write Coffee',
+      'End',
+      'If Tea in Orders',
+      'End',
+      'If Coffee in Orders',
+      'Write Tea',
+    ]);
+    const serve = within(window).getByRole('button', { name: 'Serve the shift' });
+    expect(serve.getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(serve);
+    expect(within(window).getByRole('status').textContent).toBe('');
+
+    // If Tea, Write Tea, If Coffee, Write Coffee, End: the first If is left open.
+    for (const at of [2, 5, 4, 0, 1]) fireEvent.click(tray[at]);
+    // The next block left in the kit takes focus.
+    await new Promise((done) => requestAnimationFrame(done));
+    expect(document.activeElement).toBe(tray[3]);
+    expect(tray[2].getAttribute('aria-disabled')).toBe('true');
+    fireEvent.click(tray[2]);
+    const built = () => [...window.querySelectorAll<HTMLElement>('.drill-filled .block-line')];
+    expect(built().map((line) => [line.textContent, line.style.getPropertyValue('--depth')])).toEqual([
+      ['If Tea in Orders', '0'],
+      ['Write Tea', '1'],
+      ['If Coffee in Orders', '1'],
+      ['Write Coffee', '2'],
+      ['End', '1'],
+    ]);
+    fireEvent.click(serve);
+    expect(within(window).getByRole('status').textContent).toBe(
+      'Not served. This If needs an End to close it. Take blocks back and try again.',
+    );
+    expect(saved()).toBeUndefined();
+
+    // Take back the End and the inner pair, and build it right.
+    const takeBack = within(window).getByRole('button', { name: 'Take back the last block' });
+    fireEvent.click(takeBack);
+    expect(within(window).getByRole('status').textContent).toBe('');
+    expect(window.querySelector('[aria-live="polite"]')?.textContent).toBe('End taken back.');
+    fireEvent.click(takeBack);
+    fireEvent.click(takeBack);
+    for (const at of [1, 4, 0, 3]) fireEvent.click(tray[at]);
+    expect(window.querySelector('[aria-live="polite"]')?.textContent).toBe('End placed, 6 of 6.');
+    // With the kit empty, the gap closes and Serve is next.
+    expect(within(window).queryByText('The rest of the gap')).toBeNull();
+    await new Promise((done) => requestAnimationFrame(done));
+    expect(document.activeElement).toBe(serve);
+    fireEvent.click(serve);
+    expect(within(window).getByRole('status').textContent).toBe(`Served. ${kit.idea}`);
+    expect(saved()).toEqual([kit.id]);
+    fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
+    expect(screen.getByRole('button', { name: new RegExp(`^${kit.title}`) }).textContent).toContain(
+      `${kit.title}, doneFrom a kit · Shift ${kit.shift}`,
+    );
   });
 });
 

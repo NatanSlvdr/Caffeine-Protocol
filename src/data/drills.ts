@@ -185,8 +185,11 @@ export const drills: readonly Drill[] = [
 const worked = (shift: number): RobotPrograms =>
   shift >= UNLOCKS.prep ? referencePrograms(shift) : { query: lessons[shift - 1].solution, prep: '', floor: '' };
 
+/** What cuts a gap in a worked example: the shift, whose routine, and the passage the gap leaves out. */
+type Gap = Pick<Drill, 'id' | 'shift' | 'robot' | 'passage'>;
+
 /** The drill's robot's routine, around its gap: the worked example before and after the passage. */
-export function drillRoutine(drill: Drill): { before: string; after: string } {
+export function drillRoutine(drill: Gap): { before: string; after: string } {
   const source = worked(drill.shift)[drill.robot];
   const at = source.indexOf(drill.passage);
   if (at < 0) throw new Error(`${drill.id}: the passage isn't in Shift ${drill.shift}'s worked example`);
@@ -203,7 +206,7 @@ export interface DrillLine {
  * The routine laid out by nesting with a choice in its gap, cut in three: the lines above the gap, the choice's own,
  * and the lines below. End only closes a scope, so it's left out, as the block editor leaves it out.
  */
-export function drillLines(drill: Drill, choice = drill.passage): Record<'before' | 'gap' | 'after', DrillLine[]> {
+export function drillLines(drill: Gap, choice = drill.passage): Record<'before' | 'gap' | 'after', DrillLine[]> {
   const { before, after } = drillRoutine(drill);
   const lines = indentSource(before + choice + after).split('\n');
   const from = before.split('\n').length - 1,
@@ -216,7 +219,7 @@ export function drillLines(drill: Drill, choice = drill.passage): Record<'before
 }
 
 /** Serve the drill's shift with one of its choices in the gap, and the worked example everywhere else. */
-export function tryDrill(drill: Drill, choice: string): RunResult {
+export function tryDrill(drill: Gap, choice: string): RunResult {
   const { before, after } = drillRoutine(drill);
   const programs = { ...worked(drill.shift), [drill.robot]: before + choice + after };
   const level = levels[drill.shift - 1];

@@ -4,29 +4,33 @@ import { BlockLines, Modal, spokenLines } from '@/components';
 import { titleFor } from '@/data';
 import { drillLines, tryDrill, type Drill } from '@/data/drills';
 import { drillShift, flights, type Flight } from '@/data/flights';
+import type { Kit } from '@/data/kits';
 import type { Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
 import { useCafeName } from '@/state/GameStore';
+import { KitView } from './KitView';
 import { PredictionView } from './PredictionView';
 import { acts } from './rail/acts';
 
 /** How many lines of the routine show on each side of the gap. */
 const CONTEXT = 3;
 
-/** Either kind of drill: a gap to fill, or a paused moment to call. */
-type Entry = { kind: 'gap'; item: Drill } | { kind: 'next'; item: Prediction };
-const KIND: Record<Entry['kind'], string> = { gap: 'Fill the gap', next: 'What runs next' };
+/** Any kind of drill: a gap to fill, a paused moment to call, or a gap to build from a limited kit. */
+type Entry = { kind: 'gap'; item: Drill } | { kind: 'next'; item: Prediction } | { kind: 'kit'; item: Kit };
+const KIND: Record<Entry['kind'], string> = { gap: 'Fill the gap', next: 'What runs next', kit: 'From a kit' };
 
 /**
  * Drills, away from the rail: each one on an idea a shift taught, open once that shift is served, so it never gives a
- * shift's answer away early. Two kinds: fill the gap in a worked example, or call which block runs next in a moment
- * paused from one. Either way the café plays the pick out. A drill got right on the first pick is ticked as done,
- * kept with the café but apart from its stars; the rest can be tried as often as they help. Flights gather the drills
- * on one idea from across the acts, to play one after another.
+ * shift's answer away early. Three kinds: fill the gap in a worked example, call which block runs next in a moment
+ * paused from one, or build a gap's passage from a kit that leaves out the block the example leans on. Every way, the
+ * café plays the pick out. A drill got right on the first pick, or a kit once served, is ticked as done, kept with the
+ * café but apart from its stars; the rest can be tried as often as they help. Flights gather the drills on one idea
+ * from across the acts, to play one after another.
  */
 export function DrillsWindow({
   drills,
   predictions,
+  kits,
   waiting,
   fresh = [],
   done = [],
@@ -37,6 +41,8 @@ export function DrillsWindow({
   drills: readonly Drill[];
   /** The moments to call on shifts already served, in campaign order. */
   predictions: readonly Prediction[];
+  /** The limited kits on shifts already served, in campaign order. */
+  kits: readonly Kit[];
   /** How many of either are still to come, on shifts not served yet. */
   waiting: number;
   /** The drills that weren't there when the drills were last opened. */
@@ -57,6 +63,7 @@ export function DrillsWindow({
   const entries: Entry[] = [
     ...drills.map((item) => ({ kind: 'gap' as const, item })),
     ...predictions.map((item) => ({ kind: 'next' as const, item })),
+    ...kits.map((item) => ({ kind: 'kit' as const, item })),
   ].sort((a, b) => a.item.shift - b.item.shift);
   const back = () => {
     setLeft(flying?.flight.id ?? entry?.item.id);
@@ -85,13 +92,15 @@ export function DrillsWindow({
         <>
           {entry.kind === 'gap' ? (
             <DrillView key={entry.item.id} drill={entry.item} onBack={back} onDone={finished(entry.item.id)} />
-          ) : (
+          ) : entry.kind === 'next' ? (
             <PredictionView
               key={entry.item.id}
               prediction={entry.item}
               onBack={back}
               onDone={finished(entry.item.id)}
             />
+          ) : (
+            <KitView key={entry.item.id} kit={entry.item} onBack={back} onDone={finished(entry.item.id)} />
           )}
           {flying && step >= 0 && (
             <FlightStep
@@ -106,9 +115,10 @@ export function DrillsWindow({
       ) : (
         <>
           <p className="drills-intro">
-            One idea from a served shift at a time: fill the gap in a routine, or call which block runs next, and the
-            café plays it out. A flight plays the drills on one idea one after another. A drill got right on the first
-            pick is ticked; none of it counts toward stars.
+            One idea from a served shift at a time: fill the gap in a routine, call which block runs next, or build a
+            passage from a kit that leaves a block out, and the café plays it out. A flight plays the drills on one idea
+            one after another. A drill got right on the first pick, or a kit once served, is ticked; none of it counts
+            toward stars.
           </p>
           <FlightList entries={entries} done={done} left={left} onFly={fly} />
           {acts.map((act) => {
