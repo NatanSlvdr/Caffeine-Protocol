@@ -111,6 +111,14 @@ A drill of either kind got right on the first pick is ticked as done. The ticks
 are kept in the save (`drills`, a list of ids, left out of a café with none) and
 never count toward stars. Anything else can be tried as often as it helps.
 
+Flights gather the drills on one idea from across the acts: where a block goes,
+which way a check sends a robot, listening closely, going round again, out to a
+function and back, and wherever-whenever on the floor. A flight opens with its
+first drill's shift, plays its open drills one after another from the first not
+yet ticked, and counts its own ticks; one still partly shut says which shift
+opens the rest. A flight is only a list of drill ids (`src/data/flights.ts`), so
+its progress is the drills' ticks and nothing new is stored.
+
 Scoring metrics shown after a run:
 
 - Seeds passed.

@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeft, Check, CircleCheck, CircleX } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, Modal, spokenLines } from '@/components';
 import { titleFor } from '@/data';
 import { drillLines, tryDrill, type Drill } from '@/data/drills';
+import { drillShift, flights, type Flight } from '@/data/flights';
 import type { Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
 import { useCafeName } from '@/state/GameStore';
@@ -20,7 +21,8 @@ const KIND: Record<Entry['kind'], string> = { gap: 'Fill the gap', next: 'What r
  * Drills, away from the rail: each one on an idea a shift taught, open once that shift is served, so it never gives a
  * shift's answer away early. Two kinds: fill the gap in a worked example, or call which block runs next in a moment
  * paused from one. Either way the café plays the pick out. A drill got right on the first pick is ticked as done,
- * kept with the café but apart from its stars; the rest can be tried as often as they help.
+ * kept with the café but apart from its stars; the rest can be tried as often as they help. Flights gather the drills
+ * on one idea from across the acts, to play one after another.
  */
 export function DrillsWindow({
   drills,
@@ -47,20 +49,30 @@ export function DrillsWindow({
 }) {
   const cafe = useCafeName();
   const [entry, setEntry] = useState<Entry>();
-  // Back from a drill, its own line in the list takes focus again, where the player left off.
+  // A flight being played: its open drills, one after another.
+  const [flying, setFlying] = useState<{ flight: Flight; list: Entry[] }>();
+  // Back from a drill, its own line in the list takes focus again, where the player left off; back from a flight, the
+  // flight's.
   const [left, setLeft] = useState<string>();
   const entries: Entry[] = [
     ...drills.map((item) => ({ kind: 'gap' as const, item })),
     ...predictions.map((item) => ({ kind: 'next' as const, item })),
   ].sort((a, b) => a.item.shift - b.item.shift);
   const back = () => {
-    setLeft(entry?.item.id);
+    setLeft(flying?.flight.id ?? entry?.item.id);
     setEntry(undefined);
+    setFlying(undefined);
   };
   const finished = (id: string) => () => {
     if (!done.includes(id)) onDone(id);
   };
   const ticked = done.filter((id) => entries.some((each) => each.item.id === id)).length;
+  // A flight starts at its first open drill not yet ticked, or from the top once every open one is.
+  const fly = (flight: Flight, list: Entry[]) => {
+    setFlying({ flight, list });
+    setEntry(list.find((each) => !done.includes(each.item.id)) ?? list[0]);
+  };
+  const step = flying && entry ? flying.list.indexOf(entry) : -1;
   return (
     <Modal
       className="settings-window drills-window"
@@ -69,16 +81,36 @@ export function DrillsWindow({
       onClose={onClose}
       wide
     >
-      {entry?.kind === 'gap' ? (
-        <DrillView key={entry.item.id} drill={entry.item} onBack={back} onDone={finished(entry.item.id)} />
-      ) : entry?.kind === 'next' ? (
-        <PredictionView key={entry.item.id} prediction={entry.item} onBack={back} onDone={finished(entry.item.id)} />
+      {entry ? (
+        <>
+          {entry.kind === 'gap' ? (
+            <DrillView key={entry.item.id} drill={entry.item} onBack={back} onDone={finished(entry.item.id)} />
+          ) : (
+            <PredictionView
+              key={entry.item.id}
+              prediction={entry.item}
+              onBack={back}
+              onDone={finished(entry.item.id)}
+            />
+          )}
+          {flying && step >= 0 && (
+            <FlightStep
+              flight={flying.flight}
+              list={flying.list}
+              step={step}
+              done={done}
+              onNext={() => (step + 1 < flying.list.length ? setEntry(flying.list[step + 1]) : back())}
+            />
+          )}
+        </>
       ) : (
         <>
           <p className="drills-intro">
             One idea from a served shift at a time: fill the gap in a routine, or call which block runs next, and the
-            café plays it out. A drill got right on the first pick is ticked; none of it counts toward stars.
+            café plays it out. A flight plays the drills on one idea one after another. A drill got right on the first
+            pick is ticked; none of it counts toward stars.
           </p>
+          <FlightList entries={entries} done={done} left={left} onFly={fly} />
           {acts.map((act) => {
             const here = entries.filter((each) => each.item.shift - 1 >= act.from && each.item.shift - 1 < act.to);
             if (!here.length) return null;
@@ -127,6 +159,107 @@ export function DrillsWindow({
         </>
       )}
     </Modal>
+  );
+}
+
+/**
+ * The flights, by idea: each opens with its first drill's shift, plays its open drills in campaign order, and counts
+ * its own ticks. One whose drills aren't all open yet says which shift opens the next.
+ */
+function FlightList({
+  entries,
+  done,
+  left,
+  onFly,
+}: {
+  entries: readonly Entry[];
+  done: readonly string[];
+  left?: string;
+  onFly: (flight: Flight, list: Entry[]) => void;
+}) {
+  const rows = flights.map((flight) => {
+    const list = flight.items.flatMap((id) => entries.filter((each) => each.item.id === id));
+    const shut = flight.items.filter((id) => !list.some((each) => each.item.id === id));
+    return { flight, list, shut, opens: Math.min(...shut.map(drillShift)) };
+  });
+  const first = rows.find((row) => row.list.length)?.flight;
+  return (
+    <section className="drills-act drills-flights" aria-label="Flights, by idea">
+      <h3>Flights · By idea</h3>
+      <ul>
+        {rows.map(({ flight, list, shut, opens }) => {
+          const ticks = list.filter((each) => done.includes(each.item.id)).length;
+          const all = ticks === flight.items.length;
+          return (
+            <li key={flight.id}>
+              <button
+                className={`drills-pick drills-flight${all ? ' done' : ''}`}
+                aria-disabled={!list.length || undefined}
+                autoFocus={flight.id === left}
+                data-autofocus={flight === first || undefined}
+                onClick={() => list.length && onFly(flight, list)}
+              >
+                <strong>
+                  {flight.title}
+                  {all && (
+                    <span className="drills-done">
+                      <Check size={14} strokeWidth={3} aria-hidden="true" />
+                      <span className="sr-only">, done</span>
+                    </span>
+                  )}
+                </strong>
+                <span className="drills-flight-idea">{flight.idea}</span>
+                <small>
+                  {list.length
+                    ? `${ticks} of ${count(flight.items.length, 'drill')} done`
+                    : `${count(flight.items.length, 'drill')}`}
+                  {shut.length > 0 &&
+                    (list.length
+                      ? ` · ${shut.length} more once Shift ${opens} is served`
+                      : ` · Opens once Shift ${opens} is served`)}
+                </small>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+/** Where a flight is up to: its name, a mark for each of its open drills, and on to the next one, or back. */
+function FlightStep({
+  flight,
+  list,
+  step,
+  done,
+  onNext,
+}: {
+  flight: Flight;
+  list: readonly Entry[];
+  step: number;
+  done: readonly string[];
+  onNext: () => void;
+}) {
+  const last = step === list.length - 1;
+  return (
+    <nav className="flight-step" aria-label={`${flight.title}, drill ${step + 1} of ${list.length}`}>
+      <span className="flight-step-name">
+        {flight.title} · {step + 1} of {list.length}
+      </span>
+      <ol className="flight-step-marks" aria-hidden="true">
+        {list.map((each, i) => (
+          <li
+            key={each.item.id}
+            className={[i === step && 'here', done.includes(each.item.id) && 'done'].filter(Boolean).join(' ')}
+          />
+        ))}
+      </ol>
+      <button className="settings-chip flight-next" onClick={onNext}>
+        {last ? 'End of the flight' : `Next: ${list[step + 1].item.title}`}
+        <ArrowRight size={15} aria-hidden="true" />
+      </button>
+    </nav>
   );
 }
 

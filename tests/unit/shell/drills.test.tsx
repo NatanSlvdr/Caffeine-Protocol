@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { levels } from '../../../src/data';
 import { drills } from '../../../src/data/drills';
@@ -62,7 +62,7 @@ describe('drills on the campaign', () => {
     localStorage.setItem(SEEN_KEY, JSON.stringify({ drills: [first.id] }));
     campaign(drills[1].shift);
     fireEvent.click(screen.getByRole('button', { name: 'Drills, 2 drills, 1 new' }));
-    const picks = within(screen.getByRole('dialog')).getAllByRole('button', { name: /Shift/ });
+    const picks = within(screen.getByRole('region', { name: 'Act I, Query' })).getAllByRole('button');
     expect(picks.map((pick) => pick.textContent?.includes('New'))).toEqual([false, true]);
     expect(screen.getByRole('button', { name: 'Drills, 2 drills' })).toBeTruthy();
   });
@@ -190,6 +190,65 @@ describe('a moment to call', () => {
     fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
     const pick = screen.getByRole('button', { name: new RegExp(`^${moment.title}`) });
     expect(pick.textContent).toContain(`${moment.title}, doneWhat runs next · Shift ${moment.shift}`);
+  });
+});
+
+describe('a flight', () => {
+  const flightsOf = () => within(screen.getByRole('region', { name: 'Flights, by idea' }));
+
+  it('waits for its first shift, then counts what is open and says which shift opens the rest', () => {
+    campaign(first.shift);
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    const shut = flightsOf().getByRole('button', { name: /^Which way/ });
+    expect(shut.getAttribute('aria-disabled')).toBe('true');
+    expect(shut.querySelector('small')?.textContent).toBe('5 drills · Opens once Shift 4 is served');
+    fireEvent.click(shut);
+    expect(screen.getByRole('dialog', { name: 'Drills.' })).toBeTruthy();
+    // The flight with an open drill takes focus when the drills open.
+    expect(document.activeElement?.textContent).toMatch(/^Where a block goes/);
+    cleanup();
+
+    campaign(4);
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    expect(
+      flightsOf()
+        .getByRole('button', { name: /^Which way/ })
+        .querySelector('small')?.textContent,
+    ).toBe('0 of 5 drills done · 3 more once Shift 17 is served');
+  });
+
+  it('plays its open drills one after another, from the first not yet ticked, and back to itself at the end', () => {
+    seedLocalStorage(makeSave({ unlocked: 4, selected: 4, stars: servedThrough(4), drills: ['if-else'] }));
+    render(
+      <GameProvider>
+        <CampaignPage />
+      </GameProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    fireEvent.click(flightsOf().getByRole('button', { name: /^Which way/ }));
+    const step = () => screen.getByRole('navigation', { name: /^Which way/ });
+    // If-else is ticked already, so the flight picks up with the moment to call.
+    expect(screen.getByRole('dialog', { name: 'Which side of the If' })).toBeTruthy();
+    expect(step().getAttribute('aria-label')).toBe('Which way, drill 2 of 2');
+    expect(step().querySelectorAll('li.done')).toHaveLength(1);
+    fireEvent.click(within(screen.getByRole('list', { name: 'Blocks' })).getAllByRole('button')[0]);
+    expect(step().querySelectorAll('li.done')).toHaveLength(2);
+
+    fireEvent.click(within(step()).getByRole('button', { name: 'End of the flight' }));
+    expect(screen.getByRole('dialog', { name: 'Drills.' })).toBeTruthy();
+    expect(document.activeElement?.textContent).toMatch(/^Which way/);
+    expect(document.activeElement?.querySelector('small')?.textContent).toBe(
+      '2 of 5 drills done · 3 more once Shift 17 is served',
+    );
+
+    // Every open drill ticked: the flight plays from the top, and on to the next.
+    fireEvent.click(document.activeElement!);
+    expect(screen.getByRole('dialog', { name: 'One or the other' })).toBeTruthy();
+    fireEvent.click(within(step()).getByRole('button', { name: 'Next: Which side of the If' }));
+    expect(screen.getByRole('dialog', { name: 'Which side of the If' })).toBeTruthy();
+    expect(document.activeElement?.textContent).toBe('Which block does Query run next?');
+    fireEvent.click(screen.getByRole('button', { name: 'All drills' }));
+    expect(document.activeElement?.textContent).toMatch(/^Which way/);
   });
 });
 

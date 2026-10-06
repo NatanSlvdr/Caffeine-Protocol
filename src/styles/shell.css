@@ -1522,6 +1522,65 @@ html[data-motion='reduced'] .front-page *::after {
   color: #4d9275;
   vertical-align: -1px;
 }
+/* Flights: the drills on one idea, played one after another. */
+.drills-flight-idea {
+  color: var(--slip-ink);
+  font-size: 13px;
+  line-height: 1.4;
+}
+.settings-window button.drills-pick[aria-disabled='true'] {
+  border-left-color: #392b2440;
+  cursor: default;
+}
+.settings-window button.drills-pick[aria-disabled='true']:hover {
+  background: transparent;
+}
+.drills-pick[aria-disabled='true'] strong,
+.drills-pick[aria-disabled='true'] .drills-flight-idea {
+  color: var(--slip-muted);
+}
+.flight-step {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px dashed #392b2440;
+}
+.flight-step-name {
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.flight-step-marks {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.flight-step-marks li {
+  width: 9px;
+  height: 9px;
+  border: 1.5px solid #392b2466;
+  border-radius: 50%;
+}
+.flight-step-marks li.done {
+  border-color: #4d9275;
+  background: #4d9275;
+}
+.flight-step-marks li.here {
+  outline: 2px solid var(--slip-clay);
+  outline-offset: 2px;
+}
+.settings-window button.flight-next {
+  flex: none;
+  margin-left: auto;
+}
 /* A paused moment: what the guest said, and what the robot holds and remembers. */
 .prediction-moment {
   display: flex;
