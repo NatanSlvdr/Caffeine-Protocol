@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles } from 'lucide-react';
+import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles, Wrench } from 'lucide-react';
+import { DialogueBox } from '@/components';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
@@ -7,6 +8,7 @@ import { drills } from '@/data/drills';
 import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
 import { memories, memoryOpen } from '@/data/memories';
+import { repairOpen, repairs, type Repair } from '@/data/repairs';
 import { specials } from '@/data/specials';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
@@ -23,6 +25,7 @@ import { keepsakes, shelved } from './shelf';
 import { ShelfWindow } from './ShelfWindow';
 import { SpecialsWindow } from './SpecialsWindow';
 import { MemoriesWindow } from './MemoriesWindow';
+import { RepairBayWindow } from './RepairBayWindow';
 import { useUnseen } from './unseen';
 import { ShellBar } from './ShellBar';
 
@@ -46,7 +49,7 @@ const entries: Entry[] = [
  * and the selected shift is chalked up beside it as today’s special.
  */
 export function CampaignPage() {
-  const { save, select, launch, completeDrill } = useGame();
+  const { save, select, launch, completeDrill, completeRepair } = useGame();
   const progress = useProgress();
   const shop = useCafeName();
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
@@ -93,6 +96,16 @@ export function CampaignPage() {
     remembered.map((memory) => memory.id),
   );
   const [recalling, setRecalling] = useState<readonly string[] | null>(null);
+  // The robots come to the repair bench once the shift that teaches their last sensor is served.
+  const benches = repairs.filter((repair) => repairOpen(save, repair));
+  const newBenches = useUnseen(
+    'repairs',
+    benches.map((repair) => repair.id),
+  );
+  const [repairing, setRepairing] = useState<readonly string[] | null>(null);
+  // The robot just mended, its scene playing over the rail; the bay's button takes focus back after it.
+  const [closingUp, setClosingUp] = useState<Repair>();
+  const bayButton = useRef<HTMLButtonElement>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -295,6 +308,19 @@ export function CampaignPage() {
             {newMemories.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
+        {benches.length > 0 && (
+          <button
+            ref={bayButton}
+            className="shell-icon"
+            aria-label={`Repair bay, ${count(benches.length, 'robot')} on the bench${newBenches.fresh.length ? `, ${newBenches.fresh.length} new` : ''}`}
+            aria-haspopup="dialog"
+            title="Repair bay"
+            onClick={() => setRepairing(newBenches.markSeen())}
+          >
+            <Wrench size={18} aria-hidden="true" />
+            {newBenches.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
+          </button>
+        )}
         {/* Drills come out with the first served shift that has one. */}
         {served.length > 0 && (
           <button
@@ -337,6 +363,32 @@ export function CampaignPage() {
           fresh={recalling}
           onPlay={(memory) => go(`/memory/${memory.id}`)}
           onClose={() => setRecalling(null)}
+        />
+      )}
+      {repairing && (
+        <RepairBayWindow
+          repairs={benches}
+          mended={save.repairs ?? []}
+          waiting={repairs.length - benches.length}
+          fresh={repairing}
+          onMend={(repair) => {
+            completeRepair(repair.id);
+            setRepairing(null);
+            setClosingUp(repair);
+          }}
+          onClose={() => setRepairing(null)}
+        />
+      )}
+      {closingUp && (
+        <DialogueBox
+          lines={closingUp.scene}
+          kicker={`Repair bay · ${closingUp.title}`}
+          doneLabel="Back to the rail"
+          instant={reducedMotion}
+          onDone={() => {
+            setClosingUp(undefined);
+            bayButton.current?.focus();
+          }}
         />
       )}
       {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}

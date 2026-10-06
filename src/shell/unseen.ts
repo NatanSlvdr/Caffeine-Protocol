@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { cafeKey } from '@/features/campaign/save/cafes';
 
-/** Which of the campaign's keepsakes, guestbook entries, drills, specials and memories the open café has already shown. */
+/** Which of the campaign's keepsakes, guestbook entries, drills, specials, memories and repair benches the open café has already shown. */
 export const seenKey = () => `${cafeKey()}.seen`;
-type List = 'shelf' | 'guestbook' | 'drills' | 'specials' | 'memories';
+type List = 'shelf' | 'guestbook' | 'drills' | 'specials' | 'memories' | 'repairs';
 
 function read(): Partial<Record<List, string[]>> {
   try {

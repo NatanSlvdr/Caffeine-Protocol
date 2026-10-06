@@ -77,6 +77,13 @@ The production build is static and caches itself on its first successful load. T
 3. Run Lou's routine: her three regulars are right, and the first baker's "coffee no sugar" is caught. Mend the coffee side in place: it passes, over the block target. Write the steps once after the End: every star.
 4. Back on the rail, Shift 05's routine and stars are as you left them, and the Memories window shows the memory's own stars.
 
+## Repair bay
+
+1. Before Shift 05 is served, the campaign page has no **Repair bay** button. With it served, the bay opens on Query's ears, on the bench and new, and says two more robots are to come.
+2. Open the panel: the wiring is the scrapyard's, two of six cases are right, and **Close the panel** waits. Change a wire: the cases, their ticks and the count follow at once. **Start over** puts the scrapyard's wiring back.
+3. Mend it (coffee when it doesn't hear tea, tea when it does, sugar when it hears sugar and no "no"): **Close the panel** plays Query's scene, and **Back to the rail** returns focus to the bay's button. The card now says Mended with the brass clip, and offers **Rewire again**.
+4. With Shift 11, then Shift 15, served, Brew's hands and Porter's eyes come to the bench the same way.
+
 ## Photo mode
 
 1. On a shift, open **Photo** from the heading: the routines, the heading and the playback strip go, and the café fills the desk with no bubbles or floor labels. Focus is on **Save photo**, and the framing is the view you were on.

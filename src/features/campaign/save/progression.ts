@@ -92,3 +92,8 @@ export function answerChoice(save: ProgressSave, choice: string, option: string)
 export function completeDrill(save: ProgressSave, id: string): ProgressSave {
   return save.drills?.includes(id) ? save : { ...save, drills: [...(save.drills ?? []), id] };
 }
+
+/** A robot mended on the repair bench, kept once; mending it again changes nothing. */
+export function completeRepair(save: ProgressSave, id: string): ProgressSave {
+  return save.repairs?.includes(id) ? save : { ...save, repairs: [...(save.repairs ?? []), id] };
+}

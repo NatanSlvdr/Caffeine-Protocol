@@ -15,6 +15,7 @@ import {
   clearCafe,
   completeDrill,
   completeLevel,
+  completeRepair,
   migrationChanges,
   newSave,
   parseSave,
@@ -76,6 +77,8 @@ interface GameStore {
   ) => void;
   /** A drill got right on the first pick: kept apart from the stars, as done. */
   completeDrill: (id: string) => void;
+  /** A robot mended on the repair bench: kept, and nothing scored. */
+  completeRepair: (id: string) => void;
   resetCafe: () => void;
   importCafe: (next: ProgressSave) => void;
   /** The cafés kept in this browser, and the one this tab plays. */
@@ -218,6 +221,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
         }));
       },
       completeDrill: (id) => setSave((s) => completeDrill(s, id)),
+      completeRepair: (id) => setSave((s) => completeRepair(s, id)),
       resetCafe: () => {
         keep('reset');
         setUpdated([]);

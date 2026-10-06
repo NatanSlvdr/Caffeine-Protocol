@@ -74,6 +74,7 @@ const SAVED_PART: Record<string, string> = {
   drills: 'drills done',
   specials: 'specials',
   memories: 'memories',
+  repairs: 'robots mended',
   choices: 'story choices',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
@@ -136,15 +137,15 @@ function validateChallenges(
 }
 
 /**
- * The drills got right on the first pick: ids, each once. Ids no longer in the game are kept, harmlessly, so a café
- * moved between versions loses nothing; a café with none leaves the list out.
+ * The drills got right on the first pick, or the robots mended on the repair bench: ids, each once. Ids no longer in
+ * the game are kept, harmlessly, so a café moved between versions loses nothing; a café with none leaves the list out.
  */
-function validateDrills(v: Record<string, unknown>): string[] | undefined {
-  if (v.drills === undefined || v.version !== 4) return undefined;
-  const ids = v.drills;
+function validateIds(v: Record<string, unknown>, part: 'drills' | 'repairs'): string[] | undefined {
+  if (v[part] === undefined || v.version !== 4) return undefined;
+  const ids = v[part];
   const id = (value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,47}$/.test(value);
   if (!Array.isArray(ids) || ids.length > 500 || !ids.every(id) || new Set(ids).size !== ids.length)
-    throw new Error(`Invalid ${SAVED_PART.drills}.`);
+    throw new Error(`Invalid ${SAVED_PART[part]}.`);
   return ids.length ? [...(ids as string[])] : undefined;
 }
 
@@ -345,7 +346,8 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const settings = validateSettingsMap(v);
   const robotMaps = validateRobotMaps(v, shifts);
   const challenges = validateChallenges(v, shifts);
-  const drills = validateDrills(v);
+  const drills = validateIds(v, 'drills');
+  const repairs = validateIds(v, 'repairs');
   const specials = validateKept(v, 'specials');
   const memories = validateKept(v, 'memories');
   const choices = validateChoices(v);
@@ -372,6 +374,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     ...(drills && { drills }),
     ...(specials && { specials }),
     ...(memories && { memories }),
+    ...(repairs && { repairs }),
     ...(choices && { choices }),
     settings,
   };

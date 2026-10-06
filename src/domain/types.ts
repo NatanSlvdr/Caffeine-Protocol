@@ -332,6 +332,8 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   specials?: Record<string, SpecialProgress>;
   /** Each memory's own progress, by id, kept like a special's; missing in a café that has played none. */
   memories?: Record<string, SpecialProgress>;
+  /** The robots mended on the repair bench, by bench id; missing in a café that has mended none. Nothing is scored. */
+  repairs?: string[];
   /**
    * What Niko said at each choice in the story, by choice id: the latest answer, recalled by later scenes. Missing in
    * a café that has answered none. Nothing is scored or locked by it.

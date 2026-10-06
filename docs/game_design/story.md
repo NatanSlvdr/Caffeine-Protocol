@@ -212,6 +212,20 @@ after the End earns every star. The café is drawn in the faded colours of an
 old photo while a memory plays. Its stars and routines are its own, and never
 count toward the campaign's or change the café's routines.
 
+### The repair bay
+
+Each robot came from the scrapyard with its wires put back any old way, and
+the café has run on Niko's patches since. Once the shift that teaches a robot
+the last thing its bench asks about is served, a **Repair bay** button on the
+campaign page opens the back room (`src/data/repairs.ts`): Query's ears after
+Shift 05, Brew's hands after Shift 11, Porter's eyes after Shift 15. Mending is
+optional and earns nothing toward stars. The panel closes on a short scene
+after hours, only Niko and the robot: the robot runs its own self-test in its
+own voice, and Niko adds a small touch that stays on the bay's card (a brass
+clip from Lou's drawer for Query's clipboard, a fresh striped towel for Brew,
+Porter's bow tie straightened). Moka and Pip stay out of these scenes, since a
+bench can be opened long after they have left.
+
 ### Portraits
 
 Put the full-size PNGs in `assets/portraits/<id>/<mood>.png`, then run

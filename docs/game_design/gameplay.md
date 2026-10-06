@@ -132,6 +132,21 @@ yet ticked, and counts its own ticks; one still partly shut says which shift
 opens the rest. A flight is only a list of drill ids (`src/data/flights.ts`), so
 its progress is the drills' ticks and nothing new is stored.
 
+The repair bay is a logic puzzle on a robot's wiring, away from any routine. A
+bench lists a handful of the robot's sensors (the conditions its routines
+already ask about: "hears tea", "holds a clean cup", "sees a drink at the
+pickup") and its actions, and each action is wired to up to two sensors, each
+read as it is or the other way round. An action goes off when every sensor
+wired to it reads as set, and one wired to nothing never does: the If on two
+conditions, without the routine around it (`src/domain/repair.ts`). Beside the
+board are the worked cases, what the robot meets and what it should then do,
+each showing what the wiring does now and whether that is right; the bench is
+mended when every case is. The scrapyard's wiring gets some cases right and
+never all, and `tests/unit/data/repairs.test.ts` checks every bench comes
+broken, has a wiring that mends it, asks for every action somewhere and has no
+two cases that read alike. Only the mended robots are kept (`repairs`, a list
+of ids); a half-wired board is not.
+
 The test bench lets the player write guests of their own for a shift and run
 the routines on them. A bench is written the way the shift's guests order: the
 drink, how sugar is asked for, to go, in a rush, a second drink, a mumble first,

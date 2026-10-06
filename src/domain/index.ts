@@ -23,6 +23,7 @@ export * from './pricing';
 export * from './program';
 export * from './queryMovement';
 export * from './regulars';
+export * from './repair';
 export * from './replay';
 export * from './robotConditions';
 export * from './robotProgram';

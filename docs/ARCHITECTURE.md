@@ -140,6 +140,12 @@ the routines carried in are Shift 21's, and serving a special never unlocks,
 finishes or stars anything in the campaign. `parseSave` checks the map (ids,
 star counts, known challenges, at most 100 entries) and drops empty entries.
 
+The robots mended on the repair bench are a list of ids in `repairs`, checked
+like `drills`; a wiring in progress lives in the bay's own state and is never
+saved. The bench's logic (`domain/repair.ts`) is pure, and each bench in
+`data/repairs.ts` checks as the module loads that its starter is broken and its
+solution mends it.
+
 A memory (`data/memories.ts`) keeps its progress the same way, in `memories`,
 but plays in the place of the shift whose toolkit it borrows (`L05-day-one`
 plays at index 4, with Shift 5's blocks). `app/MemoryShift.tsx` hands the
@@ -187,6 +193,9 @@ mounts the shot as a captioned print on a 2D canvas; where there is none
 - **Memory**: one `Memory` in `data/memories.ts`, with `opens` (the campaign
   shift whose service brings it out) and a level id naming the toolkit it
   borrows, plus a test that plays its reference and its starter.
+- **Repair bench**: one `Repair` in `data/repairs.ts`, with `opens`, its
+  sensors, actions and worked cases, a starter and a solution. It checks itself
+  as the module loads, and its card in the Repair bay follows from the id.
 - **Block**: one `BlockRegistry` entry (family/operands) plus the command in
   the compiler's `availableCommands` and interpreter dispatch — the registry
   is the discovery point; the language core stays explicit.

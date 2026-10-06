@@ -3451,3 +3451,147 @@ html[data-motion='reduced'] .story-page *::after {
 .settings-pace input[type='radio'] {
   accent-color: var(--slip-coffee);
 }
+/* The repair bay: a robot's wiring on the bench, an action to a row, beside the cases it has to get right. */
+.settings-window p.repair-waiting {
+  margin: 14px 0 0;
+  color: var(--slip-coffee);
+  font-size: 14px;
+  font-style: italic;
+  text-align: center;
+}
+.settings-window p.repair-fault {
+  margin: 8px 0 4px;
+  color: var(--slip-ink);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.settings-window p.repair-how {
+  margin: 0 0 14px;
+  color: var(--slip-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.repair-board {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 12px 16px 14px;
+  border: 1px solid #392b2440;
+  border-left: 3px solid var(--slip-clay);
+  background: #b968470a;
+}
+.repair-board legend {
+  padding: 0 6px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.repair-wire {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(0, 1.3fr) minmax(0, 1.3fr);
+  gap: 10px;
+  align-items: center;
+}
+.repair-action {
+  color: var(--slip-ink);
+  font-size: 14px;
+  font-weight: 700;
+}
+.repair-terminal {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+  color: var(--slip-muted);
+  font-size: 12px;
+}
+.repair-terminal span {
+  flex: none;
+}
+.repair-terminal select {
+  flex: 1;
+  min-width: 0;
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1.5px solid #392b2433;
+  border-radius: 8px;
+  color: var(--slip-ink);
+  background: var(--slip-paper);
+  font: inherit;
+  font-size: 13px;
+}
+.repair-terminal select:focus-visible {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 1px;
+}
+.repair-cases {
+  width: 100%;
+  margin-top: 14px;
+  border-collapse: collapse;
+  color: var(--slip-ink);
+  font-size: 13px;
+}
+.repair-cases caption {
+  margin-bottom: 6px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: left;
+  text-transform: uppercase;
+}
+.repair-cases th,
+.repair-cases td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #392b241f;
+  text-align: left;
+  vertical-align: top;
+}
+.repair-cases thead th {
+  color: var(--slip-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.repair-cases tbody th {
+  font-weight: 700;
+}
+.repair-cases tbody th small {
+  display: block;
+  margin-top: 2px;
+  color: var(--slip-muted);
+  font-size: 11px;
+  font-weight: 400;
+}
+.repair-cases td:last-child {
+  width: 1%;
+}
+.repair-cases tr.holds td:last-child {
+  color: #4d9275;
+}
+.repair-cases tr.fails td:last-child {
+  color: var(--slip-clay);
+}
+.repair-cases tr.fails td:nth-child(3) {
+  color: var(--slip-coffee);
+  font-style: italic;
+}
+.repair-foot {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 14px;
+}
+.settings-window .repair-foot p {
+  margin: 0 auto 0 0;
+  color: var(--slip-muted);
+  font-size: 14px;
+}
+.settings-window .repair-foot p.repair-mends {
+  /* Darker than the tick's green: this is text, and needs the contrast. */
+  color: #2f6b52;
+  font-weight: 700;
+}
