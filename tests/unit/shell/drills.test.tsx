@@ -2,6 +2,7 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { levels } from '../../../src/data';
 import { drills } from '../../../src/data/drills';
+import { predictions } from '../../../src/data/predictions';
 import type { RunEvidence } from '../../../src/features/workspace/evidence';
 import { drillFor } from '../../../src/features/workspace/hints';
 import { HelpModal } from '../../../src/features/workspace/modals/HelpModal';
@@ -52,7 +53,9 @@ describe('drills on the campaign', () => {
     expect(within(window).getByRole('region', { name: 'Act I, Query' })).toBeTruthy();
     // A drill names what it's on and nothing past it.
     expect(window.textContent).not.toMatch(/Brew|Porter/);
-    expect(within(window).getByText(`${drills.length - 1} more drills open as later shifts are served.`)).toBeTruthy();
+    expect(window.querySelector('.drills-waiting')?.textContent).toBe(
+      `0 of 1 drill done. ${drills.length + predictions.length - 1} more drills open as later shifts are served.`,
+    );
   });
 
   it('marks the drills that came in since they were last opened', () => {
@@ -108,6 +111,85 @@ describe('drills on the campaign', () => {
       [...passage.querySelectorAll<HTMLElement>('.block-line')].map((line) => line.style.getPropertyValue('--depth'));
     expect(depths(passages[0])).toEqual(['0', '0']);
     expect(depths(passages[1])).toEqual(['0', '1']);
+  });
+});
+
+describe('a drill got right on the first pick', () => {
+  const open = (title: string) => {
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${title}`) }));
+    return screen.getByRole('dialog', { name: title });
+  };
+  const saved = () => JSON.parse(localStorage.getItem('caffeine-protocol.v1') ?? '{}').drills;
+
+  it('is ticked and kept with the café; one got right only after a miss is not', () => {
+    campaign(first.shift);
+    let window = open(first.title);
+    const passages = () => within(within(window).getByRole('list', { name: 'Passages' })).getAllByRole('button');
+    fireEvent.click(passages()[0]);
+    fireEvent.click(passages()[1]);
+    expect(within(window).getByRole('status').textContent).toMatch(/^Served/);
+    fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
+    expect(screen.getByRole('button', { name: /^Paper, then pen/ }).textContent).not.toContain('done');
+    expect(saved()).toBeUndefined();
+
+    window = open(first.title);
+    fireEvent.click(passages()[1]);
+    fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
+    expect(screen.getByRole('button', { name: /^Paper, then pen/ }).textContent).toMatch(/^Paper, then pen, done/);
+    expect(screen.getByRole('dialog').querySelector('.drills-waiting')?.textContent).toMatch(/^1 of 1 drill done\./);
+    expect(saved()).toEqual([first.id]);
+  });
+});
+
+describe('a moment to call', () => {
+  const moment = predictions.find((each) => each.id === 'tea-or-coffee')!;
+  const open = () => {
+    campaign(moment.shift);
+    fireEvent.click(screen.getByRole('button', { name: /^Drills/ }));
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${moment.title}`) }));
+    return screen.getByRole('dialog', { name: moment.title });
+  };
+
+  it('shows the guest, the block just run and lettered choices, then what the café ran next', () => {
+    const window = open();
+    expect(document.activeElement?.textContent).toBe('Which block does Query run next?');
+    expect(window.querySelector('.prediction-moment')?.textContent).toContain('The guest says“tea”');
+    expect(window.querySelector('.block-line.ran')?.textContent).toBe('If Tea in Orders just ran');
+    const blocks = within(within(window).getByRole('list', { name: 'Blocks' })).getAllByRole('button');
+    expect(blocks.map((block) => block.getAttribute('aria-label'))).toEqual([
+      'A: Write Tea',
+      'B: Write Coffee',
+      'C: Move right 1',
+    ]);
+    // The letters are in the routine too, beside the blocks they stand for.
+    expect([...window.querySelectorAll('figure .block-line-mark')].map((mark) => mark.textContent?.trim())).toEqual([
+      'just ran',
+      'A',
+      'B',
+      'C',
+    ]);
+
+    fireEvent.click(blocks[1]);
+    const status = within(window).getByRole('status');
+    expect(status.textContent).toBe(`Not this time. Query ran A, Write Tea, next. ${moment.why}`);
+    expect(window.querySelector('.block-line.next')?.textContent).toBe('Write Tea A · ran next');
+    expect(window.querySelector('.block-line.missed')?.textContent).toBe('Write Coffee B');
+    // One call a visit: the others can't be tried once the café has shown the answer.
+    expect(blocks.every((block) => block.getAttribute('aria-disabled') === 'true')).toBe(true);
+    fireEvent.click(blocks[0]);
+    expect(status.textContent).toMatch(/^Not this time/);
+    fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
+    expect(screen.getByRole('button', { name: new RegExp(`^${moment.title}`) }).textContent).not.toContain('done');
+  });
+
+  it('is done once called right', () => {
+    const window = open();
+    fireEvent.click(within(within(window).getByRole('list', { name: 'Blocks' })).getAllByRole('button')[0]);
+    expect(within(window).getByRole('status').textContent).toBe(`Called it. ${moment.why}`);
+    fireEvent.click(within(window).getByRole('button', { name: 'All drills' }));
+    const pick = screen.getByRole('button', { name: new RegExp(`^${moment.title}`) });
+    expect(pick.textContent).toContain(`${moment.title}, doneWhat runs next · Shift ${moment.shift}`);
   });
 });
 

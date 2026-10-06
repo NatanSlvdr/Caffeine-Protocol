@@ -1516,6 +1516,85 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 14px;
   line-height: 1.5;
 }
+.drills-done {
+  display: inline-flex;
+  margin-left: 7px;
+  color: #4d9275;
+  vertical-align: -1px;
+}
+/* A paused moment: what the guest said, and what the robot holds and remembers. */
+.prediction-moment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 28px;
+  margin: 0 0 14px;
+}
+.prediction-moment dt {
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.prediction-moment dd {
+  margin: 2px 0 0;
+  color: var(--slip-ink);
+  font-size: 14px;
+}
+/* A whole routine can run long, so it scrolls inside the slip and opens on the block just run. */
+.prediction-routine {
+  position: relative;
+  max-height: min(300px, 38vh);
+  overflow-y: auto;
+  padding: 2px 4px 2px 2px;
+}
+.block-line-mark {
+  margin-left: 8px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+}
+.block-line.ran .command-tile {
+  outline: 2px solid var(--slip-ink);
+  outline-offset: 1px;
+}
+.block-line.ran .block-line-mark {
+  color: var(--slip-ink);
+}
+.block-line.next .command-tile {
+  outline: 2px solid #4d9275;
+  outline-offset: 1px;
+}
+.block-line.next .block-line-mark {
+  color: #3c7a60;
+}
+.block-line.missed .command-tile {
+  outline: 2px dashed var(--slip-clay);
+  outline-offset: 1px;
+}
+.settings-window button.prediction-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.settings-window button.prediction-choice[aria-disabled='true'] {
+  cursor: default;
+}
+.settings-window button.prediction-choice[aria-disabled='true']:not([aria-pressed='true']) {
+  opacity: 0.6;
+}
+.settings-window button.prediction-choice[aria-disabled='true']:not([aria-pressed='true']):hover {
+  border-color: #392b2433;
+  background: var(--slip-paper);
+}
+.prediction-letter {
+  color: var(--slip-coffee);
+  font-family: var(--slip-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
 .settings-volume {
   display: block;
   margin: 14px 0 18px;

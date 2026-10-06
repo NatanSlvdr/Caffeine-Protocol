@@ -8,6 +8,7 @@ import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import {
   SAVE_KEY,
   backupSave,
+  completeDrill,
   completeLevel,
   migrationChanges,
   newSave,
@@ -59,6 +60,8 @@ interface GameStore {
     programs: RobotPrograms,
     met: ChallengeMeasure[],
   ) => void;
+  /** A drill got right on the first pick: kept apart from the stars, as done. */
+  completeDrill: (id: string) => void;
   resetCafe: () => void;
   importCafe: (next: ProgressSave) => void;
 }
@@ -173,6 +176,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
           robotSolutions: { ...s.robotSolutions, [index]: programs },
         }));
       },
+      completeDrill: (id) => setSave((s) => completeDrill(s, id)),
       resetCafe: () => {
         keep('reset');
         setUpdated([]);

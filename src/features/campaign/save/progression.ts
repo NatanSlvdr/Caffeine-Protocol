@@ -82,3 +82,8 @@ export function openingRole(save: ProgressSave, index: number, lessons: LessonCa
     changed = changedRoles(save, index, lessons);
   return changed.length && !changed.includes(lead) ? changed[0] : lead;
 }
+
+/** A drill got right on the first pick joins the ones done before; it stays done, and adds nothing to the stars. */
+export function completeDrill(save: ProgressSave, id: string): ProgressSave {
+  return save.drills?.includes(id) ? save : { ...save, drills: [...(save.drills ?? []), id] };
+}

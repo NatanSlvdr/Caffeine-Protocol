@@ -312,4 +312,6 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   robotSolutions: Record<string, RobotPrograms>;
   /** The optional challenges met on each shift, by measure; missing in a café that has met none. */
   challenges?: Record<string, ChallengeMeasure[]>;
+  /** The drills got right on the first pick, by id; missing in a café that has none. They never count toward stars. */
+  drills?: string[];
 }

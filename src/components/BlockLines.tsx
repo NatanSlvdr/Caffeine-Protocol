@@ -24,6 +24,16 @@ function blockWords(command: string): string {
   return [verb, value].filter(Boolean).join(' ');
 }
 
+/** A line of a routine to show: its block and how deep it sits, and optionally a tone and a word in the margin. */
+interface ShownLine {
+  command: string;
+  depth: number;
+  /** A class for the line, like `ran`, so one line can stand out from the rest. */
+  tone?: string;
+  /** A word or two after the tile, like “just ran”. */
+  mark?: string;
+}
+
 /**
  * A few lines of a routine as tiles that can't be picked up, nested by indent; the depth comes from the routine around
  * them, and `base` is how deep the first of them sits. Spans throughout, so a passage can be what a button says.
@@ -33,18 +43,23 @@ export function BlockLines({
   base = 0,
   className = '',
 }: {
-  lines: readonly { command: string; depth: number }[];
+  lines: readonly ShownLine[];
   base?: number;
   className?: string;
 }) {
   return (
     <span className={`block-lines ${className}`}>
-      {lines.map(({ command, depth }, i) => (
-        <span key={i} className="block-line" style={{ '--depth': Math.max(0, depth - base) } as CSSProperties}>
+      {lines.map(({ command, depth, tone, mark }, i) => (
+        <span
+          key={i}
+          className={`block-line${tone ? ` ${tone}` : ''}`}
+          style={{ '--depth': Math.max(0, depth - base) } as CSSProperties}
+        >
           <span className={`command-tile ${category(command)}`}>
             <BlockIcon command={command} />
             {blockWords(command)}
           </span>
+          {mark && <span className="block-line-mark"> {mark}</span>}
         </span>
       ))}
     </span>

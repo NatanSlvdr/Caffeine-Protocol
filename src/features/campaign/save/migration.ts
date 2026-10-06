@@ -71,6 +71,7 @@ const SAVED_PART: Record<string, string> = {
   stars: 'star tally',
   story: 'story progress',
   challenges: 'challenges met',
+  drills: 'drills done',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -129,6 +130,19 @@ function validateChallenges(
     if (measures.length) kept[k] = [...measures];
   }
   return Object.keys(kept).length ? kept : undefined;
+}
+
+/**
+ * The drills got right on the first pick: ids, each once. Ids no longer in the game are kept, harmlessly, so a café
+ * moved between versions loses nothing; a café with none leaves the list out.
+ */
+function validateDrills(v: Record<string, unknown>): string[] | undefined {
+  if (v.drills === undefined || v.version !== 4) return undefined;
+  const ids = v.drills;
+  const id = (value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,47}$/.test(value);
+  if (!Array.isArray(ids) || ids.length > 500 || !ids.every(id) || new Set(ids).size !== ids.length)
+    throw new Error(`Invalid ${SAVED_PART.drills}.`);
+  return ids.length ? [...(ids as string[])] : undefined;
 }
 
 function validateSettingsMap(v: Record<string, unknown>): Settings {
@@ -276,6 +290,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const settings = validateSettingsMap(v);
   const robotMaps = validateRobotMaps(v, shifts);
   const challenges = validateChallenges(v, shifts);
+  const drills = validateDrills(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -296,6 +311,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     stars: { ...(v.stars as Record<string, number>) },
     story: { ...(v.story as Record<string, boolean>) },
     ...(challenges && { challenges }),
+    ...(drills && { drills }),
     settings,
   };
 }

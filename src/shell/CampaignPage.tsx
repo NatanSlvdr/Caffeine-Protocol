@@ -4,6 +4,7 @@ import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
+import { predictions } from '@/data/predictions';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -40,7 +41,7 @@ const entries: Entry[] = [
  * and the selected shift is chalked up beside it as today’s special.
  */
 export function CampaignPage() {
-  const { save, select, launch } = useGame();
+  const { save, select, launch, completeDrill } = useGame();
   const progress = useProgress();
   const shop = useCafeName();
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
@@ -63,7 +64,10 @@ export function CampaignPage() {
   );
   const [reading, setReading] = useState<readonly string[] | null>(null);
   const [looking, setLooking] = useState<readonly string[] | null>(null);
-  const served = drills.filter((drill) => save.stars[drill.shift - 1] !== undefined);
+  const isServed = ({ shift }: { shift: number }) => save.stars[shift - 1] !== undefined;
+  const gaps = drills.filter(isServed),
+    moments = predictions.filter(isServed);
+  const served = [...gaps, ...moments];
   const newDrills = useUnseen(
     'drills',
     served.map((drill) => drill.id),
@@ -263,9 +267,12 @@ export function CampaignPage() {
       </ShellBar>
       {drilling && (
         <DrillsWindow
-          open={served}
-          waiting={drills.length - served.length}
+          drills={gaps}
+          predictions={moments}
+          waiting={drills.length + predictions.length - served.length}
           fresh={drilling}
+          done={save.drills}
+          onDone={completeDrill}
           onClose={() => setDrilling(null)}
         />
       )}

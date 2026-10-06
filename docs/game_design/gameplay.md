@@ -88,12 +88,28 @@ Away from the rail, the campaign's Drills take one idea at a time: a gap in a
 served shift's worked example, and two or three passages to fill it with. The
 pick goes in, and the café serves that shift with it, so what comes back is the
 café's own verdict, its first failure reason or the idea in a sentence. A drill
-opens once its shift is served, so it never gives an unplayed shift away, and
-nothing in it is kept or counted. Each act has at least one, and
-`tests/unit/data/drills.test.ts` serves every passage: the worked example's
-alone serves the shift. When a run fails the way a served drill's idea is
-missed (paper not taken up first, a lid on a drink staying in), Help's clue
-names that drill.
+opens once its shift is served, so it never gives an unplayed shift away. Each
+act has at least one, and `tests/unit/data/drills.test.ts` serves every passage:
+the worked example's alone serves the shift. When a run fails the way a served
+drill's idea is missed (paper not taken up first, a lid on a drink staying in),
+Help's clue names that drill.
+
+The other kind of drill pauses a moment from a served shift: one guest, one
+robot, and the block it has just run. The player sees what the guest said,
+what the robot holds and remembers, and its whole routine with that block
+marked, then calls which of three lettered blocks runs next. The letters sit
+beside their blocks in the routine, so two alike can't be confused. The call is
+made once: the café then marks the block that really ran next, with why
+(“Return goes back to the block after the call”). The answer is never authored.
+`momentOf` in `src/data/predictions.ts` serves the shift with its worked example
+and reads the block after the pause from the trace, and
+`tests/unit/data/predictions.test.ts` checks that it is still one of the
+choices. Ten moments cover all four acts: both sides of an If, a For going round
+again, a loop run zero times, and where Return comes back to.
+
+A drill of either kind got right on the first pick is ticked as done. The ticks
+are kept in the save (`drills`, a list of ids, left out of a café with none) and
+never count toward stars. Anything else can be tried as often as it helps.
 
 Scoring metrics shown after a run:
 

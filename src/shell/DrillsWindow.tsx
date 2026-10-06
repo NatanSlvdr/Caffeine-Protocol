@@ -1,63 +1,86 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
-import { ArrowLeft, CircleCheck, CircleX } from 'lucide-react';
+import { ArrowLeft, Check, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, Modal, spokenLines } from '@/components';
 import { titleFor } from '@/data';
 import { drillLines, tryDrill, type Drill } from '@/data/drills';
+import type { Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
 import { useCafeName } from '@/state/GameStore';
+import { PredictionView } from './PredictionView';
 import { acts } from './rail/acts';
 
 /** How many lines of the routine show on each side of the gap. */
 const CONTEXT = 3;
 
+/** Either kind of drill: a gap to fill, or a paused moment to call. */
+type Entry = { kind: 'gap'; item: Drill } | { kind: 'next'; item: Prediction };
+const KIND: Record<Entry['kind'], string> = { gap: 'Fill the gap', next: 'What runs next' };
+
 /**
  * Drills, away from the rail: each one on an idea a shift taught, open once that shift is served, so it never gives a
- * shift's answer away early. Nothing in it is kept and nothing it does counts, so a drill can be tried as often as it
- * helps.
+ * shift's answer away early. Two kinds: fill the gap in a worked example, or call which block runs next in a moment
+ * paused from one. Either way the café plays the pick out. A drill got right on the first pick is ticked as done,
+ * kept with the café but apart from its stars; the rest can be tried as often as they help.
  */
 export function DrillsWindow({
-  open,
+  drills,
+  predictions,
   waiting,
   fresh = [],
+  done = [],
+  onDone,
   onClose,
 }: {
-  /** The drills on shifts already served, in campaign order. */
-  open: readonly Drill[];
-  /** How many are still to come, on shifts not served yet. */
+  /** The gap drills on shifts already served, in campaign order. */
+  drills: readonly Drill[];
+  /** The moments to call on shifts already served, in campaign order. */
+  predictions: readonly Prediction[];
+  /** How many of either are still to come, on shifts not served yet. */
   waiting: number;
   /** The drills that weren't there when the drills were last opened. */
   fresh?: readonly string[];
+  /** The drills already got right on a first pick. */
+  done?: readonly string[];
+  /** A drill was just got right on the first pick. */
+  onDone: (id: string) => void;
   onClose: () => void;
 }) {
   const cafe = useCafeName();
-  const [drill, setDrill] = useState<Drill>();
+  const [entry, setEntry] = useState<Entry>();
   // Back from a drill, its own line in the list takes focus again, where the player left off.
   const [left, setLeft] = useState<string>();
+  const entries: Entry[] = [
+    ...drills.map((item) => ({ kind: 'gap' as const, item })),
+    ...predictions.map((item) => ({ kind: 'next' as const, item })),
+  ].sort((a, b) => a.item.shift - b.item.shift);
+  const back = () => {
+    setLeft(entry?.item.id);
+    setEntry(undefined);
+  };
+  const finished = (id: string) => () => {
+    if (!done.includes(id)) onDone(id);
+  };
+  const ticked = done.filter((id) => entries.some((each) => each.item.id === id)).length;
   return (
     <Modal
       className="settings-window drills-window"
       kicker={`${cafe} · Away from the rail`}
-      title={drill ? drill.title : 'Drills.'}
+      title={entry ? entry.item.title : 'Drills.'}
       onClose={onClose}
       wide
     >
-      {drill ? (
-        <DrillView
-          key={drill.id}
-          drill={drill}
-          onBack={() => {
-            setLeft(drill.id);
-            setDrill(undefined);
-          }}
-        />
+      {entry?.kind === 'gap' ? (
+        <DrillView key={entry.item.id} drill={entry.item} onBack={back} onDone={finished(entry.item.id)} />
+      ) : entry?.kind === 'next' ? (
+        <PredictionView key={entry.item.id} prediction={entry.item} onBack={back} onDone={finished(entry.item.id)} />
       ) : (
         <>
           <p className="drills-intro">
-            One idea from a served shift at a time: pick the passage that fills the gap in its routine, and the café
-            serves the shift with it. Nothing here is kept or counted.
+            One idea from a served shift at a time: fill the gap in a routine, or call which block runs next, and the
+            café plays it out. A drill got right on the first pick is ticked; none of it counts toward stars.
           </p>
           {acts.map((act) => {
-            const here = open.filter((each) => each.shift - 1 >= act.from && each.shift - 1 < act.to);
+            const here = entries.filter((each) => each.item.shift - 1 >= act.from && each.item.shift - 1 < act.to);
             if (!here.length) return null;
             return (
               <section key={act.kicker} className="drills-act" aria-label={`${act.kicker}, ${act.crew}`}>
@@ -65,31 +88,42 @@ export function DrillsWindow({
                   {act.kicker} · {act.crew}
                 </h3>
                 <ul>
-                  {here.map((each) => (
-                    <li key={each.id}>
-                      <button
-                        className="drills-pick"
-                        autoFocus={each.id === left}
-                        data-autofocus={each === open[0] || undefined}
-                        onClick={() => setDrill(each)}
-                      >
-                        <strong>{each.title}</strong>
-                        <small>
-                          Shift {each.shift} · {titleFor(each.shift - 1)} · {ROBOT_DISPLAY_NAMES[each.robot]}
-                          {fresh.includes(each.id) && <span className="drills-new"> · New</span>}
-                        </small>
-                      </button>
-                    </li>
-                  ))}
+                  {here.map((each) => {
+                    const { id, title, shift, robot } = each.item;
+                    return (
+                      <li key={id}>
+                        <button
+                          className={`drills-pick${done.includes(id) ? ' done' : ''}`}
+                          autoFocus={id === left}
+                          data-autofocus={each === entries[0] || undefined}
+                          onClick={() => setEntry(each)}
+                        >
+                          <strong>
+                            {title}
+                            {done.includes(id) && (
+                              <span className="drills-done">
+                                <Check size={14} strokeWidth={3} aria-hidden="true" />
+                                <span className="sr-only">, done</span>
+                              </span>
+                            )}
+                          </strong>
+                          <small>
+                            {KIND[each.kind]} · Shift {shift} · {titleFor(shift - 1)} · {ROBOT_DISPLAY_NAMES[robot]}
+                            {fresh.includes(id) && <span className="drills-new"> · New</span>}
+                          </small>
+                        </button>
+                      </li>
+                    );
+                  })}
                 </ul>
               </section>
             );
           })}
-          {waiting > 0 && (
-            <p className="drills-waiting">
-              {count(waiting, 'more drill')} {waiting === 1 ? 'opens' : 'open'} as later shifts are served.
-            </p>
-          )}
+          <p className="drills-waiting">
+            {ticked} of {count(entries.length, 'drill')} done.
+            {waiting > 0 &&
+              ` ${count(waiting, 'more drill')} ${waiting === 1 ? 'opens' : 'open'} as later shifts are served.`}
+          </p>
         </>
       )}
     </Modal>
@@ -97,7 +131,7 @@ export function DrillsWindow({
 }
 
 /** One drill: the routine around its gap, the passages to fill it with, and what the café made of the last pick. */
-function DrillView({ drill, onBack }: { drill: Drill; onBack: () => void }) {
+function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void; onDone: () => void }) {
   const [picked, setPicked] = useState<string>();
   const [verdict, setVerdict] = useState<{ served: boolean; reason?: string }>();
   // Opening a drill takes its button away, so the question takes focus and is what's read first.
@@ -110,6 +144,8 @@ function DrillView({ drill, onBack }: { drill: Drill; onBack: () => void }) {
   const gapDepth = worked.gap[0].depth;
   const pick = (choice: string) => {
     const result = tryDrill(drill, choice);
+    // Only the first pick of a visit can tick it: after a miss, the answer is one of fewer.
+    if (picked === undefined && result.passed) onDone();
     setPicked(choice);
     setVerdict({ served: result.passed, reason: result.first_failure?.reason });
   };

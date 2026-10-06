@@ -107,6 +107,16 @@ const PAIRS: [label: string, text: string, ground: string][] = [
     declared('shell.css', '.shelf-keepsakes li.earned small', 'color'),
     'var(--slip-paper)',
   ],
+  [
+    'a mark beside a routine in the drills',
+    declared('shell.css', '.block-line-mark', 'color'),
+    declared('shell.css', '.drill-routine', 'background'),
+  ],
+  [
+    'the block a paused moment ran next',
+    declared('shell.css', '.block-line.next .block-line-mark', 'color'),
+    declared('shell.css', '.drill-routine', 'background'),
+  ],
   ['a guest’s quiet line in their bubble', 'var(--bubble-quiet)', 'var(--bubble-paper)'],
   ['a guest’s quiet line on the bubble’s well', 'var(--bubble-quiet)', 'var(--bubble-well)'],
   [
