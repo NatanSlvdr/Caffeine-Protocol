@@ -17,7 +17,8 @@ import {
 import type { ProgressSave } from '@/domain';
 import { useGame } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
-import { FRESH, holds } from './cafeWords';
+import { useWords } from '@/shared/language';
+import { CAFE_WORDS } from './cafeWords';
 
 /** A café's progress as kept, or nothing when it has none yet or it doesn't read. */
 function keptSave(id: string): ProgressSave | undefined {
@@ -40,6 +41,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
   const [renaming, setRenaming] = useState<string>();
   const [label, setLabel] = useState('');
   const [removing, setRemoving] = useState<{ cafe: CafeEntry; save?: ProgressSave }>();
+  const words = useWords(CAFE_WORDS);
   const [said, say] = useAnnouncement();
   const [exported, sayExported] = useAnnouncement();
   const [error, setError] = useState('');
@@ -54,29 +56,29 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
   const full = cafes.cafes.length >= MAX_CAFES;
   const summary = (cafe: CafeEntry) => {
     const kept = cafe.id === cafeId ? save : keptSave(cafe.id);
-    return kept ? holds(kept) || 'No shifts served yet' : 'No shifts served yet';
+    return (kept && words.holds(kept)) || words.nothingServed;
   };
   const add = (e: FormEvent) => {
     e.preventDefault();
     if (!cleanCafeName(name)) return;
-    if (!addCafe(name)) setError('This browser wouldn’t keep another café. Your cafés are as they were.');
+    if (!addCafe(name)) setError(words.noRoom);
   };
   const rename = (e: FormEvent, cafe: CafeEntry) => {
     e.preventDefault();
     if (!cleanCafeName(label)) return;
-    if (!renameCafe(cafe.id, label)) return setError('This browser wouldn’t keep the new name.');
+    if (!renameCafe(cafe.id, label)) return setError(words.noRename);
     setRenaming(undefined);
     focusNext.current = `cafe-rename-${cafe.id}`;
-    say(`Renamed “${cafe.name}”.`);
+    say(words.renamed(cafe.name));
   };
 
   return (
     <section className="settings-block cafes-block">
       <h3>
-        <Store size={16} aria-hidden="true" /> Cafés in this browser
+        <Store size={16} aria-hidden="true" /> {words.heading}
       </h3>
-      <p>Each café keeps its own progress, routines and settings. Your routine notebook is shared by them all.</p>
-      <ul className="cafe-list" aria-label="Cafés">
+      <p>{words.intro}</p>
+      <ul className="cafe-list" aria-label={words.list}>
         {cafes.cafes.map((cafe) => {
           const open = cafe.id === cafeId;
           return (
@@ -90,12 +92,12 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                     maxLength={CAFE_NAME_MAX}
                     autoComplete="off"
                     spellCheck={false}
-                    aria-label={`New name for ${cafe.name}`}
+                    aria-label={words.newName(cafe.name)}
                     onFocus={(e) => e.target.select()}
                     onChange={(e) => setLabel(e.target.value)}
                   />
                   <button type="submit" className="settings-chip" disabled={!cleanCafeName(label)}>
-                    Save
+                    {words.save}
                   </button>
                   <button
                     type="button"
@@ -105,7 +107,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                       focusNext.current = `cafe-rename-${cafe.id}`;
                     }}
                   >
-                    Cancel
+                    {words.cancel}
                   </button>
                 </form>
               ) : (
@@ -113,7 +115,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                   <span className="cafe-name">
                     <strong>{cafe.name}</strong>
                     <small>
-                      {open && <span className="cafe-open">Open now · </span>}
+                      {open && <span className="cafe-open">{words.openNow}</span>}
                       {summary(cafe)}
                     </small>
                   </span>
@@ -121,16 +123,16 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                     {!open && (
                       <button
                         className="settings-chip"
-                        aria-label={`Open ${cafe.name}`}
+                        aria-label={words.openNamed(cafe.name)}
                         onClick={() => openCafe(cafe.id)}
                       >
-                        Open
+                        {words.open}
                       </button>
                     )}
                     <button
                       id={`cafe-rename-${cafe.id}`}
                       className="settings-chip"
-                      aria-label={`Rename ${cafe.name}`}
+                      aria-label={words.renameNamed(cafe.name)}
                       onClick={() => {
                         setRenaming(cafe.id);
                         setLabel(cafe.name);
@@ -138,13 +140,13 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                         focusNext.current = 'cafe-label';
                       }}
                     >
-                      Rename
+                      {words.rename}
                     </button>
                     {!open && (
                       <Button
                         variant="outline-danger"
                         className="settings-chip"
-                        aria-label={`Remove ${cafe.name}`}
+                        aria-label={words.removeNamed(cafe.name)}
                         aria-haspopup="dialog"
                         onClick={() => {
                           setError('');
@@ -152,7 +154,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                           setRemoving({ cafe, save: keptSave(cafe.id) });
                         }}
                       >
-                        Remove
+                        {words.remove}
                       </Button>
                     )}
                   </span>
@@ -165,7 +167,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
 
       {adding ? (
         <form className="notebook-keep cafe-add" onSubmit={add}>
-          <label htmlFor="cafe-new-name">Name the new café</label>
+          <label htmlFor="cafe-new-name">{words.nameNew}</label>
           <div>
             <input
               id="cafe-new-name"
@@ -179,7 +181,7 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
               onChange={(e) => setName(e.target.value)}
             />
             <button type="submit" className="settings-chip" disabled={!cleanCafeName(name)}>
-              Open it
+              {words.openIt}
             </button>
             <button
               type="button"
@@ -189,12 +191,10 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
                 focusNext.current = 'cafe-add';
               }}
             >
-              Cancel
+              {words.cancel}
             </button>
           </div>
-          <small id="cafe-new-note">
-            It opens at the very start, with these settings. The page reloads, and a service under way starts over.
-          </small>
+          <small id="cafe-new-note">{words.newNote}</small>
         </form>
       ) : (
         <div className="settings-actions">
@@ -210,16 +210,14 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
               focusNext.current = 'cafe-new-name';
             }}
           >
-            <Plus size={15} aria-hidden="true" /> Add a café
+            <Plus size={15} aria-hidden="true" /> {words.add}
           </button>
           <Button variant="outline-danger" className="settings-chip" aria-haspopup="dialog" onClick={onStartOver}>
-            Start this café over
+            {words.startOver}
           </Button>
         </div>
       )}
-      {full && (
-        <small id="cafe-full">{MAX_CAFES} cafés is as many as one browser keeps: remove one to add another.</small>
-      )}
+      {full && <small id="cafe-full">{words.full}</small>}
       <p className="settings-status" role="status">
         {said}
       </p>
@@ -232,15 +230,12 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
       {removing && (
         <Modal
           className="settings-window confirm-slip"
-          kicker="Cafés in this browser"
-          title="Remove this café?"
+          kicker={words.heading}
+          title={words.removeTitle}
           onClose={() => setRemoving(undefined)}
         >
           <p>
-            “{removing.cafe.name}”{' '}
-            {removing.save && holds(removing.save) ? `holds ${holds(removing.save)}` : `is ${FRESH}`}. Removing it
-            deletes its progress, routines and settings from this browser, and no copy is kept. Export it first to keep
-            it.
+            {words.removeBody(removing.cafe.name, words.holdsOrFresh(removing.save ? words.holds(removing.save) : ''))}
           </p>
           {removing.save && (
             <button
@@ -248,10 +243,10 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
               onClick={() => {
                 const file = saveFileName();
                 download(JSON.stringify(removing.save, null, 2), file);
-                sayExported(`“${removing.cafe.name}” exported as ${file}. Look for it with your downloads.`);
+                sayExported(words.exportedNamed(removing.cafe.name, file));
               }}
             >
-              <Download size={15} aria-hidden="true" /> Export café
+              <Download size={15} aria-hidden="true" /> {words.exportCafe}
             </button>
           )}
           <p className="export-status" role="status">
@@ -259,20 +254,20 @@ export function CafesSection({ onStartOver }: { onStartOver: () => void }) {
           </p>
           <div className="modal-buttons">
             <button className="settings-chip" data-autofocus onClick={() => setRemoving(undefined)}>
-              Keep café
+              {words.keep}
             </button>
             <Button
               variant="danger"
               onClick={() => {
                 const { cafe } = removing;
                 setRemoving(undefined);
-                if (!removeCafe(cafe.id)) return setError('This browser wouldn’t let the café go.');
+                if (!removeCafe(cafe.id)) return setError(words.noRemove);
                 // After the slip hands focus back to a Remove button that's gone.
                 focusNext.current = 'cafe-add';
-                say(`Removed “${cafe.name}”.`);
+                say(words.removed(cafe.name));
               }}
             >
-              Remove café
+              {words.removeCafe}
             </Button>
           </div>
         </Modal>

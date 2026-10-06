@@ -1,0 +1,53 @@
+import { words } from '@/shared/language';
+
+/** The front door's words. Shift titles and objectives are the story's, and stay in English for now. */
+export const HOME_WORDS = words(
+  {
+    kicker: (cafe: string) => `${cafe} · A cozy coding adventure`,
+    shift: (number: string) => `Shift ${number}`,
+    resume: 'Where you left off',
+    tagline:
+      'A little café, a secondhand robot, and a fresh start. Teach Query one thoughtful routine at a time, until the café runs itself.',
+    scene: (title: string) => `A scene plays first: ${title}.`,
+    servedWith: (stars: number) => `Served with ${stars} of 3 stars.`,
+    served: 'Served.',
+    changedSince: 'You’ve changed the routine since.',
+    notServed: 'Not served yet. Your routine is as you left it.',
+    ready: 'Ready to start.',
+    watch: 'Watch the scene',
+    continue: (number: string) => `Continue Shift ${number}`,
+    choose: 'Choose a shift',
+    guide: 'How to play',
+    settings: 'Settings',
+    switchCafes: (cafe: string) => `${cafe}: switch cafés in Settings`,
+    servedCount: 'Served',
+    stars: 'Stars',
+    complete: 'Under new management',
+    returning: 'Welcome back',
+    fresh: 'Doors open soon',
+  },
+  {
+    kicker: (cafe) => `${cafe} · Une douce aventure de programmation`,
+    shift: (number) => `Service ${number}`,
+    resume: 'Là où vous en étiez',
+    tagline:
+      'Un petit café, un robot d’occasion et un nouveau départ. Apprenez à Query une routine bien pensée à la fois, jusqu’à ce que le café tourne tout seul.',
+    scene: (title) => `Une scène d’abord : ${title}.`,
+    servedWith: (stars) => `Servi avec ${stars} étoile${stars > 1 ? 's' : ''} sur 3.`,
+    served: 'Servi.',
+    changedSince: 'Vous avez retouché la routine depuis.',
+    notServed: 'Pas encore servi. Votre routine est telle que vous l’avez laissée.',
+    ready: 'Prêt à commencer.',
+    watch: 'Voir la scène',
+    continue: (number) => `Reprendre le service ${number}`,
+    choose: 'Choisir un service',
+    guide: 'Comment jouer',
+    settings: 'Réglages',
+    switchCafes: (cafe) => `${cafe} : changer de café dans les Réglages`,
+    servedCount: 'Servis',
+    stars: 'Étoiles',
+    complete: 'Nouvelle direction',
+    returning: 'Bon retour parmi nous',
+    fresh: 'Ouverture prochaine',
+  },
+);

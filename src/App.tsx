@@ -20,12 +20,15 @@ import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { DialoguePaceContext } from '@/components';
+import { LanguageProvider } from '@/shared/language';
 
 export default function App() {
   return (
-    <GameProvider>
-      <Shell />
-    </GameProvider>
+    <LanguageProvider>
+      <GameProvider>
+        <Shell />
+      </GameProvider>
+    </LanguageProvider>
   );
 }
 

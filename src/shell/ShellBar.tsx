@@ -2,6 +2,12 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { ArrowLeft, Settings2, Star } from 'lucide-react';
 import { openSettings } from '@/shared/lib/navigation';
 import { useProgress } from '@/state/GameStore';
+import { useWords, words } from '@/shared/language';
+
+const WORDS = words(
+  { stars: (n: number, of: number) => `${n} of ${of} stars`, settings: 'Settings' },
+  { stars: (n, of) => `${n} étoile${n > 1 ? 's' : ''} sur ${of}`, settings: 'Réglages' },
+);
 
 /** The front-of-house top bar: a way back, the star tally, and settings. Extra actions sit before the tally. */
 export function ShellBar({
@@ -16,6 +22,7 @@ export function ShellBar({
   children?: ReactNode;
 }) {
   const progress = useProgress();
+  const say = useWords(WORDS);
   // Esc goes back a screen, as it leaves a shift. Open windows, menus and story scenes claim their own Escape first.
   const goBack = useRef(onBack);
   goBack.current = onBack;
@@ -34,15 +41,15 @@ export function ShellBar({
       </button>
       <div className="shell-bar-actions">
         {children}
-        <span className="shell-stars" role="img" aria-label={`${progress.stars} of ${progress.max} stars`}>
+        <span className="shell-stars" role="img" aria-label={say.stars(progress.stars, progress.max)}>
           <Star size={14} fill="currentColor" aria-hidden="true" /> {progress.stars}
           <small> / {progress.max}</small>
         </span>
         <button
           className="shell-icon"
-          aria-label="Settings"
+          aria-label={say.settings}
           aria-haspopup="dialog"
-          title="Settings"
+          title={say.settings}
           onClick={openSettings}
         >
           <Settings2 size={18} aria-hidden="true" />

@@ -1173,6 +1173,10 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-block:nth-child(n + 3) {
   border-top: 2px dashed #392b241f;
 }
+/* Two short blocks stacked in one column of the sheet, ruled apart as the rows are. */
+.settings-column > .settings-block + .settings-block {
+  border-top: 2px dashed #392b241f;
+}
 .settings-block h3 {
   display: flex;
   align-items: center;
@@ -3546,6 +3550,11 @@ html[data-motion='reduced'] .story-page *::after {
 }
 .settings-pace input[type='radio'] {
   accent-color: var(--slip-coffee);
+}
+.settings-language {
+  gap: 18px;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
 /* The repair bay: a robot's wiring on the bench, an action to a row, beside the cases it has to get right. */
 .settings-window p.repair-waiting {

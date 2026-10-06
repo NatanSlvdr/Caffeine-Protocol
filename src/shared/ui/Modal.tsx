@@ -1,6 +1,13 @@
 import { useEffect, useRef } from 'react';
 import type { MouseEvent, ReactNode } from 'react';
 import { X } from 'lucide-react';
+import { useWords, words } from '@/shared/language';
+
+const WORDS = words(
+  { close: 'Close dialog', hover: 'Close · Esc' },
+  { close: 'Fermer la fenêtre', hover: 'Fermer · Échap' },
+);
+
 export function Modal({
   title,
   kicker,
@@ -16,6 +23,7 @@ export function Modal({
   wide?: boolean;
   className?: string;
 }) {
+  const say = useWords(WORDS);
   const ref = useRef<HTMLDialogElement>(null);
   // Only a press that starts and ends on the backdrop closes the window: the dialog's own padding is
   // also its target, and a text selection dragged out of the window ends on it too.
@@ -62,7 +70,7 @@ export function Modal({
           <h2>{title}</h2>
         )}
         {/* Icon only, so it names itself on hover like the other icon buttons, with the key that does the same. */}
-        <button aria-label="Close dialog" aria-keyshortcuts="Escape" title="Close · Esc" onClick={onClose}>
+        <button aria-label={say.close} aria-keyshortcuts="Escape" title={say.hover} onClick={onClose}>
           <X size={20} aria-hidden="true" />
         </button>
       </div>

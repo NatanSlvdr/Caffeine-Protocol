@@ -384,14 +384,20 @@ function migrateLegacyShifts(v: Record<string, unknown>, robotMaps: RobotMaps, l
   v.complete = false;
 }
 
+/** Why a file isn't a café at all, as the import says it; a café that is one but is damaged names the part instead. */
+export const SAVE_REFUSALS = {
+  large: 'It is too large to be a café export.',
+  newer: 'It comes from a newer version of Caffeine Protocol.',
+  foreign: 'It isn’t a Caffeine Protocol café export.',
+} as const;
+
 /** Validate an entire import before replacing anything in the active save. */
 export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
-  if (text.length > 2_000_000) throw new Error('It is too large to be a café export.');
+  if (text.length > 2_000_000) throw new Error(SAVE_REFUSALS.large);
   const v: unknown = JSON.parse(text);
-  if (isRecord(v) && typeof v.version === 'number' && v.version > 4)
-    throw new Error('It comes from a newer version of Caffeine Protocol.');
+  if (isRecord(v) && typeof v.version === 'number' && v.version > 4) throw new Error(SAVE_REFUSALS.newer);
   if (!isRecord(v) || (v.version !== 1 && v.version !== 2 && v.version !== 3 && v.version !== 4))
-    throw new Error('It isn’t a Caffeine Protocol café export.');
+    throw new Error(SAVE_REFUSALS.foreign);
   const legacy = v.version !== 4,
     shifts = legacy ? LEGACY_SHIFTS : lessons.length;
   validateProgress(v, shifts);

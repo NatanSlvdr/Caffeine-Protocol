@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { createElement, Fragment } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import { GUIDE_WORDS } from '../../src/app/guideWords';
 import { SOUNDS } from '../../src/shared/audio-manifest';
 
 const notes = readFileSync('docs/RELEASE.md', 'utf8');
@@ -63,8 +66,13 @@ describe('the release notes', () => {
     const controls = section('Controls');
     for (const key of ['F9', 'Shift + Alt + F', 'Ctrl/⌘ + Z', 'Ctrl/⌘ + Shift + Z', 'Ctrl/⌘ + Enter', 'Esc', 'Space'])
       expect(controls, key).toContain(`<kbd>${key}</kbd>`);
-    const guide = readFileSync('src/app/GuideWindow.tsx', 'utf8');
-    const taught = [...guide.matchAll(/<kbd>([^<{]+)<\/kbd>/g)].map(([, key]) => key);
+    // The handbook as it reads in English, with the shortcut key both platforms' notes name.
+    const { adding, moving, typing, undo, notebook, running } = GUIDE_WORDS.en;
+    const modifier = 'Ctrl/⌘';
+    const guide = renderToStaticMarkup(
+      createElement(Fragment, null, adding, moving, typing, undo(modifier), notebook, running(modifier)),
+    );
+    const taught = [...guide.matchAll(/<kbd>([^<]+)<\/kbd>/g)].map(([, key]) => key);
     expect(taught.length).toBeGreaterThan(0);
     expect(taught.filter((key) => !controls.includes(`<kbd>${key}</kbd>`))).toEqual([]);
   });

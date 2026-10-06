@@ -148,6 +148,7 @@ Before each release, someone plays through the list below and fills in a row. A 
 | Each accessibility path                                                 |        |         |        |      |       |
 | Music: default volume, muted, in the repair bay and in a memory         |        |         |        |      |       |
 | The shelf's looks: pick a print and cushions, see them in the café      |        |         |        |      |       |
+| In French: the front door, Settings and the handbook, nothing cut off   |        |         |        |      |       |
 | Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks |        |         |        |      |       |
 | Export a save, reset progress, import it back                           |        |         |        |      |       |
 | The routine notebook, as above                                          |        |         |        |      |       |

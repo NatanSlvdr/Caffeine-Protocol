@@ -48,6 +48,7 @@ Enforced by `eslint.config.mjs` (`boundaries/dependencies`, `import/no-cycle`,
 | Narrative | `data/campaign/narrative.ts` (one row per shift) |
 | Extension shift mechanics | `data/campaign/extension-config.json` (stages) merged by `extension-config.ts` |
 | Audio | `src/shared/audio-manifest.ts` (`SOUNDS`) |
+| Words on screen | One catalog per screen (`shell/homeWords.ts`, `app/settingsWords.ts`, `app/cafeWords.ts`, `app/guideWords.tsx`), made with `words` from `src/shared/language.tsx` |
 
 Key registries by `id`, never by index. No positional arrays for concepts.
 No `as` casts in loaders — campaign files are `safeParse`d with valibot.
@@ -204,6 +205,34 @@ before, on the current version only. `startDay` opens a day from the first
 wave; on a new version it keeps the routines and drops the stars and the
 furthest wave, which were earned on other waves.
 
+## Languages
+
+The browser's language (`src/shared/language.tsx`) is English or French,
+kept under its own storage key rather than in a café: every café in the
+browser reads in it, the way they share the notebook, and an export carries
+none. `LanguageProvider`, at the top of `App`, keeps `<html lang>` in step
+and follows other tabs; Settings offers the choice, each language named in
+itself. It sits at the root of `src/shared/` so every layer may read it.
+
+A screen's words are a catalog made with `words(en, fr)`. The French must
+have the English's shape, so a missing line, or a sentence that takes other
+values, fails to type-check. A sentence built from a count or a name is a
+function, so each language builds it its own way (`countFr` counts zero and
+one in the singular). French is written with plain spaces and set by
+`words`: a no-break space before `:` and inside `« »`, a narrow one before
+`; ? !`. JSX in a catalog is left alone, so it spells those spaces as
+entities. `useWords(catalog)` gives the reader's.
+
+French covers the front door, the top bar, Settings with its cafés and the
+fresh-start slip, the handbook, and the close button every window shares.
+The shift screens, the rail, the story and the shift data are still in
+English, and so is the list of what bringing an old save up to date
+changed. The save checks' refusals are keyed (`SAVE_REFUSALS`) so Settings
+can say them in French; a damaged file's field is left out in French. The
+handbook names a shift screen's buttons as they read there. Programming
+words (blocks, values, the text editor's syntax) are never translated, so a
+routine and a shared notebook read the same in either language.
+
 ## Photo mode
 
 Photo mode (`features/workspace/PhotoBar.tsx`, `photo.ts`) is workspace state
@@ -253,6 +282,10 @@ mounts the shot as a captioned print on a 2D canvas; where there is none
   is the discovery point; the language core stays explicit.
 - **Drink** (e.g. matcha): one `RECIPE_RULES` entry in `domain/drinks.ts`
   plus `PRICES` in `domain/pricing.ts`.
+- **French for another screen**: move its words into a catalog beside it,
+  made with `words(en, fr)`, and read them with `useWords`. List the catalog
+  in `tests/unit/shell/language.test.tsx`, which checks that no French line
+  is left in English.
 - **Sound** (e.g. pour): one `SOUNDS` entry in `shared/audio-manifest.ts`,
   generate with `npm run gen:audio`, sync with `npm run audio:sync`. The id
   flows into the precache list and `npm run validate:data` automatically.
