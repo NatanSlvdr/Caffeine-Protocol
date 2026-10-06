@@ -23,18 +23,18 @@ beforeEach(() => {
   };
 });
 
-describe('starting a new café', () => {
+describe('starting a café over', () => {
   it('names what a fresh start clears and exports a copy from the warning itself', () => {
     seedLocalStorage({ ...makeSave(), stars: { 0: 0, 1: 3, 2: 2 }, unlocked: 3, selected: 3 });
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Start a new café' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Start this café over' }));
     expect(
       screen.getByText(
         'This clears 3 served shifts, 5 stars, every routine and the story so far. Your audio and display settings, and your routine notebook, will stay.',
       ),
     ).toBeTruthy();
-    const dialog = screen.getByRole('dialog', { name: 'Start a new café?' });
+    const dialog = screen.getByRole('dialog', { name: 'Start this café over?' });
     expect(within(dialog).getByRole('status').textContent).toBe('');
     fireEvent.click(screen.getAllByRole('button', { name: 'Export café' }).find((b) => dialog.contains(b))!);
     expect(download).toHaveBeenCalledWith(expect.stringContaining('"version": 4'), expect.stringMatching(/\.json$/));
@@ -58,8 +58,8 @@ describe('starting a new café', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
       // Nothing was ever stored, so there is no copy to recover.
       expect(screen.queryByRole('button', { name: 'Export recovery copy' })).toBeNull();
-      fireEvent.click(screen.getByRole('button', { name: 'Start a new café' }));
-      fireEvent.click(screen.getByRole('button', { name: 'Start new café' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start this café over' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Start over' }));
       expect(screen.getByRole('heading', { name: 'Caffeine Protocol' })).toBeTruthy();
       expect(screen.getAllByRole('alert').some((a) => a.textContent?.includes(warning))).toBe(true);
     } finally {

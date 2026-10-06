@@ -39,7 +39,7 @@ describe('buttons that open a window', () => {
       opensWindow('How to play', 'How the café runs.');
       fireEvent.click(screen.getByRole('button', { name: /Close/ }));
       opensWindow('Settings', 'The little things.');
-      opensWindow('Start a new café', 'Start a new café?');
+      opensWindow('Start this café over', 'Start this café over?');
       cleanup();
     }
     seedLocalStorage(save);

@@ -91,13 +91,26 @@ lives inside the payload (`version: 1 | 2 | 3 | 4`). Schema bumps migrate via
 Historical `tests/fixtures/save-v1.json` + `save-v2.json` (pinned by
 `save-fixtures.test.ts`) prove compat with real serialized history.
 
-Three keys live beside the save and never in it, so a fresh start or an import
-leaves them alone: `caffeine-protocol.v1.seen` (which shelf and guestbook
-entries this browser has shown), `caffeine-protocol.v1.notebook` (the routine
-notebook, `features/workspace/notebook.ts`) and `caffeine-protocol.v1.bench`
-(each shift's test bench, `features/workspace/bench.ts`). The notebook is
-stored in the same format it exports as, and its pages are checked against the
-open robot and shift when shown (`unreadableLine`), not when kept. A page's
+A browser keeps up to eight cafés, listed under `caffeine-protocol.v1.cafes`
+(`features/campaign/save/cafes.ts`). The first café's save stays at `SAVE_KEY`,
+so a browser from before there could be several finds its café as the first
+with nothing to migrate; each café added later saves at
+`caffeine-protocol.v1.cafe-<n>`. Which café a tab plays is settled once as it
+opens (`settleCafe`) and read through `cafeKey()`; switching cafés reloads the
+page, so a tab never writes into a café it didn't open with.
+
+Beside each café's save, and never in it, are `<café key>.backup` (the kept
+copy, taken ahead of a fresh start, an import or an update) and two keys a
+fresh start or an import leaves alone: `<café key>.seen` (which shelf and
+guestbook entries this browser has shown) and `<café key>.bench` (each shift's
+test bench, `features/workspace/bench.ts`). Removing a café clears them all.
+One key is shared by every café: `caffeine-protocol.v1.notebook` (the routine
+notebook, `features/workspace/notebook.ts`), since a routine worth keeping is
+the player's, not one playthrough's.
+
+The notebook is stored in the same format it exports as, and its pages are
+checked against the open robot and shift when shown (`unreadableLine`), not
+when kept. A page's
 lesson (a word on what it shows, notes on its blocks by their place among the
 blocks) is plain text, cleaned of control characters whenever it is read or
 written out, and exported by `lessonText` as a `.txt` file. A kept bench holds

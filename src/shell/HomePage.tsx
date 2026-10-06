@@ -1,4 +1,4 @@
-import { ArrowRight, BookOpen, CircleHelp, Clapperboard, Settings2 } from 'lucide-react';
+import { ArrowRight, BookOpen, CircleHelp, Clapperboard, Settings2, Store } from 'lucide-react';
 import { isRated, titleFor } from '@/data';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { Button } from '@/shared/ui/Button';
@@ -21,8 +21,10 @@ function standing({ index, scene, stars, edited }: ResumePoint): string {
 
 /** The café's front door: a menu ticket pinned over the live café, which runs in the background. */
 export function HomePage() {
-  const { save, launch } = useGame();
+  const { save, launch, cafes, cafeId } = useGame();
   const progress = useProgress();
+  // With more than one café in the browser, the front door says which one this is, and opens the list of them.
+  const playing = cafes.cafes.length > 1 ? cafes.cafes.find((entry) => entry.id === cafeId)?.name : undefined;
   const cafe = useCafeName();
   // A returning player picks up where they left off; a new café gets the welcome instead.
   const resume = resumePoint(save);
@@ -90,6 +92,16 @@ export function HomePage() {
               <button className="front-link" aria-haspopup="dialog" onClick={openSettings}>
                 <Settings2 size={17} aria-hidden="true" /> Settings
               </button>
+              {playing && (
+                <button
+                  className="front-link"
+                  aria-haspopup="dialog"
+                  aria-label={`${playing}: switch cafés in Settings`}
+                  onClick={openSettings}
+                >
+                  <Store size={17} aria-hidden="true" /> {playing}
+                </button>
+              )}
             </div>
           </div>
           <footer className="front-foot">

@@ -1,8 +1,8 @@
 import { BENCH_GUESTS, benchProblems, type BenchGuest, type BenchKit, type BenchOrder } from '@/domain';
-import { SAVE_KEY } from '@/features/campaign/save/settings';
+import { cafeKey } from '@/features/campaign/save/cafes';
 
-/** The benches the player has written, by shift: beside the save and never in it, like the notebook. */
-export const BENCH_KEY = `${SAVE_KEY}.bench`;
+/** The benches the player has written for the open café, by shift: beside its save and never in it. */
+export const benchKey = () => `${cafeKey()}.bench`;
 
 function readOrder(value: unknown): BenchOrder | undefined {
   if (!value || typeof value !== 'object') return undefined;
@@ -23,7 +23,7 @@ function readGuest(value: unknown): BenchGuest | undefined {
 
 function readAll(): Record<string, unknown> {
   try {
-    const stored = JSON.parse(localStorage.getItem(BENCH_KEY) ?? '{}') as unknown;
+    const stored = JSON.parse(localStorage.getItem(benchKey()) ?? '{}') as unknown;
     return stored && typeof stored === 'object' && !Array.isArray(stored) ? (stored as Record<string, unknown>) : {};
   } catch {
     return {};
@@ -45,7 +45,7 @@ export function readBench(levelId: string, kit: BenchKit): BenchGuest[] | undefi
 /** Keep a shift's bench; false when the browser wouldn't, and it lasts until the page closes. */
 export function writeBench(levelId: string, guests: readonly BenchGuest[]): boolean {
   try {
-    localStorage.setItem(BENCH_KEY, JSON.stringify({ ...readAll(), [levelId]: guests }));
+    localStorage.setItem(benchKey(), JSON.stringify({ ...readAll(), [levelId]: guests }));
     return true;
   } catch {
     return false;

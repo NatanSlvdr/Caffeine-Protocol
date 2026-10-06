@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { lessons } from '../../../src/data';
 import {
-  BACKUP_KEY,
+  backupKey,
   SAVE_KEY,
   backupSave,
   newSave,
@@ -32,7 +32,7 @@ describe('the kept copy of a café', () => {
     backupSave(store, 'reset', lessons, now);
     expect(readBackup(store, lessons)?.reason).toBe('reset');
     expect(readBackup(store, lessons)?.save.unlocked).toBe(4);
-    expect([...store.map.keys()].sort()).toEqual([BACKUP_KEY, SAVE_KEY].sort());
+    expect([...store.map.keys()].sort()).toEqual([backupKey(), SAVE_KEY].sort());
   });
 
   it('never pushes out a good copy with a damaged or untouched café', () => {
@@ -58,9 +58,9 @@ describe('the kept copy of a café', () => {
 
   it('reads a damaged or foreign copy as none', () => {
     for (const kept of ['{broken', '42', JSON.stringify({ reason: 'whim', saved_at: now.toISOString(), raw: '{}' })])
-      expect(readBackup(storage({ [BACKUP_KEY]: kept }), lessons)).toBeNull();
+      expect(readBackup(storage({ [backupKey()]: kept }), lessons)).toBeNull();
     const damaged = JSON.stringify({ reason: 'import', saved_at: now.toISOString(), raw: '{broken' });
-    expect(readBackup(storage({ [BACKUP_KEY]: damaged }), lessons)).toBeNull();
+    expect(readBackup(storage({ [backupKey()]: damaged }), lessons)).toBeNull();
   });
 
   it('migrates an old copy as it reads it', () => {

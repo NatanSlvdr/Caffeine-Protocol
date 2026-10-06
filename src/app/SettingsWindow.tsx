@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import {
   Download,
   FolderHeart,
-  Leaf,
   Maximize,
   Minimize,
   RefreshCw,
@@ -16,18 +15,22 @@ import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
 import {
-  SAVE_KEY,
+  MAX_CAFES,
+  cafeKey,
+  freeCafeName,
   migrationChanges,
   parseSave,
   untouched,
   type BackupReason,
 } from '@/features/campaign/save/persistence';
-import { count, type DialoguePace, type ProgressSave } from '@/domain';
+import type { DialoguePace, ProgressSave } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';
 import { isNotebookFile } from '@/features/workspace/notebook';
-import { starTotal, useCafeName, useGame, useSettings } from '@/state/GameStore';
+import { useCafeName, useGame, useSettings } from '@/state/GameStore';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { updateNow, useUpdateReady } from './offlineUpdate';
+import { FRESH, holds } from './cafeWords';
+import { CafesSection } from './CafesSection';
 
 const PACES: [DialoguePace, string][] = [
   ['typed', 'Typed'],
@@ -37,7 +40,7 @@ const PACES: [DialoguePace, string][] = [
 
 /** Café settings, printed on a slip of order paper that opens over whichever screen you're on. */
 export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew: () => void }) {
-  const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup } = useGame();
+  const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup, cafes, cafeId, addCafe } = useGame();
   const cafe = useCafeName();
   const updateReady = useUpdateReady();
   // A café waiting on the Replace slip: one chosen from a file, with what bringing it up to date changes, or the kept copy.
@@ -46,6 +49,9 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
     [status, setStatus] = useAnnouncement();
   const input = useRef<HTMLInputElement>(null);
   const [settings, setting] = useSettings();
+  // With more than one café, a slip that replaces one says which.
+  const openName = cafes.cafes.length > 1 ? cafes.cafes.find((c) => c.id === cafeId)?.name : undefined;
+  const full = cafes.cafes.length >= MAX_CAFES;
   // Track the browser's own state, so leaving with Esc relabels the button too.
   const [isFullscreen, setIsFullscreen] = useState(() => !!document.fullscreenElement);
   // Some tablet browsers, and a café saved to the home screen, can't go fullscreen; offer it only where it works.
@@ -205,7 +211,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
                     setStatus('');
                     try {
                       const name = saveFileName(new Date(), 'recovery');
-                      download(localStorage.getItem(SAVE_KEY) ?? '', name);
+                      download(localStorage.getItem(cafeKey()) ?? '', name);
                       setError('');
                       setStatus(`Recovery copy exported as ${name}. Look for it with your downloads.`);
                     } catch {
@@ -264,19 +270,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
               </p>
             )}
           </section>
-          <section className="settings-block">
-            <h3>
-              <Leaf size={16} aria-hidden="true" /> A fresh start
-            </h3>
-            <p>
-              Open the doors all over again. Progress and routines are cleared; these settings and your routine notebook
-              stay.
-            </p>
-            <Button variant="outline-danger" className="settings-chip" aria-haspopup="dialog" onClick={onNew}>
-              Start a new café
-            </Button>
-            <small>We’ll ask before clearing anything.</small>
-          </section>
+          <CafesSection onStartOver={onNew} />
         </div>
         {updateReady && (
           <div className="settings-update">
@@ -309,14 +303,27 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             {pending.kept ? 'The kept copy' : 'This export'}{' '}
             {holds(pending.save) ? `holds ${holds(pending.save)}` : `is ${FRESH}`}.{' '}
             {pending.kept
-              ? `Restoring it will replace your current progress, routines and settings${untouched(save) ? '' : ', and keep this café as the copy instead'}.`
-              : 'Importing it will replace your current progress, routines and settings.'}
+              ? `Restoring it will replace ${openName ? `the progress, routines and settings of “${openName}”` : 'your current progress, routines and settings'}${untouched(save) ? '' : ', and keep this café as the copy instead'}.`
+              : `Importing it will replace ${openName ? `the progress, routines and settings of “${openName}”` : 'your current progress, routines and settings'}.${full ? '' : ' Add it as a new café instead to keep both.'}`}
           </p>
           <Changes changes={pending.changes} lead="It was saved by an older version of the game, so:" />
           <div className="modal-buttons">
             <button className="settings-chip" data-autofocus onClick={() => setPending(null)}>
               Keep current café
             </button>
+            {!pending.kept && !full && (
+              <button
+                className="settings-chip"
+                onClick={() => {
+                  const name = addCafe(freeCafeName(cafes, 'Imported café'), { save: pending.save, open: false });
+                  setPending(null);
+                  if (!name) return setError('This browser wouldn’t keep another café. Your cafés are as they were.');
+                  setStatus(`Added “${name}”: ${holds(pending.save) || FRESH}. Open it from Cafés in this browser.`);
+                }}
+              >
+                Add as a new café
+              </button>
+            )}
             <Button
               variant="danger"
               onClick={() => {
@@ -335,12 +342,10 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   );
 }
 
-const FRESH = 'a fresh café, with no shifts served yet';
-
 /** What the kept copy was taken ahead of. */
 const BEFORE: Record<BackupReason, string> = {
   import: 'your last import',
-  reset: 'you started a new café',
+  reset: 'you started this café over',
   restore: 'you last restored a copy',
   migration: 'the game updated its save',
 };
@@ -362,12 +367,6 @@ function Changes({ changes = [], lead }: { changes?: string[]; lead: string }) {
 
 /** When the kept copy was taken, in the player's own date and time format. */
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
-
-/** What an export holds, counted as the New café window counts what it clears; empty for a café never opened. */
-function holds(save: ProgressSave): string {
-  const done = Object.keys(save.stars).length;
-  return done ? `${count(done, 'served shift')} and ${count(starTotal(save.stars), 'star')}` : '';
-}
 
 /** Why a chosen file was not imported, said in full, and that nothing was replaced. */
 function importProblem(name: string, err: unknown): string {

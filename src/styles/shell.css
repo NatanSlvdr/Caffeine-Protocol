@@ -1749,6 +1749,79 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-backup .settings-chip {
   flex: none;
 }
+/* The cafés kept in this browser: one row each, the open one marked. */
+.cafe-list {
+  display: grid;
+  margin: 0 0 14px;
+  padding: 0;
+  list-style: none;
+  border-top: 1px dashed #392b2433;
+}
+.cafe-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 52px;
+  padding: 8px 0;
+  border-bottom: 1px dashed #392b2433;
+}
+.cafe-name {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+.cafe-name strong {
+  overflow: hidden;
+  color: var(--slip-ink);
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.settings-block .cafe-name small {
+  font-size: 12px;
+  line-height: 1.4;
+}
+.cafe-open {
+  color: var(--slip-clay);
+  font-weight: 800;
+}
+.cafe-list li.open {
+  box-shadow: inset 3px 0 0 var(--slip-clay);
+  padding-left: 12px;
+}
+.cafe-buttons {
+  display: flex;
+  flex: none;
+  gap: 6px;
+}
+.cafe-rename {
+  display: flex;
+  flex: 1;
+  gap: 6px;
+}
+.cafe-rename input {
+  flex: 1;
+  min-width: 0;
+  height: 34px;
+  padding: 0 10px;
+  border: 1.5px solid #392b2433;
+  border-radius: 10px;
+  color: var(--slip-ink);
+  background: #fff;
+  font: inherit;
+  font-size: 14px;
+}
+.cafe-rename input:focus-visible {
+  border-color: var(--slip-coffee);
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 1px;
+}
+.cafes-block .settings-actions + small,
+.cafes-block #cafe-full {
+  display: block;
+  margin-top: 8px;
+}
 .settings-changes {
   margin-top: 8px;
   font-size: 13px;

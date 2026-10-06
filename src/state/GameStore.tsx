@@ -6,18 +6,29 @@ import type { ShiftNarrative } from '@/data/campaign/narrative';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import {
-  SAVE_KEY,
+  CAFES_KEY,
+  MAX_CAFES,
+  addCafe as listCafe,
   backupSave,
+  cafeKey,
+  clearCafe,
   completeDrill,
   completeLevel,
   migrationChanges,
   newSave,
   parseSave,
   readBackup,
+  openCafeId,
+  readCafes,
   readSave,
+  removeCafe as unlistCafe,
+  renameCafe as relabelCafe,
+  settleCafe,
   storedIsOlder,
+  writeCafes,
   writeSave,
   type BackupReason,
+  type CafeList,
   type SaveBackup,
 } from '@/features/campaign/save/persistence';
 import type { ChallengeMeasure, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
@@ -64,6 +75,19 @@ interface GameStore {
   completeDrill: (id: string) => void;
   resetCafe: () => void;
   importCafe: (next: ProgressSave) => void;
+  /** The cafés kept in this browser, and the one this tab plays. */
+  cafes: CafeList;
+  cafeId: string;
+  /** Plays another café: the page reloads into it. */
+  openCafe: (id: string) => void;
+  /**
+   * Adds a café, fresh with these settings or the one given, and opens it unless told not to. Returns its name, or
+   * nothing when the browser wouldn't keep it.
+   */
+  addCafe: (name: string, options?: { save?: ProgressSave; open?: boolean }) => string | undefined;
+  renameCafe: (id: string, name: string) => boolean;
+  /** Removes a café other than this tab's, and everything it kept. */
+  removeCafe: (id: string) => boolean;
 }
 
 const GameContext = createContext<GameStore | null>(null);
@@ -84,21 +108,24 @@ function siteStorage(): Storage | undefined {
 export function GameProvider({ children }: { children: ReactNode }) {
   const [initial] = useState(() => {
     const storage = siteStorage();
-    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null, updated: [] };
+    // Which café this tab plays is settled first, and every read and save after this goes to its keys.
+    const cafes = settleCafe(storage);
+    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null, updated: [], cafes };
     // A café from an older version is kept as it was before the first save rewrites it in the new one. That save
     // makes it current, so the player hears what changed on this visit only.
     const older = storedIsOlder(storage);
     if (older) backupSave(storage, 'migration', lessons);
-    const updated = older ? migrationChanges(storage.getItem(SAVE_KEY) ?? '', lessons) : [];
+    const updated = older ? migrationChanges(storage.getItem(cafeKey()) ?? '', lessons) : [];
     const read = readSave(storage, lessons);
     // Only an unreadable café is held back from saves, so a recovery copy of it can still be exported.
-    return { ...read, recovery: !!read.error, backup: readBackup(storage, lessons), updated };
+    return { ...read, recovery: !!read.error, backup: readBackup(storage, lessons), updated, cafes };
   });
   const [save, setSave] = useState(initial.save),
     [saveError, setSaveError] = useState(initial.error),
     [recovery, setRecovery] = useState(initial.recovery),
     [backup, setBackup] = useState(initial.backup),
-    [updated, setUpdated] = useState(initial.updated);
+    [updated, setUpdated] = useState(initial.updated),
+    [cafes, setCafes] = useState(initial.cafes);
   // Runs before the replacement is saved, so the slot gets the café still in storage: the one being replaced.
   const keep = (reason: BackupReason) => {
     const storage = siteStorage();
@@ -111,7 +138,17 @@ export function GameProvider({ children }: { children: ReactNode }) {
   const latest = useRef(save);
   useEffect(() => {
     const saved = (event: StorageEvent) => {
-      if (event.key !== SAVE_KEY || event.newValue === null) return;
+      // A café added, renamed or removed in another tab shows here too.
+      if (event.key === CAFES_KEY) {
+        const storage = siteStorage();
+        if (!storage) return;
+        const list = readCafes(storage);
+        // Removed from another tab, this café has nowhere left to save: open the one that tab left open instead.
+        if (!list.cafes.some((cafe) => cafe.id === openCafeId())) return reloadPage();
+        setCafes(list);
+        return;
+      }
+      if (event.key !== cafeKey() || event.newValue === null) return;
       // Opening the café in another tab writes the same progress back; only a real change counts.
       const read = (raw: string) => JSON.stringify(parseSave(raw, lessons));
       let same = false;
@@ -202,8 +239,56 @@ export function GameProvider({ children }: { children: ReactNode }) {
       },
       updated,
       dismissUpdated: () => setUpdated([]),
+      cafes,
+      cafeId: openCafeId(),
+      openCafe: (id) => {
+        const storage = siteStorage();
+        if (!storage || !cafes.cafes.some((cafe) => cafe.id === id)) return;
+        writeCafes(storage, { ...readCafes(storage), open: id });
+        go('/');
+        reloadPage();
+      },
+      addCafe: (name, { save: start, open = true } = {}) => {
+        const storage = siteStorage();
+        const list = storage && readCafes(storage);
+        if (!storage || !list || list.cafes.length >= MAX_CAFES) return undefined;
+        const { list: next, id } = listCafe(list, name);
+        clearCafe(storage, id);
+        try {
+          storage.setItem(cafeKey(id), JSON.stringify(start ?? newSave(save.settings)));
+        } catch {
+          return undefined;
+        }
+        if (!writeCafes(storage, next)) {
+          clearCafe(storage, id);
+          return undefined;
+        }
+        setCafes(next);
+        if (open) {
+          writeCafes(storage, { ...next, open: id });
+          go('/');
+          reloadPage();
+        }
+        return next.cafes.find((cafe) => cafe.id === id)!.name;
+      },
+      renameCafe: (id, name) => {
+        const storage = siteStorage();
+        if (!storage) return false;
+        const next = relabelCafe(readCafes(storage), id, name);
+        if (!writeCafes(storage, next)) return false;
+        setCafes(next);
+        return true;
+      },
+      removeCafe: (id) => {
+        const storage = siteStorage();
+        if (!storage || id === openCafeId()) return false;
+        const next = unlistCafe(storage, readCafes(storage), id);
+        if (!writeCafes(storage, next)) return false;
+        setCafes(next);
+        return true;
+      },
     }),
-    [save, saveError, recovery, elsewhere, backup, updated, route],
+    [save, saveError, recovery, elsewhere, backup, updated, route, cafes],
   );
   return <GameContext.Provider value={store}>{children}</GameContext.Provider>;
 }

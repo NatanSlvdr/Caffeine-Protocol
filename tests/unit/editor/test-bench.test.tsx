@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import App from '../../../src/App';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
-import { BENCH_KEY } from '../../../src/features/workspace/bench';
+import { benchKey } from '../../../src/features/workspace/bench';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons, levels } from '../../../src/data';
 import { BenchModal } from '../../../src/features/workspace/modals/BenchModal';
@@ -104,7 +104,7 @@ describe('the test bench', () => {
     settle();
     expect(document.activeElement).toBe(within(guests()[1]).getByRole('combobox', { name: 'Guest 2 comes in' }));
     fireEvent.change(document.activeElement!, { target: { value: '2' } });
-    const kept = JSON.parse(localStorage.getItem(BENCH_KEY)!).L04;
+    const kept = JSON.parse(localStorage.getItem(benchKey())!).L04;
     expect(kept).toEqual([
       { orders: [{ drink: 'tea', sugar: 'plain' }], after: 0 },
       { orders: [{ drink: 'coffee', sugar: 'plain' }], after: 2 },
@@ -132,7 +132,7 @@ describe('the test bench', () => {
   });
 
   it('starts again from the shift’s round when the kept bench can’t be run here', () => {
-    localStorage.setItem(BENCH_KEY, JSON.stringify({ L04: [{ orders: [{ drink: 'tea', sugar: 2 }], after: 0 }] }));
+    localStorage.setItem(benchKey(), JSON.stringify({ L04: [{ orders: [{ drink: 'tea', sugar: 2 }], after: 0 }] }));
     ready();
     openBench();
     expect(guests()).toHaveLength(4);
@@ -174,7 +174,7 @@ describe('the test bench', () => {
 describe('the test bench on the last shift', () => {
   it('offers every way the finale’s guests order: sugar, marks, two drinks and a mumble', () => {
     localStorage.setItem(
-      BENCH_KEY,
+      benchKey(),
       JSON.stringify({ [levels[20].id]: [{ orders: [{ drink: 'coffee', sugar: 0 }], after: 0 }] }),
     );
     const onRun = vi.fn();

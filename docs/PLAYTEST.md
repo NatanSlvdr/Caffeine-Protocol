@@ -49,8 +49,15 @@ The production build is static and caches itself on its first successful load. T
 1. On a shift, open **Notebook**, keep the open routine under a name, then change the routine and bring the page back with **Use this page**. Undo brings the change back.
 2. On an earlier shift, open the notebook: a page with blocks that shift doesn't have says so, and can't be used. A page kept for another robot says which blocks the open one doesn't know.
 3. Export the notebook, clear the site data, and import the file: every page comes back. Import it again: nothing is added twice.
-4. Start a new café from Settings: the notebook is still there.
+4. Start this café over from Settings: the notebook is still there.
 5. On a page, choose **Write a lesson**: say what it shows, add notes to a few blocks out of order, and check they number from the top. Export the lesson and open the text file: the routine reads with the noted blocks marked, then the notes in order, and says from which shift it can be typed in.
+
+## Cafés in one browser
+
+1. With a café under way, open **Settings → Cafés in this browser** and add a café. The page reloads on the new café at the very start, with the same audio and display settings, and the front page names it.
+2. Open the notebook on a shift: it's the same notebook. Back in Settings, open the first café: its shifts, stars, routines and benches are as they were.
+3. Import an export and choose **Add as a new café**: the café you're in is untouched, and the import is listed beside it. Remove a café you're not in: it asks first, and offers its export.
+4. With two tabs on different cafés, play in both: neither writes over the other. Remove one tab's café from the other tab: the first tab reloads on a café still kept.
 
 ## Accessibility paths
 

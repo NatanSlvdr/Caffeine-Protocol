@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../../../src/App';
 import { newSave } from '../../../src/features/campaign/save/persistence';
@@ -6,6 +6,10 @@ import { notebookFile } from '../../../src/features/workspace/notebook';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
+
+/** The line in Settings that says what became of an export or import. */
+const savedStatus = () =>
+  within(screen.getByRole('heading', { name: 'Your café, saved' }).parentElement!).getByRole('status');
 
 beforeEach(() => {
   window.location.hash = '/';
@@ -70,7 +74,7 @@ describe('importing a café', () => {
       target: { files: [Object.assign(new File([text], 'cafe.json'), { text: async () => text })] },
     });
     fireEvent.click(await screen.findByRole('button', { name: 'Replace café' }));
-    expect(screen.getByRole('status').textContent).toBe('Café imported: 3 served shifts and 5 stars.');
+    expect(savedStatus().textContent).toBe('Café imported: 3 served shifts and 5 stars.');
   });
 
   it('counts what an export holds as the New café window counts, and names a fresh café as one', async () => {
@@ -84,15 +88,15 @@ describe('importing a café', () => {
     };
     choose({ ...newSave(), stars: { 0: 1, 1: 3, 2: 2 } });
     expect((await screen.findByText(/^This export/)).textContent).toBe(
-      'This export holds 3 served shifts and 5 stars. Importing it will replace your current progress, routines and settings.',
+      'This export holds 3 served shifts and 5 stars. Importing it will replace your current progress, routines and settings. Add it as a new café instead to keep both.',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Keep current café' }));
     choose(newSave());
     expect((await screen.findByText(/^This export/)).textContent).toBe(
-      'This export is a fresh café, with no shifts served yet. Importing it will replace your current progress, routines and settings.',
+      'This export is a fresh café, with no shifts served yet. Importing it will replace your current progress, routines and settings. Add it as a new café instead to keep both.',
     );
     fireEvent.click(screen.getByRole('button', { name: 'Replace café' }));
-    expect(screen.getByRole('status').textContent).toBe('Café imported: a fresh café, with no shifts served yet.');
+    expect(savedStatus().textContent).toBe('Café imported: a fresh café, with no shifts served yet.');
   });
 
   it('says where an exported copy went', () => {
@@ -105,7 +109,7 @@ describe('importing a café', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
       fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
       expect(click).toHaveBeenCalledOnce();
-      expect(screen.getByRole('status').textContent).toBe(
+      expect(savedStatus().textContent).toBe(
         'Café exported as caffeine-protocol-save-2026-10-02.json. Look for it with your downloads.',
       );
     } finally {
@@ -121,7 +125,7 @@ describe('importing a café', () => {
     try {
       render(<App />);
       fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-      const status = screen.getByRole('status');
+      const status = savedStatus();
       fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
       const first = status.textContent;
       fireEvent.click(screen.getByRole('button', { name: 'Export café' }));
@@ -151,7 +155,7 @@ describe('importing a café', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
       fireEvent.click(screen.getByRole('button', { name: 'Export recovery copy' }));
       expect(click).toHaveBeenCalledOnce();
-      expect(screen.getByRole('status').textContent).toBe(
+      expect(savedStatus().textContent).toBe(
         'Recovery copy exported as caffeine-protocol-recovery-2026-10-02.json. Look for it with your downloads.',
       );
     } finally {

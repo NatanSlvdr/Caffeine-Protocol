@@ -1,13 +1,13 @@
 import { useState } from 'react';
-import { SAVE_KEY } from '@/features/campaign/save/settings';
+import { cafeKey } from '@/features/campaign/save/cafes';
 
-/** Which of the campaign's keepsakes, guestbook entries and drills this browser has already shown. */
-export const SEEN_KEY = `${SAVE_KEY}.seen`;
+/** Which of the campaign's keepsakes, guestbook entries and drills the open café has already shown. */
+export const seenKey = () => `${cafeKey()}.seen`;
 type List = 'shelf' | 'guestbook' | 'drills';
 
 function read(): Partial<Record<List, string[]>> {
   try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(SEEN_KEY) ?? '{}');
+    const parsed: unknown = JSON.parse(localStorage.getItem(seenKey()) ?? '{}');
     return parsed && typeof parsed === 'object' ? (parsed as Partial<Record<List, string[]>>) : {};
   } catch {
     return {};
@@ -16,7 +16,7 @@ function read(): Partial<Record<List, string[]>> {
 
 function write(list: List, ids: readonly string[]): void {
   try {
-    localStorage.setItem(SEEN_KEY, JSON.stringify({ ...read(), [list]: ids }));
+    localStorage.setItem(seenKey(), JSON.stringify({ ...read(), [list]: ids }));
   } catch {
     // Storage full or blocked: the marks only come back next visit.
   }

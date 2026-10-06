@@ -67,11 +67,11 @@ test('settings persist, text mode is lossless, and import/export confirms', asyn
   await expect(page.getByRole('button', { name: `Shift 14: ${titleFor(13)}, next up`, exact: true })).toBeEnabled();
   // A fresh start keeps settings while clearing progress (the imported seed uses defaults).
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Start a new café', exact: true }).click();
+  await page.getByRole('button', { name: 'Start this café over', exact: true }).click();
   await page.getByRole('button', { name: 'Keep my café' }).click();
   await expect(page.getByRole('heading', { name: 'The little things.' })).toBeVisible();
-  await page.getByRole('button', { name: 'Start a new café', exact: true }).click();
-  await page.getByRole('button', { name: 'Start new café', exact: true }).click();
+  await page.getByRole('button', { name: 'Start this café over', exact: true }).click();
+  await page.getByRole('button', { name: 'Start over', exact: true }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('slider', { name: 'Music volume', exact: true })).toHaveValue('0.33');
 });

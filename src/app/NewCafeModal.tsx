@@ -9,16 +9,22 @@ import { useAnnouncement } from '@/hooks/useAnnouncement';
 
 /** Confirm a fresh start: name what it clears, and offer the export the warning recommends right here. */
 export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onConfirm: () => void }) {
-  const { save, saveError } = useGame();
+  const { save, saveError, cafes } = useGame();
   // Settings keeps a copy of a café with something in it, once it is saved where a copy can go.
   const kept = !saveError && !untouched(save);
   const { done, stars } = useProgress();
   const [exported, announce] = useAnnouncement();
   return (
-    <Modal className="settings-window confirm-slip" kicker="A fresh start" title="Start a new café?" onClose={onClose}>
+    <Modal
+      className="settings-window confirm-slip"
+      kicker="A fresh start"
+      title="Start this café over?"
+      onClose={onClose}
+    >
       <p>
         This clears {done ? `${count(done, 'served shift')}, ${count(stars, 'star')}, ` : ''}every routine and the story
-        so far. Your audio and display settings, and your routine notebook, will stay.
+        so far. Your audio and display settings, and your routine notebook, will stay
+        {cafes.cafes.length > 1 ? '; your other cafés aren’t touched.' : '.'}
       </p>
       <p>
         {kept
@@ -43,7 +49,7 @@ export function NewCafeModal({ onClose, onConfirm }: { onClose: () => void; onCo
           Keep my café
         </button>
         <Button variant="danger" onClick={onConfirm}>
-          Start new café
+          Start over
         </Button>
       </div>
     </Modal>

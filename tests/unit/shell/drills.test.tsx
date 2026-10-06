@@ -8,7 +8,7 @@ import type { RunEvidence } from '../../../src/features/workspace/evidence';
 import { drillFor } from '../../../src/features/workspace/hints';
 import { HelpModal } from '../../../src/features/workspace/modals/HelpModal';
 import { CampaignPage } from '../../../src/shell/CampaignPage';
-import { SEEN_KEY } from '../../../src/shell/unseen';
+import { seenKey } from '../../../src/shell/unseen';
 import { GameProvider } from '../../../src/state/GameStore';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
@@ -60,7 +60,7 @@ describe('drills on the campaign', () => {
   });
 
   it('marks the drills that came in since they were last opened', () => {
-    localStorage.setItem(SEEN_KEY, JSON.stringify({ drills: [first.id] }));
+    localStorage.setItem(seenKey(), JSON.stringify({ drills: [first.id] }));
     campaign(drills[1].shift);
     fireEvent.click(screen.getByRole('button', { name: 'Drills, 2 drills, 1 new' }));
     const picks = within(screen.getByRole('region', { name: 'Act I, Query' })).getAllByRole('button');

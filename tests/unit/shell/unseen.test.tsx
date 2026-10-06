@@ -2,7 +2,7 @@ import { act, fireEvent, render, renderHook, screen, within } from '@testing-lib
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CampaignPage } from '../../../src/shell/CampaignPage';
 import { acts } from '../../../src/shell/rail/acts';
-import { SEEN_KEY, useUnseen } from '../../../src/shell/unseen';
+import { seenKey, useUnseen } from '../../../src/shell/unseen';
 import { GameProvider } from '../../../src/state/GameStore';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
@@ -23,7 +23,7 @@ afterEach(() => {
   localStorage.clear();
 });
 
-const kept = () => JSON.parse(localStorage.getItem(SEEN_KEY) ?? 'null') as Record<string, string[]> | null;
+const kept = () => JSON.parse(localStorage.getItem(seenKey()) ?? 'null') as Record<string, string[]> | null;
 const servedThrough = (served: number) => Object.fromEntries(Array.from({ length: served }, (_, i) => [i, 2]));
 
 describe('what is new since the last look', () => {
@@ -34,7 +34,7 @@ describe('what is new since the last look', () => {
   });
 
   it('marks what arrives after the record, until it is looked at', () => {
-    localStorage.setItem(SEEN_KEY, JSON.stringify({ shelf: ['order-pad'], guestbook: ['4'] }));
+    localStorage.setItem(seenKey(), JSON.stringify({ shelf: ['order-pad'], guestbook: ['4'] }));
     const { result } = renderHook(() => useUnseen('shelf', ['order-pad', 'recipe-card']));
     expect(result.current.fresh).toEqual(['recipe-card']);
     let arrived: string[] = [];
@@ -48,7 +48,7 @@ describe('what is new since the last look', () => {
   });
 
   it('forgets what is no longer earned, so a fresh start marks it new again', () => {
-    localStorage.setItem(SEEN_KEY, JSON.stringify({ shelf: ['order-pad', 'recipe-card'] }));
+    localStorage.setItem(seenKey(), JSON.stringify({ shelf: ['order-pad', 'recipe-card'] }));
     renderHook(() => useUnseen('shelf', []));
     expect(kept()).toEqual({ shelf: [] });
     const { result } = renderHook(() => useUnseen('shelf', ['order-pad']));
@@ -56,13 +56,13 @@ describe('what is new since the last look', () => {
   });
 
   it('shrugs off a record it cannot read', () => {
-    localStorage.setItem(SEEN_KEY, '{not json');
+    localStorage.setItem(seenKey(), '{not json');
     const { result } = renderHook(() => useUnseen('guestbook', ['4']));
     expect(result.current.fresh).toEqual([]);
   });
 
   it('puts a mark on the shelf when a keepsake comes in, and takes it off once looked at', () => {
-    localStorage.setItem(SEEN_KEY, JSON.stringify({ shelf: [], guestbook: ['4', '5', '6', '7', '8'] }));
+    localStorage.setItem(seenKey(), JSON.stringify({ shelf: [], guestbook: ['4', '5', '6', '7', '8'] }));
     seedLocalStorage(makeSave({ unlocked: acts[1].to, selected: acts[1].to, stars: servedThrough(acts[1].to) }));
     const { container } = render(
       <GameProvider>
