@@ -2279,7 +2279,8 @@ html[data-motion='reduced'] .front-page *::after {
 .restore-version small.notebook-unfit {
   color: #9c4f32;
 }
-.settings-window.confirm-slip p.notebook-empty {
+.settings-window.confirm-slip p.notebook-empty,
+.settings-window.confirm-slip p.bench-empty {
   margin: 0 0 14px;
   padding: 12px 14px;
   border: 1.5px dashed #392b2433;
@@ -2314,6 +2315,151 @@ html[data-motion='reduced'] .front-page *::after {
 .notebook-carry {
   margin-top: 22px;
 }
+/* The test bench: a round of guests written on the slip, one card each, what they say and what they should get
+   under their choices. */
+.modal.settings-window.bench-slip {
+  width: min(640px, 94vw);
+}
+.bench-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 4px 0 12px;
+}
+.bench-copy > span {
+  margin-right: 4px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.settings-window .bench-copy button.settings-chip {
+  min-height: 30px;
+  padding: 0 12px;
+  font-size: 12px;
+}
+.bench-guests {
+  display: grid;
+  gap: 8px;
+  max-height: min(380px, 44dvh);
+  margin: 0 0 10px;
+  padding: 2px;
+  overflow: auto;
+  list-style: none;
+}
+.bench-guest {
+  display: grid;
+  gap: 6px;
+  padding: 10px 12px;
+  border: 1.5px solid #392b2424;
+  border-radius: 10px;
+  background: #fffaf0;
+}
+.bench-guest-head,
+.bench-order,
+.bench-guest-more {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.bench-guest-head strong {
+  font-size: 14px;
+}
+.bench-guest-head .bench-when {
+  margin-right: auto;
+}
+span.bench-when,
+.bench-fixed {
+  color: var(--slip-muted);
+  font-size: 13px;
+}
+.bench-guest select {
+  min-height: 32px;
+  padding: 0 8px;
+  border: 1.5px solid #392b2433;
+  border-radius: 8px;
+  color: var(--slip-ink);
+  background: var(--slip-paper);
+  font: inherit;
+  font-size: 13px;
+}
+.bench-guest select:focus-visible,
+.bench-mark input:focus-visible {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 1px;
+}
+.bench-fixed {
+  padding: 0 2px;
+}
+.bench-mark {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.bench-mark input {
+  margin: 0;
+  accent-color: var(--slip-coffee);
+}
+.settings-window button.bench-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  color: var(--slip-muted);
+  background: transparent;
+}
+.settings-window button.bench-remove:hover {
+  color: #9c4f32;
+  background: #b968471a;
+}
+.settings-window button.bench-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 0;
+  border: 0;
+  color: var(--slip-coffee);
+  background: none;
+  font-size: 13px;
+  font-weight: 700;
+}
+.settings-window.confirm-slip p.bench-says {
+  margin: 0;
+  color: var(--slip-muted);
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.bench-says strong {
+  color: var(--slip-ink);
+}
+.settings-window button.settings-chip.bench-add[aria-disabled] {
+  opacity: 0.55;
+  cursor: default;
+}
+.settings-window.confirm-slip p.bench-status {
+  margin: 6px 0 0;
+  font-size: 13px;
+}
+.settings-window.confirm-slip p.bench-status:empty {
+  margin: 0;
+}
+.bench-problems {
+  display: grid;
+  gap: 2px;
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: #9c4f32;
+  font-size: 13px;
+}
+
 /* Two runs of the same rounds side by side, on the same till paper: each number, and which way it went. */
 .compare-pick {
   display: grid;

@@ -2,6 +2,7 @@ import {
   ROBOT_DISPLAY_NAMES,
   count,
   indentSource,
+  isBenchSeed,
   type LevelDefinition,
   type RobotRole,
   type RunRecord,
@@ -29,10 +30,15 @@ export function latestPair(records: readonly RunRecord[]): [RunRecord, RunRecord
   return undefined;
 }
 
-/** A run named for the list: "Run 3 · Service · Served", "Run 4 · Practice, round 2 · Stopped". */
+/** A run named for the list: "Run 3 · Service · Served", "Run 4 · Practice, round 2 · Stopped", "Run 5 · Bench 1 · …". */
 export function runName(level: LevelDefinition, record: RunRecord): string {
   const round = level.seeds.findIndex((seed) => seed.id === record.seeds[0]) + 1;
-  const mode = record.mode === 'service' ? 'Service' : `Practice, round ${round}`;
+  const mode =
+    record.mode === 'service'
+      ? 'Service'
+      : isBenchSeed(record.seeds[0])
+        ? record.seeds[0].replace('BENCH_', 'Bench ')
+        : `Practice, round ${round}`;
   return `Run ${record.id} · ${mode} · ${record.result.passed ? 'Served' : 'Stopped'}`;
 }
 

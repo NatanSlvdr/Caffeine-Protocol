@@ -1,4 +1,4 @@
-import { count, evaluateQueryComparison, parseConditionExpression, spokenBlock } from '@/domain';
+import { count, evaluateQueryComparison, isBenchSeed, parseConditionExpression, spokenBlock } from '@/domain';
 import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord, TraceStep } from '@/domain';
 import { guestCalled } from './route';
 
@@ -12,6 +12,8 @@ export interface RunEvidence {
   programs: Readonly<RobotPrograms>;
   /** The run was practice of one round, not the full service. */
   practice: boolean;
+  /** The round was a bench the player wrote, not one of the shift's own. */
+  bench: boolean;
   /** Which round of guests, counting from 1. */
   round: number;
   /** Which guest of that round, counting from 1; nothing for the closing call, which belongs to no guest. */
@@ -74,6 +76,7 @@ export function evidenceOf(level: LevelDefinition, record: RunRecord): RunEviden
     decisions: decisionsOf(event?.trace ?? []),
     programs: record.programs,
     practice: record.mode === 'practice',
+    bench: isBenchSeed(failure.seed_id),
     round: Math.max(seed, 0) + 1,
     guest: guest < 0 ? undefined : guest + 1,
     name: guest < 0 ? undefined : guestCalled(level, failure.seed_id, failure.customer_id),

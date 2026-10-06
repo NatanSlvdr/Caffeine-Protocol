@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import type { RobotRole } from '@/domain';
 import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
-import { BookOpen, NotebookPen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
+import { BookOpen, FlaskConical, NotebookPen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
 import { RUN_MODIFIER } from '@/shared/lib/format';
 import { RobotOptions } from './RobotChoice';
 import type { RobotTabActivity } from './RobotChoice';
@@ -16,6 +16,7 @@ export function CodingPaneHeader({
   onRole,
   onHelp,
   onNotebook,
+  onBench,
   onOptions,
   history,
   activity,
@@ -29,6 +30,8 @@ export function CodingPaneHeader({
   onHelp?: () => void;
   /** The routine notebook, on a shift with a routine to keep or fill. */
   onNotebook?: () => void;
+  /** The test bench, on a shift with a routine to run on guests of the player's own. */
+  onBench?: () => void;
   onOptions?: () => void;
   /** Undo and redo for the open robot's routine. */
   history?: { canUndo: boolean; canRedo: boolean; onUndo: () => void; onRedo: () => void };
@@ -99,6 +102,11 @@ export function CodingPaneHeader({
                 onClick={onNotebook}
               >
                 <NotebookPen size={14} aria-hidden="true" />
+              </button>
+            )}
+            {onBench && (
+              <button type="button" aria-label="Test bench" aria-haspopup="dialog" title="Test bench" onClick={onBench}>
+                <FlaskConical size={14} aria-hidden="true" />
               </button>
             )}
             {onOptions && (

@@ -132,6 +132,20 @@ yet ticked, and counts its own ticks; one still partly shut says which shift
 opens the rest. A flight is only a list of drill ids (`src/data/flights.ts`), so
 its progress is the drills' ticks and nothing new is stored.
 
+The test bench lets the player write guests of their own for a shift and run
+the routines on them. A bench is written the way the shift's guests order: the
+drink, how sugar is asked for, to go, in a rush, a second drink, a mumble first,
+and how many seconds after the guest before each one comes in. It only offers
+what the shift's own guests ask for, so nothing untaught can be written, and
+never asks what a guest should get: `benchSeed` in `src/domain/bench.ts` works
+that out the way the shift's guests who asked alike get it, so a guest can't be
+told to want the wrong thing. A bench starts as a copy of one of the shift's
+rounds, takes up to 16 guests, and is kept per shift beside the save. It runs
+as one more round of the shift for no stars, with the failure card, replay and
+compare of any practice run; a passing bench says so beside the code and nothing else.
+`tests/unit/simulation/bench.test.ts` writes every round of every shift as a
+bench and checks it is heard and expected as the shift's own.
+
 Scoring metrics shown after a run:
 
 - Seeds passed.

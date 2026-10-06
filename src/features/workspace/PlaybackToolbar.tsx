@@ -14,6 +14,8 @@ export interface PlaybackToolbarProps {
   rounds: number;
   /** The run plays one round as practice, which earns no stars. */
   practice: boolean;
+  /** The round is a bench the player wrote, which earns no stars either. */
+  bench?: boolean;
   onRun: () => void;
   onTogglePause: () => void;
   onSpeed: (speed: number) => void;
@@ -39,6 +41,7 @@ export function PlaybackToolbar({
   round,
   rounds,
   practice,
+  bench = false,
   onRun,
   onTogglePause,
   onSpeed,
@@ -91,7 +94,13 @@ export function PlaybackToolbar({
         </>
       )}
       {pauseMenu && <PauseAtMenu {...pauseMenu} />}
-      {counted && (
+      {running && bench && (
+        <span className="playback-round practice" aria-hidden="true">
+          <strong>Bench</strong>
+          For no stars
+        </span>
+      )}
+      {counted && !bench && (
         <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
           {/* A service stops at its first slip, so every round before this one went right. */}
           {practice ? (
@@ -127,7 +136,7 @@ export function PlaybackToolbar({
         {running &&
           (paused
             ? (stepped ?? 'Service paused.')
-            : `${practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
+            : `${bench ? 'Running the bench, for no stars' : practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>
   );

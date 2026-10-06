@@ -79,7 +79,7 @@ export function FailureCard({
   const heading = useId(),
     body = useId(),
     decisionsHeading = useId();
-  const { failure, round, guest, name } = evidence;
+  const { failure, round, guest, name, bench } = evidence;
   const robot = ROBOT_DISPLAY_NAMES[failure.role ?? 'query'],
     routine = ROUTINE_CODES.has(failure.code),
     comparison = comparisonOf(failure);
@@ -87,14 +87,15 @@ export function FailureCard({
   const when = routine
     ? undefined
     : [
-        evidence.practice && 'Practice',
-        rounds > 1 && `Round ${round}`,
+        bench ? 'Bench' : evidence.practice && 'Practice',
+        !bench && rounds > 1 && `Round ${round}`,
         guest ? (name ?? `Guest ${guest}`) : 'Closing time',
       ]
         .filter(Boolean)
         .join(' · ');
-  // One round of several can be played on its own to check a fix; a routine that won't run has no round to play.
-  const practisable = rounds > 1 && !routine;
+  // One round of several, or the bench, can be played on its own to check a fix; a routine that won't run has no
+  // round to play.
+  const practisable = (rounds > 1 || bench) && !routine;
   const showable = !stale && failure.error_line >= 0;
   const followable = !routine && guest && onFollow;
   // Query's choices for the guest, when Query is the one who stopped: the latest few, which led to the slip.
@@ -116,7 +117,11 @@ export function FailureCard({
         {stale && (
           <p className="failure-card-stale">
             From your last run. The routine has changed since:{' '}
-            {practisable ? 'practise this round to check it, or run the whole service.' : 'run again to check.'}
+            {bench
+              ? 'run the bench again to check it.'
+              : practisable
+                ? 'practise this round to check it, or run the whole service.'
+                : 'run again to check.'}
           </p>
         )}
         {!routine && guest && failure.phrase && <blockquote>“{failure.phrase}”</blockquote>}
@@ -195,7 +200,7 @@ export function FailureCard({
             {practisable && (
               <button type="button" className="failure-card-show" onClick={onPractise}>
                 <RotateCcw size={14} aria-hidden="true" />
-                Practise round {round}
+                {bench ? 'Run the bench again' : `Practise round ${round}`}
               </button>
             )}
             {onCompareServed && (

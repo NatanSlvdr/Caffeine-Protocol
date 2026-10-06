@@ -21,6 +21,7 @@ import type {
   RobotRole,
   RunRecord,
   RunResult,
+  ValidationSeed,
 } from '@/domain';
 import { usePlaybackClock } from './usePlaybackClock';
 import { keepHistories, keptHistories, record, redo, undo } from './history';
@@ -78,8 +79,16 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const [following, setFollowing] = useState<{ seed: string; guest: string } | null>(null);
   // A slip the service is paused on, before the crew reacts: playing on, stepping or stopping lets them.
   const [held, setHeld] = useState<RunRecord | null>(null);
-  // The round being practised, counting from 0, or nothing for a full service.
+  // The round being practised, counting from 0, or nothing for a full service. A bench is a round past the shift's.
   const [practising, setPractising] = useState<number | null>(null);
+  // The benches run this visit, each a round of guests the player wrote. They join the shift's rounds, so a record or
+  // a slip of a bench run looks its guests up the way any other run's does, and stay for as long as their records.
+  const [benches, setBenches] = useState<ValidationSeed[]>([]);
+  const played = useMemo(
+    () => (benches.length ? { ...level, seeds: [...level.seeds, ...benches] } : level),
+    [level, benches],
+  );
+  const benching = practising !== null && practising >= level.seeds.length;
   // Every finished run this shift, frozen with the routines it ran, newest last; the oldest drop off past a few.
   const [records, setRecords] = useState<RunRecord[]>([]);
   const nextRecord = useRef(1);
@@ -98,9 +107,11 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     (e) => e.role === role && e.start <= sampled.local && (e.end > sampled.local || e.start === e.end),
   );
   // Most shifts send in a few rounds of guests, one after another; this is the one on screen.
-  const round = sampled?.seed
-    ? level.seeds.findIndex((seed) => seed.id === sampled.seed!.seed_id) + 1
-    : (practising ?? 0) + 1;
+  const round = benching
+    ? 1
+    : sampled?.seed
+      ? level.seeds.findIndex((seed) => seed.id === sampled.seed!.seed_id) + 1
+      : (practising ?? 0) + 1;
   // A failed run has already stopped, but its last frame stays up until the code changes.
   const failed = showFailure && !!result && !result.passed;
   // Who is busy and who is waiting, while the run plays or is looked back on: the robot tabs show it.
@@ -160,14 +171,22 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setViewTime(null);
     setShowFailure(false);
   };
+  /**
+   * The shift a run plays: the shift itself, or with one bench as a last round. Each bench is fingerprinted with the
+   * shift, so only runs of the same guests compare.
+   */
+  const shiftFor = (practice: number | null, bench = benchOf(practice)) =>
+    bench ? { ...level, seeds: [...level.seeds, bench] } : level;
+  const benchOf = (practice: number | null) =>
+    practice !== null && practice >= level.seeds.length ? played.seeds[practice] : undefined;
   /** Freeze a finished run with the routines and rounds it played, and keep it. */
-  const keep = (finished: RunResult, practice: number | null): RunRecord => {
-    const rounds = practice === null ? level.seeds.map((_, i) => i) : [practice];
-    const record = recordRun(nextRecord.current++, level, programs, finished, rounds);
+  const keep = (finished: RunResult, practice: number | null, bench = benchOf(practice)): RunRecord => {
+    const rounds = practice === null ? level.seeds.map((_, i) => i) : [bench ? level.seeds.length : practice];
+    const record = recordRun(nextRecord.current++, shiftFor(practice, bench), programs, finished, rounds);
     setRecords((kept) => keepRecord(kept, record));
     return record;
   };
-  const fail = (record: RunRecord) => {
+  const fail = (record: RunRecord, shift: LevelDefinition = played) => {
     liveRun.current = null;
     setRunning(false);
     setPaused(false);
@@ -175,29 +194,42 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setHeld(null);
     setViewTime(null);
     setShowFailure(true);
-    setEvidence(evidenceOf(level, record));
+    setEvidence(evidenceOf(shift, record));
     if (record.result.first_failure?.role) setRole(record.result.first_failure.role);
     onFinish(record);
   };
-  /** Start the whole service, or practise one round of it; while running, the same call stops it. */
-  const start = (practice: number | null) => {
+  /**
+   * Start the whole service, practise one round of it, or run a bench; while running, the same call stops it. A
+   * bench run of the same guests as one before reuses its round, so the two compare.
+   */
+  const start = (practice: number | null, guests?: ValidationSeed['customers']) => {
     if (running) {
       stop();
       return;
     }
-    const options = practice === null ? {} : { practice };
+    let bench: ValidationSeed | undefined;
+    if (guests) {
+      const same = benches.findIndex((seed) => JSON.stringify(seed.customers) === JSON.stringify(guests));
+      bench = same >= 0 ? benches[same] : { id: `BENCH_${benches.length + 1}`, customers: [...guests] };
+      if (same < 0) setBenches((kept) => [...kept, bench!]);
+      practice = level.seeds.length + (same >= 0 ? same : benches.length);
+    }
+    const shift = shiftFor(practice, bench);
+    const options = practice === null ? {} : { practice: bench ? level.seeds.length : practice };
     // A program that fails as the doors open, like a typo, reports at once instead of after the street intro.
-    const opening = createLiveRun(level, programs, options).advance(STREET_APPROACH_SECONDS);
+    const opening = createLiveRun(shift, programs, options).advance(STREET_APPROACH_SECONDS);
     if (opening.done && !opening.result.passed) {
       setPractising(practice);
       setResult(opening.result);
       setReplayTime(opening.time);
       setViewTime(null);
       setFollowing(null);
-      fail(keep(opening.result, practice));
+      // A bench just added isn't among the played rounds until the next render.
+      const lookIn = bench && !played.seeds.includes(bench) ? { ...played, seeds: [...played.seeds, bench] } : played;
+      fail(keep(opening.result, practice, bench), lookIn);
       return;
     }
-    liveRun.current = createLiveRun(level, programs, options);
+    liveRun.current = createLiveRun(shift, programs, options);
     setPractising(practice);
     setBestBefore(save.stars[index]);
     setMetBefore(save.challenges?.[index] ?? []);
@@ -344,7 +376,15 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     run: () => start(null),
     /** Play one round, counting from 0, with the routines as they are now: practice, never stars. */
     practise: (round: number) => start(round),
+    /** Play a round of guests the player wrote, with the routines as they are now: never stars. */
+    bench: (guests: ValidationSeed['customers']) => start(null, guests),
     practising,
+    /** The run on screen plays a bench. */
+    benching,
+    /** How many rounds the run on screen plays through, as the player counts them. */
+    rounds: benching ? 1 : level.seeds.length,
+    /** The shift with every bench run this visit as further rounds, to look a run's guests up in. */
+    played,
     records,
     stop,
     bestBefore,

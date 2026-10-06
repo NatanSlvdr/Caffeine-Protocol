@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowLeft, Captions, Footprints, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, robotUnlocked } from '@/domain';
+import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, isBenchSeed, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -36,6 +36,7 @@ import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { RestoreModal } from './modals/RestoreModal';
 import { NotebookModal } from './modals/NotebookModal';
+import { BenchModal } from './modals/BenchModal';
 import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal } from './modals/ReceiptModal';
 import { CompareModal } from './modals/CompareModal';
@@ -167,6 +168,9 @@ export function Workspace({
     run,
     practise,
     practising,
+    benching,
+    rounds,
+    played,
     records,
     programs,
     following,
@@ -298,7 +302,7 @@ export function Workspace({
     return () => window.removeEventListener('keydown', keys);
   });
   // When the service is paused: the round, if the shift has more than one, and the time into it.
-  const pausedAt = whenWords(level.seeds.length, round, roundTime);
+  const pausedAt = whenWords(rounds, round, roundTime);
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
   // The round the followed guest came in, to time their order's way from its start.
@@ -317,11 +321,11 @@ export function Workspace({
   // The café in words beside the scene while the service plays or is looked back on, and what happens said aloud.
   const summaryOn = save.settings.service_summary;
   const summary =
-    summaryOn && serviceView && result && sampled ? summarize(result, sampled, level, index + 1) : undefined;
+    summaryOn && serviceView && result && sampled ? summarize(result, sampled, played, index + 1) : undefined;
   const told = useServiceAnnouncements({
     on: summaryOn,
     result,
-    level,
+    level: played,
     shift: index + 1,
     head,
     playing: running && !paused,
@@ -431,9 +435,11 @@ export function Workspace({
                 summary={summary}
                 when={
                   running && !paused
-                    ? level.seeds.length > 1
-                      ? `Round ${round} of ${level.seeds.length}`
-                      : 'Playing'
+                    ? rounds > 1
+                      ? `Round ${round} of ${rounds}`
+                      : benching
+                        ? 'Running the bench'
+                        : 'Playing'
                     : pausedAt
                 }
               />
@@ -443,7 +449,7 @@ export function Workspace({
             </p>
             {serviceView && followed && followedRound && result && (
               <OrderRoute
-                name={guestName(level, followed)}
+                name={guestName(played, followed)}
                 guest={followed}
                 route={route}
                 done={routeDone(
@@ -451,8 +457,8 @@ export function Workspace({
                   level.service?.clearing ?? true,
                   followedRound.start + followedRound.duration <= head,
                 )}
-                round={level.seeds.findIndex((seed) => seed.id === followed.seed_id) + 1}
-                rounds={level.seeds.length}
+                round={benching ? 1 : level.seeds.findIndex((seed) => seed.id === followed.seed_id) + 1}
+                rounds={rounds}
                 start={followedRound.start}
                 time={time}
                 level={index + 1}
@@ -484,7 +490,7 @@ export function Workspace({
                 viewing={viewing}
                 moments={moments}
                 roundStarts={(result.execution ?? []).map((r) => r.start).filter((start) => start > 0 && start < head)}
-                rounds={level.seeds.length}
+                rounds={rounds}
                 when={pausedAt}
                 crew={crew}
                 role={role}
@@ -492,7 +498,7 @@ export function Workspace({
                 textMode={textMode}
                 onView={live.view}
                 onMoment={(moment) => showRobot(moment.event)}
-                followable={followable(level, result, head)}
+                followable={followable(played, result, head)}
                 following={following ?? undefined}
                 onFollow={follow}
               />
@@ -505,8 +511,9 @@ export function Workspace({
             pausable={running && (!!result?.passed || held)}
             speed={speed}
             round={round}
-            rounds={level.seeds.length}
+            rounds={rounds}
             practice={practising !== null}
+            bench={benching}
             onRun={run}
             onTogglePause={() => {
               setPaused((p) => !p);
@@ -546,6 +553,7 @@ export function Workspace({
             onHelp={() => setModal('help')}
             onOptions={() => setModal('options')}
             onNotebook={observation ? undefined : () => setModal('notebook')}
+            onBench={observation ? undefined : () => setModal('bench')}
             level={index + 1}
             role={role}
             onRole={(r) => {
@@ -611,7 +619,13 @@ export function Workspace({
                 setRole(evidence.failure.role ?? 'query');
                 setSeeking(evidence.failure.error_line);
               }}
-              onPractise={() => startFromCard(() => practise(evidence.round - 1))}
+              onPractise={() =>
+                startFromCard(() => {
+                  const bench = evidence.bench && played.seeds.find((seed) => seed.id === evidence.failure.seed_id);
+                  if (bench) live.bench(bench.customers);
+                  else practise(evidence.round - 1);
+                })
+              }
               onCompareServed={
                 servedBefore(evidence.failure.role ?? 'query')
                   ? () => {
@@ -630,6 +644,7 @@ export function Workspace({
           {practiceCard && (
             <PracticeCard
               round={level.seeds.findIndex((seed) => seed.id === practiceCard.seeds[0]) + 1}
+              bench={isBenchSeed(practiceCard.seeds[0])}
               onRunService={() => startFromCard(run)}
             />
           )}
@@ -744,9 +759,20 @@ export function Workspace({
           onClose={() => setModal('')}
         />
       )}
+      {modal === 'bench' && (
+        <BenchModal
+          level={level}
+          running={running}
+          onRun={(customers) => {
+            setModal('');
+            live.bench(customers);
+          }}
+          onClose={() => setModal('')}
+        />
+      )}
       {(modal === 'compare' || modal === 'compare-last') && (
         <CompareModal
-          level={level}
+          level={played}
           records={records}
           crew={crew}
           initial={modal === 'compare-last' ? records.at(-1) : undefined}
