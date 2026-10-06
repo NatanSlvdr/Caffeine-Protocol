@@ -2,7 +2,7 @@ import { Suspense, useEffect, useRef, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { GuideWindow } from '@/app/GuideWindow';
 import { NewCafeModal } from '@/app/NewCafeModal';
-import { MemoryShift, preloadScreens, ScreenLoading, SpecialShift, Workspace } from '@/app/screens';
+import { LongDayShift, MemoryShift, preloadScreens, ScreenLoading, SpecialShift, Workspace } from '@/app/screens';
 import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
@@ -12,6 +12,8 @@ import { narrativeFor } from '@/data/campaign/narrative';
 import { drills } from '@/data/drills';
 import { memoryById, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
+import { longDay } from '@/data/longDay';
+import { waveOpen } from '@/features/campaign/save/endurance';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
@@ -58,6 +60,9 @@ function Shell() {
   // A memory opens once the shift that brings it out is served.
   const remembered = page === 'memory' ? memoryById(route.split('/')[2] ?? '') : undefined;
   const memory = remembered && memoryOpen(save, remembered) ? remembered : undefined;
+  // A wave of the Long Day opens once the day has reached it, on the waves as they are now.
+  const wave = page === longDay.id ? Number(route.split('/')[2]) : NaN;
+  const day = save.complete && wave <= longDay.waves.length && waveOpen(save, wave, longDay.version);
   const screen =
     page === 'shift' && accessible
       ? 'workspace'
@@ -65,13 +70,15 @@ function Shell() {
         ? 'special'
         : memory
           ? 'memory'
-          : page === 'scene' && watchable
-            ? 'scene'
-            : page === 'campaign' || page === 'settings'
-              ? 'campaign'
-              : page === 'ending' && save.complete
-                ? 'ending'
-                : 'home';
+          : day
+            ? 'long-day'
+            : page === 'scene' && watchable
+              ? 'scene'
+              : page === 'campaign' || page === 'settings'
+                ? 'campaign'
+                : page === 'ending' && save.complete
+                  ? 'ending'
+                  : 'home';
   const shift = useShift(index);
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
@@ -80,6 +87,7 @@ function Shell() {
     workspace: `Shift ${pad2(index + 1)}: ${shift.title}`,
     special: `Special: ${special?.title}`,
     memory: `Memory: ${memory?.title}`,
+    'long-day': `${longDay.title}: wave ${wave}`,
     scene: scene?.title ?? '',
     ending: 'Closing time',
   }[screen];
@@ -94,8 +102,10 @@ function Shell() {
     reclaimFocus();
   }, [title]);
   return (
-    // A special and a memory are shifts too, and lay out as one.
-    <div className={`app ${screen === 'special' || screen === 'memory' ? `workspace ${screen}` : screen}`}>
+    // A special, a memory and a wave of the Long Day are shifts too, and lay out as one.
+    <div
+      className={`app ${screen === 'special' || screen === 'memory' || screen === 'long-day' ? `workspace ${screen}` : screen}`}
+    >
       {/* Every dialogue box, in a shift or a scene, keeps to the pace chosen in the house settings. */}
       <DialoguePaceContext value={save.settings.dialogue_pace}>
         <div className="app-body">
@@ -129,6 +139,7 @@ function Shell() {
             )}
             {screen === 'special' && special && <SpecialShift key={special.id} special={special} />}
             {screen === 'memory' && memory && <MemoryShift key={memory.id} memory={memory} />}
+            {screen === 'long-day' && <LongDayShift key={wave} number={wave} />}
             {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
             {screen === 'ending' && <EndingPage />}
           </Suspense>

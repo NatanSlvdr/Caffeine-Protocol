@@ -48,7 +48,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 4 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 5 specials' }));
     const board = screen.getByRole('dialog');
     expect(within(board).getByRole('heading', { name: special.title })).toBeTruthy();
     expect(within(board).getByText(/Asked for by Rosa/)).toBeTruthy();
@@ -66,7 +66,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify({ ...finished, specials: { together: { stars: 2 } } }));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 4 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 5 specials' }));
     expect(screen.getByRole('img', { name: '2 of 3 stars' })).toBeTruthy();
     expect(screen.getByRole('button', { name: `Serve again ${special.title}` })).toBeTruthy();
   });
@@ -98,7 +98,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 4 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 5 specials' }));
     const board = screen.getByRole('dialog');
     expect(within(board).getByRole('heading', { name: 'The Saturday Market' })).toBeTruthy();
     expect(within(board).getByText(/Asked for by Mr\. Albert/)).toBeTruthy();
@@ -140,7 +140,7 @@ describe('the specials', () => {
     );
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 4 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 5 specials' }));
     expect(screen.getByText('1 of 3 menus served')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /^Plan the menu/ }));
     const menu = screen.getByRole('dialog');

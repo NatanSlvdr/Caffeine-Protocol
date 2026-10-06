@@ -29,9 +29,11 @@ function deferred<P extends object>(load: () => Promise<ComponentType<P>>) {
 export const Workspace = deferred(() => import('@/features/workspace/Workspace').then((m) => m.Workspace));
 export const SpecialShift = deferred(() => import('./SpecialShift').then((m) => m.SpecialShift));
 export const MemoryShift = deferred(() => import('./MemoryShift').then((m) => m.MemoryShift));
+export const LongDayShift = deferred(() => import('./LongDayShift').then((m) => m.LongDayShift));
 
 /** Fetches every deferred screen: the app calls it once the page is idle, so a shift opens without a wait. */
-export const preloadScreens = () => Promise.all([Workspace.preload(), SpecialShift.preload(), MemoryShift.preload()]);
+export const preloadScreens = () =>
+  Promise.all([Workspace.preload(), SpecialShift.preload(), MemoryShift.preload(), LongDayShift.preload()]);
 
 /**
  * What shows while a shift's screen is still on its way. The screen's title wasn't there to take focus when the

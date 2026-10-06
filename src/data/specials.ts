@@ -198,9 +198,9 @@ const SATURDAY: Menu = {
   hint: 'Pick one menu, then program for what it brings.',
 };
 
-/** Every card is served with the toolkit the reading group gets: the campaign's, and Together besides. */
-const MENU_TOOLKIT = UNLOCKS.together;
-/** The guests a card's rounds draw on: Shift 21's, so a card asks for nothing the campaign didn't teach. */
+/** Every shift past the campaign has the toolkit the reading group gets: the campaign's, and Together besides. */
+const TOOLKIT = UNLOCKS.together;
+/** The guests a bench shift's rounds draw on: Shift 21's, so it asks for nothing the campaign didn't teach. */
 const finaleKit = () => benchKit(extensionLevels[extensionLevels.length - 1]);
 
 interface CardSpec {
@@ -229,34 +229,57 @@ const MENU_OPENING = [
   line('albert', 'Whatever the café does well. The market crowd won’t wait to be asked twice.'),
 ];
 
-function menuCard(spec: CardSpec): Special {
-  const id = `L${MENU_TOOLKIT}-${spec.id}`;
-  const kit = finaleKit();
+/**
+ * A shift past the campaign whose rounds are written as a bench writes its guests, so each is expected exactly as the
+ * campaign's guests who asked alike: the level, and the reference routines made of only the rules it brings.
+ */
+export function benchShift(spec: {
+  id: string;
+  title: string;
+  summary: string;
+  rules: ShiftRules;
+  service: Partial<ServiceConfig>;
+  /** Each round's guests, in order: A, B, C… */
+  rounds: BenchGuest[][];
+  targets: { blocks: number; instructions: number };
+}): { level: LevelDefinition; solution: RobotPrograms } {
+  // Shift 21 has no table that orders together; a shift whose rules bring one has them.
+  const kit = { ...finaleKit(), together: !!spec.rules.together };
   const solution: RobotPrograms = {
     query: queryReference(spec.rules),
-    prep: preparationSource(MENU_TOOLKIT, 1, spec.rules),
-    floor: floorSource(MENU_TOOLKIT, 1, spec.rules),
+    prep: preparationSource(TOOLKIT, 1, spec.rules),
+    floor: floorSource(TOOLKIT, 1, spec.rules),
   };
   const level: LevelDefinition = {
-    id,
+    id: spec.id,
     title: spec.title,
-    summary: `${SATURDAY.title}: ${spec.card.recipes}`,
+    summary: spec.summary,
     programming_enabled: true,
     block_target: spec.targets.blocks,
     instruction_target: spec.targets.instructions,
-    reference_block_count: countProgramBlocks(solution, codeLines(solution.query), MENU_TOOLKIT),
-    seeds: [0, 1, 2].map((round) => ({
-      id: `${id}_${String.fromCharCode(65 + round)}`,
+    reference_block_count: countProgramBlocks(solution, codeLines(solution.query), TOOLKIT),
+    seeds: spec.rounds.map((guests, round) => ({
+      id: `${spec.id}_${String.fromCharCode(65 + round)}`,
       // Numbered as the campaign's guests are, not as the bench's.
-      customers: benchSeed(kit, spec.guests(round)).customers.map((guest, n) => ({
-        ...guest,
-        customer_id: `C${n + 1}`,
-      })),
+      customers: benchSeed(kit, guests).customers.map((guest, n) => ({ ...guest, customer_id: `C${n + 1}` })),
     })),
     active_tables: TABLE_LAYOUT.length,
     service: { prepCapacity: 2, floorCapacity: 2, clearing: true, objective: 'serve', ...spec.service },
     act: 4,
   };
+  return { level, solution };
+}
+
+function menuCard(spec: CardSpec): Special {
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-${spec.id}`,
+    title: spec.title,
+    summary: `${SATURDAY.title}: ${spec.card.recipes}`,
+    rules: spec.rules,
+    service: spec.service,
+    rounds: [0, 1, 2].map(spec.guests),
+    targets: spec.targets,
+  });
   return {
     id: spec.id,
     title: spec.title,

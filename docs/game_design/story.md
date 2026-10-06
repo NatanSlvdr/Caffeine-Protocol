@@ -237,6 +237,20 @@ Bar's rushes, Query for the Hatch's lids and last call. Each ends on Albert
 pleased and that robot's own count of the morning. Moka and Pip stay out, as in
 every scene that can be played long after they have left.
 
+### The Long Day
+
+Juno asks for the third special. It is exam week, the library is shut for
+repairs, and she has told everyone, so her whole year revises at the café in
+waves, between exams: the first ones in at eight before the shutters are up,
+the ones running back to the exam hall at ten, a lunch with the spare cups gone
+to the invigilators, the quiet hours of two o'clock where orders come out as a
+mumble over notes, study groups pulling tables together at four, and everyone
+at once at six when the last exam is over. Juno opens each wave in a line or
+two, worried or not, and a robot answers in its own voice: Query for the
+lids and the asking, Brew for the four cups, Porter for the tables. The day
+ends on Juno passing ("I think the café did too") and Query's "Long day:
+served." Moka and Pip stay out, as in every optional scene.
+
 ### Portraits
 
 Put the full-size PNGs in `assets/portraits/<id>/<mood>.png`, then run

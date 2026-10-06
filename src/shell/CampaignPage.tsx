@@ -9,9 +9,11 @@ import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
 import { memories, memoryOpen } from '@/data/memories';
 import { repairOpen, repairs, type Repair } from '@/data/repairs';
+import { longDay } from '@/data/longDay';
 import { specials } from '@/data/specials';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
+import { startDay } from '@/features/campaign/save/endurance';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
 import { go, openGuide } from '@/shared/lib/navigation';
@@ -49,7 +51,7 @@ const entries: Entry[] = [
  * and the selected shift is chalked up beside it as today’s special.
  */
 export function CampaignPage() {
-  const { save, select, launch, completeDrill, completeRepair } = useGame();
+  const { save, update, select, launch, completeDrill, completeRepair } = useGame();
   const progress = useProgress();
   const shop = useCafeName();
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
@@ -84,10 +86,8 @@ export function CampaignPage() {
   const [drilling, setDrilling] = useState<readonly string[] | null>(null);
   // The regulars ask for their specials once the campaign is finished.
   const offered = save.complete ? specials : [];
-  const newSpecials = useUnseen(
-    'specials',
-    offered.map((special) => special.id),
-  );
+  // The Long Day is chalked up with them, after the last.
+  const newSpecials = useUnseen('specials', save.complete ? [...offered.map((special) => special.id), longDay.id] : []);
   const [choosing, setChoosing] = useState<readonly string[] | null>(null);
   // The crew's memories of Lou's café come out as the shifts that bring them are served.
   const remembered = memories.filter((memory) => memoryOpen(save, memory));
@@ -287,7 +287,7 @@ export function CampaignPage() {
         {offered.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Specials, ${count(offered.length, 'special')}${newSpecials.fresh.length ? `, ${newSpecials.fresh.length} new` : ''}`}
+            aria-label={`Specials, ${count(offered.length + 1, 'special')}${newSpecials.fresh.length ? `, ${newSpecials.fresh.length} new` : ''}`}
             aria-haspopup="dialog"
             title="Specials"
             onClick={() => setChoosing(newSpecials.markSeen())}
@@ -353,6 +353,10 @@ export function CampaignPage() {
           save={save}
           fresh={choosing}
           onServe={(special) => go(`/special/${special.id}`)}
+          onDay={(afresh) => {
+            if (afresh) update((s) => startDay(s, longDay.version));
+            go(`/${longDay.id}/${afresh ? 1 : (save.endurance?.wave ?? 1)}`);
+          }}
           onClose={() => setChoosing(null)}
         />
       )}

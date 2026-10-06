@@ -1,4 +1,11 @@
-import type { DialoguePace, ProgressSave, RobotPrograms, Settings, SpecialProgress } from '@/domain/types';
+import type {
+  DialoguePace,
+  EnduranceProgress,
+  ProgressSave,
+  RobotPrograms,
+  Settings,
+  SpecialProgress,
+} from '@/domain/types';
 import { CHALLENGE_MEASURES, type ChallengeMeasure } from '@/domain/challenges';
 import { DIALOGUE_PACES, MAX_PLAYBACK_SPEED } from '@/domain/constants';
 import { count } from '@/domain/tickets';
@@ -76,6 +83,7 @@ const SAVED_PART: Record<string, string> = {
   memories: 'memories',
   repairs: 'robots mended',
   choices: 'story choices',
+  endurance: 'the Long Day',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -195,6 +203,37 @@ function validateChoices(v: Record<string, unknown>): Record<string, string> | u
   if (!isRecord(entries) || Object.keys(entries).length > 100 || !Object.entries(entries).every((e) => e.every(id)))
     throw new Error(`Invalid ${SAVED_PART.choices}.`);
   return Object.keys(entries).length ? { ...(entries as Record<string, string>) } : undefined;
+}
+
+/**
+ * The Long Day's own progress: the set of waves it was played on, the open day's wave, the furthest wave served, each
+ * wave's stars and the day's routines. Waves past the current set are kept, harmlessly, like drills.
+ */
+function validateEndurance(v: Record<string, unknown>): EnduranceProgress | undefined {
+  if (v.endurance === undefined || v.version !== 4) return undefined;
+  const day = v.endurance;
+  const wave = (value: unknown): value is number =>
+    typeof value === 'number' && Number.isInteger(value) && value >= 1 && value <= 100;
+  if (!isRecord(day) || !wave(day.version)) throw new Error(`Invalid ${SAVED_PART.endurance}.`);
+  const { version, draft, solution, stars } = day;
+  if ((day.wave !== undefined && !wave(day.wave)) || (day.best !== undefined && !wave(day.best)))
+    throw new Error(`Invalid ${SAVED_PART.endurance}.`);
+  if (stars !== undefined) {
+    if (!isRecord(stars)) throw new Error(`Invalid ${SAVED_PART.endurance}.`);
+    for (const [k, value] of Object.entries(stars)) {
+      if (!/^[1-9]\d?$/.test(k)) throw new Error(`Invalid ${SAVED_PART.endurance}.`);
+      if (typeof value !== 'number' || !Number.isInteger(value) || value < 0 || value > 3)
+        throw new Error('Invalid star count.');
+    }
+  }
+  return {
+    version,
+    ...(day.wave !== undefined && { wave: day.wave as number }),
+    ...(day.best !== undefined && { best: day.best as number }),
+    ...(isRecord(stars) && Object.keys(stars).length && { stars: { ...(stars as Record<string, number>) } }),
+    ...(draft !== undefined && { draft: readPrograms(draft) }),
+    ...(solution !== undefined && { solution: readPrograms(solution) }),
+  };
 }
 
 function validateSettingsMap(v: Record<string, unknown>): Settings {
@@ -351,6 +390,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const specials = validateKept(v, 'specials');
   const memories = validateKept(v, 'memories');
   const choices = validateChoices(v);
+  const endurance = validateEndurance(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -376,6 +416,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     ...(memories && { memories }),
     ...(repairs && { repairs }),
     ...(choices && { choices }),
+    ...(endurance && { endurance }),
     settings,
   };
 }

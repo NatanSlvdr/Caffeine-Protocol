@@ -7,3 +7,4 @@ export * from './io';
 export * from './cafes';
 export * from './specials';
 export * from './memories';
+export * from './endurance';

@@ -23,8 +23,18 @@ export interface ReceiptModalProps {
   /** The run before this one that played the same rounds, to compare with; nothing on a first run. */
   compareWith?: number;
   onCompare?: () => void;
+  /** A way on that can also stop here, like a wave of the Long Day: the primary button's words, and the other way. */
+  onward?: Onward;
   onNext: () => void;
   onClose: () => void;
+}
+
+export interface Onward {
+  /** The primary button's words: "Next wave". */
+  next: string;
+  /** The words of the way out: "Stop for now". */
+  stop: string;
+  onStop: () => void;
 }
 
 /** Service receipt: stars, the totals measured against this shift's targets, and the next shift. */
@@ -39,6 +49,7 @@ export function ReceiptModal({
   metBefore,
   compareWith,
   onCompare,
+  onward,
   onNext,
   onClose,
 }: ReceiptModalProps) {
@@ -187,6 +198,16 @@ export function ReceiptModal({
         <button className="settings-chip" onClick={onClose}>
           Stay on this shift
         </button>
+        {onward && (
+          <Button
+            onClick={() => {
+              onClose();
+              onward.onStop();
+            }}
+          >
+            {onward.stop}
+          </Button>
+        )}
         <Button
           variant="primary"
           data-autofocus
@@ -195,7 +216,7 @@ export function ReceiptModal({
             onNext();
           }}
         >
-          {thanks ? 'Back to the campaign' : nextShift ? 'Next shift' : 'Closing time'}
+          {onward ? onward.next : thanks ? 'Back to the campaign' : nextShift ? 'Next shift' : 'Closing time'}
           <ArrowRight size={16} aria-hidden="true" />
         </Button>
       </div>

@@ -162,6 +162,22 @@ else the workspace changed, like the settings, stays changed. A special and a
 memory lay out as a shift: the app root carries `workspace` beside their own
 screen class.
 
+The Long Day keeps its progress in `endurance`: the version of the waves it
+was played on, the wave the open day is on (none when no day is open), the
+furthest wave served, each wave's stars, and one draft and one set of served
+routines for every wave. That is the checkpoint a day resumes from after the
+tab is closed; a wave is a single short run, so nothing of a run in progress is
+saved. `app/LongDayShift.tsx` plays wave N at `#/long-day/N` in the slot after
+the campaign's last, like a special: `projectEndurance` lays the day's routines
+and that wave's stars out as a temporary specials entry, and `keepEndurance`
+folds them back and restores the specials. Serving the open day's wave moves
+the day on (`servedWave`), so stopping on the receipt resumes from the next;
+the receipt's `onward` prop gives it **Next wave** and **Stop for now**.
+`waveOpen` lets the address reach the open day's wave and any wave served
+before, on the current version only. `startDay` opens a day from the first
+wave; on a new version it keeps the routines and drops the stars and the
+furthest wave, which were earned on other waves.
+
 ## Photo mode
 
 Photo mode (`features/workspace/PhotoBar.tsx`, `photo.ts`) is workspace state
@@ -197,7 +213,9 @@ mounts the shot as a captioned print on a 2D canvas; where there is none
   card is a special with `card` set: the window groups the cards of one `Menu`
   behind a single entry and lays them out side by side, and `menuCard` builds
   each one's rounds from bench guests, with a reference made of the rules the
-  card brings.
+  card brings. The Long Day (`data/longDay.ts`) builds its waves the same way,
+  through `benchShift`, all on the day's full set of rules; a change to its
+  waves bumps `longDay.version`, and a day open on an older set starts over.
 - **Memory**: one `Memory` in `data/memories.ts`, with `opens` (the campaign
   shift whose service brings it out) and a level id naming the toolkit it
   borrows, plus a test that plays its reference and its starter.

@@ -40,7 +40,7 @@ import { RestoreModal } from './modals/RestoreModal';
 import { NotebookModal } from './modals/NotebookModal';
 import { BenchModal } from './modals/BenchModal';
 import { routineVersions, sameRoutine } from './versions';
-import { ReceiptModal } from './modals/ReceiptModal';
+import { ReceiptModal, type Onward } from './modals/ReceiptModal';
 import { CompareModal } from './modals/CompareModal';
 import { comparableTo, latestPair } from './compare';
 import { problemReport } from './report';
@@ -80,6 +80,8 @@ export interface WorkspaceProps {
   shift: WorkspaceShift;
   /** The next shift's title, or nothing on the last shift. */
   nextShift?: string;
+  /** The receipt's way on when it can also stop there, like a wave of the Long Day. */
+  onward?: Onward;
   onNext: () => void;
   onComplete: LiveRunArgs['onComplete'];
   /** Every drill; Help names one whose shift is served when the last run missed its idea. */
@@ -94,6 +96,7 @@ export function Workspace({
   lessons,
   shift,
   nextShift,
+  onward,
   onNext,
   onComplete,
   drills = [],
@@ -888,6 +891,7 @@ export function Workspace({
           metBefore={live.metBefore}
           compareWith={observation ? undefined : receiptPair?.id}
           onCompare={() => setModal('compare-last')}
+          onward={onward}
           onNext={onNext}
           onClose={() => setModal('')}
         />

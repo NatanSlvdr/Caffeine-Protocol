@@ -197,6 +197,24 @@ the card brings earns the stars. There is no pricing, stock or money; the plan
 is the choice of workload. `tests/unit/simulation/menu.test.ts` serves each
 card's reference for every star and Shift 21's routines for fewer.
 
+The Long Day (`src/data/longDay.ts`) is an endurance service on the specials
+board, asked for by Juno: exam week, the library shut, her whole year revising
+at the café from eight to six. It is six waves, each one round of guests coming
+in faster than the last, and each asks for everything the waves before it did
+and one thing more: two drinks for one guest; then to go; a rush with only four
+cups; mumbled orders; tables ordering together; the closing call. One set of
+routines serves the whole day. They can be changed between waves, and after any
+wave the receipt offers **Next wave** or **Stop for now**; a stopped day
+carries on from its next wave, from the board, even after the tab is closed.
+The waves are authored and fixed, so a wave played again is the same wave.
+Every wave keeps its own stars, and the board shows the furthest wave ever
+served. Shift 21's routines serve the morning and are caught out at four
+o'clock, by the first table that orders together. The targets sit a little
+over the day's reference: 124 blocks every wave, and about a tenth more steps
+than it runs on each. `tests/unit/simulation/long-day.test.ts` checks that the
+demands build up, that the reference serves every wave for every star, and
+where Shift 21's routines stop.
+
 Memories are optional shifts from Lou's café, before Niko's time
 (`src/data/memories.ts`; see the story doc). Each plays with an earlier shift's
 toolkit and opens on a routine of its own, so the puzzle is someone else's code.

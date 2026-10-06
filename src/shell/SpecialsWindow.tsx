@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ArrowLeft, NotebookPen, Play } from 'lucide-react';
+import { ArrowLeft, NotebookPen, Play, RotateCcw, Sun } from 'lucide-react';
 import { Modal } from '@/components';
 import { cast } from '@/data/campaign/cast';
+import { longDay } from '@/data/longDay';
 import { menuById, type Menu, type Special } from '@/data/specials';
 import { count, type ProgressSave } from '@/domain';
 import { Button } from '@/shared/ui/Button';
@@ -25,21 +26,24 @@ function entriesOf(specials: readonly Special[]): Entry[] {
 }
 
 /**
- * The specials: shifts past the campaign that the regulars ask for, each with one new rule, and menus to plan, each
- * card its own shift. A special keeps its own stars, apart from the campaign's.
+ * The specials: shifts past the campaign that the regulars ask for, each with one new rule, menus to plan, each card
+ * its own shift, and the Long Day, served wave by wave. A special keeps its own stars, apart from the campaign's.
  */
 export function SpecialsWindow({
   specials,
   save,
   fresh = [],
   onServe,
+  onDay,
   onClose,
 }: {
   specials: readonly Special[];
-  save: Pick<ProgressSave, 'specials'>;
-  /** The specials that weren't on the board when it was last opened. */
+  save: Pick<ProgressSave, 'specials' | 'endurance'>;
+  /** The specials that weren't on the board when it was last opened, the Long Day's id among them. */
   fresh?: readonly string[];
   onServe: (special: Special) => void;
+  /** Opens the Long Day: on the open day's wave, or from the first wave on a day started afresh. */
+  onDay: (afresh: boolean) => void;
   onClose: () => void;
 }) {
   const cafe = useCafeName();
@@ -136,10 +140,77 @@ export function SpecialsWindow({
                 </li>
               );
             })}
+            <LongDay save={save} arrived={fresh.includes(longDay.id)} onDay={onDay} />
           </ul>
         </>
       )}
     </Modal>
+  );
+}
+
+/**
+ * The Long Day on the board: how far any day has got, and the way into it. A day left open carries on from its next
+ * wave; one open on waves that have changed since starts again from the first.
+ */
+function LongDay({
+  save,
+  arrived,
+  onDay,
+}: {
+  save: Pick<ProgressSave, 'endurance'>;
+  arrived: boolean;
+  onDay: (afresh: boolean) => void;
+}) {
+  const day = save.endurance;
+  const current = day?.version === longDay.version;
+  const open = current && day.wave !== undefined ? day.wave : undefined;
+  const best = current ? day.best : undefined;
+  const waves = longDay.waves.length;
+  return (
+    <li className={arrived ? 'new' : undefined}>
+      <div>
+        <h3>{longDay.title}</h3>
+        <small>
+          {arrived ? 'New · ' : ''}Asked for by {cast[longDay.by].name}
+        </small>
+        <p>{longDay.story}</p>
+        <p className="specials-hint">
+          {day && !current
+            ? 'The waves have changed since your last day. It starts again from the first, with your routines.'
+            : longDay.hint}
+        </p>
+      </div>
+      <div className="specials-serve">
+        <span className="specials-menus">
+          {best === waves
+            ? `All ${waves} waves served`
+            : best
+              ? `Best: wave ${best} of ${waves}`
+              : count(waves, 'wave')}
+        </span>
+        {open === undefined ? (
+          <Button variant="primary" aria-label={`Start the day, ${longDay.title}`} onClick={() => onDay(true)}>
+            <Sun size={15} aria-hidden="true" />
+            Start the day
+          </Button>
+        ) : (
+          <>
+            <Button
+              variant="primary"
+              aria-label={`Carry on: wave ${open}, ${longDay.title}`}
+              onClick={() => onDay(false)}
+            >
+              <Play size={15} fill="currentColor" aria-hidden="true" />
+              Carry on: wave {open}
+            </Button>
+            <Button aria-label={`Start over, ${longDay.title}`} onClick={() => onDay(true)}>
+              <RotateCcw size={15} aria-hidden="true" />
+              Start over
+            </Button>
+          </>
+        )}
+      </div>
+    </li>
   );
 }
 

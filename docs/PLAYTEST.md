@@ -71,6 +71,8 @@ The production build is static and caches itself on its first successful load. T
 4. Serve it: the receipt counts the tables served together and how close their drinks came, carries Rosa's thanks, and goes back to the campaign. The campaign's stars are unchanged, and the Specials window shows the special's own.
 5. The Saturday Market is on the board too, asked for by Mr. Albert, with "0 of 3 menus served". **Plan the menu**: three cards side by side, each with what is on the board, who comes, the rule and its targets. **All specials** goes back with focus on the menu's button.
 6. Serve the Tea Table on Shift 21's routines as they are: every guest is served, over the block target. Cut what a tea-only morning never needs and serve again for three stars. The breadcrumb reads Menu card, and the board then counts "1 of 3 menus served".
+7. The Long Day is last on the board, asked for by Juno, with "6 waves". **Start the day**: wave 1 opens on Shift 21's routines, the breadcrumb reads "Wave 1 of 6", and the receipt names what the next wave brings, with **Next wave** and **Stop for now**.
+8. Stop after a wave and close the tab. Open the board again: it shows the best wave and **Carry on: wave N**, which opens the next wave with the routines as you left them. Carry Shift 21's routines on to wave 5: the first table that orders together catches Query out. **Start over** goes back to wave 1 with the stars kept.
 
 ## Memories
 

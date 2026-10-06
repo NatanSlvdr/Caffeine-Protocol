@@ -339,6 +339,26 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
    * a café that has answered none. Nothing is scored or locked by it.
    */
   choices?: Record<string, string>;
+  /** The Long Day's own progress; missing in a café that has never opened it. */
+  endurance?: EnduranceProgress;
+}
+/**
+ * The Long Day, kept apart from the campaign like a special: one set of routines for every wave, the wave the day is
+ * on, the furthest wave ever served, and each wave's best stars.
+ */
+export interface EnduranceProgress {
+  /** Which set of waves the day was played on; a day open on another set starts again from the first wave. */
+  version: number;
+  /** The wave the open day is on, from 1; missing when no day is open. */
+  wave?: number;
+  /** The furthest wave served, on any day. */
+  best?: number;
+  /** Each wave's best stars, by wave number. */
+  stars?: Record<string, number>;
+  /** The day's routines as last written. */
+  draft?: RobotPrograms;
+  /** The routines the last wave was served with. */
+  solution?: RobotPrograms;
 }
 /** A special's or a memory's progress, kept apart from the campaign's: its stars never count toward the campaign's. */
 export interface SpecialProgress {
