@@ -174,6 +174,60 @@
 .dialogue .dialogue-block.command-tile:hover {
   transform: none;
 }
+/* What Niko says at a choice: each answer a paper slip with its number key, the one said before marked in coffee. */
+.dialogue-choices {
+  display: grid;
+  gap: 8px;
+}
+.dialogue button.dialogue-choice {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 14px;
+  border: 2px solid var(--dialogue-ink);
+  border-radius: 12px;
+  color: var(--dialogue-ink);
+  background: #fffaf2;
+  box-shadow: 0 3px 0 var(--dialogue-ink);
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.dialogue button.dialogue-choice:hover {
+  background: #fff;
+  transform: translateY(-1px);
+}
+.dialogue button.dialogue-choice:active {
+  box-shadow: 0 1px 0 var(--dialogue-ink);
+  transform: translateY(2px);
+}
+.dialogue-choice kbd {
+  display: grid;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 7px;
+  color: #fff;
+  background: var(--dialogue-coffee);
+  font-family: var(--dialogue-mono);
+  font-size: 12px;
+}
+.dialogue-choice small {
+  margin-left: auto;
+  color: var(--dialogue-muted);
+  font-family: var(--dialogue-mono);
+  font-size: 10px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.dialogue button.dialogue-choice.chosen {
+  border-color: var(--dialogue-coffee);
+  box-shadow: 0 3px 0 var(--dialogue-coffee);
+}
 .dialogue-controls {
   display: flex;
   align-items: center;

@@ -1,7 +1,7 @@
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, FastForward } from 'lucide-react';
 import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
-import type { DialogueLine } from '@/domain';
+import type { DialogueChoices, DialogueLine, DialogueOption } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
 import { DialoguePaceContext } from './pace';
@@ -41,11 +41,18 @@ export interface DialogueBoxProps {
   doneLabel?: string;
   /** Print each line whole instead of typing it out, as reduced motion asks; the house settings can ask for it too. */
   instant?: boolean;
-  /** Called with the new line's index each time the scene moves on. */
+  /** Called with the new line's index in `lines` each time the scene moves on; an answer's lines report their choice's. */
   onLine?: (index: number) => void;
+  /** The answers given before, by choice id: a choice met again marks the one given last time. */
+  choices?: DialogueChoices;
+  /** Called as the player picks what Niko says. */
+  onChoose?: (choice: string, option: string) => void;
 }
 
-/** Characters talk one line at a time: click, Enter or Space advances, ← goes back a line, Escape skips the rest. */
+/**
+ * Characters talk one line at a time: click, Enter or Space advances, ← goes back a line, Escape skips the rest. At a
+ * choice the player picks what Niko says, by button or number key, and the answer's lines play next.
+ */
 export function DialogueBox({
   lines,
   onDone,
@@ -54,21 +61,41 @@ export function DialogueBox({
   doneLabel = 'Continue',
   instant = false,
   onLine,
+  choices = {},
+  onChoose,
 }: DialogueBoxProps) {
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
   // The furthest line reached: a line gone back over is printed whole, since it has been read once already.
   const [reached, setReached] = useState(0);
+  // The answer picked at each choice this time through, by the choice line's index in `lines`.
+  const [picked, setPicked] = useState<Record<number, string>>({});
   const next = useRef<HTMLButtonElement>(null);
-  const current = lines[Math.min(index, lines.length - 1)];
+  const firstOption = useRef<HTMLButtonElement>(null);
+  /** The lines as they play: each choice followed by the lines of the answer picked there, once there is one. */
+  const played = useMemo(
+    () =>
+      lines.flatMap((each, source) => {
+        const answer = each.choice?.options.find((option) => option.id === picked[source]);
+        return [each, ...(answer?.lines ?? [])].map((said) => ({ said, source }));
+      }),
+    [lines, picked],
+  );
+  const at = Math.min(index, played.length - 1);
+  const current = played[at]?.said;
+  const source = played[at]?.source ?? 0;
   const parts = segments(current?.text ?? '');
   const text = parts.map((part) => part.text).join('');
   const pace = useContext(DialoguePaceContext);
   const step = instant ? Infinity : LETTERS[pace];
   const shown = Math.min(step === Infinity ? text.length : typed, text.length);
   const typing = shown < text.length;
-  const last = index >= lines.length - 1;
+  const last = index >= played.length - 1;
   const scene = variant === 'scene';
+  const choice = current?.choice;
+  // A choice waits for its answer; one already picked this time through can be picked again, or moved past.
+  const asking = !!choice && !typing;
+  const answered = choice ? picked[source] : undefined;
   // A live region only reads out what changes in it, so it opens empty and the first line arrives a moment later,
   // like every line after it. Otherwise the crew's reaction would start on a line no screen reader hears.
   const [voiced, setVoiced] = useState(false);
@@ -90,13 +117,26 @@ export function DialogueBox({
 
   const advance = () => {
     if (typing) setTyped(text.length);
+    else if (choice && !answered) firstOption.current?.focus({ preventScroll: true });
     else if (last) onDone();
     else {
       setIndex(index + 1);
       setTyped(index + 1 <= reached ? Infinity : 0);
       setReached(Math.max(reached, index + 1));
-      onLine?.(index + 1);
+      onLine?.(played[index + 1].source);
     }
+  };
+
+  /** Says the answer and plays its lines. A different answer on the way back replaces the lines read after it. */
+  const answer = (option: DialogueOption) => {
+    if (!choice) return;
+    const again = answered === option.id;
+    setPicked({ ...picked, [source]: option.id });
+    onChoose?.(choice.id, option.id);
+    setIndex(index + 1);
+    setTyped(again && index + 1 <= reached ? Infinity : 0);
+    setReached(again ? Math.max(reached, index + 1) : index + 1);
+    onLine?.(source);
   };
 
   /** Steps back to re-read the line before, whole. Gives false on the first line, where there is nothing to go back to. */
@@ -104,7 +144,7 @@ export function DialogueBox({
     if (index === 0) return false;
     setIndex(index - 1);
     setTyped(Infinity);
-    onLine?.(index - 1);
+    onLine?.(played[index - 1].source);
     return true;
   };
 
@@ -113,11 +153,17 @@ export function DialogueBox({
   useEffect(() => {
     if (scene || !writing(document.activeElement)) next.current?.focus({ preventScroll: true });
   }, [scene]);
+  // A choice takes focus once it's asked, as Next had it, so the answers are the next keys pressed.
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (asking && (scene || box.current?.contains(document.activeElement)))
+      firstOption.current?.focus({ preventScroll: true });
+  }, [asking, index, scene]);
 
   // A scene owns the keyboard; an aside only answers while focus is inside it, so typing code is never hijacked.
-  const handlers = useRef({ advance, back, onDone });
-  handlers.current = { advance, back, onDone };
-  const box = useRef<HTMLDivElement>(null);
+  const options = asking ? choice.options : [];
+  const handlers = useRef({ advance, back, onDone, answer, options });
+  handlers.current = { advance, back, onDone, answer, options };
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
       if (!scene && !box.current?.contains(document.activeElement)) return;
@@ -128,7 +174,11 @@ export function DialogueBox({
         const to = e.shiftKey ? (at <= 0 ? stops.length : at) - 1 : (at + 1) % stops.length;
         stops[to]?.focus({ preventScroll: true });
       } else if (e.key === 'Escape') handlers.current.onDone();
-      else if (e.key === 'ArrowLeft' && !e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
+      else if (/^[1-9]$/.test(e.key) && !e.altKey && !e.metaKey && !e.ctrlKey) {
+        const option = handlers.current.options[Number(e.key) - 1];
+        if (!option) return;
+        handlers.current.answer(option);
+      } else if (e.key === 'ArrowLeft' && !e.altKey && !e.metaKey && !e.ctrlKey && !e.shiftKey) {
         if (!handlers.current.back()) return;
       } else if ((e.key === 'Enter' || e.key === ' ') && !e.metaKey && !e.ctrlKey) {
         // A held key moves on one line, not through the rest of the scene and past its last button.
@@ -198,6 +248,33 @@ export function DialogueBox({
             </span>
             <span className="sr-only">{voiced && (speaker ? `${speakerLabel(speaker)}: ${text}` : text)}</span>
           </p>
+          {asking && (
+            <div className="dialogue-choices" role="group" aria-label="What Niko says">
+              {choice.options.map((option, i) => {
+                const chosen = (answered ?? choices[choice.id]) === option.id;
+                const mark = answered ? 'Said this time' : 'Said last time';
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    className={`dialogue-choice${chosen ? ' chosen' : ''}`}
+                    ref={i === 0 ? firstOption : undefined}
+                    aria-keyshortcuts={String(i + 1)}
+                    // The words Niko says, then the mark, read as one name rather than run together.
+                    aria-label={chosen ? `${option.label} (${mark.toLowerCase()})` : option.label}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      answer(option);
+                    }}
+                  >
+                    <kbd aria-hidden="true">{i + 1}</kbd>
+                    <span>{option.label}</span>
+                    {chosen && <small aria-hidden="true">{mark}</small>}
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <div className="dialogue-controls">
             <span className="dialogue-count">
               <span aria-hidden="true">
@@ -235,19 +312,21 @@ export function DialogueBox({
                 Skip <FastForward size={14} aria-hidden="true" />
               </button>
             )}
-            <button
-              type="button"
-              className="dialogue-next"
-              ref={next}
-              aria-keyshortcuts="Enter Space"
-              title="Enter or Space"
-              onClick={(e) => {
-                e.stopPropagation();
-                advance();
-              }}
-            >
-              {last && !typing ? doneLabel : 'Next'} <ArrowRight size={15} aria-hidden="true" />
-            </button>
+            {(!asking || answered) && (
+              <button
+                type="button"
+                className="dialogue-next"
+                ref={next}
+                aria-keyshortcuts="Enter Space"
+                title="Enter or Space"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  advance();
+                }}
+              >
+                {last && !typing ? doneLabel : 'Next'} <ArrowRight size={15} aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
       </div>

@@ -73,6 +73,7 @@ const SAVED_PART: Record<string, string> = {
   challenges: 'challenges met',
   drills: 'drills done',
   specials: 'specials',
+  choices: 'story choices',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -176,6 +177,19 @@ function validateSpecials(v: Record<string, unknown>): Record<string, SpecialPro
     if (Object.keys(entry).length) kept[id] = entry;
   }
   return Object.keys(kept).length ? kept : undefined;
+}
+
+/**
+ * What Niko said at each choice: an answer id by choice id. Choices no longer in the story are kept, harmlessly, like
+ * drills; a café that has answered none leaves the map out.
+ */
+function validateChoices(v: Record<string, unknown>): Record<string, string> | undefined {
+  if (v.choices === undefined || v.version !== 4) return undefined;
+  const entries = v.choices;
+  const id = (value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,47}$/.test(value);
+  if (!isRecord(entries) || Object.keys(entries).length > 100 || !Object.entries(entries).every((e) => e.every(id)))
+    throw new Error(`Invalid ${SAVED_PART.choices}.`);
+  return Object.keys(entries).length ? { ...(entries as Record<string, string>) } : undefined;
 }
 
 function validateSettingsMap(v: Record<string, unknown>): Settings {
@@ -329,6 +343,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const challenges = validateChallenges(v, shifts);
   const drills = validateDrills(v);
   const specials = validateSpecials(v);
+  const choices = validateChoices(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -351,6 +366,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     ...(challenges && { challenges }),
     ...(drills && { drills }),
     ...(specials && { specials }),
+    ...(choices && { choices }),
     settings,
   };
 }

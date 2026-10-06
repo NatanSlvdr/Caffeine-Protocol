@@ -83,6 +83,11 @@ export function openingRole(save: ProgressSave, index: number, lessons: LessonCa
   return changed.length && !changed.includes(lead) ? changed[0] : lead;
 }
 
+/** What Niko said at a choice in the story: the latest answer is the one later scenes recall. */
+export function answerChoice(save: ProgressSave, choice: string, option: string): ProgressSave {
+  return save.choices?.[choice] === option ? save : { ...save, choices: { ...save.choices, [choice]: option } };
+}
+
 /** A drill got right on the first pick joins the ones done before; it stays done, and adds nothing to the stars. */
 export function completeDrill(save: ProgressSave, id: string): ProgressSave {
   return save.drills?.includes(id) ? save : { ...save, drills: [...(save.drills ?? []), id] };

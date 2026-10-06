@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Clapperboard } from 'lucide-react';
 import { sceneLines, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
+import type { DialogueChoices } from '@/domain';
 import { DialogueBox } from './DialogueBox';
 
 /**
@@ -26,11 +27,24 @@ export interface CutsceneProps {
   onDone: () => void;
   doneLabel?: string;
   reduced?: boolean;
+  /** The answers given before, by choice id: what the scene recalls, and which answer it marks as said last time. */
+  choices?: DialogueChoices;
+  /** Called as the player picks what Niko says. */
+  onChoose?: (choice: string, option: string) => void;
 }
 
 /** A story scene: stills dropped one by one like photos on a dark table as the dialogue moves on. */
-export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = false }: CutsceneProps) {
-  const { lines, panels } = useMemo(() => sceneLines(scene), [scene]);
+export function Cutscene({
+  scene,
+  onDone,
+  doneLabel = 'Continue',
+  reduced = false,
+  choices = {},
+  onChoose,
+}: CutsceneProps) {
+  // The answers as the scene began: one picked partway through is kept, but doesn't rewrite the scene being watched.
+  const [before] = useState(choices);
+  const { lines, panels } = useMemo(() => sceneLines(scene, before), [scene, before]);
   const [line, setLine] = useState(0);
   const shown = panels[line] ?? 0;
   // Empty as it mounts, so the first still is read out too: a live region only speaks up when it changes.
@@ -81,6 +95,8 @@ export function Cutscene({ scene, onDone, doneLabel = 'Continue', reduced = fals
         instant={reduced}
         onLine={setLine}
         onDone={onDone}
+        choices={before}
+        onChoose={onChoose}
       />
     </div>
   );

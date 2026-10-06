@@ -57,6 +57,12 @@ The production build is static and caches itself on its first successful load. T
 1. On Shift 04, open **Test bench**, start from a round, remove guests and add one: what each should get changes with what they ask for. Run the bench: it earns no stars, and a slip stops on the guest as a service does.
 2. On Shift 18, the bench offers **Twice the cups**. With Brew's washing taken out, a bench of eight guests runs out of cups; eased, it goes right, and the toolbar, the card and the run's name in Compare runs all say it was eased. Shift 21 offers the cups and no closing time; Shift 04 offers nothing to ease.
 
+## Story choices
+
+1. Watch _The Scrapyard_ up to Query asking who its new operator is. Enter does nothing there; pick an answer with its number key: Niko says it, and Query answers. Skip the rest of the scene.
+2. Watch it again from the rail: the answer given is marked “Said last time”. Pick the other one, then go back a line with ←: it is marked “Said this time”, and Next goes on with it.
+3. Watch _A Second Pair of Hands_: Query remembers the answer. With a café that skipped the choice, the scene plays as it always did.
+
 ## Specials
 
 1. Before the campaign is finished, the campaign page has no **Specials** button, and `#/special/together` opens the front page instead.

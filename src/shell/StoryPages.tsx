@@ -33,7 +33,7 @@ function StoryScene() {
 
 /** A story scene between shifts. Finishing or skipping it goes back to the rail, on the shift it leads to. */
 export function ScenePage({ scene }: { scene: CutsceneData }) {
-  const { save, finishScene } = useGame();
+  const { save, finishScene, choose } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const done = () => {
     finishScene(scene);
@@ -41,7 +41,14 @@ export function ScenePage({ scene }: { scene: CutsceneData }) {
   };
   return (
     <main className="story-page scene-page">
-      <Cutscene scene={scene} doneLabel="To the counter" reduced={reduced} onDone={done} />
+      <Cutscene
+        scene={scene}
+        doneLabel="To the counter"
+        reduced={reduced}
+        choices={save.choices}
+        onChoose={choose}
+        onDone={done}
+      />
     </main>
   );
 }
@@ -67,7 +74,7 @@ const milestones = acts
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
   const progress = useProgress();
-  const { save, select } = useGame();
+  const { save, select, choose } = useGame();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const [talking, setTalking] = useState(true);
   // The receipt replaces the scene that held focus, so focus lands on its heading, once, as it appears.
@@ -84,7 +91,14 @@ export function EndingPage() {
       <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
       <StoryScene />
       {talking ? (
-        <Cutscene scene={closing} doneLabel="Read the receipt" reduced={reduced} onDone={() => setTalking(false)} />
+        <Cutscene
+          scene={closing}
+          doneLabel="Read the receipt"
+          reduced={reduced}
+          choices={save.choices}
+          onChoose={choose}
+          onDone={() => setTalking(false)}
+        />
       ) : (
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />

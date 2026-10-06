@@ -1,5 +1,5 @@
-import { line } from '../../domain/dialogue';
-import type { DialogueLine, Speaker } from '../../domain/dialogue';
+import { isSaid, line } from '../../domain/dialogue';
+import type { DialogueChoices, DialogueLine, Speaker } from '../../domain/dialogue';
 import type { ProgressSave } from '../../domain/types';
 import { UNLOCKS } from '../../domain/unlocks';
 
@@ -22,9 +22,26 @@ export interface Cutscene {
 }
 
 type ScriptLine = readonly [Speaker, string];
-const panel = (art: string, lines: readonly ScriptLine[]): CutscenePanel => ({
+const script = (lines: readonly ScriptLine[]) => lines.map(([speaker, text]) => line(speaker, text));
+const panel = (art: string, lines: readonly (ScriptLine | DialogueLine)[]): CutscenePanel => ({
   art,
-  lines: lines.map(([speaker, text]) => line(speaker, text)),
+  lines: lines.map((each) => ('text' in each ? each : line(...each))),
+});
+
+/** A line after which the player picks what Niko says: each answer is its id, its button, and the lines it plays. */
+const ask = (
+  [speaker, text]: ScriptLine,
+  id: string,
+  options: readonly (readonly [option: string, label: string, lines: readonly ScriptLine[]])[],
+): DialogueLine => ({
+  ...line(speaker, text),
+  choice: { id, options: options.map(([option, label, lines]) => ({ id: option, label, lines: script(lines) })) },
+});
+
+/** A line said only when the choice `id` was answered with `option`. */
+const recall = (id: string, option: string, [speaker, text]: ScriptLine): DialogueLine => ({
+  ...line(speaker, text),
+  recalls: { choice: id, option },
 });
 
 /** Story scenes between shifts, in campaign order. Prompts for their art: docs/game_design/cutscene_prompts.md. */
@@ -122,8 +139,26 @@ export const cutscenes: Cutscene[] = [
         ['query', 'Unit online. Last operator: Moka. Last ticket: June.'],
       ]),
       panel('Query sits up on the workbench and shakes Niko’s outstretched hand.', [
-        ['niko:happy', 'Hello, Query. I’m Niko. It’s my café now.'],
-        ['niko', 'I think.'],
+        ask(['query', '*bip* New operator. Identify.'], 'hello-query', [
+          [
+            'mine',
+            'It’s my café now.',
+            [
+              ['niko:happy', 'Hello, Query. I’m Niko. It’s my café now.'],
+              ['niko', 'I think.'],
+              ['query', '*bip* Operator: Niko. Café: Niko’s. Saved.'],
+            ],
+          ],
+          [
+            'minding',
+            'I’m minding Lou’s café.',
+            [
+              ['niko:happy', 'Hello, Query. I’m Niko. I’m minding Lou’s café.'],
+              ['niko', 'For now.'],
+              ['query', '*bip* Operator: Niko. Minding. Saved.'],
+            ],
+          ],
+        ]),
       ]),
     ],
   },
@@ -155,6 +190,8 @@ export const cutscenes: Cutscene[] = [
         'Back at the scrapyard, Query rides in the wheelbarrow. Under a tarp, a steel-blue robot hugs an old espresso machine.',
         [
           ['query', '*bip* Same model detected. Sibling.'],
+          recall('hello-query', 'mine', ['query', '*bip* Sibling joins Niko’s café.']),
+          recall('hello-query', 'minding', ['query', '*bip* Niko minding two now.']),
           ['niko', 'It won’t let go of that machine. Moka is going to hate how much she likes it.'],
         ],
       ),
@@ -257,8 +294,24 @@ export const cutscenes: Cutscene[] = [
         ['pip', 'Whoever writes your code, silly!'],
       ]),
       panel('Pip runs off down the street, waving. Porter waves back with its tray.', [
-        ['pip', 'I’ll come by on Saturday! Hot chocolate, the way Lou made it!'],
-        ['niko:happy', 'The way we make it!'],
+        ask(['pip', 'I’ll come by on Saturday! Hot chocolate, the way Lou made it!'], 'hot-chocolate', [
+          [
+            'ours',
+            'The way we make it!',
+            [
+              ['niko:happy', 'The way we make it!'],
+              ['pip:happy', 'Extra marshmallows, then. That’s the “we” part!'],
+            ],
+          ],
+          [
+            'lous',
+            'Just the way Lou did.',
+            [
+              ['niko:happy', 'Just the way Lou did. I’ll find her recipe.'],
+              ['pip:happy', 'It’s pencilled on the back of the menu board. I checked!'],
+            ],
+          ],
+        ]),
       ]),
       panel('A smooth morning service: Query at the register, Brew at the machine, Porter between the tables.', [
         ['niko', 'Query takes the orders. Brew makes them. Porter brings them out.'],
@@ -293,11 +346,18 @@ export const cutscenes: Cutscene[] = [
       panel('Moka comes over from her porch and Pip comes in from school.', [
         ['moka', 'Ninety-two degrees. Good.'],
         ['pip', 'Tables are clean! Porter did the corners.'],
+        recall('hot-chocolate', 'ours', ['pip:happy', 'And Saturday’s hot chocolate had extra marshmallows. Our way.']),
+        recall('hot-chocolate', 'lous', [
+          'pip:happy',
+          'And Saturday’s hot chocolate tasted just like Lou’s. Pencil and all.',
+        ]),
       ]),
       panel('Moka stops in front of the shelf, where the cups now sit on the right. Niko hovers, nervous.', [
         ['moka', 'Cups on the right, I see.'],
         ['niko:worried', 'Is that… okay?'],
         ['moka', 'It’s your café.'],
+        recall('hello-query', 'mine', ['query', '*bip* Café: Niko’s. Saved since the workbench.']),
+        recall('hello-query', 'minding', ['query', '*bip* Update. Niko not minding. Café: Niko’s. Saved.']),
       ]),
       panel('Niko pins Lou’s postcard to the wall beside the group photo. Moka stands at his shoulder.', [
         ['niko', '“Be kind to the old machine.”'],
@@ -317,11 +377,18 @@ export const sceneBefore = (shift: number): Cutscene | undefined => cutscenes.fi
 
 export const sceneById = (id: string): Cutscene | undefined => cutscenes.find((scene) => scene.id === id);
 
-/** Every line of a scene in order, each with the panel it plays over. */
-export function sceneLines(scene: Cutscene): { lines: DialogueLine[]; panels: number[] } {
-  const lines = scene.panels.flatMap((panel) => panel.lines);
-  const panels = scene.panels.flatMap((panel, index) => panel.lines.map(() => index));
-  return { lines, panels };
+/**
+ * Every line of a scene in order, each with the panel it plays over. A line recalling an earlier answer is said only
+ * when that was the answer given, so a scene whose choices were skipped plays as it was first written.
+ */
+export function sceneLines(
+  scene: Cutscene,
+  choices: DialogueChoices = {},
+): { lines: DialogueLine[]; panels: number[] } {
+  const said = scene.panels.flatMap((panel, index) =>
+    panel.lines.filter((each) => isSaid(each, choices)).map((each) => ({ each, index })),
+  );
+  return { lines: said.map(({ each }) => each), panels: said.map(({ index }) => index) };
 }
 
 type SceneProgress = Pick<ProgressSave, 'unlocked' | 'complete' | 'stars' | 'story'>;

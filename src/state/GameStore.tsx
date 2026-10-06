@@ -9,6 +9,7 @@ import {
   CAFES_KEY,
   MAX_CAFES,
   addCafe as listCafe,
+  answerChoice,
   backupSave,
   cafeKey,
   clearCafe,
@@ -62,6 +63,8 @@ interface GameStore {
   select: (index: number) => void;
   /** Marks a scene seen (or skipped) and selects the shift it opens. */
   finishScene: (scene: Cutscene) => void;
+  /** What Niko said at a choice in the story; the latest answer is the one later scenes recall. */
+  choose: (choice: string, option: string) => void;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
   /** A served shift, with the routines it was served with and the optional challenges the service met. */
   completeShift: (
@@ -205,6 +208,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
             ? { ...s, selected: scene.before, story: { ...s.story, [scene.before]: true } }
             : s,
         ),
+      choose: (choice, option) => setSave((s) => answerChoice(s, choice, option)),
       updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) =>
         setSave((s) => ({ ...s, settings: { ...s.settings, [key]: value } })),
       completeShift: (index, starsCount, querySource, programs, met) => {

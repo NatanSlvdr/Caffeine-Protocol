@@ -158,6 +158,32 @@ rewatched at any time. Seen scenes are stored in the save's `story` map, under
 the index of the shift they open. Closing Time is the last row of Act IV and
 opens with the ending.
 
+Twice in the story the player picks what Niko says, and the question is the
+campaign's own. In _The Scrapyard_ Query asks who its new operator is: "It's my
+café now" or "I'm minding Lou's café". In _Back to School_ Pip promises hot
+chocolate "the way Lou made it": "The way we make it!" or "Just the way Lou
+did." Each answer plays at once, Niko's words and then someone's reaction, and
+a later scene recalls it: Query in _A Second Pair of Hands_ and _Closing Time_,
+Pip in _Closing Time_. Neither answer is the right one, and nothing is scored,
+locked or unlocked by it.
+
+- The answers are buttons numbered 1 and 2 (the number keys pick them too).
+  Nothing moves a scene past a choice but an answer, or Skip.
+- An answer is kept in the save's `choices` map (choice id → answer id) as it
+  is given, so skipping the rest of the scene keeps it. Skipping past a choice
+  gives no answer; a scene recalling one never given plays as first written.
+- Watching a scene again asks again, with the last answer marked "Said last
+  time", and a new answer replaces it. Going back a line to a choice already
+  answered can change it too, and the lines after it follow.
+- A scene recalls the answers as they were when it began, so an answer given
+  partway through never rewrites the scene being watched.
+
+In a script, `ask(line, id, answers)` puts a choice after a line and
+`recall(id, answer, line)` writes a line said only for that answer
+(`src/data/campaign/cutscenes.ts`). `tests/unit/components/cutscene.test.tsx`
+holds every answer to Niko speaking first and someone reacting, and every answer
+to being recalled in a later scene.
+
 Stills go in `assets/cutscenes/<scene>/<nn>.png`, numbered from `01`. Run
 `python3 tools/cutscenes.py` (needs Pillow) to crop them to 16:9 and write
 1920 × 1080 WebPs to `src/assets/cutscenes/`, which are bundled and precached

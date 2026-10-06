@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { levels } from '../../../src/data';
-import { cutscenes, sceneLines } from '../../../src/data/campaign/cutscenes';
+import { cutscenes } from '../../../src/data/campaign/cutscenes';
 import { shiftIntro, shiftOutro } from '../../../src/data/campaign/dialogue';
 import { CAST_IDS, MOODS } from '../../../src/domain/dialogue';
 import { REGULAR_NAMES } from '../../../src/domain/regulars';
@@ -37,7 +37,10 @@ describe('the art the game ships', () => {
 
   it('has a face for every mood the story asks for, but the few still to draw, and none it never shows', () => {
     const lines = [
-      ...cutscenes.flatMap((scene) => sceneLines(scene).lines),
+      // Every line a scene can say: the ones recalling an answer, and each answer's own.
+      ...cutscenes
+        .flatMap((scene) => scene.panels.flatMap((panel) => panel.lines))
+        .flatMap((each) => [each, ...(each.choice?.options.flatMap((option) => option.lines) ?? [])]),
       ...levels.flatMap((_, shift) => [...shiftIntro(shift), ...shiftOutro(shift)]),
     ];
     const asked = new Set(lines.flatMap((l) => (l.who && l.mood ? [`${l.who}/${l.mood}`] : [])));

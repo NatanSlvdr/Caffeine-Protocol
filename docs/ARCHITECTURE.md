@@ -120,6 +120,11 @@ travels as its seed's `eased` list, and `easedShift` (domain) plays it under
 those rules: twice the cups, a load of one, or no closing time. Runs under
 other rules never compare, as their fingerprints differ.
 
+What Niko said at each story choice is the save's `choices` map (choice id →
+answer id, left out until one is answered). Like drills, ids no longer in the
+story are kept, harmlessly, and nothing reads them but the scenes that recall
+them (`sceneLines(scene, choices)`).
+
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 
