@@ -77,6 +77,13 @@ The production build is static and caches itself on its first successful load. T
 3. Run Lou's routine: her three regulars are right, and the first baker's "coffee no sugar" is caught. Mend the coffee side in place: it passes, over the block target. Write the steps once after the End: every star.
 4. Back on the rail, Shift 05's routine and stars are as you left them, and the Memories window shows the memory's own stars.
 
+## Photo mode
+
+1. On a shift, open **Photo** from the heading: the routines, the heading and the playback strip go, and the café fills the desk with no bubbles or floor labels. Focus is on **Save photo**, and the framing is the view you were on.
+2. Try each framing, then **Save photo**: a PNG named with today's date and time downloads, printed on paper with the shift and the moment of service written under it. In a memory, the print keeps the old-photo colours.
+3. Run a service and open **Photo** while it plays: it holds still. Press Esc: the service plays on, from the same camera view, and focus is back on **Photo**. Pause first, and it stays paused after.
+4. **Photo** waits while the shift's scene or a window is open, and while a service heading for a slip plays out.
+
 ## Cafés in one browser
 
 1. With a café under way, open **Settings → Cafés in this browser** and add a café. The page reloads on the new café at the very start, with the same audio and display settings, and the front page names it.

@@ -1,6 +1,11 @@
 /** Trigger a download in the browser: JSON unless said otherwise. */
 export function download(text: string, name: string, type = 'application/json'): void {
-  const url = URL.createObjectURL(new Blob([text], { type }));
+  downloadBlob(new Blob([text], { type }), name);
+}
+
+/** Trigger a download of a file already made: a photo of the café. */
+export function downloadBlob(blob: Blob, name: string): void {
+  const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = name;
@@ -16,4 +21,11 @@ export function download(text: string, name: string, type = 'application/json'):
 export function saveFileName(date = new Date(), kind: 'save' | 'recovery' | 'report' | 'notebook' = 'save'): string {
   const day = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((n) => String(n).padStart(2, '0'));
   return `caffeine-protocol-${kind}-${day.join('-')}.json`;
+}
+
+/** A photo's file name, dated and timed by the player's own clock, so a morning's photos sort in the order taken. */
+export function photoFileName(date = new Date()): string {
+  const day = [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((n) => String(n).padStart(2, '0'));
+  const time = [date.getHours(), date.getMinutes(), date.getSeconds()].map((n) => String(n).padStart(2, '0'));
+  return `caffeine-protocol-photo-${day.join('-')}-${time.join('')}.png`;
 }

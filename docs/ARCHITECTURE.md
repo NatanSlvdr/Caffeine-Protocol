@@ -152,6 +152,19 @@ else the workspace changed, like the settings, stays changed. A special and a
 memory lay out as a shift: the app root carries `workspace` beside their own
 screen class.
 
+## Photo mode
+
+Photo mode (`features/workspace/PhotoBar.tsx`, `photo.ts`) is workspace state
+only: it pauses a playing service and resumes it on the way out, and drives
+the café's `focusRole` through its own framing, so the workspace's camera
+view, followed guest and routines are untouched. `Cafe` takes a `snapshot`
+ref, filled by `components/three/Snapshot.tsx` inside the canvas. It reads
+the canvas in an `addAfterEffect` callback, straight after a frame is drawn
+(pixel pass included), because the renderer doesn't keep its frames. A
+frame that hasn't come within two seconds gives nothing. `framePhoto` then
+mounts the shot as a captioned print on a 2D canvas; where there is none
+(jsdom), the shot is saved as it is.
+
 ## Where to add things
 
 - **Shift L22**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one

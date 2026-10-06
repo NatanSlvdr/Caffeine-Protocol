@@ -4,6 +4,7 @@ export { BlockLines, spokenLines } from './BlockLines';
 export { BlockSelect, DirectionSelect } from './BlockSelect';
 export type { BlockOption } from './BlockSelect';
 export { Cafe } from './Cafe';
+export type { TakeSnapshot } from './three/Snapshot';
 export { CafeFloor } from './CafeFloor';
 export { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS, SugarCubes } from './CafeModels';
 export type { Vec3 } from './CafeModels';

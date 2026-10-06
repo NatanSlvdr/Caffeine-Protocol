@@ -2,6 +2,7 @@ import { UNLOCKS } from '@/domain';
 import type { BlockPreview, RobotRole, RunResult } from '@/domain';
 import { PixelArtEffect } from './cafe/PixelArtEffect';
 import { SceneCanvas } from './three/SceneCanvas';
+import { Snapshot, type TakeSnapshot } from './three/Snapshot';
 import { World } from './cafe/World';
 
 export function Cafe({
@@ -23,6 +24,7 @@ export function Cafe({
   preview,
   restored = level,
   counterLines,
+  snapshot,
 }: {
   evening?: boolean;
   result?: RunResult;
@@ -49,6 +51,8 @@ export function Cafe({
   restored?: number;
   /** What the counter says back to the regulars it recognises, by round and guest: `"L06_B/C1"`. */
   counterLines?: ReadonlyMap<string, string>;
+  /** Filled in with a way to photograph the café as drawn, while it is on screen. */
+  snapshot?: React.RefObject<TakeSnapshot | null>;
 }) {
   return (
     <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
@@ -73,6 +77,7 @@ export function Cafe({
           counterLines={counterLines}
         />
         {pixelArt && <PixelArtEffect />}
+        {snapshot && <Snapshot take={snapshot} />}
       </SceneCanvas>
     </div>
   );

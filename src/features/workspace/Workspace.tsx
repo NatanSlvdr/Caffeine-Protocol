@@ -1,11 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, Captions, Footprints, Store } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowLeft, Camera, Captions, Footprints, Store } from 'lucide-react';
 import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, isBenchSeed, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
-import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions } from '@/components';
+import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions, type TakeSnapshot } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
+import { downloadBlob, photoFileName } from '@/shared/lib/download';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
@@ -44,6 +45,8 @@ import { CompareModal } from './modals/CompareModal';
 import { comparableTo, latestPair } from './compare';
 import { problemReport } from './report';
 import { failureLines, successLines } from './reactions';
+import { PhotoBar } from './PhotoBar';
+import { framePhoto, photoCaption, photoFocus, type PhotoView } from './photo';
 
 export interface ShiftBrief {
   story: string;
@@ -267,8 +270,48 @@ export function Workspace({
     if (scene === 'success') setModal('receipt');
     setScene('');
   };
+  // A service can be paused once it has passed or is held for looking into; one on its way to a slip plays out.
+  const pausable = running && (!!result?.passed || held);
+  // Photo mode: the café alone and held still, framed one of a few ways, to save as a picture. It leaves the service
+  // as it found it, playing on if it was playing, on the camera view it was on.
+  const [photo, setPhoto] = useState<{ resume: boolean } | null>(null);
+  const [photoView, setPhotoView] = useState<PhotoView>('cafe');
+  const [developing, setDeveloping] = useState(false);
+  const [photoSaid, sayPhoto] = useAnnouncement();
+  const snapshot = useRef<TakeSnapshot | null>(null);
+  const photoButton = useRef<HTMLButtonElement>(null);
+  // Not over a scene, a reaction or a window, nor while the crew cheers; a service only once it can be held still.
+  const photographable = !modal && !scene && !cheer && (!running || pausable);
+  const enterPhoto = () => {
+    setPhoto({ resume: running && !paused });
+    if (running) setPaused(true);
+    // The framing starts from the view on screen.
+    setPhotoView(focused ? role : 'cafe');
+    sayPhoto('');
+  };
+  const leavePhoto = () => {
+    if (photo?.resume) setPaused(false);
+    setPhoto(null);
+  };
+  // Back from photo mode, focus returns to the button that opened it, once it is shown again.
+  const leftPhoto = useRef(false);
+  useEffect(() => {
+    if (photo) leftPhoto.current = true;
+    else if (leftPhoto.current) {
+      leftPhoto.current = false;
+      photoButton.current?.focus();
+    }
+  }, [photo]);
   useEffect(() => {
     const keys = (e: KeyboardEvent) => {
+      // Photo mode keeps every shortcut but its own way out: the routines and the service are put away under it.
+      if (photo) {
+        if (e.key === 'Escape' && !e.repeat) {
+          e.preventDefault();
+          leavePhoto();
+        }
+        return;
+      }
       // Ctrl/⌘+Z undoes and Ctrl/⌘+Shift+Z or Ctrl+Y redoes, in a text field too: the routine's own history replaces
       // the browser's, which knows nothing of block edits. A drag in progress claims the keys first.
       const key = e.key.toLowerCase();
@@ -361,8 +404,24 @@ export function Workspace({
   const receiptPair = latest && comparableTo(records, latest).find((r) => r.id < latest.id);
   // The run can be looked back through: paused, or slipped once the crew has had their say.
   const lookBack = ((running && paused) || (failed && !reaction)) && !observation && !!result && head > 0;
+  const savePhoto = async () => {
+    setDeveloping(true);
+    try {
+      const shot = await snapshot.current?.();
+      if (!shot) {
+        sayPhoto('The café couldn’t be photographed just now. Try again in a moment.');
+        return;
+      }
+      const caption = photoCaption({ label, title: shift.title, when: serviceView ? pausedAt : undefined });
+      const name = photoFileName();
+      downloadBlob(await framePhoto(shot, caption, { memory: shift.memory }), name);
+      sayPhoto(`Saved as ${name}. Look for it with your downloads.`);
+    } finally {
+      setDeveloping(false);
+    }
+  };
   return (
-    <main className={'workspace-main' + (shift.memory ? ' memory' : '')}>
+    <main className={'workspace-main' + (shift.memory ? ' memory' : '') + (photo ? ' photo' : '')}>
       <div className={'workbench' + (result && !result.passed ? ' has-failure' : '')}>
         <section className="cafe-panel">
           <div className="workspace-heading">
@@ -390,6 +449,22 @@ export function Workspace({
                   <span>Block paths</span>
                 </button>
               )}
+              <button
+                ref={photoButton}
+                type="button"
+                className="heading-toggle photo-toggle"
+                aria-label="Photo mode"
+                title={
+                  photographable
+                    ? 'Hold the café still and save a photo of it, without the routines'
+                    : 'Photos are taken with the scene and windows closed, and a service paused'
+                }
+                disabled={!photographable}
+                onClick={enterPhoto}
+              >
+                <Camera size={16} aria-hidden="true" />
+                <span>Photo</span>
+              </button>
               <button
                 type="button"
                 className="heading-toggle summary-toggle"
@@ -427,14 +502,16 @@ export function Workspace({
               time={time}
               reduced={reduced}
               pixelArt={save.settings.pixel_art}
-              showLabels={!serviceView && !modal && !observation}
+              showLabels={!serviceView && !modal && !observation && !photo}
+              showStatusBubbles={!photo}
               moving={running && !paused}
               serviceView={serviceView}
-              focusRole={focused ? role : undefined}
+              focusRole={photo ? photoFocus(photoView) : focused ? role : undefined}
               level={index + 1}
-              follow={serviceView && following ? following : undefined}
-              preview={preview}
+              follow={serviceView && following && !photo ? following : undefined}
+              preview={photo ? undefined : preview}
               counterLines={regularLines}
+              snapshot={snapshot}
             />
             {previewing && <BlockPreviewNote note={note} textMode={textMode} />}
             {summary && (
@@ -511,11 +588,21 @@ export function Workspace({
               />
             )}
           </div>
+          {photo && (
+            <PhotoBar
+              view={photoView}
+              onView={setPhotoView}
+              onSave={savePhoto}
+              onDone={leavePhoto}
+              developing={developing}
+              said={photoSaid}
+            />
+          )}
           <PlaybackToolbar
             running={running}
             observation={observation}
             paused={paused}
-            pausable={running && (!!result?.passed || held)}
+            pausable={pausable}
             speed={speed}
             round={round}
             rounds={rounds}
