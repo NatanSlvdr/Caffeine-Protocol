@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   STREET_APPROACH_SECONDS,
   createLiveRun,
+  easedShift,
   keepRecord,
   orderRoute,
   recordRun,
@@ -12,6 +13,7 @@ import {
 import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type {
+  BenchEase,
   ChallengeMeasure,
   ExecutionEvent,
   LevelDefinition,
@@ -172,11 +174,11 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     setShowFailure(false);
   };
   /**
-   * The shift a run plays: the shift itself, or with one bench as a last round. Each bench is fingerprinted with the
-   * shift, so only runs of the same guests compare.
+   * The shift a run plays: the shift itself, or with one bench as a last round, under the rules that bench eases. Each
+   * bench is fingerprinted with the shift, so only runs of the same guests under the same rules compare.
    */
   const shiftFor = (practice: number | null, bench = benchOf(practice)) =>
-    bench ? { ...level, seeds: [...level.seeds, bench] } : level;
+    bench ? easedShift({ ...level, seeds: [...level.seeds, bench] }, bench.eased) : level;
   const benchOf = (practice: number | null) =>
     practice !== null && practice >= level.seeds.length ? played.seeds[practice] : undefined;
   /** Freeze a finished run with the routines and rounds it played, and keep it. */
@@ -200,17 +202,23 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   };
   /**
    * Start the whole service, practise one round of it, or run a bench; while running, the same call stops it. A
-   * bench run of the same guests as one before reuses its round, so the two compare.
+   * bench run of the same guests under the same rules as one before reuses its round, so the two compare.
    */
-  const start = (practice: number | null, guests?: ValidationSeed['customers']) => {
+  const start = (practice: number | null, guests?: ValidationSeed['customers'], eased: readonly BenchEase[] = []) => {
     if (running) {
       stop();
       return;
     }
     let bench: ValidationSeed | undefined;
     if (guests) {
-      const same = benches.findIndex((seed) => JSON.stringify(seed.customers) === JSON.stringify(guests));
-      bench = same >= 0 ? benches[same] : { id: `BENCH_${benches.length + 1}`, customers: [...guests] };
+      const same = benches.findIndex(
+        (seed) =>
+          JSON.stringify(seed.customers) === JSON.stringify(guests) && (seed.eased ?? []).join() === eased.join(),
+      );
+      bench =
+        same >= 0
+          ? benches[same]
+          : { id: `BENCH_${benches.length + 1}`, customers: [...guests], ...(eased.length && { eased: [...eased] }) };
       if (same < 0) setBenches((kept) => [...kept, bench!]);
       practice = level.seeds.length + (same >= 0 ? same : benches.length);
     }
@@ -376,8 +384,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     run: () => start(null),
     /** Play one round, counting from 0, with the routines as they are now: practice, never stars. */
     practise: (round: number) => start(round),
-    /** Play a round of guests the player wrote, with the routines as they are now: never stars. */
-    bench: (guests: ValidationSeed['customers']) => start(null, guests),
+    /** Play a round of guests the player wrote, with the routines as they are now, and any rules eased: never stars. */
+    bench: (guests: ValidationSeed['customers'], eased?: readonly BenchEase[]) => start(null, guests, eased),
     practising,
     /** The run on screen plays a bench. */
     benching,

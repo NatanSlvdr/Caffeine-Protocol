@@ -16,6 +16,8 @@ export interface PlaybackToolbarProps {
   practice: boolean;
   /** The round is a bench the player wrote, which earns no stars either. */
   bench?: boolean;
+  /** The shift's rules the bench eases, said after "with": "twice the cups"; nothing when it eases none. */
+  eased?: string;
   onRun: () => void;
   onTogglePause: () => void;
   onSpeed: (speed: number) => void;
@@ -42,6 +44,7 @@ export function PlaybackToolbar({
   rounds,
   practice,
   bench = false,
+  eased = '',
   onRun,
   onTogglePause,
   onSpeed,
@@ -97,7 +100,7 @@ export function PlaybackToolbar({
       {running && bench && (
         <span className="playback-round practice" aria-hidden="true">
           <strong>Bench</strong>
-          For no stars
+          {eased ? 'Eased, for no stars' : 'For no stars'}
         </span>
       )}
       {counted && !bench && (
@@ -136,7 +139,7 @@ export function PlaybackToolbar({
         {running &&
           (paused
             ? (stepped ?? 'Service paused.')
-            : `${bench ? 'Running the bench, for no stars' : practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
+            : `${bench ? `Running the bench${eased ? ` with ${eased}` : ''}, for no stars` : practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
       </p>
     </div>
   );

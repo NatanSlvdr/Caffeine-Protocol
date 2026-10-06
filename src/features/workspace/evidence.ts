@@ -1,5 +1,13 @@
 import { count, evaluateQueryComparison, isBenchSeed, parseConditionExpression, spokenBlock } from '@/domain';
-import type { FailureCode, LevelDefinition, RobotPrograms, RunFailure, RunRecord, TraceStep } from '@/domain';
+import type {
+  BenchEase,
+  FailureCode,
+  LevelDefinition,
+  RobotPrograms,
+  RunFailure,
+  RunRecord,
+  TraceStep,
+} from '@/domain';
 import { guestCalled } from './route';
 
 /**
@@ -14,6 +22,8 @@ export interface RunEvidence {
   practice: boolean;
   /** The round was a bench the player wrote, not one of the shift's own. */
   bench: boolean;
+  /** The shift's rules that bench eased; missing when it eased none, or wasn't a bench. */
+  eased?: readonly BenchEase[];
   /** Which round of guests, counting from 1. */
   round: number;
   /** Which guest of that round, counting from 1; nothing for the closing call, which belongs to no guest. */
@@ -77,6 +87,7 @@ export function evidenceOf(level: LevelDefinition, record: RunRecord): RunEviden
     programs: record.programs,
     practice: record.mode === 'practice',
     bench: isBenchSeed(failure.seed_id),
+    ...(level.seeds[seed]?.eased && { eased: level.seeds[seed].eased }),
     round: Math.max(seed, 0) + 1,
     guest: guest < 0 ? undefined : guest + 1,
     name: guest < 0 ? undefined : guestCalled(level, failure.seed_id, failure.customer_id),

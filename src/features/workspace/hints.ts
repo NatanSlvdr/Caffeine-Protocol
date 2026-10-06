@@ -29,7 +29,8 @@ function blockName(command: string): string {
 /** Which library block a command is, telling the two kinds of Wait apart. */
 const kindOf = (command: string) => (familyFor(command) === 'WAIT' ? command : familyFor(command));
 
-const andList = (items: string[]) =>
+/** Items said as a list: “a”, “a and b”, “a, b and c”. */
+export const andList = (items: readonly string[]) =>
   items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
 
 /**

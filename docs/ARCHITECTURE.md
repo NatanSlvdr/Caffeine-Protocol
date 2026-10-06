@@ -110,12 +110,15 @@ the player's, not one playthrough's.
 
 The notebook is stored in the same format it exports as, and its pages are
 checked against the open robot and shift when shown (`unreadableLine`), not
-when kept. A page's
-lesson (a word on what it shows, notes on its blocks by their place among the
-blocks) is plain text, cleaned of control characters whenever it is read or
-written out, and exported by `lessonText` as a `.txt` file. A kept bench holds
-only what its guests ask for; `benchSeed` (domain) works out what they should
-get each time it runs, and a bench the shift can no longer take is dropped.
+when kept. A page's lesson (a word on what it shows, notes on its blocks by
+their place among the blocks) is plain text, cleaned of control characters
+whenever it is read or written out, and exported by `lessonText` as a `.txt`
+file. A kept bench holds only what its guests ask for, and the shift's rules it
+eases, if any; `benchSeed` (domain) works out what they should get each time it
+runs, and a bench the shift can no longer take is dropped. An eased bench
+travels as its seed's `eased` list, and `easedShift` (domain) plays it under
+those rules: twice the cups, a load of one, or no closing time. Runs under
+other rules never compare, as their fingerprints differ.
 
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.

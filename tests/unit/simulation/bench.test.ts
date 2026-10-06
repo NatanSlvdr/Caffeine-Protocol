@@ -8,14 +8,18 @@ import {
   benchSays,
   benchSeed,
   benchTicket,
+  benchEases,
+  easedShift,
   freshGuest,
   isBenchSeed,
+  keptEases,
+  type BenchEase,
   type BenchGuest,
   type BenchKit,
 } from '../../../src/domain';
 import { compileProgram } from '../../../src/domain/program';
 import { runLevel } from '../../../src/domain/simulation';
-import type { LevelDefinition } from '../../../src/domain/types';
+import type { LevelDefinition, RobotPrograms } from '../../../src/domain/types';
 import { UNLOCKS } from '../../../src/domain/unlocks';
 import { referenceProgramsFor } from '../../helpers/run';
 
@@ -220,5 +224,73 @@ describe('a bench guest', () => {
   it('belongs to a round the café can tell from the shift’s own', () => {
     expect(isBenchSeed('BENCH_2')).toBe(true);
     expect(levels.flatMap((level) => level.seeds).some((seed) => isBenchSeed(seed.id))).toBe(false);
+  });
+});
+
+describe('a bench that eases the shift’s rules', () => {
+  /** A routine with one passage rewritten; the passage has to be there, so a changed reference can't pass quietly. */
+  const edit = (source: string, from: string, to: string) => {
+    expect(source).toContain(from);
+    return source.split(from).join(to);
+  };
+  /** A shift's first round on a bench, or its first few guests, run with the reference as edited, under the eases. */
+  function play(n: number, edits: Partial<RobotPrograms>, eased: BenchEase[] = [], guests = BENCH_GUESTS) {
+    const level = levels[n - 1];
+    const programs = { ...referenceProgramsFor(n - 1), ...edits };
+    const round = benchGuests(level.seeds[0].customers).slice(0, guests);
+    const seed = { ...benchSeed(benchKit(level), round), eased };
+    const bench = easedShift({ ...level, seeds: [seed] }, seed.eased);
+    return runLevel(bench, compileProgram(programs.query, n), programs);
+  }
+
+  it('offers only the rules a shift has', () => {
+    expect(levels.map((level) => benchEases(level).join('+'))).toEqual(
+      levels.map((_, i) => ({ 13: 'load', 16: 'load', 18: 'cups', 20: 'closing', 21: 'cups+closing' })[i + 1] ?? ''),
+    );
+    // A bench kept before the shift changed may ask for an ease it no longer has.
+    expect(keptEases(levels[20], ['closing', 'load', 'cups', 'closing'])).toEqual(['cups', 'closing']);
+  });
+
+  it('eases each rule, and leaves the shift as it was', () => {
+    const finale = levels[20];
+    const eased = easedShift(finale, ['cups', 'closing']);
+    expect(eased.service).toMatchObject({ cups: 8, closing: false });
+    expect(finale.service).toMatchObject({ cups: 4, closing: true });
+    expect(easedShift(levels[12], ['load']).service?.minLoad).toBe(0);
+    expect(easedShift(finale)).toBe(finale);
+  });
+
+  it('serves with the reference routines, eased or not', () => {
+    for (const [n, eased] of [
+      [13, ['load']],
+      [18, ['cups']],
+      [21, ['cups', 'closing']],
+    ] as const) {
+      expect(play(n, {}).passed, `Shift ${n}`).toBe(true);
+      expect(play(n, {}, [...eased]).passed, `Shift ${n}, eased`).toBe(true);
+    }
+  });
+
+  it('lets one drink a trip through, once the full load is eased', () => {
+    const prep = edit(referenceProgramsFor(12).prep, 'LISTEN\nLISTEN\nCALL recipe\nCALL recipe', 'LISTEN\nCALL recipe');
+    expect(play(13, { prep }).first_failure?.code).toBe('carry-more');
+    expect(play(13, { prep }, ['load']).passed).toBe(true);
+  });
+
+  it('lets a routine that never washes go further, with twice the cups', () => {
+    const prep = edit(referenceProgramsFor(17).prep, 'MOVE RIGHT 1\nUSE UP\nMOVE LEFT 9', 'MOVE LEFT 8');
+    // Eight guests, a cup each: four cups run out, eight see them through.
+    expect(play(18, { prep }, [], 8).first_failure?.code).toBe('no-clean-cups');
+    expect(play(18, { prep }, ['cups'], 8).passed).toBe(true);
+    expect(play(18, { prep }, ['cups']).first_failure?.code).toBe('no-clean-cups');
+  });
+
+  it('lets robots that never stop through, with no closing time', () => {
+    const never = (source: string) => source.replace(/IF closed IN CUSTOMER SPEECH\n\s*STOP\n\s*END\n/g, '');
+    const programs = referenceProgramsFor(19);
+    const open = { query: never(programs.query), prep: never(programs.prep), floor: never(programs.floor) };
+    expect(open.query).not.toContain('closed');
+    expect(play(20, open).first_failure?.code).toBe('closing-ticket');
+    expect(play(20, open, ['closing']).passed).toBe(true);
   });
 });

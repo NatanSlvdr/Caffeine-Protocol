@@ -960,6 +960,11 @@ html[data-motion='reduced'] .failure-card-chevron {
   color: var(--draft-muted);
   font-size: 11px;
 }
+/* A bench that eased the shift's rules says so, quietly: the slip happened under them. */
+.failure-card-eased {
+  color: var(--draft-muted);
+  font-size: 11px;
+}
 .failure-card.stale .failure-card-body > :not(.failure-card-stale) {
   opacity: 0.6;
 }

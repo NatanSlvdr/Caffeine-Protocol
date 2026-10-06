@@ -5,7 +5,9 @@ import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { benchKey } from '../../../src/features/workspace/bench';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 import { lessons, levels } from '../../../src/data';
+import { benchGuests } from '../../../src/domain';
 import { BenchModal } from '../../../src/features/workspace/modals/BenchModal';
+import { referenceProgramsFor } from '../../helpers/run';
 
 vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div data-testid="cafe" /> }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
@@ -205,12 +207,88 @@ describe('the test bench on the last shift', () => {
       'Mumbles “The usual, please.”, then says “A quick coffee, 2 sugars, to go. I’m in a rush!” once asked · Should get coffee · 2 sugars · to go · rushed, once Query asks for help',
     );
     fireEvent.click(runBench());
-    expect(onRun).toHaveBeenCalledWith([
-      expect.objectContaining({
-        customer_id: 'B1',
-        phrase: 'The usual, please.',
-        expected: expect.objectContaining({ ask_help: true }),
+    expect(onRun).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          customer_id: 'B1',
+          phrase: 'The usual, please.',
+          expected: expect.objectContaining({ ask_help: true }),
+        }),
+      ],
+      [],
+    );
+  });
+});
+
+describe('a bench that eases the shift’s rules', () => {
+  /** The first guest of shift 18's first round. */
+  const guest = benchGuests(levels[17].seeds[0].customers)[0];
+  /** Shift 18, four cups to wash, with the reference routines, and a bench of one guest that eases the cups. */
+  function cups(query = referenceProgramsFor(17).query) {
+    const save = makeSave();
+    localStorage.setItem(
+      benchKey(),
+      JSON.stringify({
+        L18: { guests: [guest], eased: ['cups', 'closing'] },
       }),
-    ]);
+    );
+    seedLocalStorage({
+      ...save,
+      unlocked: 17,
+      selected: 17,
+      settings: { ...save.settings, text_editor: true },
+      robotDrafts: { 17: { ...referenceProgramsFor(17), query } },
+    });
+    window.location.hash = '/shift/18';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    openBench();
+  }
+  const ease = () => within(slip()).getByRole('group', { name: 'Ease the shift’s rules' });
+
+  it('offers the rules the shift has, and keeps the choice with the bench', () => {
+    cups();
+    // Shift 18 has cups to wash but no closing time, so a kept ease it doesn't have is let go.
+    const twice = within(ease()).getByRole('checkbox', { name: /Twice the cups/ }) as HTMLInputElement;
+    expect(within(ease()).getAllByRole('checkbox')).toHaveLength(1);
+    expect(twice.checked).toBe(true);
+    expect(ease().textContent).toContain('8 cups instead of 4.');
+    expect(runBench().textContent).toBe('Run the bench · 1 guest · eased');
+    fireEvent.click(twice);
+    expect(runBench().textContent).toBe('Run the bench · 1 guest');
+    expect(JSON.parse(localStorage.getItem(benchKey())!).L18).toEqual([guest]);
+    fireEvent.click(twice);
+    expect(JSON.parse(localStorage.getItem(benchKey())!).L18.eased).toEqual(['cups']);
+  });
+
+  it('says which rules a run eased, as it plays and once it’s done', () => {
+    cups();
+    fireEvent.click(runBench());
+    expect(document.querySelector('.playback-round')!.textContent).toBe('BenchEased, for no stars');
+    const status = screen.getByRole('group', { name: 'Simulation controls' }).querySelector('[role="status"]')!;
+    expect(status.textContent).toBe(
+      'Running the bench with twice the cups, for no stars. The routines are locked until it stops.',
+    );
+    play();
+    expect(wentRight()!.textContent).toContain(
+      'The bench ran with twice the cups, and earns no stars: they come from the shift’s own guests and rules',
+    );
+  });
+
+  it('says so on the card when a run eased slips', () => {
+    // Query writes every drink as the one the guest didn't ask for.
+    const wrong = guest.orders[0].drink === 'coffee' ? 'tea' : 'coffee';
+    cups(referenceProgramsFor(17).query.replace(/ITEM \w+/g, `ITEM ${wrong}`));
+    fireEvent.click(runBench());
+    play();
+    fireEvent.keyDown(window, { key: 'Escape' });
+    const slipped = screen.getByRole('region', { name: /^Query stopped/ });
+    expect(slipped.textContent).toContain('The bench ran with twice the cups.');
+  });
+
+  it('isn’t offered on a shift with no rule to ease', () => {
+    ready();
+    openBench();
+    expect(within(slip()).queryByRole('group', { name: 'Ease the shift’s rules' })).toBeNull();
   });
 });

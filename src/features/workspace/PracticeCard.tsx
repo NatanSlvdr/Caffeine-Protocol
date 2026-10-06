@@ -6,6 +6,8 @@ export interface PracticeCardProps {
   round: number;
   /** It was a bench the player wrote, not one of the shift's rounds. */
   bench?: boolean;
+  /** The shift's rules the bench eased, said after "with"; nothing when it eased none. */
+  eased?: string;
   onRunService: () => void;
 }
 
@@ -13,7 +15,7 @@ export interface PracticeCardProps {
  * Practice that went right, said beside the code: the round is fixed, but only the whole service earns stars, so
  * the next step is one button away.
  */
-export function PracticeCard({ round, bench = false, onRunService }: PracticeCardProps) {
+export function PracticeCard({ round, bench = false, eased = '', onRunService }: PracticeCardProps) {
   const heading = useId();
   return (
     <section className="failure-card practice-card" aria-labelledby={heading}>
@@ -25,7 +27,9 @@ export function PracticeCard({ round, bench = false, onRunService }: PracticeCar
       <div className="failure-card-body">
         <p className="failure-card-reason">
           {bench
-            ? 'The bench earns no stars: they come from the shift’s own guests, every round of them.'
+            ? eased
+              ? `The bench ran with ${eased}, and earns no stars: they come from the shift’s own guests and rules, every round of them.`
+              : 'The bench earns no stars: they come from the shift’s own guests, every round of them.'
             : 'Practice earns no stars: the whole service has to get every round right.'}
         </p>
         <div className="failure-card-actions">

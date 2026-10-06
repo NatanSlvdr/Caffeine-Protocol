@@ -1,4 +1,5 @@
 import type { FailureCode, FailureContext } from './failures';
+import type { BenchEase } from './bench';
 import type { Challenge, ChallengeMeasure } from './challenges';
 
 export type Drink = 'coffee' | 'tea';
@@ -38,6 +39,8 @@ export interface Customer {
 export interface ValidationSeed {
   id: string;
   customers: Customer[];
+  /** A bench only: the shift's rules it eased for practice, so it plays them that way; see `easedShift`. */
+  eased?: readonly BenchEase[];
 }
 /** block_target is the two-star threshold (reference plus margin); reference_block_count is the measured reference size. */
 export interface LevelDefinition {

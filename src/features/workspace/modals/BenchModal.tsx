@@ -3,6 +3,7 @@ import { Plus, Trash2, X } from 'lucide-react';
 import {
   BENCH_GAPS,
   BENCH_GUESTS,
+  benchEases,
   benchGuests,
   benchKit,
   benchProblems,
@@ -12,6 +13,7 @@ import {
   count,
   freshGuest,
   ROBOT_DISPLAY_NAMES,
+  type BenchEase,
   type BenchGuest,
   type BenchKit,
   type BenchOrder,
@@ -23,14 +25,14 @@ import {
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
-import { readBench, writeBench } from '../bench';
+import { easeChoice, readBench, readEased, writeBench } from '../bench';
 
 export interface BenchModalProps {
   /** The shift on screen: its own guests say what the bench can ask for. */
   level: LevelDefinition;
   running: boolean;
-  /** Runs the bench's guests with the routines as they are now. */
-  onRun: (customers: Customer[]) => void;
+  /** Runs the bench's guests with the routines as they are now, under any rules it eases. */
+  onRun: (customers: Customer[], eased: BenchEase[]) => void;
   onClose: () => void;
 }
 
@@ -57,13 +59,16 @@ function ticketWords(ticket: ExpectedTicket): string {
 /**
  * The test bench: guests the player writes for this shift, to run the routines on without the shift's own rounds.
  * Each guest only says what they ask for and when they come in, from what the shift's guests ask for; what each one
- * should get is worked out the same way as for those guests, and shown beside them. The bench is kept in this browser,
- * per shift, and a bench run never earns stars.
+ * should get is worked out the same way as for those guests, and shown beside them. Where the shift has a rule to
+ * ease, like a few cups to wash, the bench can ease it, to practise one thing at a time. The bench is kept in this
+ * browser, per shift, and a bench run never earns stars.
  */
 export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) {
   const kit = useMemo(() => benchKit(level), [level]);
   const rounds = level.seeds.map((seed) => benchGuests(seed.customers));
   const [guests, setGuests] = useState<BenchGuest[]>(() => readBench(level.id, kit) ?? rounds[0]);
+  const offered = benchEases(level);
+  const [eased, setEased] = useState(() => readEased(level));
   const [kept, setKept] = useState(true);
   const [said, say] = useAnnouncement();
   const list = useRef<HTMLOListElement>(null),
@@ -72,7 +77,7 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
 
   const commit = (next: BenchGuest[], words?: string) => {
     setGuests(next);
-    setKept(writeBench(level.id, next));
+    setKept(writeBench(level.id, next, eased));
     if (words) say(words);
   };
   const edit = (at: number, guest: BenchGuest) => commit(guests.map((g, i) => (i === at ? guest : g)));
@@ -99,6 +104,11 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
       `Guest ${at + 1} removed.${next.length > at ? ` The guests after are numbered on from ${at + 1}.` : ''}`,
     );
     focusGuest(Math.min(at, next.length - 1), 'remove');
+  };
+  const ease = (which: BenchEase, on: boolean) => {
+    const next = offered.filter((e) => (e === which ? on : eased.includes(e)));
+    setEased(next);
+    setKept(writeBench(level.id, guests, next));
   };
   const copyRound = (round: number) => {
     commit(rounds[round], `Copied round ${round + 1}: ${count(rounds[round].length, 'guest')}.`);
@@ -153,6 +163,30 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
         {guests.length >= BENCH_GUESTS ? `The bench takes ${BENCH_GUESTS} guests` : 'Add a guest'}
       </button>
 
+      {offered.length > 0 && (
+        <fieldset className="bench-eases" aria-describedby="bench-eases-note">
+          <legend>Ease the shift’s rules</legend>
+          {offered.map((which) => {
+            const { label, detail } = easeChoice(level, which);
+            return (
+              <label key={which} className="bench-mark bench-ease">
+                <input
+                  type="checkbox"
+                  checked={eased.includes(which)}
+                  onChange={(e) => ease(which, e.target.checked)}
+                />
+                <span>
+                  <strong>{label}</strong> <small>{detail}</small>
+                </span>
+              </label>
+            );
+          })}
+          <small id="bench-eases-note">
+            Practise one thing at a time. A bench that goes right eased says less: the shift keeps its own rules.
+          </small>
+        </fieldset>
+      )}
+
       <p className="bench-status" role="status">
         {said}
       </p>
@@ -175,9 +209,11 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
           data-autofocus
           disabled={running || problems.length > 0}
           aria-describedby={running ? 'bench-running' : problems.length && guests.length ? 'bench-problems' : undefined}
-          onClick={() => onRun(benchSeed(kit, guests).customers)}
+          onClick={() => onRun(benchSeed(kit, guests).customers, eased)}
         >
-          {guests.length ? `Run the bench · ${count(guests.length, 'guest')}` : 'Add a guest to run the bench'}
+          {guests.length
+            ? `Run the bench · ${count(guests.length, 'guest')}${eased.length ? ' · eased' : ''}`
+            : 'Add a guest to run the bench'}
         </Button>
       </div>
     </Modal>

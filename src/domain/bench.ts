@@ -242,5 +242,36 @@ export function benchSeed(kit: BenchKit, guests: readonly BenchGuest[]): Validat
   return { id: 'BENCH', customers };
 }
 
+/**
+ * A rule of the shift a bench can ease, for practice: twice the cups, carrying one at a time where the shift asks for
+ * a full load, or no closing time. Eased, a bench can check one part of a routine while another still falls short;
+ * what goes right there says less about the shift, which keeps its own rules.
+ */
+export type BenchEase = 'cups' | 'load' | 'closing';
+
+/** The rules of a shift its bench can ease, in the order they're offered. */
+export function benchEases(level: LevelDefinition): BenchEase[] {
+  const service = level.service;
+  return [
+    ...(service?.cups ? (['cups'] as const) : []),
+    ...(service?.minLoad ? (['load'] as const) : []),
+    ...(service?.closing && level.programming_enabled ? (['closing'] as const) : []),
+  ];
+}
+
+/** Only the eases the shift has, once each, in the order they're offered: a bench kept from before may ask for more. */
+export const keptEases = (level: LevelDefinition, eased: readonly unknown[]): BenchEase[] =>
+  benchEases(level).filter((ease) => eased.includes(ease));
+
+/** The shift as a bench plays it with its rules eased; the shift itself when none are. */
+export function easedShift(level: LevelDefinition, eased: readonly BenchEase[] = []): LevelDefinition {
+  if (!level.service || !eased.length) return level;
+  const service = { ...level.service };
+  if (eased.includes('cups') && service.cups) service.cups *= 2;
+  if (eased.includes('load')) service.minLoad = 0;
+  if (eased.includes('closing')) service.closing = false;
+  return { ...level, service };
+}
+
 /** Whether a round is a bench the player wrote, rather than one of the shift's own. */
 export const isBenchSeed = (id: string) => id.startsWith('BENCH');

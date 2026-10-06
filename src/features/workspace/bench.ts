@@ -1,5 +1,16 @@
-import { BENCH_GUESTS, benchProblems, type BenchGuest, type BenchKit, type BenchOrder } from '@/domain';
+import {
+  BENCH_GUESTS,
+  ROBOT_UNLOCK_LEVELS,
+  benchProblems,
+  keptEases,
+  type BenchEase,
+  type BenchGuest,
+  type BenchKit,
+  type BenchOrder,
+  type LevelDefinition,
+} from '@/domain';
 import { cafeKey } from '@/features/campaign/save/cafes';
+import { andList } from './hints';
 
 /** The benches the player has written for the open café, by shift: beside its save and never in it. */
 export const benchKey = () => `${cafeKey()}.bench`;
@@ -30,24 +41,69 @@ function readAll(): Record<string, unknown> {
   }
 }
 
+/** A shift's bench as kept: its guests, with the rules it eases beside them once it eases any. */
+interface KeptBench {
+  guests: readonly BenchGuest[];
+  eased?: readonly BenchEase[];
+}
+
+/** A shift's bench as kept: guests alone, as a bench easing nothing is (and every bench was), or with its eases. */
+const keptOf = (stored: unknown): { guests?: unknown; eased?: unknown } =>
+  Array.isArray(stored) ? { guests: stored } : stored && typeof stored === 'object' ? stored : {};
+
 /**
  * The bench kept for a shift, or nothing. One the shift can no longer take, from an older café or changed by hand, is
  * read as nothing, so the bench starts again rather than offering guests it can't run.
  */
 export function readBench(levelId: string, kit: BenchKit): BenchGuest[] | undefined {
-  const stored = readAll()[levelId];
+  const stored = keptOf(readAll()[levelId]).guests;
   if (!Array.isArray(stored) || stored.length > BENCH_GUESTS) return undefined;
   const guests = stored.map(readGuest);
   if (!guests.every(Boolean)) return undefined;
   return benchProblems(kit, guests as BenchGuest[]).length ? undefined : (guests as BenchGuest[]);
 }
 
+/** The shift's rules its kept bench eases: only ones the shift has, and none when they don't read. */
+export function readEased(level: LevelDefinition): BenchEase[] {
+  const { eased } = keptOf(readAll()[level.id]);
+  return Array.isArray(eased) ? keptEases(level, eased) : [];
+}
+
 /** Keep a shift's bench; false when the browser wouldn't, and it lasts until the page closes. */
-export function writeBench(levelId: string, guests: readonly BenchGuest[]): boolean {
+export function writeBench(levelId: string, guests: readonly BenchGuest[], eased: readonly BenchEase[] = []): boolean {
+  const bench: KeptBench | readonly BenchGuest[] = eased.length ? { guests, eased } : guests;
   try {
-    localStorage.setItem(benchKey(), JSON.stringify({ ...readAll(), [levelId]: guests }));
+    localStorage.setItem(benchKey(), JSON.stringify({ ...readAll(), [levelId]: bench }));
     return true;
   } catch {
     return false;
   }
 }
+
+/** A rule a bench can ease, as the bench offers it: what it's called, and what changes on this shift. */
+export function easeChoice(level: LevelDefinition, ease: BenchEase): { label: string; detail: string } {
+  const service = level.service;
+  switch (ease) {
+    case 'cups':
+      return { label: 'Twice the cups', detail: `${(service?.cups ?? 0) * 2} cups instead of ${service?.cups}.` };
+    case 'load': {
+      // The robot the shift asks for a full load: Brew until Porter joins, then Porter.
+      const porter = Number(level.id.slice(1)) >= ROBOT_UNLOCK_LEVELS.floor;
+      return {
+        label: 'One at a time will do',
+        detail: `${porter ? 'Porter can carry' : 'Brew can make'} one drink a trip, not ${service?.minLoad}.`,
+      };
+    }
+    case 'closing':
+      return { label: 'No closing time', detail: 'Nobody calls closing, so no robot has to stop.' };
+  }
+}
+
+const EASED: Record<BenchEase, string> = {
+  cups: 'twice the cups',
+  load: 'one at a time',
+  closing: 'no closing time',
+};
+
+/** The rules a bench run eased, said after "with": "twice the cups and no closing time"; nothing when it eased none. */
+export const easedWords = (eased: readonly BenchEase[] = []) => andList(eased.map((ease) => EASED[ease]));

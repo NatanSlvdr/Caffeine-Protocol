@@ -15,6 +15,7 @@ import { drillFor, type WorkspaceDrill } from './hints';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
+import { easedWords } from './bench';
 import { FirstRoutineTips } from './FirstRoutineTips';
 import { firstRoutineStep } from './firstRoutine';
 import { HandoverCard } from './HandoverCard';
@@ -514,6 +515,7 @@ export function Workspace({
             rounds={rounds}
             practice={practising !== null}
             bench={benching}
+            eased={benching && practising !== null ? easedWords(played.seeds[practising]?.eased) : ''}
             onRun={run}
             onTogglePause={() => {
               setPaused((p) => !p);
@@ -622,7 +624,7 @@ export function Workspace({
               onPractise={() =>
                 startFromCard(() => {
                   const bench = evidence.bench && played.seeds.find((seed) => seed.id === evidence.failure.seed_id);
-                  if (bench) live.bench(bench.customers);
+                  if (bench) live.bench(bench.customers, bench.eased);
                   else practise(evidence.round - 1);
                 })
               }
@@ -645,6 +647,7 @@ export function Workspace({
             <PracticeCard
               round={level.seeds.findIndex((seed) => seed.id === practiceCard.seeds[0]) + 1}
               bench={isBenchSeed(practiceCard.seeds[0])}
+              eased={easedWords(played.seeds.find((seed) => seed.id === practiceCard.seeds[0])?.eased)}
               onRunService={() => startFromCard(run)}
             />
           )}
@@ -763,9 +766,9 @@ export function Workspace({
         <BenchModal
           level={level}
           running={running}
-          onRun={(customers) => {
+          onRun={(customers, eased) => {
             setModal('');
-            live.bench(customers);
+            live.bench(customers, eased);
           }}
           onClose={() => setModal('')}
         />

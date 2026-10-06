@@ -21,6 +21,7 @@ import type { FailureCode } from '@/domain';
 import { comparisonOf } from './evidence';
 import type { Aspect, RunEvidence } from './evidence';
 import { failureHint } from './reactions';
+import { easedWords } from './bench';
 
 const ASPECT_ICONS: Record<Aspect, LucideIcon> = {
   drink: Coffee,
@@ -126,6 +127,7 @@ export function FailureCard({
         )}
         {!routine && guest && failure.phrase && <blockquote>“{failure.phrase}”</blockquote>}
         <p className="failure-card-reason">{variableLabels(failure.reason)}</p>
+        {evidence.eased && <p className="failure-card-eased">The bench ran with {easedWords(evidence.eased)}.</p>}
         {comparison && (
           <table className="failure-compare">
             <caption className="sr-only">

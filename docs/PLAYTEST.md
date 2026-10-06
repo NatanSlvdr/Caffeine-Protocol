@@ -52,6 +52,11 @@ The production build is static and caches itself on its first successful load. T
 4. Start this café over from Settings: the notebook is still there.
 5. On a page, choose **Write a lesson**: say what it shows, add notes to a few blocks out of order, and check they number from the top. Export the lesson and open the text file: the routine reads with the noted blocks marked, then the notes in order, and says from which shift it can be typed in.
 
+## Test bench
+
+1. On Shift 04, open **Test bench**, start from a round, remove guests and add one: what each should get changes with what they ask for. Run the bench: it earns no stars, and a slip stops on the guest as a service does.
+2. On Shift 18, the bench offers **Twice the cups**. With Brew's washing taken out, a bench of eight guests runs out of cups; eased, it goes right, and the toolbar, the card and the run's name in Compare runs all say it was eased. Shift 21 offers the cups and no closing time; Shift 04 offers nothing to ease.
+
 ## Cafés in one browser
 
 1. With a café under way, open **Settings → Cafés in this browser** and add a café. The page reloads on the new café at the very start, with the same audio and display settings, and the front page names it.

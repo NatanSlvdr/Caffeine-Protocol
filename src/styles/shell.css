@@ -2687,6 +2687,32 @@ span.bench-when,
 .bench-says strong {
   color: var(--slip-ink);
 }
+/* The shift's rules the bench can ease, set apart under the guests: they change the café, not who comes in. */
+.bench-eases {
+  display: grid;
+  gap: 6px;
+  margin: 12px 0 0;
+  padding: 8px 12px 10px;
+  border: 1.5px dashed #392b2433;
+  border-radius: 10px;
+}
+.bench-eases legend {
+  padding: 0 4px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.bench-ease small {
+  color: var(--slip-muted);
+  font-size: 12.5px;
+}
+.bench-eases > small {
+  color: var(--slip-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
 .settings-window button.settings-chip.bench-add[aria-disabled] {
   opacity: 0.55;
   cursor: default;

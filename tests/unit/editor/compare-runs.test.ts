@@ -38,6 +38,17 @@ describe('comparing two runs', () => {
     expect(runName(level, failed)).toBe('Run 1 · Service · Stopped');
   });
 
+  it('names a bench run, and says when it eased the shift’s rules', () => {
+    const bench = { id: 'BENCH_2', customers: level.seeds[0].customers, eased: ['cups'] as const };
+    const shift = { ...level, seeds: [...level.seeds, bench] };
+    const { result } = createLiveRun(shift, solution, { practice: level.seeds.length }).advance(1e9);
+    const record = recordRun(5, shift, solution, result, [level.seeds.length]);
+    expect(runName(shift, record)).toBe('Run 5 · Bench 2, eased · Served');
+    expect(runName({ ...shift, seeds: [...level.seeds, { ...bench, eased: undefined }] }, record)).toBe(
+      'Run 5 · Bench 2 · Served',
+    );
+  });
+
   it('says what a fix got right, without judging what a stopped run never finished', () => {
     const rows = compareRuns(level, failed, served);
     const row = (label: string) => rows.find((r) => r.label === label)!;
