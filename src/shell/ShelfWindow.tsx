@@ -9,9 +9,9 @@ import {
   Timer,
   type LucideIcon,
 } from 'lucide-react';
-import { Modal } from '@/components';
-import { useCafeName } from '@/state/GameStore';
-import type { ProgressSave } from '@/domain';
+import { CushionSwatch, Modal, PrintSwatch } from '@/components';
+import { useCafeName, useGame } from '@/state/GameStore';
+import { DECOR_OPTIONS, LOUS_DECOR, decorOf, type Decor, type DecorSpot, type ProgressSave } from '@/domain';
 import { acts } from './rail/acts';
 import { keepsakes, veiled, type Keepsake, type KeepsakeId } from './shelf';
 
@@ -25,9 +25,16 @@ const ICONS: Record<KeepsakeId, LucideIcon> = {
   stopwatch: Timer,
 };
 
+/** What each spot is called on the shelf, and how its looks are shown there. */
+const SPOTS: { [Spot in DecorSpot]: { name: string; Swatch: (props: { id: Decor[Spot] }) => React.JSX.Element } } = {
+  cushions: { name: 'The cushions', Swatch: ({ id }) => <CushionSwatch cushions={id} /> },
+  print: { name: 'The print by the window', Swatch: ({ id }) => <PrintSwatch print={id} /> },
+};
+
 /**
  * The shelf behind the counter: every keepsake, those earned with what they mark, the rest with what earns them. One
- * from an act still sealed stays wrapped, saying only which act it comes out with.
+ * from an act still sealed stays wrapped, saying only which act it comes out with. Under them, the café's looks: one
+ * picked for each spot, from Lou's and those the acts served have brought.
  */
 export function ShelfWindow({
   save,
@@ -35,7 +42,7 @@ export function ShelfWindow({
   fresh = [],
   onClose,
 }: {
-  save: Pick<ProgressSave, 'stars' | 'challenges' | 'unlocked'>;
+  save: Pick<ProgressSave, 'stars' | 'challenges' | 'unlocked' | 'complete' | 'decor'>;
   earned: readonly Keepsake[];
   /** The keepsakes that weren't there when the shelf was last opened. */
   fresh?: readonly string[];
@@ -74,6 +81,63 @@ export function ShelfWindow({
           );
         })}
       </ul>
+      <Looks save={save} />
     </Modal>
+  );
+}
+
+/** A choice of look for each spot. One not earned yet says what earns it; the café shows only looks it has earned. */
+function Looks({ save }: { save: Pick<ProgressSave, 'stars' | 'complete' | 'decor'> }) {
+  const { pickDecor } = useGame();
+  const decor = decorOf(save);
+  return (
+    <section className="shelf-looks" aria-labelledby="shelf-looks-title">
+      <h3 id="shelf-looks-title">The café’s looks</h3>
+      <p>Picked here, out for every shift. Lou’s are there from the start, and each act served brings another.</p>
+      <div>
+        {(Object.keys(SPOTS) as DecorSpot[]).map((spot) => (
+          <SpotChoice key={spot} spot={spot} save={save} picked={decor[spot]} onPick={(id) => pickDecor(spot, id)} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function SpotChoice<Spot extends DecorSpot>({
+  spot,
+  save,
+  picked,
+  onPick,
+}: {
+  spot: Spot;
+  save: Pick<ProgressSave, 'stars' | 'complete'>;
+  picked: Decor[Spot];
+  onPick: (id: Decor[Spot]) => void;
+}) {
+  const { name, Swatch } = SPOTS[spot];
+  return (
+    <fieldset>
+      <legend>{name}</legend>
+      {DECOR_OPTIONS[spot].map((option) => {
+        const earned = option.earned(save);
+        const lous = option.id === LOUS_DECOR[spot];
+        return (
+          <label key={option.id} className={earned ? undefined : 'locked'}>
+            <input
+              type="radio"
+              name={`decor-${spot}`}
+              checked={picked === option.id}
+              disabled={!earned}
+              onChange={() => onPick(option.id)}
+            />
+            <Swatch id={option.id} />
+            <span>
+              <strong>{option.name}</strong>
+              {(lous || !earned) && <small>{option.goal}</small>}
+            </span>
+          </label>
+        );
+      })}
+    </fieldset>
   );
 }

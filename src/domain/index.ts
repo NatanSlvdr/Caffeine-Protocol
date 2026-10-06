@@ -10,6 +10,7 @@ export * from './constants';
 export * from './counters';
 export * from './directions';
 export * from './dragPlacement';
+export * from './decor';
 export * from './dialogue';
 export * from './drinks';
 export * from './failures';

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { ArrowRight } from 'lucide-react';
 import { CAMPAIGN_LENGTH, isRated } from '@/data';
+import { decorOf } from '@/domain';
 import { Cafe, Cutscene } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { Tally } from '@/shared/ui/Tally';
@@ -22,6 +23,7 @@ function StoryScene() {
       <Cafe
         evening
         restored={restoredShift(save)}
+        decor={decorOf(save)}
         reduced={reduced}
         pixelArt={save.settings.pixel_art}
         showStatusBubbles={false}

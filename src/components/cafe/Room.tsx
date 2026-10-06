@@ -11,9 +11,10 @@ import {
   STATIONS,
   TABLE_LAYOUT,
   tableSeat,
+  type Decor,
   type StationId,
 } from '@/domain';
-import { STREET_WINDOWS, cushionIsSage } from './dressing';
+import { STREET_WINDOWS, cushionColor } from './dressing';
 import { WallDressing, KitchenFloor } from './WallDressing';
 import { Facade } from './Facade';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
@@ -27,12 +28,15 @@ export function Room({
   gateOpen,
   showLabels,
   restored,
+  decor,
 }: {
   evening: boolean;
   gateOpen: boolean;
   showLabels: boolean;
   /** The shift whose café is shown: what the story has put back by then. */
   restored: number;
+  /** The looks the café has picked. */
+  decor: Decor;
 }) {
   const done = restoredBy(restored);
   return (
@@ -41,7 +45,7 @@ export function Room({
       <CafeFloor showGrid={showLabels} />
       <Box at={[-0.6, 1.3, -6.6]} size={[16.2, 2.7, 0.2]} color={CAFE_COLORS.wall} />
       <CafeMural />
-      <WallDressing restored={done} growth={sillGrowth(restored)} evening={evening} />
+      <WallDressing restored={done} growth={sillGrowth(restored)} evening={evening} print={decor.print} />
       <KitchenFloor />
       <Facade open={done.has('open-sign')} />
       <Box at={[-8.6, 1.3, -1.6]} size={[0.2, 2.7, 10.2]} color={CAFE_COLORS.wall} />
@@ -113,7 +117,7 @@ export function Room({
               key={side}
               at={[tableSeat(i, side)[0], 0, tableSeat(i, side)[1]]}
               rotation={side === 0 ? Math.PI / 2 : -Math.PI / 2}
-              color={cushionIsSage(i) ? CAFE_COLORS.sage : CAFE_COLORS.clay}
+              color={cushionColor(decor.cushions, i)}
             />
           ))}
         </group>

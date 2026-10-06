@@ -146,6 +146,7 @@ Before each release, someone plays through the list below and fills in a row. A 
 | Offline reload and update                                               |        |         |        |      |       |
 | Each accessibility path                                                 |        |         |        |      |       |
 | Music: default volume, muted, in the repair bay and in a memory         |        |         |        |      |       |
+| The shelf's looks: pick a print and cushions, see them in the café      |        |         |        |      |       |
 | Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks |        |         |        |      |       |
 | Export a save, reset progress, import it back                           |        |         |        |      |       |
 | The routine notebook, as above                                          |        |         |        |      |       |

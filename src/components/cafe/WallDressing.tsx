@@ -1,5 +1,5 @@
 import { DoubleSide } from 'three';
-import { BOUNDS, ENTRANCE, type Restoration, type SillGrowth } from '@/domain';
+import { BOUNDS, ENTRANCE, type PrintId, type Restoration, type SillGrowth } from '@/domain';
 import { useCanvasTexture } from '@/hooks/useCanvasTexture';
 import { Box, Cylinder, CAFE_COLORS } from './primitives';
 import {
@@ -10,6 +10,7 @@ import {
   WAINSCOT_HEIGHT,
   type FloorPatch,
 } from './dressing';
+import { PRINTS, PRINT_FRAME } from './prints';
 import { StoryDressing } from './StoryDressing';
 import { tileTexture } from './tileTexture';
 
@@ -25,16 +26,19 @@ const WALL_TOP = 2.65;
 
 /**
  * Panelling, trim and the few things hung on the walls, composed around the cup mural, with what the story has put
- * back by the shift shown: the herbs on the sills, and the photos, aprons and lights on the back wall.
+ * back by the shift shown: the herbs on the sills, and the photos, aprons and lights on the back wall. The print by
+ * the window is the one the café picked.
  */
 export function WallDressing({
   restored,
   growth,
   evening,
+  print,
 }: {
   restored: ReadonlySet<Restoration>;
   growth: SillGrowth;
   evening: boolean;
+  print: PrintId;
 }) {
   return (
     <group>
@@ -76,7 +80,7 @@ export function WallDressing({
         size={[0.3, 0.06, ENTRANCE[1] + 0.6 - (BACK_WALL_FACE - 0.2)]}
         color={CAFE_COLORS.walnut}
       />
-      <FramedPrint at={[-6.8, 1.62, BACK_WALL_FACE]} />
+      <FramedPrint at={[-6.8, 1.62, BACK_WALL_FACE]} print={print} />
       <WallClock at={[-2.5, 1.85, BACK_WALL_FACE]} />
       <CupShelf at={[1.6, 1.55, BACK_WALL_FACE]} />
       <MenuBoard at={[5.7, 1.62, BACK_WALL_FACE]} />
@@ -88,18 +92,26 @@ export function WallDressing({
   );
 }
 
-/** A small landscape print in the café's colours: hills, a field and a sun. */
-function FramedPrint({ at }: { at: [number, number, number] }) {
+/** A small print in the café's colours, in a walnut frame on a cream mount. */
+function FramedPrint({ at, print }: { at: [number, number, number]; print: PrintId }) {
+  const [frameWidth, frameHeight] = PRINT_FRAME.frame;
+  const [mountWidth, mountHeight] = PRINT_FRAME.mount;
   return (
     <group position={at}>
-      <Box at={[0, 0, 0.025]} size={[0.86, 0.64, 0.05]} color={CAFE_COLORS.walnut} />
-      <Box at={[0, 0, 0.052]} size={[0.74, 0.52, 0.006]} color={CAFE_COLORS.cream} />
-      <Box at={[0, -0.12, 0.057]} size={[0.6, 0.14, 0.006]} color={CAFE_COLORS.sage} />
-      <Box at={[0.08, -0.03, 0.056]} size={[0.44, 0.08, 0.006]} color={CAFE_COLORS.wall} />
-      <mesh position={[-0.16, 0.1, 0.058]}>
-        <circleGeometry args={[0.07, 20]} />
-        <meshStandardMaterial color={CAFE_COLORS.clay} roughness={0.9} />
-      </mesh>
+      <Box at={[0, 0, 0.025]} size={[frameWidth, frameHeight, 0.05]} color={CAFE_COLORS.walnut} />
+      <Box at={[0, 0, 0.052]} size={[mountWidth, mountHeight, 0.006]} color={CAFE_COLORS.cream} />
+      {/* Flat on the mount, each shape a hair proud of the one behind it. */}
+      {PRINTS[print].map(({ shape, at: [x, y], size: [width, height], color, turn = 0 }, i) => (
+        <mesh
+          key={i}
+          position={[x, y, 0.0555 + i * 0.001]}
+          rotation-z={turn}
+          scale={shape === 'disc' ? [1, height / width, 1] : 1}
+        >
+          {shape === 'band' ? <planeGeometry args={[width, height]} /> : <circleGeometry args={[width, 20]} />}
+          <meshStandardMaterial color={color} roughness={0.9} />
+        </mesh>
+      ))}
     </group>
   );
 }

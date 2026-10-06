@@ -346,6 +346,11 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   choices?: Record<string, string>;
   /** The Long Day's own progress; missing in a café that has never opened it. */
   endurance?: EnduranceProgress;
+  /**
+   * The café's looks picked, by spot (`DecorSpot`): an option's id. Missing for a spot left as Lou's, and the whole map
+   * in a café that has picked none. Only looks: nothing is scored, and a pick not yet earned shows Lou's.
+   */
+  decor?: Record<string, string>;
 }
 /**
  * The Long Day, kept apart from the campaign like a special: one set of routines for every wave, the wave the day is

@@ -21,6 +21,7 @@ import {
   type ActorId,
   type ActorSnapshot,
   type BlockPreview,
+  type Decor,
   type RobotRole,
   type RunResult,
 } from '@/domain';
@@ -95,6 +96,7 @@ export function World({
   follow,
   preview,
   restored,
+  decor,
   counterLines,
 }: {
   evening: boolean;
@@ -116,6 +118,8 @@ export function World({
   preview?: BlockPreview;
   /** The shift whose café is dressed: what the story has put back by then. */
   restored: number;
+  /** The looks the café has picked. */
+  decor: Decor;
   /** What the counter says back to the regulars it recognises, by round and guest. */
   counterLines?: ReadonlyMap<string, string>;
 }) {
@@ -149,7 +153,7 @@ export function World({
         cameraAngleDegrees={cameraAngleDegrees}
       />
       <SceneLights evening={evening} />
-      <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} restored={restored} />
+      <Room evening={evening} gateOpen={gateOpen} showLabels={showLabels} restored={restored} decor={decor} />
       {preview && <BlockPath preview={preview} />}
       {Object.entries(actors).map(
         ([id, actor]) =>

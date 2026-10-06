@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Cafe } from '@/components';
-import { STREET_APPROACH_SECONDS } from '@/domain';
+import { STREET_APPROACH_SECONDS, decorOf } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useGame } from '@/state/GameStore';
 import { HOME_PREVIEW_LEVEL, homePreviewResult, restoredShift } from './homePreview';
@@ -39,6 +39,7 @@ export function HomeCafePreview({ reduced, pixelArt }: { reduced: boolean; pixel
     <Cafe
       level={HOME_PREVIEW_LEVEL}
       restored={restoredShift(save)}
+      decor={decorOf(save)}
       result={result}
       time={reduceMotion && stillTime ? (stillTime.start + stillTime.end) / 2 : time}
       reduced={reduceMotion}

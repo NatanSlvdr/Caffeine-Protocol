@@ -17,6 +17,7 @@ import {
   completeLevel,
   completeRepair,
   migrationChanges,
+  pickDecor,
   newSave,
   parseSave,
   readBackup,
@@ -33,7 +34,7 @@ import {
   type CafeList,
   type SaveBackup,
 } from '@/features/campaign/save/persistence';
-import type { ChallengeMeasure, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
+import type { ChallengeMeasure, Decor, DecorSpot, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
 import { go, reloadPage } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
@@ -79,6 +80,8 @@ interface GameStore {
   completeDrill: (id: string) => void;
   /** A robot mended on the repair bench: kept, and nothing scored. */
   completeRepair: (id: string) => void;
+  /** A look picked for a spot in the café; only looks, nothing scored. */
+  pickDecor: <Spot extends DecorSpot>(spot: Spot, id: Decor[Spot]) => void;
   resetCafe: () => void;
   importCafe: (next: ProgressSave) => void;
   /** The cafés kept in this browser, and the one this tab plays. */
@@ -222,6 +225,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
       },
       completeDrill: (id) => setSave((s) => completeDrill(s, id)),
       completeRepair: (id) => setSave((s) => completeRepair(s, id)),
+      pickDecor: (spot, id) => setSave((s) => pickDecor(s, spot, id)),
       resetCafe: () => {
         keep('reset');
         setUpdated([]);

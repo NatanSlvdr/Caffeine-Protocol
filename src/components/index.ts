@@ -9,6 +9,7 @@ export { CafeFloor } from './CafeFloor';
 export { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS, SugarCubes } from './CafeModels';
 export type { Vec3 } from './CafeModels';
 export { CodingPaneHeader } from './CodingPaneHeader';
+export { CushionSwatch, PrintSwatch } from './cafe/DecorSwatches';
 export { CustomerSpeech } from './CustomerSpeech';
 export { Editor } from './Editor';
 export { ExecutionCursor } from './ExecutionCursor';

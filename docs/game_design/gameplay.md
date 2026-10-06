@@ -84,6 +84,14 @@ waits by the table to clear it, and missed by the worked example
 (`tests/unit/data/challenges.test.ts`). A challenge once met stays met in the
 save, and the first one puts a stopwatch on the shelf.
 
+Under the keepsakes, the shelf keeps the café's looks: the chair cushions and
+the print by the window, three of each. Lou's are there from the start; serving
+each of the first three acts brings a new one, as its keepsake goes up, and
+finishing the campaign brings the last. A look is picked, not bought or placed,
+and nothing it changes is scored, so it marks progress without becoming a game
+of its own. The café shows only looks it has earned, and a memory shows Lou's
+café as it was.
+
 Away from the rail, the campaign's Drills take one idea at a time: a gap in a
 served shift's worked example, and two or three passages to fill it with. The
 pick goes in, and the café serves that shift with it, so what comes back is the

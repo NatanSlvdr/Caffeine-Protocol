@@ -1,4 +1,5 @@
 import type { ChallengeMeasure } from '@/domain/challenges';
+import { LOUS_DECOR, type Decor, type DecorSpot } from '@/domain/decor';
 import type { ProgressSave, RobotPrograms, RobotRole } from '@/domain/types';
 import { ROBOT_ROLES, robotForLevel, robotUnlocked } from '@/domain/robots';
 import { UNLOCKS } from '@/domain/unlocks';
@@ -91,6 +92,15 @@ export function answerChoice(save: ProgressSave, choice: string, option: string)
 /** A drill got right on the first pick joins the ones done before; it stays done, and adds nothing to the stars. */
 export function completeDrill(save: ProgressSave, id: string): ProgressSave {
   return save.drills?.includes(id) ? save : { ...save, drills: [...(save.drills ?? []), id] };
+}
+
+/** A look picked for a spot in the café. Picking Lou's own leaves the spot out, and a café with no picks the map. */
+export function pickDecor<Spot extends DecorSpot>(save: ProgressSave, spot: Spot, id: Decor[Spot]): ProgressSave {
+  const decor: Record<string, string> = { ...save.decor, [spot]: id };
+  if (id === LOUS_DECOR[spot]) delete decor[spot];
+  const next: ProgressSave = { ...save, decor };
+  if (!Object.keys(decor).length) delete next.decor;
+  return next;
 }
 
 /** A robot mended on the repair bench, kept once; mending it again changes nothing. */

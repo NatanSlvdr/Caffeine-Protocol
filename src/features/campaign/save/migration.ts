@@ -84,6 +84,7 @@ const SAVED_PART: Record<string, string> = {
   repairs: 'robots mended',
   choices: 'story choices',
   endurance: 'the Long Day',
+  decor: 'café looks',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -202,6 +203,19 @@ function validateChoices(v: Record<string, unknown>): Record<string, string> | u
   const id = (value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,47}$/.test(value);
   if (!isRecord(entries) || Object.keys(entries).length > 100 || !Object.entries(entries).every((e) => e.every(id)))
     throw new Error(`Invalid ${SAVED_PART.choices}.`);
+  return Object.keys(entries).length ? { ...(entries as Record<string, string>) } : undefined;
+}
+
+/**
+ * The café's looks picked, by spot. Spots and looks no longer in the game are kept, harmlessly, like drills; the café
+ * shows Lou's for any it doesn't know or hasn't earned.
+ */
+function validateDecor(v: Record<string, unknown>): Record<string, string> | undefined {
+  if (v.decor === undefined || v.version !== 4) return undefined;
+  const entries = v.decor;
+  const id = (value: unknown) => typeof value === 'string' && /^[a-z][a-z0-9-]{0,47}$/.test(value);
+  if (!isRecord(entries) || Object.keys(entries).length > 20 || !Object.entries(entries).every((e) => e.every(id)))
+    throw new Error(`Invalid ${SAVED_PART.decor}.`);
   return Object.keys(entries).length ? { ...(entries as Record<string, string>) } : undefined;
 }
 
@@ -391,6 +405,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const memories = validateKept(v, 'memories');
   const choices = validateChoices(v);
   const endurance = validateEndurance(v);
+  const decor = validateDecor(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -417,6 +432,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     ...(repairs && { repairs }),
     ...(choices && { choices }),
     ...(endurance && { endurance }),
+    ...(decor && { decor }),
     settings,
   };
 }

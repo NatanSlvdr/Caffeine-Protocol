@@ -1,5 +1,5 @@
-import { UNLOCKS } from '@/domain';
-import type { BlockPreview, RobotRole, RunResult } from '@/domain';
+import { LOUS_DECOR, UNLOCKS } from '@/domain';
+import type { BlockPreview, Decor, RobotRole, RunResult } from '@/domain';
 import { PixelArtEffect } from './cafe/PixelArtEffect';
 import { SceneCanvas } from './three/SceneCanvas';
 import { Snapshot, type TakeSnapshot } from './three/Snapshot';
@@ -23,6 +23,7 @@ export function Cafe({
   follow,
   preview,
   restored = level,
+  decor = LOUS_DECOR,
   counterLines,
   snapshot,
 }: {
@@ -49,6 +50,8 @@ export function Cafe({
    * aprons on their hooks, the lights and the herbs. The shift played by default; the shell's views show the furthest.
    */
   restored?: number;
+  /** The looks the café has picked: Lou's unless given. */
+  decor?: Decor;
   /** What the counter says back to the regulars it recognises, by round and guest: `"L06_B/C1"`. */
   counterLines?: ReadonlyMap<string, string>;
   /** Filled in with a way to photograph the café as drawn, while it is on screen. */
@@ -74,6 +77,7 @@ export function Cafe({
           follow={follow}
           preview={preview}
           restored={restored}
+          decor={decor}
           counterLines={counterLines}
         />
         {pixelArt && <PixelArtEffect />}

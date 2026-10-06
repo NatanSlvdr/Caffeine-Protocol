@@ -1,6 +1,15 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Captions, Footprints, Store } from 'lucide-react';
-import { BLOCK_SECONDS, ROBOT_AREA_LABELS, ROBOT_DISPLAY_NAMES, UNLOCKS, isBenchSeed, robotUnlocked } from '@/domain';
+import {
+  BLOCK_SECONDS,
+  LOUS_DECOR,
+  ROBOT_AREA_LABELS,
+  ROBOT_DISPLAY_NAMES,
+  UNLOCKS,
+  decorOf,
+  isBenchSeed,
+  robotUnlocked,
+} from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions, type TakeSnapshot } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -514,6 +523,8 @@ export function Workspace({
               follow={serviceView && following && !photo ? following : undefined}
               preview={photo ? undefined : preview}
               counterLines={regularLines}
+              // A memory is Lou's café two winters ago, before any of the café's own looks.
+              decor={shift.memory ? LOUS_DECOR : decorOf(save)}
               snapshot={snapshot}
             />
             {previewing && <BlockPreviewNote note={note} textMode={textMode} />}

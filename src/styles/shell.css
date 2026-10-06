@@ -1325,6 +1325,102 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-window .shelf-keepsakes li:not(.earned) p {
   color: var(--slip-muted);
 }
+/* The café's looks: a column per spot, each look a card with its swatch; one not earned yet prints faint. */
+.shelf-looks {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 2px dashed #392b241f;
+}
+.shelf-looks h3 {
+  margin: 0;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.settings-window .shelf-looks p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  line-height: 1.45;
+}
+.shelf-looks > div {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 20px;
+  margin-top: 14px;
+}
+.shelf-looks fieldset {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.shelf-looks legend {
+  margin-bottom: 8px;
+  padding: 0;
+  color: var(--slip-ink);
+  font-size: 15px;
+  font-weight: 700;
+}
+.shelf-looks label {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 12px;
+  border: 1px solid #392b2440;
+  color: var(--slip-ink);
+  cursor: pointer;
+}
+.shelf-looks label:has(input:checked) {
+  padding-left: 10px;
+  border-left: 3px solid var(--slip-clay);
+  background: #b968470f;
+}
+.shelf-looks label:has(input:focus-visible) {
+  outline: 2px solid var(--slip-coffee);
+  outline-offset: 2px;
+}
+.shelf-looks label.locked {
+  border-style: dashed;
+  color: var(--slip-muted);
+  cursor: default;
+}
+.shelf-looks input[type='radio'] {
+  flex: none;
+  margin: 0;
+  accent-color: var(--slip-coffee);
+}
+.shelf-looks svg {
+  flex: none;
+  width: 52px;
+  height: 39px;
+}
+.shelf-looks .cushion-swatch {
+  height: 31px;
+}
+.shelf-looks label.locked svg {
+  opacity: 0.4;
+  filter: saturate(0.4);
+}
+.shelf-looks label span {
+  display: grid;
+  gap: 2px;
+}
+.shelf-looks strong {
+  font-size: 14px;
+}
+.shelf-looks label.locked strong {
+  color: var(--slip-muted);
+}
+.shelf-looks small {
+  color: var(--slip-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
 /* The specials: a card per special, what it asks for beside its stars and the way in. */
 .settings-window p.specials-intro {
   margin: 4px 0 0;

@@ -1,4 +1,5 @@
-import { BOUNDS, ENTRANCE, QUERY_TILES, STATIONS, TABLE_LAYOUT, type Point } from '@/domain';
+import { BOUNDS, ENTRANCE, QUERY_TILES, STATIONS, TABLE_LAYOUT, type CushionId, type Point } from '@/domain';
+import { CAFE_COLORS } from './primitives';
 
 /** A floor area in tile edges: x from `left` to `right`, z from `back` to `front`. */
 export interface FloorPatch {
@@ -41,8 +42,15 @@ export const WAINSCOT_HEIGHT = 0.78;
 const TABLE_COLUMNS = [...new Set(TABLE_LAYOUT.map((t) => t.x))].sort((a, b) => a - b);
 const TABLE_ROWS = [...new Set(TABLE_LAYOUT.map((t) => t.z))].sort((a, b) => a - b);
 
-/** Chair cushions alternate clay and sage across the dining room like a checkerboard. */
-export function cushionIsSage(tableIndex: number): boolean {
+/** Each pair of cushion colours the café can pick, muted to sit with the walnut and the green walls. */
+export const CUSHIONS: Record<CushionId, readonly [string, string]> = {
+  'clay-sage': [CAFE_COLORS.clay, CAFE_COLORS.sage],
+  'mustard-teal': ['#c19a4f', '#5c8a84'],
+  'berry-oat': ['#93566a', '#d4c4a3'],
+};
+
+/** Chair cushions alternate the pair's two colours across the dining room like a checkerboard. */
+export function cushionColor(cushions: CushionId, tableIndex: number): string {
   const table = TABLE_LAYOUT[tableIndex];
-  return (TABLE_COLUMNS.indexOf(table.x) + TABLE_ROWS.indexOf(table.z)) % 2 === 1;
+  return CUSHIONS[cushions][(TABLE_COLUMNS.indexOf(table.x) + TABLE_ROWS.indexOf(table.z)) % 2];
 }

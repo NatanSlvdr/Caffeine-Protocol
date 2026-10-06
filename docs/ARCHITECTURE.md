@@ -138,6 +138,14 @@ answer id, left out until one is answered). Like drills, ids no longer in the
 story are kept, harmlessly, and nothing reads them but the scenes that recall
 them (`sceneLines(scene, choices)`).
 
+The café's looks are the save's `decor` map (spot → look id), kept by
+`pickDecor`, which leaves out a spot set back to Lou's and the map once none
+is picked. `decorOf` (domain) reads what the café shows: a pick it has earned,
+and Lou's for one it hasn't or doesn't know, so an imported save never shows a
+look early. Earning reads only stars and `complete`, as keepsakes do; nothing
+in a service reads the looks. The 3D print and the shelf's thumbnail draw from
+the same shapes (`components/cafe/prints.ts`), and a memory always shows Lou's.
+
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 

@@ -6,6 +6,7 @@ import { CampaignPage } from '../../../src/shell/CampaignPage';
 import { acts } from '../../../src/shell/rail/acts';
 import { keepsakes, shelved, veiled } from '../../../src/shell/shelf';
 import { GameProvider } from '../../../src/state/GameStore';
+import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
@@ -136,5 +137,35 @@ describe('the shelf', () => {
     expect(within(items[3]).getByText('Something for Act III. It comes out once Act II is served.')).toBeTruthy();
     fireEvent.click(within(shelf).getByRole('button', { name: 'Close dialog' }));
     expect(screen.queryByRole('dialog', { name: 'The shelf.' })).toBeNull();
+  });
+
+  it('picks the café’s looks from Lou’s and those earned, and keeps the pick with the café', () => {
+    seedLocalStorage(makeSave({ unlocked: acts[1].to, selected: acts[1].to, stars: servedThrough(acts[1].to) }));
+    render(
+      <GameProvider>
+        <CampaignPage />
+      </GameProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: /^Shelf/ }));
+    const looks = within(screen.getByRole('dialog', { name: 'The shelf.' })).getByRole('region', {
+      name: 'The café’s looks',
+    });
+    const prints = within(within(looks).getByRole('group', { name: 'The print by the window' })).getAllByRole('radio');
+    const cushions = within(within(looks).getByRole('group', { name: 'The cushions' })).getAllByRole('radio');
+    expect(prints.map((radio) => (radio as HTMLInputElement).checked)).toEqual([true, false, false]);
+    expect(prints.map((radio) => (radio as HTMLInputElement).disabled)).toEqual([false, false, true]);
+    expect(cushions.map((radio) => (radio as HTMLInputElement).disabled)).toEqual([false, true, true]);
+    // A look still to earn says what earns it.
+    expect(
+      within(looks)
+        .getByRole('radio', { name: /^Mustard and teal/ })
+        .closest('label')!.textContent,
+    ).toContain('Serve every shift of Act II.');
+
+    fireEvent.click(within(looks).getByRole('radio', { name: /^The harbour/ }));
+    expect((within(looks).getByRole('radio', { name: /^The harbour/ }) as HTMLInputElement).checked).toBe(true);
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!).decor).toEqual({ print: 'harbour' });
+    fireEvent.click(within(looks).getByRole('radio', { name: /^Hills at noon/ }));
+    expect(JSON.parse(localStorage.getItem(SAVE_KEY)!)).not.toHaveProperty('decor');
   });
 });
