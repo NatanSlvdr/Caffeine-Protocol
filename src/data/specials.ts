@@ -1,4 +1,6 @@
-import type { Customer, LevelDefinition, RobotPrograms, ValidationSeed } from '@/domain/types';
+import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig, ValidationSeed } from '@/domain/types';
+import { benchKit, benchSeed, type BenchGuest } from '@/domain/bench';
+import type { Regular } from '@/domain/regulars';
 import type { DialogueLine } from '@/domain/dialogue';
 import { line } from '@/domain/dialogue';
 import { floorSource, preparationSource } from '@/domain/defaultPrograms';
@@ -6,7 +8,7 @@ import type { ShiftRules } from '@/domain/defaultPrograms';
 import { countProgramBlocks } from '@/domain/scoring';
 import { shiftNumber, UNLOCKS } from '@/domain/unlocks';
 import { TABLE_LAYOUT } from '@/domain/layout/geometry';
-import { queryReference, referencePrograms } from './extension';
+import { extensionLevels, queryReference, referencePrograms } from './extension';
 import { validateLessonData, validateLevelData } from './campaign/validate';
 
 /**
@@ -19,7 +21,9 @@ export interface Special {
   id: string;
   title: string;
   /** The regular who asked for it. */
-  by: 'rosa';
+  by: Regular;
+  /** A card on a menu the player picks from before the special: what it asks of the café, said up front. */
+  card?: MenuCard;
   /** A few words for the campaign page. */
   hint: string;
   /** The regular's thanks on the receipt, where a campaign shift names the next one. */
@@ -35,6 +39,21 @@ export interface Special {
   brief: { story: string; objective: string; concept: string };
   intro: DialogueLine[];
   outro: DialogueLine[];
+}
+
+/**
+ * One card on a menu, shown side by side with the others before any is served: what is on it, who comes for it, and
+ * the rule it brings. Each card is a special of its own, with its own guests, targets and stars.
+ */
+export interface MenuCard {
+  /** The menu the card is on. */
+  menu: string;
+  /** What is on the board, drink by drink. */
+  recipes: string;
+  /** Who comes, how many and how fast. */
+  demand: string;
+  /** The rule the card brings with it. */
+  constraint: string;
 }
 
 /** How close together a table that orders together gets its drinks, in seconds after the first one. */
@@ -161,7 +180,225 @@ function readingGroup(): Special {
   };
 }
 
-export const specials: readonly Special[] = [readingGroup()];
+/** A menu's own words, for its place on the specials board: it shows once, with its cards behind it. */
+export interface Menu {
+  id: string;
+  title: string;
+  by: Regular;
+  story: string;
+  hint: string;
+}
+
+const SATURDAY: Menu = {
+  id: 'saturday',
+  title: 'The Saturday Market',
+  by: 'albert',
+  story:
+    'The street market is back on Saturdays, and Lou always chalked one menu for it, all morning. Mr. Albert wants to know which.',
+  hint: 'Pick one menu, then program for what it brings.',
+};
+
+/** Every card is served with the toolkit the reading group gets: the campaign's, and Together besides. */
+const MENU_TOOLKIT = UNLOCKS.together;
+/** The guests a card's rounds draw on: Shift 21's, so a card asks for nothing the campaign didn't teach. */
+const finaleKit = () => benchKit(extensionLevels[extensionLevels.length - 1]);
+
+interface CardSpec {
+  id: string;
+  title: string;
+  card: Omit<MenuCard, 'menu'>;
+  rules: ShiftRules;
+  service: Partial<ServiceConfig>;
+  /** The round's guests, as a bench would have them; `round` is 0, 1 or 2. */
+  guests: (round: number) => BenchGuest[];
+  /**
+   * Between the card's own reference and Shift 21's routines: the campaign's way of working serves any card, and a
+   * routine cut to what the card brings earns its stars.
+   */
+  targets: { blocks: number; instructions: number };
+  hint: string;
+  thanks: string;
+  brief: Special['brief'];
+  intro: DialogueLine[];
+  outro: DialogueLine[];
+}
+
+const MENU_OPENING = [
+  line('', 'Saturday morning. Stalls are going up along the street outside.'),
+  line('albert:happy', 'The market’s back. Lou always chalked a board for it: one menu, all morning.'),
+  line('albert', 'Whatever the café does well. The market crowd won’t wait to be asked twice.'),
+];
+
+function menuCard(spec: CardSpec): Special {
+  const id = `L${MENU_TOOLKIT}-${spec.id}`;
+  const kit = finaleKit();
+  const solution: RobotPrograms = {
+    query: queryReference(spec.rules),
+    prep: preparationSource(MENU_TOOLKIT, 1, spec.rules),
+    floor: floorSource(MENU_TOOLKIT, 1, spec.rules),
+  };
+  const level: LevelDefinition = {
+    id,
+    title: spec.title,
+    summary: `${SATURDAY.title}: ${spec.card.recipes}`,
+    programming_enabled: true,
+    block_target: spec.targets.blocks,
+    instruction_target: spec.targets.instructions,
+    reference_block_count: countProgramBlocks(solution, codeLines(solution.query), MENU_TOOLKIT),
+    seeds: [0, 1, 2].map((round) => ({
+      id: `${id}_${String.fromCharCode(65 + round)}`,
+      // Numbered as the campaign's guests are, not as the bench's.
+      customers: benchSeed(kit, spec.guests(round)).customers.map((guest, n) => ({
+        ...guest,
+        customer_id: `C${n + 1}`,
+      })),
+    })),
+    active_tables: TABLE_LAYOUT.length,
+    service: { prepCapacity: 2, floorCapacity: 2, clearing: true, objective: 'serve', ...spec.service },
+    act: 4,
+  };
+  return {
+    id: spec.id,
+    title: spec.title,
+    by: SATURDAY.by,
+    card: { menu: SATURDAY.id, ...spec.card },
+    hint: spec.hint,
+    thanks: spec.thanks,
+    level,
+    lesson: {
+      note: `${spec.card.recipes} ${spec.card.demand} ${spec.card.constraint}`,
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: spec.brief,
+    intro: [...MENU_OPENING, ...spec.intro],
+    outro: spec.outro,
+  };
+}
+
+/** Guests `n` of a round, coming in `gap` seconds apart, the first as the café opens. */
+const arriving = (count: number, gap: number, guest: (n: number) => Omit<BenchGuest, 'after'>): BenchGuest[] =>
+  Array.from({ length: count }, (_, n) => ({ ...guest(n), after: n ? gap : 0 }));
+
+const saturdayMenu: Special[] = [
+  menuCard({
+    id: 'tea-table',
+    title: 'The Tea Table',
+    card: {
+      recipes: 'Tea only, with up to two sugars counted out.',
+      demand: 'Twelve guests, one every five seconds; every fourth orders a pot for two.',
+      constraint: 'Four cups in the whole café: they are washed as they come back.',
+    },
+    rules: { cups: true },
+    service: { cups: 4 },
+    guests: (round) =>
+      arriving(12, 5, (n) => ({
+        orders: Array.from({ length: n % 4 === 2 ? 2 : 1 }, (_, k) => ({
+          drink: 'tea' as const,
+          sugar: (n + round + k) % 3,
+        })),
+      })),
+    targets: { blocks: 95, instructions: 2850 },
+    hint: 'No coffee all morning: what does Brew still need?',
+    thanks: 'Thank you. Keep the tea table for next Saturday, if the kettle can spare it.',
+    brief: {
+      story:
+        'A tea table for the market: tea only, sugar counted out, and a pot for two now and then. The café puts out four cups and no more.',
+      objective: 'Serve every guest and clear every table, with four cups in the whole café.',
+      concept:
+        'A routine fits the work in front of it. With one drink on the menu, a check that only ever goes one way is a block that can go.',
+    },
+    intro: [
+      line('niko', 'Teas, then. Four cups out, so Brew washes them as they come back.'),
+      line('brew', '*BEEP BEEP!* Kettle all morning! Is very good morning.'),
+    ],
+    outro: [
+      line('albert:happy', 'Not a coffee all morning, and I didn’t miss it. Don’t tell anyone.'),
+      line('brew', '*soft beep* Four cups. Washed many times. Still four.'),
+    ],
+  }),
+  menuCard({
+    id: 'espresso-bar',
+    title: 'The Espresso Bar',
+    card: {
+      recipes: 'Coffee only, with up to two sugars counted out.',
+      demand: 'Fourteen guests, one every three seconds; every other one in a rush.',
+      constraint: 'A guest in a rush is made and served before anyone waiting.',
+    },
+    rules: { rush: true },
+    service: {},
+    guests: (round) =>
+      arriving(14, 3, (n) => ({
+        orders: [{ drink: 'coffee', sugar: (n + round) % 3, ...((n + round) % 2 === 1 && { rush: true }) }],
+      })),
+    targets: { blocks: 95, instructions: 2800 },
+    hint: 'The quickest morning: no tea, no lids, and no closing.',
+    thanks: 'Thank you. Every stall on the street opened on time, for once.',
+    brief: {
+      story:
+        'An espresso bar for the market: coffee only, as quick as it comes, and half the street in a rush to open their stalls.',
+      objective: 'Serve every guest and clear every table. A guest in a rush is served before anyone waiting.',
+      concept:
+        'The busiest card asks the least of each drink. What it asks of the order things happen in is all the more.',
+    },
+    intro: [
+      line('niko', 'Coffee, quick. Anyone in a rush goes first.'),
+      line('porter', '*ding* Rush first. Understood.'),
+    ],
+    outro: [
+      line('albert:happy', 'The whole market had its coffee before the bread was out. Lou would have liked that.'),
+      line('porter', '*ding ding* Fourteen coffees. Zero waiting.'),
+    ],
+  }),
+  menuCard({
+    id: 'market-hatch',
+    title: 'The Market Hatch',
+    card: {
+      recipes: 'Coffee and tea, with up to two sugars counted out.',
+      demand: 'Ten guests, one every four seconds; two in three take theirs to go.',
+      constraint: 'The hatch closes when the market packs up: every robot stops at the last call.',
+    },
+    rules: { toGo: true, closing: true },
+    service: { closing: true },
+    guests: (round) =>
+      arriving(10, 4, (n) => ({
+        orders: [
+          {
+            drink: (n + round) % 2 ? 'tea' : 'coffee',
+            sugar: (n + 2 * round) % 3,
+            ...(n % 3 !== 2 && { toGo: true }),
+          },
+        ],
+      })),
+    targets: { blocks: 105, instructions: 2000 },
+    hint: 'Lids and the last call, and a table now and then.',
+    thanks: 'Thank you. Leave the hatch open next Saturday; the market will look for it.',
+    brief: {
+      story:
+        'A hatch onto the market: both drinks, most of them to go, until the stalls pack up and the café closes with them.',
+      objective: 'Serve every guest and clear every table. At the last call, every robot stops.',
+      concept:
+        'A card with two rules and fewer guests: the routine still has to handle each of them, but nothing the morning won’t ask.',
+    },
+    intro: [
+      line('niko', 'The hatch, then. Everything to go, until the market packs up.'),
+      line('query', '*bip* Lids on. Stop at the last call. Understood.'),
+    ],
+    outro: [
+      line('albert:happy', 'Every cup out of the hatch with a lid on. I even kept mine for next week.'),
+      line('query', '*bip bip* Hatch: closed. Market: served.'),
+    ],
+  }),
+];
+
+export const specials: readonly Special[] = [readingGroup(), ...saturdayMenu];
+
+/** The menus chalked up for the specials board, each with its cards behind it. */
+const menus: readonly Menu[] = [SATURDAY];
+
+export const menuById = (id: string): Menu | undefined => menus.find((menu) => menu.id === id);
 
 export const specialById = (id: string): Special | undefined => specials.find((special) => special.id === id);
 

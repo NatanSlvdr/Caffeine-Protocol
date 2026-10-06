@@ -226,6 +226,17 @@ clip from Lou's drawer for Query's clipboard, a fresh striped towel for Brew,
 Porter's bow tie straightened). Moka and Pip stay out of these scenes, since a
 bench can be opened long after they have left.
 
+### The Saturday menu
+
+Mr. Albert asks the second special: the street market is back on Saturdays, and
+Lou always chalked one menu for it, all morning. Every card opens on the same
+three lines (stalls going up outside, Albert remembering Lou's board) before
+Niko says what the card means for the crew and the robot it asks most of
+answers: Brew for the Tea Table's kettle and four cups, Porter for the Espresso
+Bar's rushes, Query for the Hatch's lids and last call. Each ends on Albert
+pleased and that robot's own count of the morning. Moka and Pip stay out, as in
+every scene that can be played long after they have left.
+
 ### Portraits
 
 Put the full-size PNGs in `assets/portraits/<id>/<mood>.png`, then run

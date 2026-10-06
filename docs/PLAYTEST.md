@@ -69,6 +69,8 @@ The production build is static and caches itself on its first successful load. T
 2. With the campaign finished, open **Specials**: Bound Together is new, asked for by Rosa. Serve it: it opens on the routines Shift 21 was served with, and the breadcrumb reads Special.
 3. Run Shift 21's routines as they are: Query is caught out on the first table that orders together. Add the Together mark only: the table's drinks reach it apart, and the card says where the late one is.
 4. Serve it: the receipt counts the tables served together and how close their drinks came, carries Rosa's thanks, and goes back to the campaign. The campaign's stars are unchanged, and the Specials window shows the special's own.
+5. The Saturday Market is on the board too, asked for by Mr. Albert, with "0 of 3 menus served". **Plan the menu**: three cards side by side, each with what is on the board, who comes, the rule and its targets. **All specials** goes back with focus on the menu's button.
+6. Serve the Tea Table on Shift 21's routines as they are: every guest is served, over the block target. Cut what a tea-only morning never needs and serve again for three stars. The breadcrumb reads Menu card, and the board then counts "1 of 3 menus served".
 
 ## Memories
 

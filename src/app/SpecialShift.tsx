@@ -32,7 +32,7 @@ export function SpecialShift({ special }: { special: Special }) {
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...special, label: 'Special' }}
+      shift={{ ...special, label: special.card ? 'Menu card' : 'Special' }}
       drills={drills}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>

@@ -22,8 +22,8 @@ const wayIn: RobotPrograms = {
 };
 
 describe('Bound Together, Rosa’s reading group', () => {
-  it('is the one special, at the address its id makes', () => {
-    expect(specials.map((s) => s.id)).toEqual(['together']);
+  it('is the first special, at the address its id makes', () => {
+    expect(specials[0].id).toBe('together');
     expect(level.id).toBe(`L${UNLOCKS.together}-together`);
     expect(level.seeds.map((seed) => seed.id)).toEqual(['A', 'B', 'C'].map((round) => `${level.id}_${round}`));
   });

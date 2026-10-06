@@ -55,7 +55,7 @@ Running 100 more services on top of those, the heap stays where it was, and drop
 
 | What                                | Budget                 | Measured            | Held by                                                  |
 | ----------------------------------- | ---------------------- | ------------------- | -------------------------------------------------------- |
-| Startup scripts and styles, gzipped | 540 KiB                | 478 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
+| Startup scripts and styles, gzipped | 540 KiB                | 482 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
 | The whole build                     | 16 MiB                 | 14.1 MiB            | `tools/size-check.mjs`                                   |
 | One service, any shift, worst case  | 250 ms                 | 39 ms               | `tests/unit/simulation/service-time.test.ts`             |
 | Runs a shift keeps                  | 12, the newest in full | 6.5 MiB on shift 21 | `keepRecord`; `compare-runs.test.ts`                     |

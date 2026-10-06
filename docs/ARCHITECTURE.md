@@ -193,7 +193,11 @@ mounts the shot as a captioned print on a 2D canvas; where there is none
 - **Special**: one `Special` in `data/specials.ts` (its level, lesson, brief,
   intro, outro and thanks) and a test that serves its reference. Its route
   (`#/special/<id>`), its card in the campaign's Specials window and its save
-  entry follow from the id; it validates itself as the module loads.
+  entry follow from the id; it validates itself as the module loads. A menu
+  card is a special with `card` set: the window groups the cards of one `Menu`
+  behind a single entry and lays them out side by side, and `menuCard` builds
+  each one's rounds from bench guests, with a reference made of the rules the
+  card brings.
 - **Memory**: one `Memory` in `data/memories.ts`, with `opens` (the campaign
   shift whose service brings it out) and a level id naming the toolkit it
   borrows, plus a test that plays its reference and its starter.

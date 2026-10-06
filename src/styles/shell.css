@@ -3595,3 +3595,71 @@ html[data-motion='reduced'] .story-page *::after {
   color: #2f6b52;
   font-weight: 700;
 }
+/* A menu to plan: its cards side by side, each what it asks of the café above the way to serve it. */
+.specials-serve .specials-menus {
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.menu-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.menu-cards li {
+  display: flex;
+  flex-direction: column;
+  padding: 14px 16px;
+  border: 1px solid #392b2440;
+  border-top: 3px solid var(--slip-clay);
+  background: #fffaf0;
+  color: var(--slip-coffee);
+}
+.menu-cards h3 {
+  margin: 0;
+  color: var(--slip-ink);
+  font-size: 16px;
+}
+.menu-cards dl {
+  display: grid;
+  gap: 2px;
+  margin: 10px 0 0;
+}
+.menu-cards dt {
+  margin-top: 8px;
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.menu-cards dd {
+  margin: 0;
+  color: var(--slip-ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.settings-window .menu-cards p.specials-hint {
+  flex: 1;
+  margin: 12px 0 0;
+  color: var(--slip-coffee);
+  font-size: 14px;
+  font-style: italic;
+  line-height: 1.45;
+}
+.menu-card-foot {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 14px;
+}
+.menu-card-foot [role='img'] {
+  color: var(--slip-clay);
+  font-size: 18px;
+  letter-spacing: 2px;
+}

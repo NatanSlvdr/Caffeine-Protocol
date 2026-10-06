@@ -180,6 +180,23 @@ Its stars and routines are its own and never count toward the campaign's.
 the routines that fall short (no mark, a mark but no wait, two at once without
 the check).
 
+A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
+cards side by side on the specials board before any is served, each a special
+of its own with its own save entry and stars: what is on the board, who comes
+and how fast, the rule it brings, and its targets. The Tea Table is tea only,
+twelve guests and a pot for two now and then, with four cups in the whole café.
+The Espresso Bar is coffee only, fourteen guests three seconds apart and every
+other one in a rush. The Market Hatch is both drinks, ten guests, two in three
+to go, and the closing call. Every card's guests are written as a bench would
+write them (`benchSeed`, so each is expected exactly as the campaign's guests
+who asked alike), and Shift 21's routines serve every card. The targets sit
+between those routines and the card's own reference, built from
+`queryReference` and the robots' sources with only the card's rules: carrying
+the campaign's way of working in passes, and cutting the routine down to what
+the card brings earns the stars. There is no pricing, stock or money; the plan
+is the choice of workload. `tests/unit/simulation/menu.test.ts` serves each
+card's reference for every star and Shift 21's routines for fewer.
+
 Memories are optional shifts from Lou's café, before Niko's time
 (`src/data/memories.ts`; see the story doc). Each plays with an earlier shift's
 toolkit and opens on a routine of its own, so the puzzle is someone else's code.
