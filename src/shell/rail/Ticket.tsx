@@ -1,8 +1,10 @@
 import { Clapperboard, LockKeyhole } from 'lucide-react';
 import { isRated } from '@/data';
 import { sceneBefore, type Cutscene } from '@/data/campaign/cutscenes';
+import { useUntranslated, useWords } from '@/shared/language';
 import { pad2, starRow } from '@/shared/lib/format';
 import { acts, type Act } from './acts';
+import { RAIL_WORDS } from './railWords';
 
 export type ActState = 'locked' | 'active' | 'done';
 
@@ -70,7 +72,12 @@ export function Ticket({
   const rated = shifts.filter(isRated).length;
   // A sealed ticket shows only the act name, never the crew or the shift names.
   const sealed = state === 'locked';
-  const unlockedBy = acts[number - 1]?.kicker;
+  const say = useWords(RAIL_WORDS);
+  const english = useUntranslated();
+  const named = say.acts[number];
+  const kicker = named.kicker ?? act.kicker;
+  const crew = named.crew ?? act.crew;
+  const unlockedBy = number > 0 ? (say.acts[number - 1].kicker ?? acts[number - 1].kicker) : '';
 
   return (
     <article className={`ticket ${state} ${current ? 'current' : ''}`} data-act={number}>
@@ -80,27 +87,24 @@ export function Ticket({
         disabled={sealed}
         aria-current={current ? 'step' : undefined}
         aria-label={
-          sealed
-            ? `${act.kicker}, locked until ${unlockedBy} is served`
-            : `${act.kicker} · ${act.crew}, ${served} of ${shifts.length} served${
-                rated > 0 ? `, ${earned} of ${rated * 3} stars` : ''
-              }`
+          sealed ? say.sealedHead(kicker, unlockedBy) : say.head(kicker, crew, served, shifts.length, earned, rated * 3)
         }
         onClick={onOpen}
       >
         <span className="ticket-shop">
-          {current && `${shop} · `}Order #{pad2(number + 1)}
+          {current && `${shop} · `}
+          {say.order(pad2(number + 1))}
         </span>
         {/* Sealed, the act name takes the crew's place; the blank lines keep the head its open height. */}
-        <span className="ticket-kicker">{sealed ? '\u00a0' : act.kicker}</span>
-        <strong className="ticket-crew">{sealed ? act.kicker : act.crew}</strong>
-        <span className="ticket-tagline">{sealed ? '\u00a0' : act.tagline}</span>
+        <span className="ticket-kicker">{sealed ? '\u00a0' : kicker}</span>
+        <strong className="ticket-crew">{sealed ? kicker : crew}</strong>
+        <span className="ticket-tagline">{sealed ? '\u00a0' : named.tagline}</span>
       </button>
 
       {sealed && (
         <span className="ticket-stamp" aria-hidden="true">
           <LockKeyhole size={16} strokeWidth={2.6} />
-          Opens soon
+          {say.opensSoon}
         </span>
       )}
       <ol className="ticket-lines" aria-hidden={sealed || undefined}>
@@ -140,31 +144,38 @@ export function Ticket({
                 }}
                 aria-keyshortcuts={!locked && selected === shift ? 'Enter' : undefined}
                 // The marks beside the name are visual only, so the label carries the same status.
-                aria-label={`Shift ${shift + 1}: ${titles[shift]}${
+                aria-label={
                   shift === gated
-                    ? `, opens after ${sceneBefore(shift)?.title}`
-                    : locked
-                      ? ', locked'
-                      : !done
-                        ? shift === unlocked
-                          ? ', next up'
-                          : ''
-                        : !isRated(shift)
-                          ? ', served'
-                          : `, ${stars[shift]} of 3 stars`
-                }`}
+                    ? say.opensAfter(shift + 1, titles[shift], sceneBefore(shift)?.title ?? '')
+                    : say.line(
+                        shift + 1,
+                        titles[shift],
+                        locked
+                          ? 'locked'
+                          : !done
+                            ? shift === unlocked
+                              ? 'next'
+                              : undefined
+                            : !isRated(shift)
+                              ? 'served'
+                              : undefined,
+                        done && isRated(shift) ? stars[shift] : undefined,
+                      )
+                }
                 aria-pressed={!locked && selected === shift}
                 title={titles[shift]}
               >
                 <span className="shift-no">{pad2(shift + 1)}</span>
-                <span className="shift-name">{titles[shift]}</span>
+                <span className="shift-name" lang={english}>
+                  {titles[shift]}
+                </span>
                 <span className="shift-leader" aria-hidden="true" />
                 <span className="shift-mark" aria-hidden="true">
                   {locked ? (
                     <LockKeyhole size={12} strokeWidth={2.4} />
                   ) : !done ? (
                     shift === unlocked ? (
-                      'NEXT'
+                      say.next
                     ) : (
                       '···'
                     )
@@ -182,21 +193,21 @@ export function Ticket({
 
       <footer className="ticket-foot" aria-hidden="true">
         <p>
-          <span>Served</span>
+          <span>{say.served}</span>
           <span>
             {served}/{shifts.length}
           </span>
         </p>
         {rated > 0 && (
           <p>
-            <span>Stars</span>
+            <span>{say.stars}</span>
             <span>
               {earned}/{rated * 3}
             </span>
           </p>
         )}
         <span className="ticket-barcode" />
-        <small>{sealed ? 'Order on hold' : state === 'done' ? 'Thank you, come again' : 'Order in progress'}</small>
+        <small>{sealed ? say.onHold : state === 'done' ? say.thanks : say.inProgress}</small>
       </footer>
     </article>
   );
@@ -225,17 +236,19 @@ export function Ticket({
           onWatch(scene);
         }}
         aria-keyshortcuts={!locked && selectedScene === scene ? 'Enter' : undefined}
-        aria-label={`Scene: ${scene.title}${locked ? ', locked' : next ? ', next up' : seen ? ', seen' : ''}`}
+        aria-label={say.sceneLine(scene.title, locked ? 'locked' : next ? 'next' : seen ? 'seen' : undefined)}
         aria-pressed={!locked && selectedScene === scene}
         title={scene.title}
       >
         <span className="shift-no scene-icon" aria-hidden="true">
           <Clapperboard size={13} strokeWidth={2.2} />
         </span>
-        <span className="shift-name">{scene.title}</span>
+        <span className="shift-name" lang={english}>
+          {scene.title}
+        </span>
         <span className="shift-leader" aria-hidden="true" />
         <span className="shift-mark" aria-hidden="true">
-          {locked ? <LockKeyhole size={12} strokeWidth={2.4} /> : next ? 'NEXT' : seen ? 'SEEN' : '···'}
+          {locked ? <LockKeyhole size={12} strokeWidth={2.4} /> : next ? say.next : seen ? say.seenMark : '···'}
         </span>
       </button>
     );

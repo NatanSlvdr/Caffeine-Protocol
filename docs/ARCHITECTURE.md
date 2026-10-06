@@ -220,14 +220,20 @@ values, fails to type-check. A sentence built from a count or a name is a
 function, so each language builds it its own way (`countFr` counts zero and
 one in the singular). French is written with plain spaces and set by
 `words`: a no-break space before `:` and inside `« »`, a narrow one before
-`; ? !`. JSX in a catalog is left alone, so it spells those spaces as
-entities. `useWords(catalog)` gives the reader's.
+`; ? !`, and one after `n°`. JSX in a catalog is left alone, so it spells
+those spaces as entities. `useWords(catalog)` gives the reader's.
 
-French covers the front door, the top bar, Settings with its cafés and the
-fresh-start slip, the handbook, and the close button every window shares.
-The shift screens, the rail, the story and the shift data are still in
-English, and so is the list of what bringing an old save up to date
-changed. The save checks' refusals are keyed (`SAVE_REFUSALS`) so Settings
+French covers the front door, the top bar, the order rail with its
+tickets and specials board, Settings with its cafés and the fresh-start
+slip, the handbook, and the close button every window shares. The shift
+screens, the rail's windows (guestbook, shelf, drills and the rest), the
+story and the shift data are still in English, and so is the list of what
+bringing an old save up to date changed. Where English data sits on a
+French screen (a shift's name, its story, a scene's logline), it carries
+`lang={useUntranslated()}`, so a screen reader says it as English; on an
+English page the attribute is left off. Act names and taglines for the
+tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
+the English-only windows still read. The save checks' refusals are keyed (`SAVE_REFUSALS`) so Settings
 can say them in French; a damaged file's field is left out in French. The
 handbook names a shift screen's buttons as they read there. Programming
 words (blocks, values, the text editor's syntax) are never translated, so a

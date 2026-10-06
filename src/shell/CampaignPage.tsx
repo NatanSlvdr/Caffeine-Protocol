@@ -12,15 +12,16 @@ import { repairOpen, repairs, type Repair } from '@/data/repairs';
 import { longDay } from '@/data/longDay';
 import { specials } from '@/data/specials';
 import { narrativeFor } from '@/data/campaign/narrative';
-import { count } from '@/domain';
 import { startDay } from '@/features/campaign/save/endurance';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
+import { useUntranslated, useWords } from '@/shared/language';
 import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
+import { RAIL_WORDS } from './rail/railWords';
 import { DrillsWindow } from './DrillsWindow';
 import { GuestbookWindow } from './GuestbookWindow';
 import { keepsakes, shelved } from './shelf';
@@ -54,6 +55,8 @@ export function CampaignPage() {
   const { save, update, select, launch, completeDrill, completeRepair } = useGame();
   const progress = useProgress();
   const shop = useCafeName();
+  const say = useWords(RAIL_WORDS);
+  const english = useUntranslated();
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
   const rail = useRef<HTMLDivElement>(null);
   const orderTimer = useRef<number | undefined>(undefined);
@@ -248,12 +251,12 @@ export function CampaignPage() {
 
   return (
     <main className={`campaign-page ${reducedMotion ? 'still' : ''} ${ordering !== null ? 'ordering' : ''}`}>
-      <ShellBar label="Campaign" back="Caffeine Protocol" onBack={() => go('/')}>
+      <ShellBar label={say.bar} back="Caffeine Protocol" onBack={() => go('/')}>
         <button
           className="shell-icon"
-          aria-label="How to play"
+          aria-label={say.howToPlay}
           aria-haspopup="dialog"
-          title="How to play"
+          title={say.howToPlay}
           onClick={openGuide}
         >
           <CircleHelp size={18} aria-hidden="true" />
@@ -262,9 +265,9 @@ export function CampaignPage() {
         {notes.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Guestbook, ${count(notes.length, 'note')}${newNotes.fresh.length ? `, ${newNotes.fresh.length} new` : ''}`}
+            aria-label={say.guestbook.label(notes.length, newNotes.fresh.length)}
             aria-haspopup="dialog"
-            title="Guestbook"
+            title={say.guestbook.title}
             onClick={() => setReading(newNotes.markSeen())}
           >
             <BookOpen size={18} aria-hidden="true" />
@@ -275,9 +278,9 @@ export function CampaignPage() {
         {earned.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Shelf, ${earned.length} of ${keepsakes.length} keepsakes${newKeepsakes.fresh.length ? `, ${newKeepsakes.fresh.length} new` : ''}`}
+            aria-label={say.shelf.label(earned.length, keepsakes.length, newKeepsakes.fresh.length)}
             aria-haspopup="dialog"
-            title="Shelf"
+            title={say.shelf.title}
             onClick={() => setLooking(newKeepsakes.markSeen())}
           >
             <Award size={18} aria-hidden="true" />
@@ -287,9 +290,9 @@ export function CampaignPage() {
         {offered.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Specials, ${count(offered.length + 1, 'special')}${newSpecials.fresh.length ? `, ${newSpecials.fresh.length} new` : ''}`}
+            aria-label={say.specials.label(offered.length + 1, newSpecials.fresh.length)}
             aria-haspopup="dialog"
-            title="Specials"
+            title={say.specials.title}
             onClick={() => setChoosing(newSpecials.markSeen())}
           >
             <Sparkles size={18} aria-hidden="true" />
@@ -299,9 +302,9 @@ export function CampaignPage() {
         {remembered.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Memories, ${remembered.length === 1 ? '1 memory' : `${remembered.length} memories`}${newMemories.fresh.length ? `, ${newMemories.fresh.length} new` : ''}`}
+            aria-label={say.memories.label(remembered.length, newMemories.fresh.length)}
             aria-haspopup="dialog"
-            title="Memories"
+            title={say.memories.title}
             onClick={() => setRecalling(newMemories.markSeen())}
           >
             <History size={18} aria-hidden="true" />
@@ -312,9 +315,9 @@ export function CampaignPage() {
           <button
             ref={bayButton}
             className="shell-icon"
-            aria-label={`Repair bay, ${count(benches.length, 'robot')} on the bench${newBenches.fresh.length ? `, ${newBenches.fresh.length} new` : ''}`}
+            aria-label={say.repairs.label(benches.length, newBenches.fresh.length)}
             aria-haspopup="dialog"
-            title="Repair bay"
+            title={say.repairs.title}
             onClick={() => setRepairing(newBenches.markSeen())}
           >
             <Wrench size={18} aria-hidden="true" />
@@ -325,9 +328,9 @@ export function CampaignPage() {
         {served.length > 0 && (
           <button
             className="shell-icon"
-            aria-label={`Drills, ${count(served.length, 'drill')}${newDrills.fresh.length ? `, ${newDrills.fresh.length} new` : ''}`}
+            aria-label={say.drills.label(served.length, newDrills.fresh.length)}
             aria-haspopup="dialog"
-            title="Drills"
+            title={say.drills.title}
             onClick={() => setDrilling(newDrills.markSeen())}
           >
             <Dumbbell size={18} aria-hidden="true" />
@@ -386,8 +389,8 @@ export function CampaignPage() {
       {closingUp && (
         <DialogueBox
           lines={closingUp.scene}
-          kicker={`Repair bay · ${closingUp.title}`}
-          doneLabel="Back to the rail"
+          kicker={say.repairKicker(closingUp.title)}
+          doneLabel={say.backToRail}
           instant={reducedMotion}
           onDone={() => {
             setClosingUp(undefined);
@@ -399,18 +402,19 @@ export function CampaignPage() {
       {looking && <ShelfWindow save={save} earned={earned} fresh={looking} onClose={() => setLooking(null)} />}
 
       <header className="pass-title">
-        <p className="pass-kicker">{shop} · Order rail</p>
+        <p className="pass-kicker">{say.kicker(shop)}</p>
         <h1 data-screen-title tabIndex={-1}>
-          Choose a shift
+          {say.title}
         </h1>
         <p className="pass-progress">
-          <strong>{progress.done}</strong> of {progress.total} shifts served
+          <strong>{progress.done}</strong>
+          {say.progress(progress.total, progress.done)}
         </p>
       </header>
 
       <div className="pass-stage">
         <div className="pass" ref={rail}>
-          <nav className="pass-track" aria-label="Shifts">
+          <nav className="pass-track" aria-label={say.shifts}>
             {acts.map((act, actIndex) => (
               <Ticket
                 key={act.kicker}
@@ -442,61 +446,63 @@ export function CampaignPage() {
       {scene ? (
         <SceneBoard scene={scene} seen={sceneSeen(save, scene)} onWatch={() => watch(scene)} />
       ) : (
-        <aside className="recipe" aria-label="Selected shift" aria-live="polite" aria-atomic="true">
+        <aside className="recipe" aria-label={say.selectedShift} aria-live="polite" aria-atomic="true">
           <div className="board">
             <div className="board-chalk" key={selected}>
               <p className="board-kicker">
                 <span>
-                  Today’s special <span className="board-no">No. {pad2(selected + 1)}</span>
+                  {say.special} <span className="board-no">{say.number(pad2(selected + 1))}</span>
                 </span>
                 {(upNext || isComplete(selected)) && (
                   <span className={`board-tag ${isComplete(selected) ? 'done' : 'next'}`}>
-                    {isComplete(selected) ? 'Served' : 'Up next'}
+                    {isComplete(selected) ? say.servedTag : say.upNext}
                   </span>
                 )}
               </p>
-              <h2>{titleFor(selected)}</h2>
+              <h2 lang={english}>{titleFor(selected)}</h2>
               <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
                 <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
               </svg>
               <dl className="board-menu">
                 <div>
-                  <dt>Tables</dt>
+                  <dt>{say.tables}</dt>
                   <dd>{level.active_tables}</dd>
                 </div>
                 {observation ? (
                   <div>
-                    <dt>Service</dt>
-                    <dd>Watch only</dd>
+                    <dt>{say.service}</dt>
+                    <dd>{say.watchOnly}</dd>
                   </div>
                 ) : (
                   <>
                     <div>
                       <dt>
                         <span aria-hidden="true">★★</span>
-                        <span className="sr-only">Two stars</span>
+                        <span className="sr-only">{say.twoStars}</span>
                       </dt>
                       <dd>
-                        <span aria-hidden="true">≤ {level.block_target} blocks</span>
-                        <span className="sr-only">{level.block_target} blocks or fewer</span>
+                        <span aria-hidden="true">{say.blocks(level.block_target)}</span>
+                        <span className="sr-only">{say.blocksSaid(level.block_target)}</span>
                       </dd>
                     </div>
                     <div>
                       <dt>
                         <span aria-hidden="true">★★★</span>
-                        <span className="sr-only">Three stars</span>
+                        <span className="sr-only">{say.threeStars}</span>
                       </dt>
                       <dd>
-                        <span aria-hidden="true">≤ {level.instruction_target} steps</span>
-                        <span className="sr-only">{level.instruction_target} steps or fewer</span>
+                        <span aria-hidden="true">{say.steps(level.instruction_target)}</span>
+                        <span className="sr-only">{say.stepsSaid(level.instruction_target)}</span>
                       </dd>
                     </div>
                   </>
                 )}
               </dl>
-              <p className="board-story">{shift.story}</p>
+              <p className="board-story" lang={english}>
+                {shift.story}
+              </p>
               <p className="board-note">
-                <strong>Chef’s note</strong> {shift.hint}
+                <strong>{say.chefsNote}</strong> <span lang={english}>{shift.hint}</span>
               </p>
               <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
                 <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />
@@ -506,13 +512,13 @@ export function CampaignPage() {
               </svg>
               <p className="board-foot">
                 {observation ? (
-                  <span className="board-scene">{isComplete(selected) ? 'Watched' : 'Sit back and watch'}</span>
+                  <span className="board-scene">{isComplete(selected) ? say.watched : say.sitBack}</span>
                 ) : (
                   <span
                     className="board-stars"
                     role="img"
                     // Every pass earns a star, so none means the shift hasn't been served yet.
-                    aria-label={save.stars[selected] ? `${save.stars[selected]} of 3 stars` : 'No stars yet'}
+                    aria-label={save.stars[selected] ? say.starsOf(save.stars[selected]) : say.noStars}
                   >
                     {starRow(save.stars[selected] ?? 0)}
                   </span>
@@ -528,20 +534,20 @@ export function CampaignPage() {
               >
                 <Play size={17} fill="currentColor" aria-hidden="true" />{' '}
                 {ordering !== null
-                  ? 'Order up…'
+                  ? say.ordering
                   : isComplete(selected)
                     ? observation
-                      ? 'Watch again'
-                      : 'Serve again'
-                    : 'Start shift'}
+                      ? say.watchAgain
+                      : say.serveAgain
+                    : say.start}
               </Button>
               <p className="board-hint" aria-hidden="true">
-                <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>↵</kbd> or double-click to start
+                <kbd>←</kbd> <kbd>→</kbd> {say.browse} · <kbd>↵</kbd> {say.toStart}
               </p>
             </div>
             {ordering !== null && (
               <span className="board-order-up" aria-hidden="true">
-                Order up!
+                {say.orderUp}
               </span>
             )}
           </div>
@@ -554,41 +560,45 @@ export function CampaignPage() {
 /** A scene chalked up on the specials board in place of a shift: what it shows, and a button to watch it. */
 function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; onWatch(): void }) {
   const closing = scene.before >= levels.length;
+  const say = useWords(RAIL_WORDS);
+  const english = useUntranslated();
   return (
-    <aside className="recipe scene-recipe" aria-label="Selected scene" aria-live="polite" aria-atomic="true">
+    <aside className="recipe scene-recipe" aria-label={say.selectedScene} aria-live="polite" aria-atomic="true">
       <div className="board">
         <div className="board-chalk" key={scene.id}>
           <p className="board-kicker">
             <span>
-              Cutscene <Clapperboard className="board-clapper" size={14} aria-hidden="true" />
+              {say.cutscene} <Clapperboard className="board-clapper" size={14} aria-hidden="true" />
             </span>
-            <span className={`board-tag ${seen ? 'done' : 'next'}`}>{seen ? 'Seen' : 'New'}</span>
+            <span className={`board-tag ${seen ? 'done' : 'next'}`}>{seen ? say.seen : say.fresh}</span>
           </p>
-          <h2>{scene.title}</h2>
+          <h2 lang={english}>{scene.title}</h2>
           <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
             <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
           </svg>
           <dl className="board-menu">
             <div>
-              <dt>Shots</dt>
+              <dt>{say.shots}</dt>
               <dd>{scene.panels.length}</dd>
             </div>
             <div>
-              <dt>{closing ? 'After' : 'Before'}</dt>
-              <dd>{closing ? 'The last shift' : `Shift ${pad2(scene.before + 1)}`}</dd>
+              <dt>{closing ? say.after : say.before}</dt>
+              <dd>{closing ? say.lastShift : say.beforeShift(pad2(scene.before + 1))}</dd>
             </div>
           </dl>
-          <p className="board-story">{scene.logline}</p>
+          <p className="board-story" lang={english}>
+            {scene.logline}
+          </p>
           <p className="board-note">
-            <strong>Chef’s note</strong> Back, or ←, goes over a line again; Skip, or Esc, ends the scene early.
+            <strong>{say.chefsNote}</strong> {say.sceneNote}
           </p>
         </div>
         <div className="board-launch">
           <Button className="recipe-start" variant="primary" onClick={onWatch}>
-            <Clapperboard size={17} aria-hidden="true" /> {seen ? 'Watch again' : 'Watch scene'}
+            <Clapperboard size={17} aria-hidden="true" /> {seen ? say.watchAgain : say.watchScene}
           </Button>
           <p className="board-hint" aria-hidden="true">
-            <kbd>←</kbd> <kbd>→</kbd> browse · <kbd>↵</kbd> or double-click to watch
+            <kbd>←</kbd> <kbd>→</kbd> {say.browse} · <kbd>↵</kbd> {say.toWatch}
           </p>
         </div>
       </div>

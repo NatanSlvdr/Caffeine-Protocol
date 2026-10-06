@@ -5,6 +5,9 @@ import { CAFE_WORDS } from '../../../src/app/cafeWords';
 import { GUIDE_WORDS } from '../../../src/app/guideWords';
 import { SETTINGS_WORDS } from '../../../src/app/settingsWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
+import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
+import { titleFor } from '../../../src/data';
+import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { UNLOCKS } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, words } from '../../../src/shared/language';
@@ -45,7 +48,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, these settings and the handbook/,
+      /French covers the front door, the order rail, these settings and the handbook/,
     );
   });
 
@@ -116,6 +119,48 @@ describe('reading the café in French', () => {
   });
 });
 
+describe('the order rail in French', () => {
+  const served = () => seedLocalStorage(makeSave({ unlocked: 3, selected: 3, stars: { 0: 0, 1: 3, 2: 2 } }));
+
+  it('chalks up the shift in French, and keeps its English name and story said as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    served();
+    render(<App />);
+    expect(screen.getByRole('heading', { level: 1, name: 'Choisir un service' })).toBeTruthy();
+    expect(screen.getByRole('navigation', { name: 'Campagne' })).toBeTruthy();
+    expect(document.querySelector('.pass-progress')!.textContent).toMatch(/^3 services servis sur \d+$/);
+    const board = within(screen.getByRole('complementary', { name: 'Service choisi' }));
+    expect(document.querySelector('.board-no')!.textContent).toBe(`N°${NBSP}04`);
+    expect(board.getByText('À suivre')).toBeTruthy();
+    expect(board.getByRole('heading', { name: titleFor(3) }).lang).toBe('en');
+    expect(board.getByText(narrativeFor(3).story).lang).toBe('en');
+    expect(board.getByRole('button', { name: 'Commencer le service' })).toBeTruthy();
+    expect(board.getByText('Le mot du chef')).toBeTruthy();
+  });
+
+  it('reads each line and each ticket out in French', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    served();
+    render(<App />);
+    expect(screen.getByRole('button', { name: `Service 2${NBSP}: ${titleFor(1)}, 3 étoiles sur 3` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Service 4${NBSP}: ${titleFor(3)}, à suivre` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Service 5${NBSP}: ${titleFor(4)}, verrouillé` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Acte II, verrouillé tant que l’acte I n’est pas servi' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /^Acte I · Query, 2 sur \d+ servis, 5 étoiles sur \d+$/ })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Comment jouer' })).toBeTruthy();
+  });
+
+  it('leaves an English page’s names unmarked', () => {
+    window.location.hash = '/campaign';
+    served();
+    render(<App />);
+    const board = within(screen.getByRole('complementary', { name: 'Selected shift' }));
+    expect(board.getByRole('heading', { name: titleFor(3) }).hasAttribute('lang')).toBe(false);
+  });
+});
+
 describe('the words themselves', () => {
   it('sets French with its own typography, and leaves English alone', () => {
     const said = words(
@@ -126,6 +171,7 @@ describe('the words themselves', () => {
     expect(said.fr.ask).toBe(`Prêt${NARROW}?`);
     expect(said.fr.name('Chez Lou')).toBe(`«${NBSP}Chez Lou${NBSP}»${NBSP}: ouvert`);
     expect(said.fr.name('Lou’s 14:05')).toContain('14:05');
+    expect(words({ n: 'No. 4' }, { n: 'N° 4' }).fr.n).toBe(`N°${NBSP}4`);
   });
 
   it('counts in French, and says what a café holds', () => {
@@ -139,8 +185,8 @@ describe('the words themselves', () => {
 
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
-    const same = new Set(['Cafés', 'Options']);
-    for (const catalog of [HOME_WORDS, SETTINGS_WORDS, CAFE_WORDS, GUIDE_WORDS]) {
+    const same = new Set(['Cafés', 'Options', 'Tables', 'Service']);
+    for (const catalog of [HOME_WORDS, SETTINGS_WORDS, CAFE_WORDS, GUIDE_WORDS, RAIL_WORDS]) {
       const english = new Map(lines(catalog.en));
       for (const [path, line] of lines(catalog.fr))
         if (!same.has(line)) expect({ path, line }).not.toEqual({ path, line: english.get(path) });

@@ -70,9 +70,13 @@ export const useLanguage = () => use(LanguageContext);
 const NBSP = String.fromCharCode(0xa0);
 const NARROW_NBSP = String.fromCharCode(0x202f);
 
-/** French typography: no line ever starts with a colon, a closing guillemet, a semicolon, or a ? or !. */
+/**
+ * French typography: no line ever starts with a colon, a closing guillemet, a semicolon, or a ? or !, and “n°” stays
+ * with its number.
+ */
 const typeset = (text: string): string =>
   text
+    .replace(/([Nn]°) /g, `$1${NBSP}`)
     .replace(/ ([:»])/g, `${NBSP}$1`)
     .replace(/« /g, `«${NBSP}`)
     .replace(/ ([;?!])/g, `${NARROW_NBSP}$1`);
@@ -100,6 +104,12 @@ export const words = <Words,>(en: Words, fr: NoInfer<Words>): Record<Language, W
 
 /** The words for the language the browser reads in. */
 export const useWords = <Words,>(all: Record<Language, Words>): Words => all[useLanguage()[0]];
+
+/**
+ * The `lang` for words not yet translated, such as a shift's name or its story: English, said as English by a screen
+ * reader on a page in another language; nothing on an English page, where it would only repeat the page's own.
+ */
+export const useUntranslated = (): 'en' | undefined => (useLanguage()[0] === 'en' ? undefined : 'en');
 
 /** A French count: zero and one take the singular (“0 étoile”, “1 étoile”, “3 étoiles”). */
 export const countFr = (n: number, noun: string, plural = `${noun}s`): string => `${n} ${n < 2 ? noun : plural}`;
