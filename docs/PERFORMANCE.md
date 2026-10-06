@@ -17,6 +17,16 @@ On 2026-10-05, from the build of commit `60502748`, on an Apple M4 Pro with Node
 | `index-*.css`      | 126 KiB  | 25 KiB      |
 | **Startup**        |          | **480 KiB** |
 
+By 2026-10-06 the features added since had brought the startup to 538 KiB, two short of the budget. The shift's screen (the editor, playback and receipt, with the special's and the memory's wrappers) moved out of startup into a chunk of its own (`app/screens.tsx`), fetched once the page is idle, so a shift opened from the rail draws at once. Only a shift opened straight from its address, before that chunk has arrived, shows “Opening the shift…” for a moment. From the build after commit `5b63e632`:
+
+| File               | Size     | Gzipped     |
+| ------------------ | -------- | ----------- |
+| `index-*.js` (app) | 499 KiB  | 160 KiB     |
+| `cafe-3d-*.js`     | 1072 KiB | 299 KiB     |
+| `index-*.css`      | 165 KiB  | 32 KiB      |
+| **Startup**        |          | **478 KiB** |
+| `Workspace-*.js`   | 185 KiB  | 64 KiB      |
+
 The 3D chunk is preloaded because the front door already shows the café. The rest of the build loads as it's needed: 77 WebP stills and portraits (10.0 MiB) as their scenes open, and the music (2.2 MiB WAV) once the player starts it. The offline worker stores the whole build, 14.1 MiB, in the background on the first visit, so a first visit on a slow connection pays for it once.
 
 ### Simulating a service
@@ -45,7 +55,7 @@ Running 100 more services on top of those, the heap stays where it was, and drop
 
 | What                                | Budget                 | Measured            | Held by                                                  |
 | ----------------------------------- | ---------------------- | ------------------- | -------------------------------------------------------- |
-| Startup scripts and styles, gzipped | 540 KiB                | 480 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
+| Startup scripts and styles, gzipped | 540 KiB                | 478 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
 | The whole build                     | 16 MiB                 | 14.1 MiB            | `tools/size-check.mjs`                                   |
 | One service, any shift, worst case  | 250 ms                 | 39 ms               | `tests/unit/simulation/service-time.test.ts`             |
 | Runs a shift keeps                  | 12, the newest in full | 6.5 MiB on shift 21 | `keepRecord`; `compare-runs.test.ts`                     |

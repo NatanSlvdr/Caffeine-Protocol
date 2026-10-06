@@ -24,7 +24,11 @@ data → shared/domain → components → app shell
   campaign save modules. It composes `components/` and `shared/*`, injects
   `data` via props or the store — never imports `data/` or app shell.
 - **App shell** (`src/App.tsx`, `src/app/`, `src/state/`, `src/shell/`,
-  `src/audio.ts`) wires everything: routing, `GameStore`, pages.
+  `src/audio.ts`) wires everything: routing, `GameStore`, pages. The shift
+  screens (`Workspace`, `SpecialShift`, `MemoryShift`) come through
+  `app/screens.tsx`, which keeps them out of the startup chunk and fetches
+  them once the page is idle; the unit tests' setup fetches them first, so a
+  test renders a shift at once. See [PERFORMANCE](PERFORMANCE.md).
 
 Enforced by `eslint.config.mjs` (`boundaries/dependencies`, `import/no-cycle`,
 `no-restricted-imports` for deep relative domain/data paths) and `knip`.

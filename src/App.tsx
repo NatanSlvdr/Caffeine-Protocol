@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
-import { Workspace } from '@/features/workspace/Workspace';
 import { GuideWindow } from '@/app/GuideWindow';
 import { NewCafeModal } from '@/app/NewCafeModal';
-import { MemoryShift } from '@/app/MemoryShift';
-import { SpecialShift } from '@/app/SpecialShift';
+import { MemoryShift, preloadScreens, ScreenLoading, SpecialShift, Workspace } from '@/app/screens';
 import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
@@ -36,6 +34,16 @@ function Shell() {
   const [guideOpen, setGuideOpen] = useState(false);
   useEffect(() => onOpenSettings(() => setSettingsOpen(true)), []);
   useEffect(() => onOpenGuide(() => setGuideOpen(true)), []);
+  // The shift screens come after startup: fetched once the page is idle, so a shift opens without a wait.
+  useEffect(() => {
+    const fetch = () => void preloadScreens().catch(() => undefined);
+    if (typeof requestIdleCallback !== 'function') {
+      const timer = window.setTimeout(fetch, 1500);
+      return () => window.clearTimeout(timer);
+    }
+    const idle = requestIdleCallback(fetch, { timeout: 4000 });
+    return () => cancelIdleCallback(idle);
+  }, []);
   // A hand-typed address like #/shift/abc falls back to the home page rather than loading no shift at all.
   const requested = Number(route.split('/')[2] || 1);
   const index = Number.isInteger(requested) ? Math.max(0, Math.min(CAMPAIGN_LENGTH - 1, requested - 1)) : 0;
@@ -91,36 +99,39 @@ function Shell() {
       {/* Every dialogue box, in a shift or a scene, keeps to the pace chosen in the house settings. */}
       <DialoguePaceContext value={save.settings.dialogue_pace}>
         <div className="app-body">
-          {screen === 'home' && <HomePage />}
-          {screen === 'campaign' && <CampaignPage />}
-          {screen === 'workspace' && (
-            <Workspace
-              key={index}
-              index={index}
-              save={save}
-              update={update}
-              lessons={lessons}
-              shift={shift}
-              drills={drills}
-              nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
-              onNext={() => {
-                if (index === CAMPAIGN_LENGTH - 1) go('/ending');
-                else {
-                  // A scene waiting before the next shift plays straight away.
-                  const next = waitingScene(save, index + 1);
-                  select(index + 1);
-                  go(next ? `/scene/${next.id}` : '/campaign');
+          {/* Only a shift opened before its screen has arrived waits here, and then only for a moment. */}
+          <Suspense fallback={<ScreenLoading />}>
+            {screen === 'home' && <HomePage />}
+            {screen === 'campaign' && <CampaignPage />}
+            {screen === 'workspace' && (
+              <Workspace
+                key={index}
+                index={index}
+                save={save}
+                update={update}
+                lessons={lessons}
+                shift={shift}
+                drills={drills}
+                nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
+                onNext={() => {
+                  if (index === CAMPAIGN_LENGTH - 1) go('/ending');
+                  else {
+                    // A scene waiting before the next shift plays straight away.
+                    const next = waitingScene(save, index + 1);
+                    select(index + 1);
+                    go(next ? `/scene/${next.id}` : '/campaign');
+                  }
+                }}
+                onComplete={(stars, querySource, programs, met) =>
+                  completeShift(index, stars, querySource, programs, met)
                 }
-              }}
-              onComplete={(stars, querySource, programs, met) =>
-                completeShift(index, stars, querySource, programs, met)
-              }
-            />
-          )}
-          {screen === 'special' && special && <SpecialShift key={special.id} special={special} />}
-          {screen === 'memory' && memory && <MemoryShift key={memory.id} memory={memory} />}
-          {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
-          {screen === 'ending' && <EndingPage />}
+              />
+            )}
+            {screen === 'special' && special && <SpecialShift key={special.id} special={special} />}
+            {screen === 'memory' && memory && <MemoryShift key={memory.id} memory={memory} />}
+            {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
+            {screen === 'ending' && <EndingPage />}
+          </Suspense>
         </div>
       </DialoguePaceContext>
       <SaveNotice />
