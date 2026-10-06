@@ -1622,6 +1622,52 @@ html[data-motion='reduced'] .front-page *::after {
   font-size: 10.5px;
   opacity: 0.8;
 }
+/* Optional challenges, once the shift has been served: each with the café fact it turns on. */
+.help-slip .help-challenges {
+  margin: -6px 0 18px;
+  padding-bottom: 14px;
+  border-bottom: 2px dashed #392b241f;
+}
+.settings-window.help-slip .help-challenges p {
+  margin: 0 0 8px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.help-slip .help-challenges ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--slip-ink);
+  font-size: 13px;
+}
+.help-slip .help-challenge-met {
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11.5px;
+}
+.help-slip .help-challenge-met::after {
+  content: ' ✓';
+  color: #5f7f45;
+}
+.help-slip .help-challenge-goal {
+  display: block;
+  margin-top: 2px;
+  color: var(--slip-muted);
+  font-family: var(--slip-mono);
+  font-size: 11.5px;
+}
+.help-slip .help-challenges small {
+  display: block;
+  margin-top: 3px;
+  color: var(--slip-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
 .settings-window.help-slip p.code-example-label {
   margin: 14px 0 0;
   color: var(--slip-muted);
@@ -2112,6 +2158,55 @@ html[data-motion='reduced'] .front-page *::after {
 .receipt-slip .receipt-waits dl > div:first-child .receipt-wait-bar {
   background: #d4962c;
   opacity: 1;
+}
+/* The optional challenges: a met one is ticked in green, like a star target. */
+.receipt-slip .receipt-challenges {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 2px dashed #392b241f;
+  font-family: var(--slip-mono);
+  font-size: 12px;
+}
+.settings-window.receipt-slip .receipt-challenges p {
+  margin: 0 0 8px;
+  color: var(--slip-ink);
+  font-size: 12px;
+  text-align: center;
+}
+.receipt-slip .receipt-challenges p small {
+  color: var(--slip-muted);
+  font-size: 11px;
+}
+.receipt-slip .receipt-challenges ul {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.receipt-slip .receipt-challenge-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--slip-ink);
+}
+.receipt-slip .receipt-challenge-head > span {
+  color: var(--slip-muted);
+}
+.receipt-slip .receipt-challenges .met .receipt-challenge-head > span {
+  color: var(--slip-ink);
+  font-weight: 700;
+}
+.receipt-slip .receipt-challenges .met .receipt-challenge-head > span::after {
+  content: ' ✓';
+  color: #5f7f45;
+}
+.receipt-slip .receipt-challenge-goal {
+  display: block;
+  margin-top: 2px;
+  color: var(--slip-muted);
+  font-size: 11px;
+  line-height: 1.45;
 }
 .settings-window.receipt-slip p.receipt-thanks {
   margin: 16px 0 0;

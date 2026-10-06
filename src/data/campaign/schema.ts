@@ -85,6 +85,12 @@ export const ServiceConfigSchema = v.strictObject({
   closing: v.optional(v.boolean()),
 });
 
+/** An optional challenge: what's weighed, and the most it may come to. */
+export const ChallengeSchema = v.strictObject({
+  measure: v.picklist(['walk', 'wait', 'rush', 'close']),
+  target: PositiveInt,
+});
+
 export const LevelSchema = v.strictObject({
   id: LevelId,
   title: NonEmptyString,
@@ -98,6 +104,7 @@ export const LevelSchema = v.strictObject({
   reference_block_count: NonNegativeInt,
   seeds: v.pipe(v.array(ValidationSeedSchema), v.minLength(1)),
   service: v.optional(ServiceConfigSchema),
+  challenges: v.optional(v.pipe(v.array(ChallengeSchema), v.minLength(1))),
 });
 
 const RobotProgramsSchema = v.strictObject({

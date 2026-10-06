@@ -10,7 +10,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
-import { useLiveRun } from './useLiveRun';
+import { useLiveRun, type LiveRunArgs } from './useLiveRun';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
@@ -69,7 +69,7 @@ export interface WorkspaceProps {
   /** The next shift's title, or nothing on the last shift. */
   nextShift?: string;
   onNext: () => void;
-  onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
+  onComplete: LiveRunArgs['onComplete'];
 }
 
 /** Shift workspace layout: scene panel, editor panel, playback, and modals. Run state lives in useLiveRun. */
@@ -646,6 +646,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           opening={resetRobotPrograms(save, index, lessons)[role]}
           observation={observation}
           running={running}
+          challengesMet={save.stars[index] === undefined ? undefined : (save.challenges?.[index] ?? [])}
           hints={hints}
           onHints={setHints}
           evidence={evidence}
@@ -747,6 +748,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           observation={observation}
           nextShift={nextShift}
           best={live.bestBefore}
+          metBefore={live.metBefore}
           compareWith={observation ? undefined : receiptPair?.id}
           onCompare={() => setModal('compare-last')}
           onNext={onNext}

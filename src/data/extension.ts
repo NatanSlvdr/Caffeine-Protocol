@@ -130,6 +130,7 @@ export function buildExtensionLevel(seed: LevelSeed): LevelDefinition {
     active_tables,
     service,
     act: level < ROBOT_UNLOCK_LEVELS.floor ? 2 : config.fullHouse ? 4 : 3,
+    ...(seed.challenges && { challenges: seed.challenges }),
   };
 }
 export const extensionLessons = extensionSeeds.map(buildExtensionLesson);

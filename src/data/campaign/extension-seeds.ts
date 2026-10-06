@@ -1,3 +1,5 @@
+import type { Challenge } from '../../domain/challenges.ts';
+
 /** Extension shift seeds keyed by shift id. Adding L22 means one entry here plus a narrative row. */
 export interface LevelSeed {
   id: string;
@@ -16,6 +18,9 @@ export interface LevelSeed {
    * in, such as Act III's batches carried into Act IV. tests/unit/data/ways-in.test.ts holds it there. */
   blocks: number;
   instructions: number;
+  /** Optional challenges for after a pass. Each target is one a routine reaches and the reference doesn't:
+   * tests/unit/data/challenges.test.ts runs both. */
+  challenges?: Challenge[];
 }
 export const extensionSeeds: LevelSeed[] = [
   {
@@ -81,6 +86,7 @@ export const extensionSeeds: LevelSeed[] = [
     todo: 'collect: take up the cup from the table',
     blocks: 85,
     instructions: 766,
+    challenges: [{ measure: 'walk', target: 480 }],
   },
   {
     id: 'L16',
@@ -90,6 +96,7 @@ export const extensionSeeds: LevelSeed[] = [
     todo: 'take down the first drink before claiming the second',
     blocks: 89,
     instructions: 1505,
+    challenges: [{ measure: 'walk', target: 800 }],
   },
   {
     id: 'L17',
@@ -97,6 +104,7 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'Some customers order to go. Query writes To go on their ticket: If To go IN item, then Write To go. Brew puts a lid on those drinks: Take up at the lids, between the sugar and pickup. Porter leaves them on the to-go shelf by the door: walk there and Deposit down. They go in paper cups, so there’s nothing to clear.',
     blocks: 98,
     instructions: 2413,
+    challenges: [{ measure: 'wait', target: 450 }],
   },
   {
     id: 'L18',
@@ -104,6 +112,7 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'There are only four café cups. Taking beans or leaves at storage uses a clean cup, and Porter drops the used ones in the sink. Use up at the sink washes them. When no clean cup is left, Brew waits at the sink until a used one comes back.',
     blocks: 100,
     instructions: 2611,
+    challenges: [{ measure: 'walk', target: 1000 }],
   },
   {
     id: 'L19',
@@ -111,6 +120,7 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'Customers in a rush say so: Query writes Rush on their ticket. Rush orders jump the queue, and whoever holds one handles it first. Brew can’t wait for another ticket while it holds a rush order, and Porter can’t wait or pick up another drink while it carries one.',
     blocks: 110,
     instructions: 2677,
+    challenges: [{ measure: 'rush', target: 220 }],
   },
   {
     id: 'L20',
@@ -118,6 +128,7 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'After the last customer, Wait for Orders reports Closed instead of waiting. Check If Closed IN Orders, and Stop. Every robot has to stop, after finishing whatever it’s holding. A robot that keeps waiting keeps the café open.',
     blocks: 127,
     instructions: 3043,
+    challenges: [{ measure: 'close', target: 640 }],
   },
   {
     id: 'L21',
@@ -125,5 +136,9 @@ export const extensionSeeds: LevelSeed[] = [
     note: 'Everything at once: groups, “the usual”, drinks to go, four cups, customers in a rush, and closing time.',
     blocks: 127,
     instructions: 3403,
+    challenges: [
+      { measure: 'walk', target: 1300 },
+      { measure: 'close', target: 700 },
+    ],
   },
 ];

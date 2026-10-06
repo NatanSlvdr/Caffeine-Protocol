@@ -19,7 +19,7 @@ import {
   type BackupReason,
   type SaveBackup,
 } from '@/features/campaign/save/persistence';
-import type { DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
+import type { ChallengeMeasure, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
 import { go, reloadPage } from '@/shared/lib/navigation';
 import { useHashRoute } from '@/app/useHashRoute';
@@ -51,7 +51,14 @@ interface GameStore {
   /** Marks a scene seen (or skipped) and selects the shift it opens. */
   finishScene: (scene: Cutscene) => void;
   updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) => void;
-  completeShift: (index: number, starsCount: number, querySource: string, programs: RobotPrograms) => void;
+  /** A served shift, with the routines it was served with and the optional challenges the service met. */
+  completeShift: (
+    index: number,
+    starsCount: number,
+    querySource: string,
+    programs: RobotPrograms,
+    met: ChallengeMeasure[],
+  ) => void;
   resetCafe: () => void;
   importCafe: (next: ProgressSave) => void;
 }
@@ -160,9 +167,9 @@ export function GameProvider({ children }: { children: ReactNode }) {
         ),
       updateSetting: <K extends keyof Settings>(key: K, value: Settings[K]) =>
         setSave((s) => ({ ...s, settings: { ...s.settings, [key]: value } })),
-      completeShift: (index, starsCount, querySource, programs) => {
+      completeShift: (index, starsCount, querySource, programs, met) => {
         setSave((s) => ({
-          ...completeLevel(s, index, starsCount, querySource, lessons),
+          ...completeLevel(s, index, starsCount, querySource, lessons, met),
           robotSolutions: { ...s.robotSolutions, [index]: programs },
         }));
       },

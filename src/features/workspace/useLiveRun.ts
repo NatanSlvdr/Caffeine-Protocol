@@ -12,6 +12,7 @@ import {
 import { incomingRobotPrograms, openingRole } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import type {
+  ChallengeMeasure,
   ExecutionEvent,
   LevelDefinition,
   LiveFrame,
@@ -27,6 +28,7 @@ import type { EditKind } from './history';
 import { evidenceOf, isStale } from './evidence';
 import { crewActivity } from './crew';
 import { inspectRobot } from './inspector';
+import { challengesMet } from './challenges';
 import { carryMarks, noMarks, pauseNowhere, pauseWhen, pausedBy, toggleMark } from './breakpoints';
 import type { Marks, PauseAt, PausedBy } from './breakpoints';
 import type { RunEvidence } from './evidence';
@@ -37,7 +39,8 @@ export interface LiveRunArgs {
   save: ProgressSave;
   lessons: LessonCatalog;
   onDraft: (updated: RobotPrograms) => void;
-  onComplete: (stars: number, querySource: string, programs: RobotPrograms) => void;
+  /** A full service passed: its stars, its routines and the optional challenges it met. */
+  onComplete: (stars: number, querySource: string, programs: RobotPrograms, met: ChallengeMeasure[]) => void;
   /** A run ended, passed or failed, service or practice: its record says which. */
   onFinish: (record: RunRecord) => void;
 }
@@ -86,6 +89,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   const stale = !!evidence && isStale(evidence, programs);
   // The shift's stars before this run, so the receipt can tell a new best from a replay.
   const [bestBefore, setBestBefore] = useState<number | undefined>(save.stars[index]);
+  // And the challenges met before it, so the receipt can tell one met for the first time.
+  const [metBefore, setMetBefore] = useState<ChallengeMeasure[]>(save.challenges?.[index] ?? []);
   const time = viewTime ?? replayTime;
   const viewing = viewTime !== null;
   const sampled = result ? sampleReplay(result, time) : undefined;
@@ -195,6 +200,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     liveRun.current = createLiveRun(level, programs, options);
     setPractising(practice);
     setBestBefore(save.stars[index]);
+    setMetBefore(save.challenges?.[index] ?? []);
     setResult(null);
     setEvidence(null);
     setReplayTime(-STREET_APPROACH_SECONDS);
@@ -219,7 +225,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
       setPaused(false);
       setStepped(null);
       // Practice can pass, but only the whole service counts.
-      if (record.mode === 'service') onComplete(frame.result.stars, programs.query, programs);
+      if (record.mode === 'service')
+        onComplete(frame.result.stars, programs.query, programs, challengesMet(level.challenges, frame.result));
       onFinish(record);
     } else if (pauseAt.slips) {
       // Paused on the moment it went wrong, with the slip open beside the code.
@@ -341,5 +348,6 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     records,
     stop,
     bestBefore,
+    metBefore,
   };
 }

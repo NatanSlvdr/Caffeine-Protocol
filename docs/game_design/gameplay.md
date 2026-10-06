@@ -32,29 +32,29 @@ The campaign has 21 shifts. Each shift's lesson, customers and reference
 programs are on its generated page in [docs/campaign/](../campaign/README.md);
 the shift numbers below come from `src/domain/unlocks.ts`.
 
-| Shift | Robot | New programming focus |
-| --- | --- | --- |
-| 1 | None | Observe the whole café workflow. |
-| 2 | Query | Wait for Orders, paper, Write coffee, Move and Deposit. |
-| 3 | Query | Jump destination and Jump, for a queue of customers. |
-| 4 | Query | If and Else on what the customer said; tea. |
-| 5 | Query | Sugar and “without” in speech; Write sugar. |
-| 6 | Query | For item in order, for several drinks at once. |
-| 7 | Query | Numbers in speech; Store and Write a variable's sugar. |
-| 8 | Query | Unclear orders and Help. |
-| 9 | Brew | The coffee recipe in the kitchen. |
-| 10 | Brew | Tea: branch on the ticket. |
-| 11 | Brew | Sugar cubes counted from the order. |
-| 12 | Brew | Functions, for the recipe. |
-| 13 | Brew | Two cups at once. |
-| 14 | Porter | Carrying drinks to tables. |
-| 15 | Porter | Clearing used cups. |
-| 16 | Porter | A tray of two. |
-| 17 | All three | Drinks to go. |
-| 18 | All three | Only four café cups, so Brew washes up. |
-| 19 | All three | Customers in a rush jump the queue. |
-| 20 | All three | Closing time: every robot has to Stop. |
-| 21 | All three | Everything at once. |
+| Shift | Robot     | New programming focus                                   |
+| ----- | --------- | ------------------------------------------------------- |
+| 1     | None      | Observe the whole café workflow.                        |
+| 2     | Query     | Wait for Orders, paper, Write coffee, Move and Deposit. |
+| 3     | Query     | Jump destination and Jump, for a queue of customers.    |
+| 4     | Query     | If and Else on what the customer said; tea.             |
+| 5     | Query     | Sugar and “without” in speech; Write sugar.             |
+| 6     | Query     | For item in order, for several drinks at once.          |
+| 7     | Query     | Numbers in speech; Store and Write a variable's sugar.  |
+| 8     | Query     | Unclear orders and Help.                                |
+| 9     | Brew      | The coffee recipe in the kitchen.                       |
+| 10    | Brew      | Tea: branch on the ticket.                              |
+| 11    | Brew      | Sugar cubes counted from the order.                     |
+| 12    | Brew      | Functions, for the recipe.                              |
+| 13    | Brew      | Two cups at once.                                       |
+| 14    | Porter    | Carrying drinks to tables.                              |
+| 15    | Porter    | Clearing used cups.                                     |
+| 16    | Porter    | A tray of two.                                          |
+| 17    | All three | Drinks to go.                                           |
+| 18    | All three | Only four café cups, so Brew washes up.                 |
+| 19    | All three | Customers in a rush jump the queue.                     |
+| 20    | All three | Closing time: every robot has to Stop.                  |
+| 21    | All three | Everything at once.                                     |
 
 Shift 1 shows the same workspace with a locked Automatic service block.
 Watching the whole service is enough to go on; ticket inspection is optional.
@@ -72,6 +72,17 @@ Replay scoring uses stars plus metrics:
   target block count.
 - 3 stars: all required seeds pass, program size target is met, and executed
   instruction count target is met.
+
+Shifts 15 to 21 also carry optional challenges, which earn no stars and come
+to light on the receipt once the shift has been served. Each weighs the service
+from one side: the tiles Porter walks, the longest any guest waits, the longest
+a rush order waits, or how long the longest round runs until the crew has
+stopped. They pull against the step target as often as with it (Brew claiming
+two tickets at once runs fewer steps and serves later), so none of them names
+one best routine. Each challenge's target is met by a routine in which Porter
+waits by the table to clear it, and missed by the worked example
+(`tests/unit/data/challenges.test.ts`). A challenge once met stays met in the
+save, and the first one puts a stopwatch on the shelf.
 
 Scoring metrics shown after a run:
 

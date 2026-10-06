@@ -7,6 +7,7 @@ import { sceneBefore } from '../../../src/data/campaign/cutscenes';
 import { ROBOT_UNLOCK_LEVELS } from '../../../src/domain/robots';
 import { indentSource } from '../../../src/domain/scope';
 import type { RobotRole } from '../../../src/domain/types';
+import { CHALLENGE_WORDS } from '../../../src/features/workspace/challenges';
 
 /**
  * docs/campaign/shifts/ holds one page per shift, rendered from the campaign data so it can't drift from the
@@ -55,6 +56,15 @@ function renderShift(index: number): string {
           : ''),
       '',
     );
+  // Optional, and shown in the game once the shift has been served: tests/unit/data/challenges.test.ts sets them.
+  if (level.challenges) {
+    out.push('**Challenges.** Optional, for no stars, and shown once the shift has been served.', '');
+    for (const { measure, target } of level.challenges) {
+      const words = CHALLENGE_WORDS[measure];
+      out.push(`- _${words.name}._ ${words.goal(target)} ${words.note}`);
+    }
+    out.push('');
+  }
   out.push('## Customers in the first seed', '');
   for (const customer of level.seeds[0]!.customers) {
     const said = customer.phrase ? `“${customer.phrase}”` : '(nothing)';

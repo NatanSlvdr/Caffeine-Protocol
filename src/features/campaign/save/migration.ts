@@ -1,4 +1,5 @@
 import type { DialoguePace, ProgressSave, RobotPrograms, Settings } from '@/domain/types';
+import { CHALLENGE_MEASURES, type ChallengeMeasure } from '@/domain/challenges';
 import { DIALOGUE_PACES, MAX_PLAYBACK_SPEED } from '@/domain/constants';
 import { count } from '@/domain/tickets';
 import { migrateQuerySource } from '@/domain/program';
@@ -69,6 +70,7 @@ const SAVED_PART: Record<string, string> = {
   robotSolutions: 'served routines',
   stars: 'star tally',
   story: 'story progress',
+  challenges: 'challenges met',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -104,6 +106,29 @@ function validateMaps(v: Record<string, unknown>, shifts: number): void {
       if (key === 'story' && typeof value !== 'boolean') throw new Error('Invalid story progress.');
     }
   }
+}
+
+/**
+ * The optional challenges met on each shift: known measures, each once. Only a v4 café can have met any; a shift with
+ * none met leaves no entry, and a café with none at all leaves the map out.
+ */
+function validateChallenges(
+  v: Record<string, unknown>,
+  shifts: number,
+): Record<string, ChallengeMeasure[]> | undefined {
+  if (v.challenges === undefined || v.version !== 4) return undefined;
+  const entries = v.challenges;
+  if (!isRecord(entries)) throw new Error(`Invalid ${SAVED_PART.challenges}.`);
+  const kept: Record<string, ChallengeMeasure[]> = {};
+  for (const [k, measures] of Object.entries(entries)) {
+    if (!/^(0|[1-9]\d*)$/.test(k) || !isShiftIndex(Number(k), shifts)) throw new Error('Invalid shift number.');
+    const known = (measure: unknown): measure is ChallengeMeasure =>
+      CHALLENGE_MEASURES.includes(measure as ChallengeMeasure);
+    if (!Array.isArray(measures) || !measures.every(known) || new Set(measures).size !== measures.length)
+      throw new Error(`Invalid ${SAVED_PART.challenges}.`);
+    if (measures.length) kept[k] = [...measures];
+  }
+  return Object.keys(kept).length ? kept : undefined;
 }
 
 function validateSettingsMap(v: Record<string, unknown>): Settings {
@@ -250,6 +275,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   validateMaps(v, shifts);
   const settings = validateSettingsMap(v);
   const robotMaps = validateRobotMaps(v, shifts);
+  const challenges = validateChallenges(v, shifts);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -269,6 +295,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     solutions: cleanQueryMap(v.solutions as Record<string, string>),
     stars: { ...(v.stars as Record<string, number>) },
     story: { ...(v.story as Record<string, boolean>) },
+    ...(challenges && { challenges }),
     settings,
   };
 }

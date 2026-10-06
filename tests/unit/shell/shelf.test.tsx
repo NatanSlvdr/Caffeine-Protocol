@@ -73,12 +73,29 @@ describe('the shelf', () => {
     expect(Array.from({ length: acts[0].to }, (_, i) => isRated(i)).some(Boolean)).toBe(false);
   });
 
+  it('gives the stopwatch for an optional challenge met, on any shift', () => {
+    const stars = servedThrough(UNLOCKS.floor + 1);
+    expect(shelved({ stars }).map((keepsake) => keepsake.id)).not.toContain('stopwatch');
+    expect(shelved({ stars, challenges: {} }).map((keepsake) => keepsake.id)).not.toContain('stopwatch');
+    expect(shelved({ stars, challenges: { [UNLOCKS.floor]: ['walk'] } }).map((keepsake) => keepsake.id)).toContain(
+      'stopwatch',
+    );
+  });
+
   it('keeps a keepsake under wraps while its act is sealed on the rail, and never one already earned', () => {
     const wrapped = (unlocked: number, stars: Record<string, number> = servedThrough(unlocked)) =>
       keepsakes.filter((keepsake) => veiled(keepsake, { unlocked, stars })).map((keepsake) => keepsake.id);
-    expect(wrapped(0)).toEqual(['order-pad', 'recipe-card', 'name-tags', 'floor-plan', 'closing-sign', 'gold-star']);
+    expect(wrapped(0)).toEqual([
+      'order-pad',
+      'recipe-card',
+      'name-tags',
+      'floor-plan',
+      'closing-sign',
+      'gold-star',
+      'stopwatch',
+    ]);
     // Act I served opens Act II: Brew may be named now, Porter and a third robot not yet.
-    expect(wrapped(acts[2].from)).toEqual(['name-tags', 'floor-plan', 'closing-sign']);
+    expect(wrapped(acts[2].from)).toEqual(['name-tags', 'floor-plan', 'closing-sign', 'stopwatch']);
     expect(wrapped(acts[3].from)).toEqual(['closing-sign']);
     expect(wrapped(acts[4].from)).toEqual([]);
     // Whatever the save says is unlocked, a keepsake on the shelf shows itself.
@@ -115,7 +132,7 @@ describe('the shelf', () => {
     expect(within(items[1]).getByText('Serve every shift of Act II.')).toBeTruthy();
     // Act III is still sealed, so nothing on the shelf names who works it.
     expect(shelf.textContent).not.toMatch(/Porter|three robots|floor/i);
-    expect(within(shelf).getAllByRole('heading', { name: 'Under wraps' })).toHaveLength(3);
+    expect(within(shelf).getAllByRole('heading', { name: 'Under wraps' })).toHaveLength(4);
     expect(within(items[3]).getByText('Something for Act III. It comes out once Act II is served.')).toBeTruthy();
     fireEvent.click(within(shelf).getByRole('button', { name: 'Close dialog' }));
     expect(screen.queryByRole('dialog', { name: 'The shelf.' })).toBeNull();

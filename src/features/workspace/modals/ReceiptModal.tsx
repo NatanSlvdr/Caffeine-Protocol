@@ -1,9 +1,10 @@
 import { ArrowRight, GitCompareArrows } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { count, type LevelDefinition, type RunResult } from '@/domain';
+import { count, type ChallengeMeasure, type LevelDefinition, type RunResult } from '@/domain';
 import { pad2, starRow } from '@/shared/lib/format';
 import { guestWaits, WAIT_LABELS, WAIT_LEADS } from '../waits';
+import { challengeOutcomes, type ChallengeOutcome } from '../challenges';
 
 export interface ReceiptModalProps {
   index: number;
@@ -14,6 +15,8 @@ export interface ReceiptModalProps {
   nextShift?: string;
   /** This shift's stars before the run, if it had been served before. */
   best?: number;
+  /** This shift's optional challenges met before the run. */
+  metBefore?: ChallengeMeasure[];
   /** The run before this one that played the same rounds, to compare with; nothing on a first run. */
   compareWith?: number;
   onCompare?: () => void;
@@ -29,6 +32,7 @@ export function ReceiptModal({
   observation,
   nextShift,
   best,
+  metBefore,
   compareWith,
   onCompare,
   onNext,
@@ -65,6 +69,8 @@ export function ReceiptModal({
           : '';
   // Where the guests' time went, so a slow service says which part to look at. The opening day was served by hand.
   const waits = observation ? [] : guestWaits(result.events ?? []);
+  // The challenges come to light with the first pass, and every service after says how it measured up.
+  const challenges = observation ? [] : challengeOutcomes(level.challenges ?? [], result, metBefore);
   return (
     <Modal
       title="Service complete"
@@ -131,6 +137,25 @@ export function ReceiptModal({
           </dl>
         </section>
       )}
+      {challenges.length > 0 && (
+        <section className="receipt-challenges" aria-labelledby="receipt-challenges-lead">
+          <p id="receipt-challenges-lead">
+            Challenges <small>· optional, for no stars</small>
+          </p>
+          <ul>
+            {challenges.map((outcome) => (
+              <li key={outcome.challenge.measure} className={outcome.met ? 'met' : ''}>
+                <span className="receipt-challenge-head">
+                  <strong>{outcome.words.name}</strong> <span>{challengeVerdict(outcome)}</span>
+                </span>
+                <span className="receipt-challenge-goal">
+                  {outcome.words.goal(outcome.challenge.target)} This service: {outcome.words.amount(outcome.value)}.
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <p className="receipt-thanks">
         {nextShift ? (
           <>
@@ -158,6 +183,12 @@ export function ReceiptModal({
       </div>
     </Modal>
   );
+}
+
+/** Whether this service met a challenge, and whether that's news. */
+function challengeVerdict({ met, before }: ChallengeOutcome): string {
+  if (met) return before ? 'Met' : 'Met, for the first time';
+  return before ? 'Not this time · met before' : 'Not yet';
 }
 
 /** The "/ 4" and the ✓ are drawn for the eye, so screen readers hear the target and the verdict here instead. */

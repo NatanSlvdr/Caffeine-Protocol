@@ -2,11 +2,19 @@ import { useEffect, useRef, useState } from 'react';
 import { ArrowRight, Crosshair, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { indentSource, ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotPrograms, type RobotRole } from '@/domain';
+import {
+  indentSource,
+  ROBOT_DISPLAY_NAMES,
+  type ChallengeMeasure,
+  type LevelDefinition,
+  type RobotPrograms,
+  type RobotRole,
+} from '@/domain';
 import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
 import type { RunEvidence } from '../evidence';
 import { clueFor, HINT_TIERS, type Clue } from '../hints';
+import { CHALLENGE_WORDS } from '../challenges';
 
 export interface HelpModalProps {
   index: number;
@@ -20,6 +28,8 @@ export interface HelpModalProps {
   opening: string;
   observation: boolean;
   running: boolean;
+  /** The shift's optional challenges met so far; nothing until it has been served, when they come to light. */
+  challengesMet?: ChallengeMeasure[];
   /** How many hint tiers the player has asked for this shift: the last is the worked example. */
   hints: number;
   onHints: (hints: number) => void;
@@ -49,6 +59,7 @@ export function HelpModal({
   opening,
   observation,
   running,
+  challengesMet,
   hints,
   onHints,
   evidence,
@@ -137,10 +148,29 @@ export function HelpModal({
                 <span className="sr-only">Three stars</span>
               </dt>
               <dd>
-                {level.instruction_target} steps or fewer<small>Fewer steps, shorter waits</small>
+                {level.instruction_target} steps or fewer<small>Every block run, by every robot</small>
               </dd>
             </div>
           </dl>
+          {challengesMet && level.challenges && (
+            <section className="help-challenges" aria-labelledby="help-challenges-lead">
+              <p id="help-challenges-lead">Challenges · optional, for no stars</p>
+              <ul>
+                {level.challenges.map(({ measure, target }) => {
+                  const words = CHALLENGE_WORDS[measure];
+                  const met = challengesMet.includes(measure);
+                  return (
+                    <li key={measure} className={met ? 'met' : ''}>
+                      <strong>{words.name}</strong>
+                      {met && <span className="help-challenge-met"> · Met</span>}
+                      <span className="help-challenge-goal">{words.goal(target)}</span>
+                      <small>{words.note}</small>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
           {hints > 0 && (
             <ol className="help-hints" aria-label="Hints">
               <li>

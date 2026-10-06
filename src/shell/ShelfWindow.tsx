@@ -6,6 +6,7 @@ import {
   Package,
   ScrollText,
   Star,
+  Timer,
   type LucideIcon,
 } from 'lucide-react';
 import { Modal } from '@/components';
@@ -21,6 +22,7 @@ const ICONS: Record<KeepsakeId, LucideIcon> = {
   'floor-plan': FloorPlan,
   'closing-sign': DoorClosed,
   'gold-star': Star,
+  stopwatch: Timer,
 };
 
 /**
@@ -33,7 +35,7 @@ export function ShelfWindow({
   fresh = [],
   onClose,
 }: {
-  save: Pick<ProgressSave, 'stars' | 'unlocked'>;
+  save: Pick<ProgressSave, 'stars' | 'challenges' | 'unlocked'>;
   earned: readonly Keepsake[];
   /** The keepsakes that weren't there when the shelf was last opened. */
   fresh?: readonly string[];

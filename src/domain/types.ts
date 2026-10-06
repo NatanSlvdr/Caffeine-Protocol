@@ -1,4 +1,5 @@
 import type { FailureCode, FailureContext } from './failures';
+import type { Challenge, ChallengeMeasure } from './challenges';
 
 export type Drink = 'coffee' | 'tea';
 export interface SpeechIntent {
@@ -51,6 +52,8 @@ export interface LevelDefinition {
   seeds: ValidationSeed[];
   summary: string;
   active_tables: number;
+  /** Optional goals for after a pass, each weighing the service from one side; they earn no stars. */
+  challenges?: Challenge[];
 }
 export interface Program {
   source: string;
@@ -300,4 +303,6 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;
   robotDrafts: Record<string, RobotPrograms>;
   robotSolutions: Record<string, RobotPrograms>;
+  /** The optional challenges met on each shift, by measure; missing in a café that has met none. */
+  challenges?: Record<string, ChallengeMeasure[]>;
 }

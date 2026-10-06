@@ -3,6 +3,7 @@ export * from './blockFields';
 export * from './blockPreview';
 export * from './blockRegistry';
 export * from './cargo';
+export * from './challenges';
 export * from './commands';
 export * from './constants';
 export * from './counters';

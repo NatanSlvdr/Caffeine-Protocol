@@ -94,7 +94,9 @@ function Shell() {
                   go(next ? `/scene/${next.id}` : '/campaign');
                 }
               }}
-              onComplete={(stars, querySource, programs) => completeShift(index, stars, querySource, programs)}
+              onComplete={(stars, querySource, programs, met) =>
+                completeShift(index, stars, querySource, programs, met)
+              }
             />
           )}
           {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}

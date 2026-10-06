@@ -1,3 +1,4 @@
+import type { ChallengeMeasure } from '@/domain/challenges';
 import type { ProgressSave, RobotPrograms, RobotRole } from '@/domain/types';
 import { ROBOT_ROLES, robotForLevel, robotUnlocked } from '@/domain/robots';
 import { UNLOCKS } from '@/domain/unlocks';
@@ -11,15 +12,25 @@ export function incomingProgram(save: ProgressSave, index: number, lessons: Less
       : (save.solutions[index - 1] ?? save.drafts[index - 1] ?? lessons[index].starter),
   );
 }
+/**
+ * A served shift: the next one unlocks, the best stars and the routine are kept, and any optional challenge the
+ * service met joins the ones met before. Once met, a challenge stays met.
+ */
 export function completeLevel(
   save: ProgressSave,
   index: number,
   stars: number,
   source = '',
   lessons: LessonCatalog,
+  met: readonly ChallengeMeasure[] = [],
 ): ProgressSave {
+  const before = save.challenges?.[index] ?? [];
+  const challenges = met.some((measure) => !before.includes(measure))
+    ? { ...save.challenges, [index]: [...before, ...met.filter((measure) => !before.includes(measure))] }
+    : save.challenges;
   return {
     ...save,
+    ...(challenges && { challenges }),
     unlocked: Math.max(save.unlocked, Math.min(index + 1, lessons.length - 1)),
     complete: save.complete || index === lessons.length - 1,
     stars: { ...save.stars, [index]: Math.max(save.stars[index] ?? -1, stars) },

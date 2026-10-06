@@ -117,6 +117,27 @@ describe('unified campaign validation', () => {
     );
   });
 
+  it('holds optional challenges to what the shift can measure', () => {
+    const withChallenges = (challenges: unknown, level = programmableLevel()) =>
+      validateLevelData({ ...level, challenges });
+    expect(withChallenges([{ measure: 'wait', target: 90 }])).toEqual([]);
+    // Shift 03 has no Porter to walk, no guest in a rush and no closing call.
+    for (const measure of ['walk', 'rush', 'close'])
+      expect(withChallenges([{ measure, target: 90 }]).join()).toContain(`a ${measure} challenge doesn't fit`);
+    expect(withChallenges([{ measure: 'wait', target: 90 }], observationLevel()).length).toBeGreaterThan(0);
+    for (const bad of [
+      [],
+      [{ measure: 'wait', target: 0 }],
+      [{ measure: 'wait', target: 9.5 }],
+      [{ measure: 'speed', target: 90 }],
+      [
+        { measure: 'wait', target: 90 },
+        { measure: 'wait', target: 80 },
+      ],
+    ])
+      expect(withChallenges(bad).length).toBeGreaterThan(0);
+  });
+
   it('rejects negative, fractional, and unordered arrivals', () => {
     const withCustomers = (customers: unknown[]) =>
       validateLevelData({ ...observationLevel(), seeds: [{ id: 'L01_A', customers }] });

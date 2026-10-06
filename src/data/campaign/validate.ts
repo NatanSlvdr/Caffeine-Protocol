@@ -9,7 +9,7 @@
 // module directly. Vite, vitest, and tsc accept explicit extensions because
 // tsconfig sets `allowImportingTsExtensions`.
 import * as v from 'valibot';
-import { LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
+import { ChallengeSchema, LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
 import { ROBOT_UNLOCK_LEVELS } from '../../domain/robots.ts';
 import { UNLOCKS } from '../../domain/unlocks.ts';
@@ -234,6 +234,36 @@ export function collectSeedErrors(seed: ValidationSeed, levelId: string): string
 }
 
 /** Semantic checks for one level beyond the structural schema. */
+/**
+ * Optional challenges weigh something the shift gives a routine room to change: Porter's walking once Porter works
+ * the room, rush orders where guests are in a rush, closing up where the café closes. Whether each target can be met,
+ * and isn't by the reference, takes running routines: tests/unit/data/challenges.test.ts does that.
+ */
+function collectChallengeErrors(level: LevelDefinition, numeric: number): string[] {
+  const challenges = level.challenges ?? [];
+  if (!challenges.length) return [];
+  if (!level.programming_enabled) return [`${level.id}: an observation shift has no challenges`];
+  const errors: string[] = [];
+  const rushed = (level.seeds ?? []).some((seed) =>
+    seed.customers.some((c) => c.expected.rush || c.expected.tickets?.some((ticket) => ticket.rush)),
+  );
+  const fits = {
+    walk: numeric >= ROBOT_UNLOCK_LEVELS.floor,
+    wait: true,
+    rush: rushed,
+    close: !!level.service?.closing,
+  };
+  const seen = new Set<string>();
+  for (const { measure, target } of challenges) {
+    if (seen.has(measure)) errors.push(`${level.id}: more than one ${measure} challenge`);
+    seen.add(measure);
+    if (!fits[measure]) errors.push(`${level.id}: a ${measure} challenge doesn't fit this shift`);
+    if (!Number.isInteger(target) || target < 1)
+      errors.push(`${level.id}: ${measure} target must be a positive integer`);
+  }
+  return errors;
+}
+
 export function collectLevelErrors(level: LevelDefinition): string[] {
   const errors: string[] = [];
   if (!LEVEL_ID_RE.test(level.id)) errors.push(`level id ${JSON.stringify(level.id)} must match L<n>`);
@@ -264,6 +294,7 @@ export function collectLevelErrors(level: LevelDefinition): string[] {
   } else if (level.block_target !== 0 || level.instruction_target !== 0 || level.reference_block_count !== 0) {
     errors.push(`${level.id}: observation shifts must have zero block/instruction targets`);
   }
+  errors.push(...collectChallengeErrors(level, numeric));
   const seeds = level.seeds ?? [];
   if (!Array.isArray(seeds) || seeds.length === 0) {
     errors.push(`${level.id}: seeds must be a non-empty array`);
@@ -317,6 +348,7 @@ const ExtensionSeedSchema = v.strictObject({
   robot: v.optional(v.picklist(['prep', 'floor'])),
   blocks: v.pipe(v.number(), v.integer(), v.minValue(1)),
   instructions: v.pipe(v.number(), v.integer(), v.minValue(1)),
+  challenges: v.optional(v.pipe(v.array(ChallengeSchema), v.minLength(1))),
 });
 
 export type ExtensionSeedLike = v.InferOutput<typeof ExtensionSeedSchema>;
