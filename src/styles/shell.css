@@ -1325,6 +1325,68 @@ html[data-motion='reduced'] .front-page *::after {
 .settings-window .shelf-keepsakes li:not(.earned) p {
   color: var(--slip-muted);
 }
+/* The specials: a card per special, what it asks for beside its stars and the way in. */
+.settings-window p.specials-intro {
+  margin: 4px 0 0;
+  color: var(--slip-muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.specials-list {
+  display: grid;
+  gap: 12px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.specials-list li {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border: 1px solid #392b2440;
+  border-left: 3px solid var(--slip-clay);
+  color: var(--slip-coffee);
+}
+.specials-list li.new {
+  border-left-color: var(--slip-coffee);
+  background: #b968470f;
+}
+.specials-list h3 {
+  display: inline;
+  margin: 0 10px 0 0;
+  color: var(--slip-ink);
+  font-size: 15px;
+}
+.specials-list small {
+  font-family: var(--slip-mono);
+  font-size: 11px;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.settings-window .specials-list p {
+  margin: 6px 0 0;
+  color: var(--slip-ink);
+  font-size: 14px;
+  line-height: 1.45;
+}
+.settings-window .specials-list p.specials-hint {
+  color: var(--slip-coffee);
+  font-style: italic;
+}
+.specials-serve {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-end;
+}
+.specials-serve [role='img'] {
+  color: var(--slip-clay);
+  font-size: 18px;
+  letter-spacing: 2px;
+}
 /* Drills: a gap in a served shift's routine, passages to fill it, and the café's verdict on the pick. */
 .settings-window p.drills-intro {
   margin: 4px 0 0;

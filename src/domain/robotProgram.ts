@@ -28,6 +28,7 @@ const ROBOT_CONDITION_UNLOCKS: Record<string, number> = {
   togo: UNLOCKS.toGo,
   rush: UNLOCKS.rush,
   closed: UNLOCKS.closing,
+  together: UNLOCKS.together,
 };
 const robotConditionValues = (level: number) =>
   Object.keys(ROBOT_CONDITION_UNLOCKS).filter((value) => level >= ROBOT_CONDITION_UNLOCKS[value]);

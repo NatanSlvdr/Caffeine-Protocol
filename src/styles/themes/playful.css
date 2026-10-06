@@ -1991,7 +1991,7 @@ html[data-motion='reduced'] .execution-line-highlight {
   opacity: 1;
   background: #ffffff22;
 }
-/* Take-away and rush orders carry a small tag on the paper, the cup and the customer's bubble. */
+/* Take-away, rush and together orders carry a small tag on the paper, the cup and the customer's bubble. */
 .order-mark {
   padding: 1px 4px;
   border-radius: 999px;
@@ -2007,6 +2007,9 @@ html[data-motion='reduced'] .execution-line-highlight {
 .order-mark.rush {
   background: #a9502f;
   color: var(--cream);
+}
+.order-mark.together {
+  background: var(--yellow);
 }
 
 /* One draggable assignment, with two inset tiles and an unboxed equals sign. */

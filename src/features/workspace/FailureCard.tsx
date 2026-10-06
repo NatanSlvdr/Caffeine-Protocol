@@ -13,6 +13,7 @@ import {
   Route,
   ShoppingBag,
   TriangleAlert,
+  Users,
   Zap,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
@@ -29,6 +30,7 @@ const ASPECT_ICONS: Record<Aspect, LucideIcon> = {
   sugar: Candy,
   'to-go': ShoppingBag,
   rush: Zap,
+  together: Users,
   lid: CupSoda,
   table: Armchair,
   facing: Compass,

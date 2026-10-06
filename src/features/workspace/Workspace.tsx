@@ -61,6 +61,10 @@ export interface WorkspaceShift {
   /** The scene that pays a passed shift off, before the star verdict. */
   outro: DialogueLine[];
   title: string;
+  /** What the shift is called beside its title, for a special: the campaign's shifts go by number. */
+  label?: string;
+  /** A special's thanks on the receipt, where a campaign shift names the next one. */
+  thanks?: string;
 }
 
 export interface WorkspaceProps {
@@ -90,6 +94,7 @@ export function Workspace({
   drills = [],
 }: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
+  const label = shift.label ?? `Shift ${pad2(index + 1)}`;
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
   const textMode = save.settings.text_editor;
@@ -366,8 +371,7 @@ export function Workspace({
               onClick={() => go('/campaign')}
             >
               {/* Read as "Campaign Shift 03": the arrow and the slash are only drawn. */}
-              <ArrowLeft size={14} aria-hidden="true" /> Campaign <span aria-hidden="true">/</span> Shift{' '}
-              {pad2(index + 1)}
+              <ArrowLeft size={14} aria-hidden="true" /> Campaign <span aria-hidden="true">/</span> {label}
             </button>
             <div className="heading-tools">
               {!observation && (
@@ -659,7 +663,7 @@ export function Workspace({
       {scene === 'intro' && (
         <DialogueBox
           lines={intro}
-          kicker={`Shift ${pad2(index + 1)} · ${shift.title}`}
+          kicker={`${label} · ${shift.title}`}
           doneLabel="Start the shift"
           instant={reduced}
           onDone={() => setScene('')}
@@ -667,7 +671,7 @@ export function Workspace({
       )}
       {modal === 'help' && (
         <HelpModal
-          index={index}
+          label={label}
           title={shift.title}
           lesson={lesson}
           brief={brief}
@@ -785,11 +789,12 @@ export function Workspace({
       )}
       {modal === 'receipt' && result?.passed && (
         <ReceiptModal
-          index={index}
+          label={label}
           level={level}
           result={result}
           observation={observation}
           nextShift={nextShift}
+          thanks={shift.thanks}
           best={live.bestBefore}
           metBefore={live.metBefore}
           compareWith={observation ? undefined : receiptPair?.id}

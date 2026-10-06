@@ -21,6 +21,7 @@ const tokenUnlocks: Record<string, number> = {
   togo: UNLOCKS.toGo,
   rush: UNLOCKS.rush,
   closed: UNLOCKS.closing,
+  together: UNLOCKS.together,
 };
 function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);
@@ -59,6 +60,7 @@ export function availableCommands(level: number): string[] {
   if (level >= UNLOCKS.toGo) c.push('WRITE togo');
   if (level >= UNLOCKS.rush) c.push('WRITE rush');
   if (level >= UNLOCKS.closing) c.push('STOP');
+  if (level >= UNLOCKS.together) c.push('WRITE together');
   return c;
 }
 /** Whether Query reads one line on a shift, with that shift's library of commands. */

@@ -34,7 +34,7 @@ export function parseTimes(command: string) {
   return /^FOR (var[1-4]) TIMES$/.exec(command)?.[1];
 }
 /** Marks Query can write on the held paper, from the shift each arrives. */
-export const PAPER_MARKS = ['togo', 'rush'] as const;
+export const PAPER_MARKS = ['togo', 'rush', 'together'] as const;
 /** The mark a Write block puts on the paper, like Write To go. */
 export function parseMarkWrite(command: string) {
   return (PAPER_MARKS as readonly string[]).find((mark) => command === `WRITE ${mark}`) as

@@ -102,7 +102,7 @@ export function isStale(evidence: Pick<RunEvidence, 'programs'>, programs: Robot
 }
 
 /** What a comparison row is about, so the card can draw an icon beside the words. */
-export type Aspect = 'drink' | 'tickets' | 'sugar' | 'to-go' | 'rush' | 'lid' | 'table' | 'facing';
+export type Aspect = 'drink' | 'tickets' | 'sugar' | 'to-go' | 'rush' | 'together' | 'lid' | 'table' | 'facing';
 
 /** One thing the guest or ticket wanted, against what the routine produced. */
 export interface Difference {
@@ -157,6 +157,10 @@ export function comparisonOf(failure: RunFailure): Comparison | undefined {
     'ticket-to-go-extra': () => query({ aspect: 'to-go', label: 'To go', wanted: 'Staying in', got: 'To go' }),
     'ticket-rush-missing': () => query({ aspect: 'rush', label: 'Rush', wanted: 'In a hurry', got: 'Not marked' }),
     'ticket-rush-extra': () => query({ aspect: 'rush', label: 'Rush', wanted: 'No hurry', got: 'Rush' }),
+    'ticket-together-missing': () =>
+      query({ aspect: 'together', label: 'Together', wanted: 'All at once', got: 'Not marked' }),
+    'ticket-together-extra': () =>
+      query({ aspect: 'together', label: 'Together', wanted: 'On their own', got: 'Together' }),
     'ticket-count': () => ({
       columns: QUERY,
       rows: [

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { levels } from '../../../src/data';
+import { specialById } from '../../../src/data/specials';
 import {
   BENCH_GUESTS,
   benchGuests,
@@ -20,7 +21,7 @@ import {
 import { compileProgram } from '../../../src/domain/program';
 import { runLevel } from '../../../src/domain/simulation';
 import type { LevelDefinition, RobotPrograms } from '../../../src/domain/types';
-import { UNLOCKS } from '../../../src/domain/unlocks';
+import { shiftNumber, UNLOCKS } from '../../../src/domain/unlocks';
 import { referenceProgramsFor } from '../../helpers/run';
 
 const shifts = levels.map((level, i) => ({ level, n: i + 1 })).filter(({ level }) => level.programming_enabled);
@@ -292,5 +293,64 @@ describe('a bench that eases the shift’s rules', () => {
     expect(open.query).not.toContain('closed');
     expect(play(20, open).first_failure?.code).toBe('closing-ticket');
     expect(play(20, open, ['closing']).passed).toBe(true);
+  });
+});
+
+describe('a bench for a table that orders together', () => {
+  const special = specialById('together')!;
+  const kit = benchKit(special.level);
+  const table: BenchGuest = {
+    orders: [
+      { drink: 'coffee', sugar: 0 },
+      { drink: 'tea', sugar: 2 },
+    ],
+    together: true,
+    after: 0,
+  };
+
+  /** A bench of the special's, served with its reference routines. */
+  function serveTogether(guests: BenchGuest[]) {
+    const programs = special.lesson.robotSolution;
+    const bench = { ...special.level, seeds: [benchSeed(kit, guests)] };
+    return runLevel(bench, compileProgram(programs.query, shiftNumber(special.level.id)), programs);
+  }
+
+  it('is offered only where tables order together', () => {
+    expect(kit.together).toBe(true);
+    expect(benchKit(levels[20]).together).toBe(false);
+    expect(benchProblems(benchKit(levels[20]), [table])).toEqual([
+      'Guest 1 orders together, and nobody does on this shift.',
+    ]);
+  });
+
+  it('hears the special’s own tables as tables that order together', () => {
+    for (const seed of special.level.seeds) {
+      const guests = benchGuests(seed.customers);
+      expect(guests.filter((guest) => guest.together)).toHaveLength(3);
+      expect(benchSeed(kit, guests).customers.map((c) => c.expected)).toEqual(seed.customers.map((c) => c.expected));
+      expect(serveTogether(guests).passed).toBe(true);
+    }
+  });
+
+  it('asks for the table’s drinks together, and expects Together on each ticket', () => {
+    const [guest] = benchSeed(kit, [table]).customers;
+    expect(guest.phrase).toBe('Coffee, 0 sugars and tea, 2 sugars, together please');
+    expect(guest.heard_orders.every((heard) => heard.tokens.includes('together'))).toBe(true);
+    expect(guest.expected).toEqual({
+      tickets: [
+        { item: 'coffee', sugar_count: 0, together: true },
+        { item: 'tea', sugar_count: 2, together: true },
+      ],
+    });
+    expect(serveTogether([table, { ...freshGuest(kit), after: 6 }]).passed).toBe(true);
+  });
+
+  it('takes a guest on their own as one who doesn’t', () => {
+    const alone = { ...table, orders: table.orders.slice(0, 1) };
+    expect(benchProblems(kit, [alone])).toEqual([]);
+    expect(benchSeed(kit, [alone]).customers[0]).toMatchObject({
+      phrase: 'Coffee, 0 sugars',
+      expected: { item: 'coffee', sugar_count: 0 },
+    });
   });
 });

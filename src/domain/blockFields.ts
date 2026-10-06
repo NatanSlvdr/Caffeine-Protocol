@@ -23,7 +23,7 @@ export function familyFor(command: string): string {
 }
 
 /** The words a paper mark shows on its Write block. */
-export const MARK_LABELS: Record<string, string> = { togo: 'To go', rush: 'Rush' };
+export const MARK_LABELS: Record<string, string> = { togo: 'To go', rush: 'Rush', together: 'Together' };
 
 /** Presentation-only verb/value labels for one serialized command. */
 export function labelFor(command: string): { verb: string; value: string } {

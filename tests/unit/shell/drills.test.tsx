@@ -340,7 +340,7 @@ describe('a drill named in Help', () => {
 
   it('sits with the clue', () => {
     const props = {
-      index: 6,
+      label: 'Shift 07',
       title: 'Shift',
       lesson: { note: 'Note', solution: 'LISTEN\nTAKE UP' },
       brief: { story: 'Story', objective: 'Goal', concept: 'The idea.' },

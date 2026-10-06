@@ -74,6 +74,8 @@ const SLIP_SOURCES: Partial<Record<FailureCode, (command: string) => boolean>> =
   'ticket-to-go-extra': (command) => parseMarkWrite(command) === 'togo',
   'ticket-rush-missing': (command) => parseMarkWrite(command) === 'rush',
   'ticket-rush-extra': (command) => parseMarkWrite(command) === 'rush',
+  'ticket-together-missing': (command) => parseMarkWrite(command) === 'together',
+  'ticket-together-extra': (command) => parseMarkWrite(command) === 'together',
   'ticket-sugar': writesSugar,
   'ticket-item': writesItem,
   'help-needed': writesItem,

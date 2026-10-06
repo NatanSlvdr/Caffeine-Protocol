@@ -29,8 +29,10 @@ const rulesFor = (config: ExtensionShiftConfig): ShiftRules => ({
  * Query reference for extension shifts: the Act I finale, plus the marks and the stop an Act IV rule
  * needs. Marks go on each sheet just before it's handed over.
  */
-function queryReference(rules: ShiftRules): string {
-  const marks = (['togo', 'rush'] as const).filter((mark) => (mark === 'togo' ? rules.toGo : rules.rush));
+export function queryReference(rules: ShiftRules): string {
+  const marks = (['togo', 'rush', 'together'] as const).filter(
+    (mark) => ({ togo: rules.toGo, rush: rules.rush, together: rules.together })[mark],
+  );
   let source = lessonById('L08').solution;
   if (marks.length)
     source = source.replace(

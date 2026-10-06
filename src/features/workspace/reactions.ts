@@ -199,6 +199,16 @@ const kinds: Record<FailureCode, FailureKind> = {
     react: (p) => `“${p}”. No hurry, really. I’ve got all afternoon.`,
     hint: 'Rush jumps the queue, so it’s only for guests who say they’re in a hurry: check If Rush IN item first.',
   },
+  'ticket-together-missing': {
+    by: 'guest',
+    react: (p) => `“${p}”… we did want them together.`,
+    hint: 'A table that orders together says so: If Together IN Customer speech, then Write Together on each of its tickets.',
+  },
+  'ticket-together-extra': {
+    by: 'guest',
+    react: (p) => `“${p}”. It’s just me today.`,
+    hint: 'Together is only for a table ordering for more than one: check If Together IN Customer speech first.',
+  },
   checkout: {
     by: 'guest',
     react: () => 'Um… can I pay now? Anyone?',
@@ -292,6 +302,11 @@ const kinds: Record<FailureCode, FailureKind> = {
     by: 'guest',
     react: () => 'Um… is someone going to clear this table?',
     hint: 'A clean table is the next guest’s first impression, and nobody sits at a messy one.',
+  },
+  'table-apart': {
+    by: 'guest',
+    react: () => 'We said together… one of us is still waiting.',
+    hint: 'A Together ticket means its table wants both drinks at once: wait for both, carry them on one tray, and serve them on one visit.',
   },
   'open-after-closing': CLOSING,
   'stopped-early': CLOSING,

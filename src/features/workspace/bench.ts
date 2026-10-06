@@ -3,6 +3,7 @@ import {
   ROBOT_UNLOCK_LEVELS,
   benchProblems,
   keptEases,
+  shiftNumber,
   type BenchEase,
   type BenchGuest,
   type BenchKit,
@@ -88,7 +89,7 @@ export function easeChoice(level: LevelDefinition, ease: BenchEase): { label: st
       return { label: 'Twice the cups', detail: `${(service?.cups ?? 0) * 2} cups instead of ${service?.cups}.` };
     case 'load': {
       // The robot the shift asks for a full load: Brew until Porter joins, then Porter.
-      const porter = Number(level.id.slice(1)) >= ROBOT_UNLOCK_LEVELS.floor;
+      const porter = shiftNumber(level.id) >= ROBOT_UNLOCK_LEVELS.floor;
       return {
         label: 'One at a time will do',
         detail: `${porter ? 'Porter can carry' : 'Brew can make'} one drink a trip, not ${service?.minLoad}.`,

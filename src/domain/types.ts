@@ -10,6 +10,7 @@ export interface SpeechIntent {
   sugar_count?: number;
   to_go?: boolean;
   rush?: boolean;
+  together?: boolean;
   orders?: SpeechIntent[];
 }
 export interface ExpectedTicket {
@@ -18,6 +19,7 @@ export interface ExpectedTicket {
   sugar_count?: number;
   to_go?: boolean;
   rush?: boolean;
+  together?: boolean;
 }
 /** Authored concepts available to Query; expected ticket fields stay separate. */
 export interface HeardOrder {
@@ -95,6 +97,8 @@ export interface OrderTicket {
   to_go?: boolean;
   /** Written by Query for customers in a rush: the order jumps the queue. */
   rush?: boolean;
+  /** Written by Query for a table that orders together: its drinks arrive together. */
+  together?: boolean;
   status: string;
   created_at: number;
   due_at: number;
@@ -131,6 +135,8 @@ export interface Timing {
   created: number;
   seated: number;
   ready: number;
+  /** When the table's first drink was set down, if it was; `served` is when the last one was. */
+  firstServed?: number;
   served: number;
   left: number;
   cleaned: number;
@@ -308,6 +314,11 @@ export interface ServiceConfig {
   cups?: number;
   /** At closing time Wait for Orders reports Closed, and every robot has to Stop. */
   closing?: boolean;
+  /**
+   * A table that orders together has all its drinks within this many seconds of the first one; past that, the table
+   * gives up waiting. Missing on a shift with no such tables.
+   */
+  together?: number;
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;
@@ -317,4 +328,15 @@ export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   challenges?: Record<string, ChallengeMeasure[]>;
   /** The drills got right on the first pick, by id; missing in a café that has none. They never count toward stars. */
   drills?: string[];
+  /** Each special's own progress, by id; missing in a café that has played none. */
+  specials?: Record<string, SpecialProgress>;
+}
+/** A special's progress, kept apart from the campaign's: its stars never count toward the campaign's. */
+export interface SpecialProgress {
+  /** The routines as last written. */
+  draft?: RobotPrograms;
+  /** The routines it was last served with. */
+  solution?: RobotPrograms;
+  stars?: number;
+  challenges?: ChallengeMeasure[];
 }

@@ -7,13 +7,14 @@ export interface IconOrder {
   quantity?: number;
   toGo?: boolean;
   rush?: boolean;
+  together?: boolean;
 }
 
 /** Group identical drinks without merging different sugar preferences. */
 export function groupOrders(orders: IconOrder[]): (IconOrder & { quantity: number })[] {
   const groups = new Map<string, IconOrder & { quantity: number }>();
   for (const order of orders) {
-    const key = `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}`;
+    const key = `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}:${!!order.together}`;
     const previous = groups.get(key);
     groups.set(key, { ...order, quantity: (previous?.quantity ?? 0) + (order.quantity ?? 1) });
   }
@@ -28,6 +29,7 @@ export function ticketToIconOrder(ticket: OrderTicket): IconOrder {
     sugar: ticketSugar(ticket),
     toGo: ticket.to_go,
     rush: ticket.rush,
+    together: ticket.together,
   };
 }
 
@@ -38,5 +40,6 @@ export function heardToIconOrders(heard: HeardOrder[]): IconOrder[] {
     sugar: order.tokens.includes('negation') ? 0 : (order.number ?? (order.tokens.includes('sugar') ? 1 : 0)),
     toGo: order.tokens.includes('togo'),
     rush: order.tokens.includes('rush'),
+    together: order.tokens.includes('together'),
   }));
 }

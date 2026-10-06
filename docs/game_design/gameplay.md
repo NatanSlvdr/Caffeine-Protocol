@@ -146,6 +146,25 @@ compare of any practice run; a passing bench says so beside the code and nothing
 `tests/unit/simulation/bench.test.ts` writes every round of every shift as a
 bench and checks it is heard and expected as the shift's own.
 
+Once the campaign is finished, the regulars ask for specials: optional shifts
+past the last, each with one new rule, a brief setup and the regular's thanks
+on the receipt. The first is Rosa's reading group (Bound Together,
+`src/data/specials.ts`): every third guest is a table of two who order
+together, and a table that does gets all its drinks within 4 seconds of the
+first. The window is in the objective and Niko's briefing before the run, and
+the simulation's own timestamps judge it. Query writes Together on each ticket
+of such a table, and Porter, holding one, uses Wait for Orders to bring the rest
+of the table's order next, so both cups go out on one tray and one visit. A
+table served apart fails with where its late drink still is (being made, at
+pickup, on the tray), and the receipt counts the tables served together and how
+close their drinks came. A special opens on the routines Shift 21 was served
+with, and the way in from them is two blocks: its block target is theirs plus
+those two, and its step target a tenth over theirs, as on the campaign's shifts.
+Its stars and routines are its own and never count toward the campaign's.
+`tests/unit/simulation/together.test.ts` serves the reference, the way in, and
+the routines that fall short (no mark, a mark but no wait, two at once without
+the check).
+
 Scoring metrics shown after a run:
 
 - Seeds passed.

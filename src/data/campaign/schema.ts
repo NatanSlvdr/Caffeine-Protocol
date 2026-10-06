@@ -10,14 +10,17 @@ export const TokenSchema = v.picklist([
   'rush',
   'sugar',
   'tea',
+  'together',
   'togo',
 ]);
 
 /** Non-negative integer counts (arrivals, sugar amounts, capacities, targets). */
 const NonNegativeInt = v.pipe(v.number(), v.integer(), v.minValue(0));
 const PositiveInt = v.pipe(v.number(), v.integer(), v.minValue(1));
-const LevelId = v.pipe(v.string(), v.regex(/^L\d+$/));
-const SeedId = v.pipe(v.string(), v.regex(/^L\d+_[A-Z]$/));
+const ShiftId = v.pipe(v.string(), v.regex(/^L\d+$/));
+/** A campaign shift, like L05, or a special named after the toolkit it borrows, like L22-together. */
+const LevelId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)?$/));
+const SeedId = v.pipe(v.string(), v.regex(/^L\d+(-[a-z]+)?_[A-Z]$/));
 const CustomerId = v.pipe(v.string(), v.regex(/^C\d+$/));
 const NonEmptyString = v.pipe(v.string(), v.minLength(1));
 
@@ -34,6 +37,7 @@ const TicketLikeSchema = v.strictObject({
   sugar_count: v.optional(NonNegativeInt),
   to_go: v.optional(v.boolean()),
   rush: v.optional(v.boolean()),
+  together: v.optional(v.boolean()),
   item: v.optional(v.picklist(['coffee', 'tea'])),
   ask_help: v.optional(v.boolean()),
 });
@@ -45,6 +49,7 @@ const SpeechIntentSchema = v.strictObject({
   sugar_count: v.optional(NonNegativeInt),
   to_go: v.optional(v.boolean()),
   rush: v.optional(v.boolean()),
+  together: v.optional(v.boolean()),
   orders: v.optional(v.array(TicketLikeSchema)),
 });
 
@@ -54,6 +59,7 @@ const ExpectedTicketSchema = v.strictObject({
   sugar_count: v.optional(NonNegativeInt),
   to_go: v.optional(v.boolean()),
   rush: v.optional(v.boolean()),
+  together: v.optional(v.boolean()),
   tickets: v.optional(v.pipe(v.array(TicketLikeSchema), v.minLength(1))),
   ask_help: v.optional(v.boolean()),
 });
@@ -83,6 +89,7 @@ export const ServiceConfigSchema = v.strictObject({
   minLoad: v.optional(NonNegativeInt),
   cups: v.optional(NonNegativeInt),
   closing: v.optional(v.boolean()),
+  together: v.optional(PositiveInt),
 });
 
 /** An optional challenge: what's weighed, and the most it may come to. */
@@ -124,5 +131,5 @@ export type Lesson = v.InferOutput<typeof LessonSchema>;
 
 export const ManifestSchema = v.strictObject({
   version: PositiveInt,
-  order: v.pipe(v.array(LevelId), v.minLength(1)),
+  order: v.pipe(v.array(ShiftId), v.minLength(1)),
 });

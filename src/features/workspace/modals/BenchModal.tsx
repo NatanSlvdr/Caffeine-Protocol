@@ -239,8 +239,9 @@ function GuestRow({
   const gaps = [...new Set([...BENCH_GAPS, kit.gap, guest.after])].filter((gap) => gap > 0).sort((a, b) => a - b);
   // What the guest should get, once they ask for nothing the shift hasn't taught; when they come in is checked apart.
   const fits = benchProblems(kit, [{ ...guest, after: 0 }]).length === 0;
-  const tickets = fits ? guest.orders.map((order) => benchTicket(kit, order)) : [];
-  const says = benchSays(guest.orders);
+  const together = !!guest.together && guest.orders.length > 1;
+  const tickets = fits ? guest.orders.map((order) => benchTicket(kit, order, together)) : [];
+  const says = benchSays(guest.orders, together);
   return (
     <li className="bench-guest">
       <div className="bench-guest-head">
@@ -336,7 +337,7 @@ function GuestRow({
           </div>
         );
       })}
-      {(kit.most > 1 || kit.mumble) && (
+      {(kit.most > 1 || kit.mumble || kit.together) && (
         <div className="bench-guest-more">
           {kit.most > 1 && !guest.mumbles && guest.orders.length < kit.most && (
             <button
@@ -351,6 +352,16 @@ function GuestRow({
             >
               <Plus size={13} aria-hidden="true" /> Another drink
             </button>
+          )}
+          {kit.together && guest.orders.length > 1 && (
+            <label className="bench-mark">
+              <input
+                type="checkbox"
+                checked={!!guest.together}
+                onChange={(e) => onChange({ ...guest, together: e.target.checked || undefined })}
+              />
+              Orders together
+            </label>
           )}
           {kit.mumble && (
             <label className="bench-mark">

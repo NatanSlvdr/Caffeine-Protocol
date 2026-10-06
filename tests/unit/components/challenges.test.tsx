@@ -25,7 +25,7 @@ const unwalked: RunResult = {
 const receipt = (result: RunResult, metBefore?: ChallengeMeasure[], observation = false) =>
   render(
     <ReceiptModal
-      index={index}
+      label="Shift 15"
       level={level}
       result={result}
       observation={observation}
@@ -72,7 +72,7 @@ describe('challenges on the receipt', () => {
   it('has none on a shift without them', () => {
     render(
       <ReceiptModal
-        index={2}
+        label="Shift 03"
         level={levels[2]}
         result={served}
         observation={false}
@@ -88,7 +88,7 @@ describe('challenges in the field notes', () => {
   const notes = (challengesMet?: ChallengeMeasure[]) =>
     render(
       <HelpModal
-        index={index}
+        label="Shift 15"
         title="Shift"
         lesson={{ note: 'Note', solution: '' }}
         brief={{ story: 'Story', objective: 'Goal', concept: 'Idea' }}

@@ -74,6 +74,10 @@ export type FailureCode =
   | 'ticket-rush-missing'
   /** Rush on the ticket of a guest in no hurry. */
   | 'ticket-rush-extra'
+  /** A table that ordered together without Together on its tickets. */
+  | 'ticket-together-missing'
+  /** Together on the ticket of a guest on their own. */
+  | 'ticket-together-extra'
   /** Query wasn’t back at the register to take payment. */
   | 'checkout'
   /** Query wrote down an unclear order without asking for help. */
@@ -120,6 +124,8 @@ export type FailureCode =
   | 'wrong-dirty-table'
   /** A used cup was left on a table nobody cleared. */
   | 'table-not-cleared'
+  /** A table that ordered together had its drinks too far apart. */
+  | 'table-apart'
   // Closing time.
   /** A robot kept waiting, or Query kept listening, after the café closed. */
   | 'open-after-closing'

@@ -26,6 +26,8 @@ export interface ShiftRules {
   rush?: boolean;
   /** Closing time: Stop once Wait for Orders reports Closed. */
   closing?: boolean;
+  /** Tables that order together: Porter waits for the rest of the order and serves it on one visit. */
+  together?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {
@@ -93,7 +95,14 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
 }
 export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
   // Porter keeps its starting place in Var B, reads each order's table into Var A and walks there by itself.
-  const serve = ['STORE var1 FROM table', 'MOVE var1', 'DEPOSIT UP', 'MOVE var2'];
+  // A table that orders together gets the rest of its order on the same visit.
+  const serve = [
+    'STORE var1 FROM table',
+    'MOVE var1',
+    'DEPOSIT UP',
+    ...(rules.together ? ['IF together IN CUSTOMER SPEECH', 'DEPOSIT UP', 'END'] : []),
+    'MOVE var2',
+  ];
   // The sink sits below the tile right of Porter's start.
   const clear = [
     'WAIT DIRTY',
@@ -106,7 +115,7 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
     ...movementSource(STATIONS.returns.floor, STARTS.floor, 'floor'),
   ];
   const clearing = level >= UNLOCKS.clearing;
-  if (rules.toGo || rules.cups || rules.rush || rules.closing) {
+  if (rules.toGo || rules.cups || rules.rush || rules.closing || rules.together) {
     // One drink at a time: rush orders never wait on the tray, and every table cup is cleared as it's served.
     if (batch !== 1) throw new Error('Porter handles the odd rules one drink at a time.');
     const toGo = rules.toGo
@@ -124,6 +133,18 @@ export function floorSource(level: number, batch = 1, rules: ShiftRules = {}) {
       'LISTEN',
       ...(rules.closing ? STOP_WHEN_CLOSED() : []),
       'TAKE DOWN',
+      // Wait for Orders brings the rest of a Together table's order next; both cups are cleared once served.
+      ...(rules.together
+        ? [
+            'IF together IN CUSTOMER SPEECH',
+            'LISTEN',
+            'TAKE DOWN',
+            'CALL deliver',
+            ...(clearing ? ['CALL clear', 'CALL clear'] : []),
+            'JUMP listen',
+            'END',
+          ]
+        : []),
       ...toGo,
       'CALL deliver',
       ...(clearing ? ['CALL clear'] : []),

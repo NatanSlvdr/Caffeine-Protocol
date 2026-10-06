@@ -1,18 +1,21 @@
 import { ArrowRight, GitCompareArrows } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { count, type ChallengeMeasure, type LevelDefinition, type RunResult } from '@/domain';
-import { pad2, starRow } from '@/shared/lib/format';
+import { count, type ChallengeMeasure, type LevelDefinition, type ReplayEvent, type RunResult } from '@/domain';
+import { starRow } from '@/shared/lib/format';
 import { guestWaits, WAIT_LABELS, WAIT_LEADS } from '../waits';
 import { challengeOutcomes, type ChallengeOutcome } from '../challenges';
 
 export interface ReceiptModalProps {
-  index: number;
+  /** What the kicker calls the shift: "Shift 03", or "Special". */
+  label: string;
   level: LevelDefinition;
   result: RunResult;
   observation: boolean;
   /** The next shift's title, or nothing after the last shift. */
   nextShift?: string;
+  /** A special's thanks, said in place of the next shift: its way on goes back to the campaign. */
+  thanks?: string;
   /** This shift's stars before the run, if it had been served before. */
   best?: number;
   /** This shift's optional challenges met before the run. */
@@ -26,11 +29,12 @@ export interface ReceiptModalProps {
 
 /** Service receipt: stars, the totals measured against this shift's targets, and the next shift. */
 export function ReceiptModal({
-  index,
+  label,
   level,
   result,
   observation,
   nextShift,
+  thanks,
   best,
   metBefore,
   compareWith,
@@ -71,10 +75,11 @@ export function ReceiptModal({
   const waits = observation ? [] : guestWaits(result.events ?? []);
   // The challenges come to light with the first pass, and every service after says how it measured up.
   const challenges = observation ? [] : challengeOutcomes(level.challenges ?? [], result, metBefore);
+  const together = level.service?.together === undefined ? undefined : servedTogether(result.events);
   return (
     <Modal
       title="Service complete"
-      kicker={`Shift ${pad2(index + 1)} · Service receipt`}
+      kicker={`${label} · Service receipt`}
       onClose={onClose}
       className="settings-window confirm-slip receipt-slip"
     >
@@ -110,6 +115,17 @@ export function ReceiptModal({
               </dd>
             </div>
           </>
+        )}
+        {together && (
+          <div className="met">
+            <dt>Tables served together</dt>
+            <dd>
+              {together.tables}{' '}
+              <small>
+                · {together.tables === 1 ? 'within' : 'all within'} {together.gap} s
+              </small>
+            </dd>
+          </div>
         )}
       </dl>
       {nextStar && <p className="receipt-note">{nextStar}</p>}
@@ -157,7 +173,9 @@ export function ReceiptModal({
         </section>
       )}
       <p className="receipt-thanks">
-        {nextShift ? (
+        {thanks ? (
+          thanks
+        ) : nextShift ? (
           <>
             Thank you. Next up: <strong>{nextShift}</strong>
           </>
@@ -177,12 +195,23 @@ export function ReceiptModal({
             onNext();
           }}
         >
-          {nextShift ? 'Next shift' : 'Closing time'}
+          {thanks ? 'Back to the campaign' : nextShift ? 'Next shift' : 'Closing time'}
           <ArrowRight size={16} aria-hidden="true" />
         </Button>
       </div>
     </Modal>
   );
+}
+
+/**
+ * The tables that ordered together, and the longest any of them waited from its first drink to its last, in seconds:
+ * the receipt of a shift whose guests order together says how close the drinks came.
+ */
+function servedTogether(events: readonly ReplayEvent[]): { tables: number; gap: number } | undefined {
+  const tables = events.filter((event) => event.tickets.some((ticket) => ticket.together));
+  if (!tables.length) return undefined;
+  const gaps = tables.map(({ timing }) => timing.served - (timing.firstServed ?? timing.served));
+  return { tables: tables.length, gap: Math.round(Math.max(...gaps) * 10) / 10 };
 }
 
 /** Whether this service met a challenge, and whether that's news. */

@@ -57,8 +57,8 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
     [role, setRole] = useState<RobotRole>(() => openingRole(save, index, lessons));
   const source = programs[role];
   // Every robot keeps its own undo history, so undoing on Brew's tab never reaches back into Query's routine.
-  const [histories, setHistories] = useState(() => keptHistories(index, programs));
-  useEffect(() => keepHistories(index, programs, histories), [programs, histories]);
+  const [histories, setHistories] = useState(() => keptHistories(level.id, programs));
+  useEffect(() => keepHistories(level.id, programs, histories), [programs, histories]);
   const history = histories[role];
   const [result, setResult] = useState<RunResult | null>(null),
     [running, setRunning] = useState(false),

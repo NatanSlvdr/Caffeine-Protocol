@@ -3,6 +3,7 @@ import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { Workspace } from '@/features/workspace/Workspace';
 import { GuideWindow } from '@/app/GuideWindow';
 import { NewCafeModal } from '@/app/NewCafeModal';
+import { SpecialShift } from '@/app/SpecialShift';
 import { SaveNotice } from '@/app/SaveNotice';
 import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
@@ -10,6 +11,7 @@ import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { drills } from '@/data/drills';
+import { specialById } from '@/data/specials';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
@@ -41,22 +43,27 @@ function Shell() {
   // The closing scene belongs to the ending page, which shows the receipt after it.
   const scene = page === 'scene' ? sceneById(route.split('/')[2] ?? '') : undefined;
   const watchable = !!scene && sceneOpen(save, scene) && scene.before < CAMPAIGN_LENGTH;
+  // The specials open once the campaign is finished.
+  const special = page === 'special' && save.complete ? specialById(route.split('/')[2] ?? '') : undefined;
   const screen =
     page === 'shift' && accessible
       ? 'workspace'
-      : page === 'scene' && watchable
-        ? 'scene'
-        : page === 'campaign' || page === 'settings'
-          ? 'campaign'
-          : page === 'ending' && save.complete
-            ? 'ending'
-            : 'home';
+      : special
+        ? 'special'
+        : page === 'scene' && watchable
+          ? 'scene'
+          : page === 'campaign' || page === 'settings'
+            ? 'campaign'
+            : page === 'ending' && save.complete
+              ? 'ending'
+              : 'home';
   const shift = useShift(index);
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
     home: '',
     campaign: 'Choose a shift',
     workspace: `Shift ${pad2(index + 1)}: ${shift.title}`,
+    special: `Special: ${special?.title}`,
     scene: scene?.title ?? '',
     ending: 'Closing time',
   }[screen];
@@ -101,6 +108,7 @@ function Shell() {
               }
             />
           )}
+          {screen === 'special' && special && <SpecialShift key={special.id} special={special} />}
           {screen === 'scene' && scene && <ScenePage key={scene.id} scene={scene} />}
           {screen === 'ending' && <EndingPage />}
         </div>

@@ -9,7 +9,7 @@ const result = (stars: number, block_count = 5, executed_instructions = 20) =>
 const receipt = (stars: number, best?: number, observation = false, run = result(stars)) =>
   render(
     <ReceiptModal
-      index={2}
+      label="Shift 03"
       level={levels[2]}
       result={run}
       observation={observation}
@@ -32,7 +32,7 @@ describe('service receipt', () => {
     // Shift 06's guests order several drinks each: 12 guests, 21 tickets.
     render(
       <ReceiptModal
-        index={5}
+        label="Shift 06"
         level={levels[5]}
         result={result(3)}
         observation={false}

@@ -123,6 +123,18 @@ other rules never compare, as their fingerprints differ.
 The save layer takes a `LessonCatalog` parameter instead of importing data,
 so validation stays testable without the campaign bundle.
 
+A special (`data/specials.ts`) keeps its progress in the save's `specials`
+map, by id: a draft, a solution, stars and challenges, and nothing for one
+never touched. It plays in the ordinary `Workspace` as the shift after the
+campaign's last: `app/SpecialShift.tsx` hands the workspace a save laid out by
+`projectSpecial`, with the special's progress at index `CAMPAIGN_LENGTH` and the
+lesson appended to the catalog, and folds every change back with
+`keepSpecial`, which moves that index's progress into `specials` and restores
+`selected`, `unlocked` and `complete`. So the workspace needs no special case,
+the routines carried in are Shift 21's, and serving a special never unlocks,
+finishes or stars anything in the campaign. `parseSave` checks the map (ids,
+star counts, known challenges, at most 100 entries) and drops empty entries.
+
 ## Where to add things
 
 - **Shift L22**: one `LevelSeed` in `data/campaign/extension-seeds.ts` plus one
@@ -138,6 +150,10 @@ so validation stays testable without the campaign bundle.
   compile at `ROBOT_STAND_IN_LEVEL`, which exceeds every unlock by design — it
   is not the campaign length. Save validation follows the injected catalog
   length, so longer campaigns validate without code changes.
+- **Special**: one `Special` in `data/specials.ts` (its level, lesson, brief,
+  intro, outro and thanks) and a test that serves its reference. Its route
+  (`#/special/<id>`), its card in the campaign's Specials window and its save
+  entry follow from the id; it validates itself as the module loads.
 - **Block**: one `BlockRegistry` entry (family/operands) plus the command in
   the compiler's `availableCommands` and interpreter dispatch — the registry
   is the discovery point; the language core stays explicit.

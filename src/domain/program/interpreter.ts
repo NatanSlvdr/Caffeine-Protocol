@@ -185,8 +185,10 @@ export function* streamCustomerEvent(
       ticket.with_sugar = amount > 0;
     } else if (parseMarkWrite(c)) {
       if (!ticket) return fail('no-paper', 'Take the order paper before writing on it.');
-      if (parseMarkWrite(c) === 'togo') ticket.to_go = true;
-      else ticket.rush = true;
+      const mark = parseMarkWrite(c);
+      if (mark === 'togo') ticket.to_go = true;
+      else if (mark === 'rush') ticket.rush = true;
+      else ticket.together = true;
     } else if (c.startsWith('ITEM ')) {
       if (!ticket) return fail('no-paper', 'Take the order paper before writing its item.');
       const parts = c.split(' ');

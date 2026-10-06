@@ -107,5 +107,17 @@ export function ticketMismatch(index: number, e: ExpectedTicket, a: OrderTicket)
           reason: `Ticket ${ticket} isn’t in a rush, but it says Rush.`,
           context: { ticket },
         };
+  if ((e.together ?? false) !== (a.together ?? false))
+    return e.together
+      ? {
+          code: 'ticket-together-missing',
+          reason: `Ticket ${ticket} is for a table that wants its drinks together: Write Together on it.`,
+          context: { ticket },
+        }
+      : {
+          code: 'ticket-together-extra',
+          reason: `Ticket ${ticket} is for a guest on their own, but it says Together.`,
+          context: { ticket },
+        };
   return undefined;
 }

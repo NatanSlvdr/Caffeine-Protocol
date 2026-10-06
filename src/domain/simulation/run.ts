@@ -1,6 +1,7 @@
 /** Level runs: validate orders, run service, then score. */
 import { orderTotal } from '../pricing';
 import { streamService } from '../service';
+import { shiftNumber } from '../unlocks';
 import type { ServiceResult } from '../service';
 import { INSTRUCTION_LIMIT } from '../constants';
 import { countProgramBlocks, starsFor } from '../scoring';
@@ -208,7 +209,7 @@ function finalizeResult(
   program: Program,
   programs: RobotPrograms,
 ): void {
-  const levelNumber = Number(level.id.slice(1));
+  const levelNumber = shiftNumber(level.id);
   if (result.first_failure) {
     const failedIndex = level.seeds.findIndex((s) => s.id === result.first_failure?.seed_id);
     result.events = result.events.filter((e) => level.seeds.findIndex((s) => s.id === e.seed_id) <= failedIndex);

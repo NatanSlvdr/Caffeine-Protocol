@@ -12,7 +12,7 @@ import * as v from 'valibot';
 import { ChallengeSchema, LessonSchema, LevelSchema, ManifestSchema } from './schema.ts';
 import { TABLE_LAYOUT } from '../../domain/layout/geometry.ts';
 import { ROBOT_UNLOCK_LEVELS } from '../../domain/robots.ts';
-import { UNLOCKS } from '../../domain/unlocks.ts';
+import { shiftNumber, UNLOCKS } from '../../domain/unlocks.ts';
 import type { Customer, LevelDefinition, ServiceConfig, ValidationSeed } from '../../domain/types.ts';
 import { extensionShiftConfig, shiftId } from './extension-config.ts';
 
@@ -20,11 +20,24 @@ import { extensionShiftConfig, shiftId } from './extension-config.ts';
 export const MAX_TABLES = TABLE_LAYOUT.length;
 
 export const LEVEL_ID_RE = /^L\d+$/;
-export const SEED_ID_RE = /^L\d+_[A-Z]$/;
+/** A special past the campaign, named after the toolkit it borrows: L22-together. */
+const SPECIAL_ID_RE = /^L\d+-[a-z]+$/;
+export const SEED_ID_RE = /^L\d+(-[a-z]+)?_[A-Z]$/;
 export const CUSTOMER_ID_RE = /^C\d+$/;
 
 /** Closed concept vocabulary shared with schema.ts for semantic checks. */
-const TOKENS = new Set(['ambiguous', 'closed', 'coffee', 'negation', 'number', 'rush', 'sugar', 'tea', 'togo']);
+const TOKENS = new Set([
+  'ambiguous',
+  'closed',
+  'coffee',
+  'negation',
+  'number',
+  'rush',
+  'sugar',
+  'tea',
+  'together',
+  'togo',
+]);
 
 /** Expected table count from the same config used to build extension shifts. */
 export function extensionActiveTables(levelNumber: number): number {
@@ -266,11 +279,15 @@ function collectChallengeErrors(level: LevelDefinition, numeric: number): string
 
 export function collectLevelErrors(level: LevelDefinition): string[] {
   const errors: string[] = [];
-  if (!LEVEL_ID_RE.test(level.id)) errors.push(`level id ${JSON.stringify(level.id)} must match L<n>`);
-  const numeric = Number(level.id.slice(1));
+  const special = SPECIAL_ID_RE.test(level.id);
+  if (!LEVEL_ID_RE.test(level.id) && !special) errors.push(`level id ${JSON.stringify(level.id)} must match L<n>`);
+  const numeric = shiftNumber(level.id);
   if (!Number.isInteger(numeric) || numeric < 1)
     errors.push(`level id ${JSON.stringify(level.id)} needs a positive number`);
-  else {
+  // A special goes by its own name, with no shift number in front.
+  else if (special) {
+    if (/^Level \d+: /.test(level.title)) errors.push(`${level.id}: a special's title has no shift number`);
+  } else {
     const prefix = `Level ${numeric}: `;
     if (!level.title.startsWith(prefix) || level.title.length <= prefix.length)
       errors.push(`${level.id}: title must start with ${JSON.stringify(prefix)}`);

@@ -5,3 +5,4 @@ export * from './migration';
 export * from './progression';
 export * from './io';
 export * from './cafes';
+export * from './specials';

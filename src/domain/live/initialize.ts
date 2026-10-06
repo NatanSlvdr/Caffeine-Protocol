@@ -1,4 +1,5 @@
 import { compileProgram } from '../program';
+import { shiftNumber } from '../unlocks';
 import { tableForShift } from '../scoring';
 import type { LevelDefinition, Program, ReplayEvent, RobotPrograms } from '../types';
 
@@ -12,8 +13,8 @@ export interface LiveRunInit {
 
 /** Compile the query program and seed per-customer events; executes no player instruction. */
 export function initializeLiveRun(level: LevelDefinition, programs: RobotPrograms, seedIndex = 0): LiveRunInit {
-  const program = compileProgram(programs.query, Number(level.id.slice(1)));
-  const number = Number(level.id.slice(1));
+  const number = shiftNumber(level.id);
+  const program = compileProgram(programs.query, number);
   const seed = level.seeds[seedIndex] ?? level.seeds[0];
   const events = seed.customers.map((customer, i): ReplayEvent => ({
     seed_id: seed.id,

@@ -40,6 +40,7 @@ Query's part of the campaign, by shift (see [docs/campaign/](../campaign/README.
 - Shift 8: ambiguous speech and HELP.
 - Shifts 9–16: Query keeps the counter while Brew and Porter are programmed.
 - Shifts 17–21: drinks to go, customers in a rush and closing time add the `togo`, `rush` and `closed` tokens.
+- The Together special, after the campaign: a table that orders for itself adds the `together` token, written on each of its tickets.
 
 ## Ticket data and validation
 

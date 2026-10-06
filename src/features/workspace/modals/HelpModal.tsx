@@ -10,14 +10,15 @@ import {
   type RobotPrograms,
   type RobotRole,
 } from '@/domain';
-import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
+import { RUN_MODIFIER } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
 import type { RunEvidence } from '../evidence';
 import { clueFor, HINT_TIERS, type Clue, type WorkspaceDrill } from '../hints';
 import { CHALLENGE_WORDS } from '../challenges';
 
 export interface HelpModalProps {
-  index: number;
+  /** What the kicker calls the shift: "Shift 03", or "Special". */
+  label: string;
   title: string;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
@@ -51,7 +52,7 @@ export interface HelpModalProps {
  * routine when they say so.
  */
 export function HelpModal({
-  index,
+  label,
   title,
   lesson,
   brief,
@@ -101,7 +102,7 @@ export function HelpModal({
   return (
     <Modal
       className="settings-window confirm-slip help-slip"
-      kicker={`Shift ${pad2(index + 1)} · Field notes`}
+      kicker={`${label} · Field notes`}
       title={title}
       onClose={onClose}
     >

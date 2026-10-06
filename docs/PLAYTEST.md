@@ -57,6 +57,13 @@ The production build is static and caches itself on its first successful load. T
 1. On Shift 04, open **Test bench**, start from a round, remove guests and add one: what each should get changes with what they ask for. Run the bench: it earns no stars, and a slip stops on the guest as a service does.
 2. On Shift 18, the bench offers **Twice the cups**. With Brew's washing taken out, a bench of eight guests runs out of cups; eased, it goes right, and the toolbar, the card and the run's name in Compare runs all say it was eased. Shift 21 offers the cups and no closing time; Shift 04 offers nothing to ease.
 
+## Specials
+
+1. Before the campaign is finished, the campaign page has no **Specials** button, and `#/special/together` opens the front page instead.
+2. With the campaign finished, open **Specials**: Bound Together is new, asked for by Rosa. Serve it: it opens on the routines Shift 21 was served with, and the breadcrumb reads Special.
+3. Run Shift 21's routines as they are: Query is caught out on the first table that orders together. Add the Together mark only: the table's drinks reach it apart, and the card says where the late one is.
+4. Serve it: the receipt counts the tables served together and how close their drinks came, carries Rosa's thanks, and goes back to the campaign. The campaign's stars are unchanged, and the Specials window shows the special's own.
+
 ## Cafés in one browser
 
 1. With a café under way, open **Settings → Cafés in this browser** and add a café. The page reloads on the new café at the very start, with the same audio and display settings, and the front page names it.

@@ -12,6 +12,7 @@ export const QUERY_CONDITION_VALUES = [
   'togo',
   'rush',
   'closed',
+  'together',
 ] as const;
 export const QUERY_CONDITION_SOURCES = ['CUSTOMER SPEECH', 'item'] as const;
 export interface QueryComparisonCondition {

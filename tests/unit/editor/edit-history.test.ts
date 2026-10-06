@@ -68,10 +68,10 @@ describe('routine edit history', () => {
   it('keeps a shift’s histories only while they still lead to its routines', () => {
     const programs = { query: 'LISTEN', prep: 'WAIT ORDER', floor: '' };
     const query = edits(['', 'LISTEN']).history;
-    keepHistories(41, programs, { query, prep: query, floor: emptyHistory() });
-    const back = keptHistories(41, { ...programs, prep: 'WAIT ORDER\nSTOP' });
+    keepHistories('L41', programs, { query, prep: query, floor: emptyHistory() });
+    const back = keptHistories('L41', { ...programs, prep: 'WAIT ORDER\nSTOP' });
     expect(back.query).toBe(query);
     expect(back.prep.past).toEqual([]);
-    expect(keptHistories(42, programs).query.past).toEqual([]);
+    expect(keptHistories('L42', programs).query.past).toEqual([]);
   });
 });

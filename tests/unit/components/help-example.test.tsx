@@ -10,7 +10,7 @@ function Notes({ start, ...props }: { start: number } & Partial<Parameters<typeo
   const [hints, setHints] = useState(start);
   return (
     <HelpModal
-      index={2}
+      label="Shift 03"
       title="Shift"
       lesson={lesson}
       brief={{ story: 'Story', objective: 'Goal', concept: 'The idea behind it.' }}

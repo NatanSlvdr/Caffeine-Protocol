@@ -82,17 +82,17 @@ export function redo(history: RoutineHistory, present: string): { history: Routi
  * with the routine it ends on: if that routine changed meanwhile (an imported café, a reset save), the history no
  * longer leads to it and is dropped.
  */
-const kept = new Map<number, { programs: RobotPrograms; histories: Record<RobotRole, RoutineHistory> }>();
+const kept = new Map<string, { programs: RobotPrograms; histories: Record<RobotRole, RoutineHistory> }>();
 
 export function keepHistories(
-  shift: number,
+  shift: string,
   programs: RobotPrograms,
   histories: Record<RobotRole, RoutineHistory>,
 ): void {
   kept.set(shift, { programs, histories });
 }
 
-export function keptHistories(shift: number, programs: RobotPrograms): Record<RobotRole, RoutineHistory> {
+export function keptHistories(shift: string, programs: RobotPrograms): Record<RobotRole, RoutineHistory> {
   const entry = kept.get(shift),
     histories = emptyHistories();
   if (!entry) return histories;

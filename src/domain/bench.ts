@@ -30,6 +30,8 @@ export interface BenchOrder {
 export interface BenchGuest {
   orders: BenchOrder[];
   mumbles?: boolean;
+  /** A table that orders together: its drinks come on one visit. Only a guest asking for two or more can. */
+  together?: boolean;
   /** Seconds after the guest before; the first guest comes in as the café opens, so theirs is 0. */
   after: number;
 }
@@ -43,6 +45,8 @@ export interface BenchKit {
   mumble: boolean;
   toGo: boolean;
   rush: boolean;
+  /** Whether a table orders together. */
+  together: boolean;
   /** How far apart the shift's guests come in, at the closest. */
   gap: number;
   /** What a ticket says about each way of asking for sugar, copied from a guest of the shift who asked that way. */
@@ -99,6 +103,7 @@ export function benchKit(level: LevelDefinition): BenchKit {
     mumble: customers.some((customer) => customer.expected.ask_help),
     toGo: orders.some(({ heard }) => heard.tokens.includes('togo')),
     rush: orders.some(({ heard }) => heard.tokens.includes('rush')),
+    together: orders.some(({ heard }) => heard.tokens.includes('together')),
     gap: gaps.length ? Math.max(1, Math.min(...gaps)) : 8,
     tickets,
   };
@@ -115,6 +120,7 @@ export function benchGuests(customers: readonly Customer[]): BenchGuest[] {
       ...(heard.tokens.includes('rush') && { rush: true }),
     })),
     ...(customer.expected.ask_help && { mumbles: true }),
+    ...(ordersOf(customer).some(({ heard }) => heard.tokens.includes('together')) && { together: true }),
     after: i === 0 ? customer.arrival : customer.arrival - guests[i - 1].arrival,
   }));
 }
@@ -149,6 +155,7 @@ export function benchProblems(kit: BenchKit, guests: readonly BenchGuest[]): str
       if (order.toGo && !kit.toGo) problems.push(`${who} takes a drink to go, not on this shift.`);
       if (order.rush && !kit.rush) problems.push(`${who} is in a rush, not on this shift.`);
     }
+    if (guest.together && !kit.together) problems.push(`${who} orders together, and nobody does on this shift.`);
   });
   return problems;
 }
@@ -166,15 +173,15 @@ function benchPhrase(order: BenchOrder): string {
 }
 
 /** A guest's whole order in words, as they say it at the register, or once asked again after mumbling. */
-export function benchSays(orders: readonly BenchOrder[]): string {
-  const said = orders.map(benchPhrase).join(' and ');
+export function benchSays(orders: readonly BenchOrder[], together = false): string {
+  const said = orders.map(benchPhrase).join(' and ') + (together ? ', together please' : '');
   // One guest in a rush says so; in a group, “a quick” says which of the drinks is.
   const hurry = orders.length === 1 && orders[0].rush ? '. I’m in a rush!' : '';
   return said[0].toUpperCase() + said.slice(1) + hurry;
 }
 
 /** What one order should come out as, the way the shift's guests who asked like that get it. */
-export function benchTicket(kit: BenchKit, order: BenchOrder): ExpectedTicket {
+export function benchTicket(kit: BenchKit, order: BenchOrder, together = false): ExpectedTicket {
   const sugar = kit.tickets[sugarKey(order.sugar)] ?? {};
   return {
     item: order.drink,
@@ -182,10 +189,11 @@ export function benchTicket(kit: BenchKit, order: BenchOrder): ExpectedTicket {
     ...(sugar.sugar_count !== undefined && { sugar_count: order.sugar as number }),
     ...(order.toGo && { to_go: true }),
     ...(order.rush && { rush: true }),
+    ...(together && { together: true }),
   };
 }
 
-function heardOf(order: BenchOrder): HeardOrder {
+function heardOf(order: BenchOrder, together = false): HeardOrder {
   const { sugar } = order;
   return {
     tokens: [
@@ -195,6 +203,7 @@ function heardOf(order: BenchOrder): HeardOrder {
       ...(typeof sugar === 'number' ? ['number'] : []),
       ...(order.toGo ? ['togo'] : []),
       ...(order.rush ? ['rush'] : []),
+      ...(together ? ['together'] : []),
     ],
     ...(typeof sugar === 'number' && { number: sugar }),
   };
@@ -207,6 +216,7 @@ const intentOf = (ticket: ExpectedTicket): SpeechIntent => ({
   ...(ticket.sugar_count !== undefined && { sugar_count: ticket.sugar_count }),
   ...(ticket.to_go && { to_go: true }),
   ...(ticket.rush && { rush: true }),
+  ...(ticket.together && { together: true }),
 });
 
 /** The bench as a round of the shift: its guests as the café hears them, each with what they should get. */
@@ -216,9 +226,10 @@ export function benchSeed(kit: BenchKit, guests: readonly BenchGuest[]): Validat
   let arrival = 0;
   const customers = guests.map((guest, i): Customer => {
     arrival += guest.after;
-    const tickets = guest.orders.map((order) => benchTicket(kit, order));
-    const heard = guest.orders.map(heardOf);
-    const said = benchSays(guest.orders);
+    const together = !!guest.together && guest.orders.length > 1;
+    const tickets = guest.orders.map((order) => benchTicket(kit, order, together));
+    const heard = guest.orders.map((order) => heardOf(order, together));
+    const said = benchSays(guest.orders, together);
     const base = { customer_id: `B${i + 1}`, arrival };
     if (guest.mumbles)
       return {

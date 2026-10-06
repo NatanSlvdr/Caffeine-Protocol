@@ -6,6 +6,7 @@ import { commandDirection } from './commands';
 import { reachedName } from './blockPreview';
 import { interactionTarget } from './queryMovement';
 import { robotUnlocked } from './robots';
+import { shiftNumber } from './unlocks';
 import { DRINK_SECONDS, STREET_APPROACH_SECONDS, STREET_EXIT_SECONDS } from './street';
 import { customerCrowd, isToGo } from './sidewalk';
 import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
@@ -24,7 +25,7 @@ export function sampleReplay(result: RunResult, time: number) {
       ? result.execution?.[0]
       : result.execution?.find((s) => time >= s.start && time < s.start + s.duration)) ?? result.execution?.at(-1);
   const local = time - (seed?.start ?? 0),
-    level = Number(result.level_id.slice(1));
+    level = shiftNumber(result.level_id);
   const actors: Partial<Record<ActorId, ActorSnapshot>> = {};
   if (robotUnlocked('query', level)) actors.query = { position: STARTS.query, inventory: [], role: 'query' };
   actors.prep = { position: STARTS.prep, inventory: [], role: 'prep' };

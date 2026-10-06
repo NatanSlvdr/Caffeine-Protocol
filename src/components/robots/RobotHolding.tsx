@@ -127,7 +127,7 @@ export function RobotHolding({
                   {paper.sugar_count}
                 </span>
               )}
-              <OrderMarks toGo={paper.to_go} rush={paper.rush} />
+              <OrderMarks toGo={paper.to_go} rush={paper.rush} together={paper.together} />
             </li>
           )}
           {inventory.map((cargo) => {

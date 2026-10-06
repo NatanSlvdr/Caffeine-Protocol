@@ -39,6 +39,7 @@ export function paperLabel(paper: OrderTicket): string {
     (paper.item ? `${paper.item === 'tea' ? 'Tea' : 'Coffee'} order paper` : 'Blank order paper') +
     sugar +
     (paper.to_go ? ' · To go' : '') +
-    (paper.rush ? ' · Rush' : '')
+    (paper.rush ? ' · Rush' : '') +
+    (paper.together ? ' · Together' : '')
   );
 }

@@ -34,7 +34,7 @@ import {
 import { RECIPE_RULES, machineStep, machineStepError, recipeStepError } from './drinks';
 import { satisfactionFor, tableForShift } from './scoring';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from './robots';
-import { UNLOCKS } from './unlocks';
+import { shiftNumber, UNLOCKS } from './unlocks';
 import type { Failure, FailureCode, FailureContext } from './failures';
 import type {
   ActorId,
@@ -63,6 +63,10 @@ type Job = {
   toGo: boolean;
   /** The customer is in a rush: the order jumps the queue. */
   rush: boolean;
+  /** The table ordered together: its drinks arrive on one visit. */
+  together: boolean;
+  /** When it reached the table; Infinity until then. */
+  servedAt: number;
 };
 type Worker = {
   role: 'prep' | 'floor';
@@ -151,7 +155,7 @@ export function* streamService(
   start = 0,
   live?: LiveService,
 ): Generator<number, ServiceResult> {
-  const number = Number(level.id.slice(1)),
+  const number = shiftNumber(level.id),
     config = configFor(level),
     seed = events[0]?.seed_id ?? level.seeds[0].id;
   const log: ExecutionEvent[] = [],
@@ -240,6 +244,8 @@ export function* streamService(
             dirtyAt: Infinity,
             toGo: !!ticket.to_go,
             rush: !!ticket.rush,
+            together: !!ticket.together,
+            servedAt: Infinity,
           });
       }
     }
@@ -480,6 +486,7 @@ export function* streamService(
       const tokens = [
         ...(job ? [job.item, ...(job.sugar > 0 ? ['sugar'] : []), ...(job.toGo ? ['togo'] : [])] : []),
         ...(job?.rush ? ['rush'] : []),
+        ...(job?.together ? ['together'] : []),
         ...(w.closed ? ['closed'] : []),
       ];
       return evaluateConditionExpression(expression, { 'CUSTOMER SPEECH': { tokens } });
@@ -499,12 +506,47 @@ export function* streamService(
   /** Wait for Orders brings Brew its next ticket and Porter its next ready drink; rush orders jump the queue. */
   const isWait = (c: string) => c === 'LISTEN' || c === 'WAIT DIRTY';
   const firstOf = (ready: (j: Job) => boolean) => jobs.find((j) => j.rush && ready(j)) ?? jobs.find(ready);
-  const nextWork = (w: Worker, c: string) =>
-    c === 'LISTEN' && w.role === 'prep'
-      ? firstOf((j) => j.status === 'ticket' && j.created <= now)
-      : c === 'LISTEN'
-        ? firstOf(canClaimDrink)
-        : jobs.find((j) => j.status === 'dirty' && j.dirtyAt <= now);
+  /** Each Together table with a drink served, the first one's time, and the drinks still to come. */
+  const togetherTables = () =>
+    events.flatMap((event) => {
+      const group = jobs.filter((j) => j.event === event && j.together);
+      const first = Math.min(...group.map((j) => j.servedAt));
+      const late = group.filter((j) => j.servedAt === Infinity);
+      return Number.isFinite(first) && late.length ? [{ event, first, group, late: late[0] }] : [];
+    });
+  const togetherDeadlines = (seconds: number) => togetherTables().map((t) => t.first + seconds);
+  /** A Together table that has waited too long for the rest of its order, told from where the late drink is. */
+  const apartTable = (seconds: number) => {
+    const table = togetherTables().find((t) => now >= t.first + seconds);
+    if (!table) return undefined;
+    const { event, group, late } = table;
+    const served = group.find((j) => Number.isFinite(j.servedAt))!;
+    const where =
+      late.status === 'carried'
+        ? 'is still on Porter’s tray'
+        : late.status === 'ready' || late.status === 'reserved'
+          ? 'is still waiting at pickup'
+          : 'is still being made';
+    return {
+      event,
+      reason: `Table ${event.table} ordered together, but ${
+        served.item === late.item
+          ? `one ${served.item} reached them alone: the other`
+          : `the ${served.item} reached them alone: the ${late.item}`
+      } ${where}. Carry the table’s drinks on one tray, and serve them on one visit.`,
+    };
+  };
+  /** The rest of a Together table's order, while Porter carries part of it: Wait for Orders brings that next. */
+  const tableMates = (w: Worker) => {
+    const held = w.inventory.map(jobOf).find((j) => j?.together);
+    return held && jobs.filter((j) => j.event === held.event && ['ticket', 'claimed', 'ready'].includes(j.status));
+  };
+  const nextWork = (w: Worker, c: string) => {
+    if (c === 'LISTEN' && w.role === 'prep') return firstOf((j) => j.status === 'ticket' && j.created <= now);
+    if (c !== 'LISTEN') return jobs.find((j) => j.status === 'dirty' && j.dirtyAt <= now);
+    const mates = tableMates(w);
+    return mates?.length ? mates.find(canClaimDrink) : firstOf(canClaimDrink);
+  };
   /** Every customer has ordered, so no new ticket will ever reach the kitchen. */
   const allOrdered = () => (!live || live.done()) && events.every((event) => event.timing.created <= now);
   /** At closing time a wait with nothing left to come reports Closed instead of waiting forever. */
@@ -945,6 +987,8 @@ export function* streamService(
           return;
         }
         served.status = 'served';
+        served.servedAt = now;
+        served.event.timing.firstServed ??= now;
         served.dirtyAt = now + DRINK_SECONDS;
         if (jobs.filter((j) => belongsToPaper(j.ticketId, paper)).every((j) => Number.isFinite(j.dirtyAt)))
           paper.status = 'served';
@@ -1191,6 +1235,8 @@ export function* streamService(
               dirtyAt: Infinity,
               toGo: !!ticket.to_go,
               rush: !!ticket.rush,
+              together: !!ticket.together,
+              servedAt: Infinity,
             });
         }
     }
@@ -1284,6 +1330,11 @@ export function* streamService(
       };
     }
     for (const job of jobs) if (job.status === 'served' && job.dirtyAt <= now) job.status = 'dirty';
+    const apart = config.together === undefined ? undefined : apartTable(config.together);
+    if (apart) {
+      fail(workers[1], 'table-apart', apart.reason, { event: apart.event });
+      break;
+    }
     // Reserve a table as the customer chooses it; delivery waits for the seated timestamp.
     for (const [index, event] of events.entries()) {
       // Take-away customers wait by the to-go shelf as soon as they've ordered.
@@ -1361,6 +1412,7 @@ export function* streamService(
       ...workers.flatMap((w) => (w.pending ? [w.pending.end] : [])),
       ...jobs.filter((j) => j.status === 'ticket' && j.created > now).map((j) => j.created),
       ...jobs.filter((j) => j.status === 'served' && j.dirtyAt > now).map((j) => j.dirtyAt),
+      ...(config.together === undefined ? [] : togetherDeadlines(config.together)),
     ].filter((t) => Number.isFinite(t) && t > now);
     if (!future.length) {
       // Porter waiting for a used cup while drinks wait at pickup: no guest has a drink to leave one, so the robot to

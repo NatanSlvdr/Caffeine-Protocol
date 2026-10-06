@@ -1,4 +1,4 @@
-import type { DialoguePace, ProgressSave, RobotPrograms, Settings } from '@/domain/types';
+import type { DialoguePace, ProgressSave, RobotPrograms, Settings, SpecialProgress } from '@/domain/types';
 import { CHALLENGE_MEASURES, type ChallengeMeasure } from '@/domain/challenges';
 import { DIALOGUE_PACES, MAX_PLAYBACK_SPEED } from '@/domain/constants';
 import { count } from '@/domain/tickets';
@@ -72,6 +72,7 @@ const SAVED_PART: Record<string, string> = {
   story: 'story progress',
   challenges: 'challenges met',
   drills: 'drills done',
+  specials: 'specials',
 };
 /** Scenes are stored under the shift they open; these are the same scenes in the 32-shift campaign. */
 const LEGACY_SCENES: Record<string, number> = { 0: 0, 2: 1, 14: 8, 21: 12, 22: 13, 30: 16 };
@@ -145,6 +146,38 @@ function validateDrills(v: Record<string, unknown>): string[] | undefined {
   return ids.length ? [...(ids as string[])] : undefined;
 }
 
+/**
+ * Each special's own progress: its routines, stars and challenges met. Specials no longer in the game are kept,
+ * harmlessly, like drills; a special with nothing kept leaves no entry, and a café with none leaves the map out.
+ */
+function validateSpecials(v: Record<string, unknown>): Record<string, SpecialProgress> | undefined {
+  if (v.specials === undefined || v.version !== 4) return undefined;
+  const entries = v.specials;
+  if (!isRecord(entries) || Object.keys(entries).length > 100) throw new Error(`Invalid ${SAVED_PART.specials}.`);
+  const kept: Record<string, SpecialProgress> = {};
+  for (const [id, progress] of Object.entries(entries)) {
+    if (!/^[a-z][a-z0-9-]{0,47}$/.test(id) || !isRecord(progress)) throw new Error(`Invalid ${SAVED_PART.specials}.`);
+    const { draft, solution, stars, challenges } = progress;
+    if (stars !== undefined && (typeof stars !== 'number' || !Number.isInteger(stars) || stars < 0 || stars > 3))
+      throw new Error('Invalid star count.');
+    const known = (measure: unknown): measure is ChallengeMeasure =>
+      CHALLENGE_MEASURES.includes(measure as ChallengeMeasure);
+    if (
+      challenges !== undefined &&
+      (!Array.isArray(challenges) || !challenges.every(known) || new Set(challenges).size !== challenges.length)
+    )
+      throw new Error(`Invalid ${SAVED_PART.specials}.`);
+    const entry: SpecialProgress = {
+      ...(draft !== undefined && { draft: readPrograms(draft) }),
+      ...(solution !== undefined && { solution: readPrograms(solution) }),
+      ...(stars !== undefined && { stars }),
+      ...(challenges?.length && { challenges: [...(challenges as ChallengeMeasure[])] }),
+    };
+    if (Object.keys(entry).length) kept[id] = entry;
+  }
+  return Object.keys(kept).length ? kept : undefined;
+}
+
 function validateSettingsMap(v: Record<string, unknown>): Settings {
   const settings = v.settings;
   if (!isRecord(settings)) throw new Error('Missing settings.');
@@ -206,19 +239,23 @@ function validateRobotMaps(v: Record<string, unknown>, shifts: number): RobotMap
       const entries = v[key];
       if (!isRecord(entries)) throw new Error(`Missing ${SAVED_PART[key]}.`);
       for (const [shift, programs] of Object.entries(entries)) {
-        if (!/^\d+$/.test(shift) || !index(Number(shift)) || !isRecord(programs))
-          throw new Error('Invalid set of robot routines.');
-        for (const role of ['query', 'prep', 'floor'])
-          if (typeof programs[role] !== 'string' || programs[role].length > 100_000)
-            throw new Error('Invalid routine.');
-        robotMaps[key][shift] = {
-          query: cleanQuery(programs.query as string),
-          prep: migrateRobotSource(programs.prep as string, 'prep'),
-          floor: migrateRobotSource(cleanFloor(programs.floor as string), 'floor'),
-        };
+        if (!/^\d+$/.test(shift) || !index(Number(shift))) throw new Error('Invalid set of robot routines.');
+        robotMaps[key][shift] = readPrograms(programs);
       }
     }
   return robotMaps;
+}
+
+/** One set of the three robots' routines, brought up to the current blocks. */
+function readPrograms(programs: unknown): RobotPrograms {
+  if (!isRecord(programs)) throw new Error('Invalid set of robot routines.');
+  for (const role of ['query', 'prep', 'floor'])
+    if (typeof programs[role] !== 'string' || programs[role].length > 100_000) throw new Error('Invalid routine.');
+  return {
+    query: cleanQuery(programs.query as string),
+    prep: migrateRobotSource(programs.prep as string, 'prep'),
+    floor: migrateRobotSource(cleanFloor(programs.floor as string), 'floor'),
+  };
 }
 
 /**
@@ -291,6 +328,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
   const robotMaps = validateRobotMaps(v, shifts);
   const challenges = validateChallenges(v, shifts);
   const drills = validateDrills(v);
+  const specials = validateSpecials(v);
   // A finished v1 save had served all of Act I, which ended at the 14th shift.
   if (v.version === 1 && v.complete) Object.assign(v, { unlocked: 14, complete: false });
   retireSemanticQuery(v, robotMaps);
@@ -312,6 +350,7 @@ export function parseSave(text: string, lessons: LessonCatalog): ProgressSave {
     story: { ...(v.story as Record<string, boolean>) },
     ...(challenges && { challenges }),
     ...(drills && { drills }),
+    ...(specials && { specials }),
     settings,
   };
 }

@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
-import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, Play } from 'lucide-react';
+import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, Play, Sparkles } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
 import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
+import { specials } from '@/data/specials';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -19,6 +20,7 @@ import { DrillsWindow } from './DrillsWindow';
 import { GuestbookWindow } from './GuestbookWindow';
 import { keepsakes, shelved } from './shelf';
 import { ShelfWindow } from './ShelfWindow';
+import { SpecialsWindow } from './SpecialsWindow';
 import { useUnseen } from './unseen';
 import { ShellBar } from './ShellBar';
 
@@ -75,6 +77,13 @@ export function CampaignPage() {
     served.map((drill) => drill.id),
   );
   const [drilling, setDrilling] = useState<readonly string[] | null>(null);
+  // The regulars ask for their specials once the campaign is finished.
+  const offered = save.complete ? specials : [];
+  const newSpecials = useUnseen(
+    'specials',
+    offered.map((special) => special.id),
+  );
+  const [choosing, setChoosing] = useState<readonly string[] | null>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -253,6 +262,18 @@ export function CampaignPage() {
             {newKeepsakes.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
+        {offered.length > 0 && (
+          <button
+            className="shell-icon"
+            aria-label={`Specials, ${count(offered.length, 'special')}${newSpecials.fresh.length ? `, ${newSpecials.fresh.length} new` : ''}`}
+            aria-haspopup="dialog"
+            title="Specials"
+            onClick={() => setChoosing(newSpecials.markSeen())}
+          >
+            <Sparkles size={18} aria-hidden="true" />
+            {newSpecials.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
+          </button>
+        )}
         {/* Drills come out with the first served shift that has one. */}
         {served.length > 0 && (
           <button
@@ -277,6 +298,15 @@ export function CampaignPage() {
           done={save.drills}
           onDone={completeDrill}
           onClose={() => setDrilling(null)}
+        />
+      )}
+      {choosing && (
+        <SpecialsWindow
+          specials={offered}
+          save={save}
+          fresh={choosing}
+          onServe={(special) => go(`/special/${special.id}`)}
+          onClose={() => setChoosing(null)}
         />
       )}
       {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}

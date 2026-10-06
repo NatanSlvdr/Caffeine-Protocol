@@ -76,6 +76,7 @@ export const ticketWords = (ticket: OrderTicket) =>
     ticket.item ? capital(ticket.item) : undefined,
     count(ticketSugar(ticket), 'sugar'),
     ticket.rush ? 'Rush' : undefined,
+    ticket.together ? 'Together' : undefined,
   ]
     .filter(Boolean)
     .join(' · ');
