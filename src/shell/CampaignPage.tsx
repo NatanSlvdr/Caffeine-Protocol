@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
-import { Award, BookOpen, CircleHelp, Clapperboard, Play } from 'lucide-react';
+import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, Play } from 'lucide-react';
 import { levels, titleFor } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
+import { drills } from '@/data/drills';
 import { narrativeFor } from '@/data/campaign/narrative';
 import { count } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -12,6 +13,7 @@ import { pad2, starRow } from '@/shared/lib/format';
 import { useCafeName, useGame, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
+import { DrillsWindow } from './DrillsWindow';
 import { GuestbookWindow } from './GuestbookWindow';
 import { keepsakes, shelved } from './shelf';
 import { ShelfWindow } from './ShelfWindow';
@@ -61,6 +63,12 @@ export function CampaignPage() {
   );
   const [reading, setReading] = useState<readonly string[] | null>(null);
   const [looking, setLooking] = useState<readonly string[] | null>(null);
+  const served = drills.filter((drill) => save.stars[drill.shift - 1] !== undefined);
+  const newDrills = useUnseen(
+    'drills',
+    served.map((drill) => drill.id),
+  );
+  const [drilling, setDrilling] = useState<readonly string[] | null>(null);
 
   const isComplete = (index: number) => save.stars[index] !== undefined;
   const stateOf = (actIndex: number): ActState => {
@@ -239,7 +247,28 @@ export function CampaignPage() {
             {newKeepsakes.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
           </button>
         )}
+        {/* Drills come out with the first served shift that has one. */}
+        {served.length > 0 && (
+          <button
+            className="shell-icon"
+            aria-label={`Drills, ${count(served.length, 'drill')}${newDrills.fresh.length ? `, ${newDrills.fresh.length} new` : ''}`}
+            aria-haspopup="dialog"
+            title="Drills"
+            onClick={() => setDrilling(newDrills.markSeen())}
+          >
+            <Dumbbell size={18} aria-hidden="true" />
+            {newDrills.fresh.length > 0 && <span className="shell-icon-new" aria-hidden="true" />}
+          </button>
+        )}
       </ShellBar>
+      {drilling && (
+        <DrillsWindow
+          open={served}
+          waiting={drills.length - served.length}
+          fresh={drilling}
+          onClose={() => setDrilling(null)}
+        />
+      )}
       {reading && <GuestbookWindow notes={notes} fresh={reading} onClose={() => setReading(null)} />}
       {looking && <ShelfWindow save={save} earned={earned} fresh={looking} onClose={() => setLooking(null)} />}
 

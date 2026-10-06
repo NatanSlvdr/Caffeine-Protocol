@@ -10,6 +10,7 @@ The first release: the whole campaign, start to finish.
 - **Two ways to write a routine:** blocks you drag or move from the keyboard, and a text editor that round-trips with them. A routine notebook keeps the ones worth keeping under a name, to bring back on any shift, and travels as a file.
 - **Seeing what happened:** a replay timeline with the crew's events, pause marks on blocks, a robot inspector, the receipt's wait breakdown, and two runs of the same rounds side by side.
 - **Help without spoilers first:** each shift's lesson, then hints one at a time, then a worked example; the crew react to a failed run and point at the block where the service stopped.
+- **Drills, away from the rail:** a dozen short ones, each a gap in a served shift's routine and a few passages to fill it with, served by the café itself, so the verdict is the café's and never an answer key's. Help names the drill when a run fails the way its idea is missed.
 - **The café remembers:** stars and routines per shift, the optional challenges met on the later shifts, four regulars who come back for their usual and are greeted by name at the counter, their guestbook, a shelf of keepsakes for finishing each act and more, and a café that is put back together as the story goes, from the sidewalk board to Lou's postcard on the wall.
 - **Offline:** the build caches itself on its first load and offers updates instead of swapping them in mid-shift.
 - **Accessibility:** reduced motion, dialogue text speed, shorter repeats, a screen-reader service summary, keyboard play throughout, and an editor that keeps working without WebGL.
@@ -73,5 +74,5 @@ Before a release, fill in the three gaps in bold: name the image model and the t
 - **English only.** Every line of the game is written in English, and there is no way to switch.
 - **No typeface ships.** The interface uses Inter where it is installed and the system's sans-serif font elsewhere, so it looks a little different from one computer to the next.
 - **No licence for the code yet.** The repository has no licence file, so its terms are unstated.
-- **No optional challenges or practice mode.** Every shift is part of the campaign; replaying one for more stars is the only extra goal ([roadmap](ROADMAP.md) C11, C12, F09–F12).
+- **No puzzle modes beyond the drills.** The drills take one idea at a time and keep nothing; there are no playlists of them, prediction puzzles, limited kits or test benches of your own ([roadmap](ROADMAP.md) F09–F12).
 - **No screenshots in this page.** Captures are made only when a release asks for browser work.

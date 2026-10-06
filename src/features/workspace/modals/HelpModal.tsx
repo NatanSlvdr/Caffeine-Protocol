@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ArrowRight, Crosshair, MessageCircle } from 'lucide-react';
+import { ArrowRight, Crosshair, Dumbbell, MessageCircle } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import {
@@ -13,7 +13,7 @@ import {
 import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
 import type { ShiftBrief } from '../Workspace';
 import type { RunEvidence } from '../evidence';
-import { clueFor, HINT_TIERS, type Clue } from '../hints';
+import { clueFor, HINT_TIERS, type Clue, type WorkspaceDrill } from '../hints';
 import { CHALLENGE_WORDS } from '../challenges';
 
 export interface HelpModalProps {
@@ -36,6 +36,8 @@ export interface HelpModalProps {
   /** The last failed run, for a clue that points at the robot that stopped. */
   evidence: RunEvidence | null;
   stale: boolean;
+  /** A served shift's drill on the idea the last failed run missed, named beside the clue. */
+  drill?: WorkspaceDrill;
   /** Close the notes and put focus on the block a clue points at. */
   onShowClue: (show: NonNullable<Clue['show']>) => void;
   onUseExample: (source: string) => void;
@@ -64,6 +66,7 @@ export function HelpModal({
   onHints,
   evidence,
   stale,
+  drill,
   onShowClue,
   onUseExample,
   onReplayIntro,
@@ -185,6 +188,14 @@ export function HelpModal({
                     <button className="settings-chip help-hint-show" onClick={() => onShowClue(clue.show!)}>
                       <Crosshair size={14} aria-hidden="true" /> Show this block
                     </button>
+                  )}
+                  {drill && (
+                    <p className="help-drill">
+                      <Dumbbell size={14} aria-hidden="true" />
+                      <span>
+                        The order rail’s Drills have one on this, from Shift {drill.shift}: “{drill.title}”.
+                      </span>
+                    </p>
                   )}
                 </li>
               )}

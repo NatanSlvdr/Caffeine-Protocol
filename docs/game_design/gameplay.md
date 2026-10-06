@@ -84,6 +84,17 @@ waits by the table to clear it, and missed by the worked example
 (`tests/unit/data/challenges.test.ts`). A challenge once met stays met in the
 save, and the first one puts a stopwatch on the shelf.
 
+Away from the rail, the campaign's Drills take one idea at a time: a gap in a
+served shift's worked example, and two or three passages to fill it with. The
+pick goes in, and the café serves that shift with it, so what comes back is the
+café's own verdict, its first failure reason or the idea in a sentence. A drill
+opens once its shift is served, so it never gives an unplayed shift away, and
+nothing in it is kept or counted. Each act has at least one, and
+`tests/unit/data/drills.test.ts` serves every passage: the worked example's
+alone serves the shift. When a run fails the way a served drill's idea is
+missed (paper not taken up first, a lid on a drink staying in), Help's clue
+names that drill.
+
 Scoring metrics shown after a run:
 
 - Seeds passed.

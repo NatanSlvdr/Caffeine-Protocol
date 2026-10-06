@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { SAVE_KEY } from '@/features/campaign/save/settings';
 
-/** Which of the campaign's keepsake shelf and guestbook entries this browser has already shown. */
+/** Which of the campaign's keepsakes, guestbook entries and drills this browser has already shown. */
 export const SEEN_KEY = `${SAVE_KEY}.seen`;
-type List = 'shelf' | 'guestbook';
+type List = 'shelf' | 'guestbook' | 'drills';
 
 function read(): Partial<Record<List, string[]>> {
   try {

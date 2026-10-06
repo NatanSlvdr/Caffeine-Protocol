@@ -1,5 +1,5 @@
 import { blockFields, familyFor, ROBOT_DISPLAY_NAMES, spokenBlock } from '@/domain';
-import type { RobotRole } from '@/domain';
+import type { FailureCode, ProgressSave, RobotRole } from '@/domain';
 import type { RunEvidence } from './evidence';
 
 /** The tiers of Help's hints, each asked for in turn: the idea, a clue about the routine, then the worked example. */
@@ -85,4 +85,27 @@ export function clueFor(
         ? `${robot}’s routine and the worked example part ways at the very first block, ${words(0)}.`
         : `${robot}’s routine follows the worked example as far as ${words(at - 1)}, then parts ways at ${words(at)}.`;
   return { text: where, show: { role, line: mine[at].line } };
+}
+
+/** A drill away from the rail, as Help names it when a run fails the way the drill's idea is missed. */
+export interface WorkspaceDrill {
+  title: string;
+  shift: number;
+  misses: readonly FailureCode[];
+}
+
+/**
+ * The drill on the idea the last failed run missed, from a shift already served, so the drill is open and gives
+ * nothing away. When two would do, the newer: it's the one nearest what the shift asks now.
+ */
+export function drillFor(
+  drills: readonly WorkspaceDrill[],
+  stars: ProgressSave['stars'],
+  evidence: RunEvidence | null,
+  stale: boolean,
+): WorkspaceDrill | undefined {
+  if (!evidence || stale) return undefined;
+  return drills.findLast(
+    (drill) => stars[drill.shift - 1] !== undefined && drill.misses.includes(evidence.failure.code),
+  );
 }

@@ -11,6 +11,7 @@ import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
 import { useLiveRun, type LiveRunArgs } from './useLiveRun';
+import { drillFor, type WorkspaceDrill } from './hints';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
@@ -70,10 +71,22 @@ export interface WorkspaceProps {
   nextShift?: string;
   onNext: () => void;
   onComplete: LiveRunArgs['onComplete'];
+  /** Every drill; Help names one whose shift is served when the last run missed its idea. */
+  drills?: readonly WorkspaceDrill[];
 }
 
 /** Shift workspace layout: scene panel, editor panel, playback, and modals. Run state lives in useLiveRun. */
-export function Workspace({ index, save, update, lessons, shift, nextShift, onNext, onComplete }: WorkspaceProps) {
+export function Workspace({
+  index,
+  save,
+  update,
+  lessons,
+  shift,
+  nextShift,
+  onNext,
+  onComplete,
+  drills = [],
+}: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
@@ -651,6 +664,7 @@ export function Workspace({ index, save, update, lessons, shift, nextShift, onNe
           onHints={setHints}
           evidence={evidence}
           stale={stale}
+          drill={drillFor(drills, save.stars, evidence, stale)}
           onShowClue={(show) => {
             setModal('');
             setRole(show.role);

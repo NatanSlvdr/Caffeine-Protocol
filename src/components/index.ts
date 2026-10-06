@@ -1,5 +1,6 @@
 /** Single-import surface for presentational components. Internal imports stay relative. */
 export { BlockIcon } from './BlockIcon';
+export { BlockLines, spokenLines } from './BlockLines';
 export { BlockSelect, DirectionSelect } from './BlockSelect';
 export type { BlockOption } from './BlockSelect';
 export { Cafe } from './Cafe';

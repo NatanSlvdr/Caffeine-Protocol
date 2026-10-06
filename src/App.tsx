@@ -9,6 +9,7 @@ import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
 import { narrativeFor } from '@/data/campaign/narrative';
+import { drills } from '@/data/drills';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
@@ -84,6 +85,7 @@ function Shell() {
               update={update}
               lessons={lessons}
               shift={shift}
+              drills={drills}
               nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
               onNext={() => {
                 if (index === CAMPAIGN_LENGTH - 1) go('/ending');
