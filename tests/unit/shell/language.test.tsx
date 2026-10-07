@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import App from '../../../src/App';
 import { CAFE_WORDS } from '../../../src/app/cafeWords';
@@ -41,6 +41,11 @@ import { momentWords } from '../../../src/features/workspace/timeline';
 import { inspectRobot } from '../../../src/features/workspace/inspector';
 import { crewActivity } from '../../../src/features/workspace/crew';
 import { CARGO_WORDS } from '../../../src/components/cargoWords';
+import { SCENE_WORDS } from '../../../src/components/sceneWords';
+import { RobotHolding } from '../../../src/components/RobotHolding';
+import { OrderQueueBubble } from '../../../src/components/OrderQueueBubble';
+import { CustomerSpeech } from '../../../src/components/CustomerSpeech';
+import { createRoot } from 'react-dom/client';
 import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
 import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
@@ -59,7 +64,7 @@ import {
 } from '../../../src/domain';
 import type { OrderTicket } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
-import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
+import { LANGUAGE_KEY, LanguageProvider, LanguageRelay, useWords, words } from '../../../src/shared/language';
 import { finishLiveRun, runCampaignLevel } from '../../helpers/run';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
@@ -899,6 +904,68 @@ describe('the words themselves', () => {
     expect(guest.querySelector('[lang="en"]')!.textContent).toBe(slipped.events[0].customer.phrase);
   });
 
+  it('draws the café’s bubbles in French, with block names and what guests say kept English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const [x, z] = STATIONS.pickup.floor;
+    const paper = { ...blankPaper, item: 'coffee', sugar_count: 2, to_go: true } as OrderTicket;
+    const { unmount } = render(
+      <LanguageProvider>
+        <RobotHolding
+          name="Brew"
+          inventory={[{ ticketId: 'one', table: 2, item: 'tea', stage: 'brewed', sugar: 1, lid: true }]}
+          paper={paper}
+          action={{ command: 'TAKE UP', start: 0, progress: 0.4, at: 'sugar' }}
+          variables={{ var1: [x, z] }}
+        />
+      </LanguageProvider>,
+    );
+    expect(screen.getByLabelText('Ce que porte Brew')).toBeTruthy();
+    const chip = screen.getByRole('group', { name: `Brew${NBSP}: Take, Sucre` });
+    expect(chip.querySelector('.robot-action-label [lang="en"]')!.textContent).toBe('Take');
+    expect(chip.querySelector('.robot-action-at')!.textContent).toBe(' · Sucre');
+    const held = within(screen.getByRole('list', { name: 'Inventaire de Brew' }));
+    expect(held.getByLabelText('Feuille de commande · Café · 2 sucres · À emporter')).toBeTruthy();
+    const cup = held.getByLabelText('Thé · 1 sucre · Couvercle mis · Table 2');
+    expect(cup.querySelector('.order-mark')!.textContent).toBe('Couvercle');
+    expect(screen.getByRole('group', { name: 'Mémoire de Brew' }).textContent).toBe('Var A = Comptoir de retrait');
+    unmount();
+    render(
+      <LanguageProvider>
+        <RobotHolding name="Query" inventory={[]} action={{ command: 'IF ORDER IS COFFEE', start: 0, progress: 0.4 }} />
+      </LanguageProvider>,
+    );
+    expect(screen.getByRole('group', { name: `Query${NBSP}: Réfléchit` }).querySelector('[lang]')).toBeNull();
+    cleanup();
+
+    render(
+      <LanguageProvider>
+        <OrderQueueBubble tickets={[{ ...paper, ticket_id: 't1' }]} />
+        <CustomerSpeech customer={levels[13].seeds[0].customers[0]} counterLine="Query: *bip* Albert." />
+      </LanguageProvider>,
+    );
+    const queue = within(screen.getByRole('group', { name: 'File des commandes de la cuisine' }));
+    expect(queue.getByText('Commandes')).toBeTruthy();
+    expect(
+      within(queue.getByRole('list', { name: 'Commandes en attente' })).getByLabelText(
+        'café ×1 + 2 sucres, à emporter',
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole('list', { name: 'Commandes entendues' })).toBeTruthy();
+    expect(document.querySelector('blockquote')!.getAttribute('lang')).toBe('en');
+    expect(document.querySelector('.customer-speech small')!.getAttribute('lang')).toBe('en');
+    expect(SCENE_WORDS.fr.station({ table: 3 })).toBe('Table 3');
+    expect(SCENE_WORDS.fr.order({ quantity: 2, rush: true })).toBe('Commande floue ×2, pressé');
+  });
+
+  it('carries the language into a root of its own, as the café’s overlays are', async () => {
+    const Probe = () => <span>{useWords(SCENE_WORDS).thinking}</span>;
+    const host = document.createElement('div');
+    const root = createRoot(host);
+    await act(async () => root.render(<LanguageRelay language={['fr', () => {}]}>{<Probe />}</LanguageRelay>));
+    expect(host.textContent).toBe('Réfléchit');
+    await act(async () => root.unmount());
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
@@ -924,6 +991,7 @@ describe('the words themselves', () => {
       CARGO_WORDS,
       ROUTE_WORDS,
       SUMMARY_WORDS,
+      SCENE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

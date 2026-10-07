@@ -193,14 +193,14 @@ it('sweeps the progress bar while a wait has not started counting', () => {
 
 it('names the station a hand action reaches, and leaves it off where there is none', () => {
   const { rerender } = render(
-    <RobotHolding name="Brew" inventory={[]} action={{ command: 'TAKE UP', start: 0, progress: 0.4, at: 'Sugar' }} />,
+    <RobotHolding name="Brew" inventory={[]} action={{ command: 'TAKE UP', start: 0, progress: 0.4, at: 'sugar' }} />,
   );
   expect(screen.getByRole('group', { name: 'Brew: Take at Sugar' }).textContent).toBe('Take · Sugar');
   rerender(
     <RobotHolding
       name="Porter"
       inventory={[]}
-      action={{ command: 'DEPOSIT UP', start: 0, progress: 0.4, at: 'Table 3' }}
+      action={{ command: 'DEPOSIT UP', start: 0, progress: 0.4, at: { table: 3 } }}
     />,
   );
   expect(document.querySelector('.robot-action-at')?.textContent).toBe(' · Table 3');

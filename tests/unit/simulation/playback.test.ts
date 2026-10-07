@@ -38,8 +38,8 @@ describe('the station a hand action reaches', () => {
       .map((e) => sampleReplay(result, (e.start + e.end) / 2).actors[actor]?.action?.at);
 
   it('is named on the action while it runs, and only on a hand action', () => {
-    expect(at(base, 'query', /^TAKE /)).toEqual(['Paper']);
-    expect(at(base, 'query', /^DEPOSIT /)).toEqual(['Order handoff']);
+    expect(at(base, 'query', /^TAKE /)).toEqual(['paper']);
+    expect(at(base, 'query', /^DEPOSIT /)).toEqual(['handoff']);
     expect(at(base, 'query', /^MOVE /).every((name) => name === undefined)).toBe(true);
   });
 
@@ -51,8 +51,10 @@ describe('the station a hand action reaches', () => {
       referencePrograms(shift),
     );
     expect(new Set(at(result, 'prep', /^(TAKE|USE|DEPOSIT) /))).toEqual(
-      new Set(['Storage', 'Coffee machine', 'Sink', 'Sugar', 'Lids', 'Pickup counter']),
+      new Set(['storage', 'machine', 'sink', 'sugar', 'lids', 'pickup']),
     );
-    expect(at(result, 'floor', /^(TAKE|DEPOSIT) /).some((name) => /^Table \d$/.test(name ?? ''))).toBe(true);
+    expect(at(result, 'floor', /^(TAKE|DEPOSIT) /).some((place) => typeof place === 'object' && place.table > 0)).toBe(
+      true,
+    );
   });
 });

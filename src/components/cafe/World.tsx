@@ -6,6 +6,8 @@ import { Street, StreetClip } from '../Street';
 import { OrderQueueBubble } from '../OrderQueueBubble';
 import { CustomerSpeech } from '../CustomerSpeech';
 import { RobotHolding } from '../RobotHolding';
+import { SCENE_WORDS } from '../sceneWords';
+import { useWords } from '@/shared/language';
 import {
   CAMERA_POSITION,
   STARTS,
@@ -123,6 +125,7 @@ export function World({
   /** What the counter says back to the regulars it recognises, by round and guest. */
   counterLines?: ReadonlyMap<string, string>;
 }) {
+  const say = useWords(SCENE_WORDS);
   const state = result ? sampleReplay(result, time) : undefined;
   const followed =
     follow && state?.seed?.seed_id === follow.seed
@@ -169,9 +172,9 @@ export function World({
                   !showStatusBubbles
                     ? undefined
                     : id === 'prep' && !robotUnlocked('prep', level)
-                      ? 'Moka · Auto'
+                      ? say.auto('Moka')
                       : id === 'floor' && !robotUnlocked('floor', level)
-                        ? 'Pip · Auto'
+                        ? say.auto('Pip')
                         : undefined
                 }
                 facing={actor.facing ?? (id === 'query' ? -Math.PI / 2 : 0)}

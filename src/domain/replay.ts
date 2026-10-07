@@ -3,7 +3,7 @@ import { STARTS } from './layout';
 import type { ActorId, ActorSnapshot, ExecutionEvent, RunResult } from './types';
 import { directionVectors } from './directions';
 import { commandDirection } from './commands';
-import { reachedName } from './blockPreview';
+import { reachedPlace, type Place } from './blockPreview';
 import { interactionTarget } from './queryMovement';
 import { robotUnlocked } from './robots';
 import { shiftNumber } from './unlocks';
@@ -12,11 +12,11 @@ import { customerCrowd, isToGo } from './sidewalk';
 import { sampleClaimedTickets, samplePickupCounter, waitingCounterTickets } from './counters';
 
 /** Sample immutable execution records; presentation never invents a robot route. */
-/** The station a Take, Deposit or Use reaches into, as the action chip names it: "Sugar", "Table 3". */
-function withStation(event: ExecutionEvent): { at?: string } {
+/** The station a Take, Deposit or Use reaches into, for the action chip to name: the sugar, table 3. */
+function withStation(event: ExecutionEvent): { at?: Place } {
   const direction = /^(TAKE|PICKUP|DEPOSIT|USE) /.test(event.command) ? commandDirection(event.command) : undefined;
-  const name = direction && reachedName(interactionTarget(event.from, direction)!);
-  return name ? { at: name.replace(/^the /, '').replace(/^./, (first) => first.toUpperCase()) } : {};
+  const place = direction && reachedPlace(interactionTarget(event.from, direction)!);
+  return place ? { at: place } : {};
 }
 
 /** Blocks that put a hand into a station. */

@@ -17,6 +17,8 @@ import {
 import { STREET_WINDOWS, cushionColor } from './dressing';
 import { WallDressing, KitchenFloor } from './WallDressing';
 import { Facade } from './Facade';
+import { SCENE_WORDS } from '../sceneWords';
+import { useWords } from '@/shared/language';
 import { Plant, Chair, Table, CafeMural, FloorLabel, CounterGate, CounterRun } from './Furniture';
 
 /** The storage tile holds the fridge and shelf instead of a counter, so it is left out of the joinery. */
@@ -39,6 +41,7 @@ export function Room({
   decor: Decor;
 }) {
   const done = restoredBy(restored);
+  const floor = useWords(SCENE_WORDS).floor;
   return (
     <group>
       <Box at={[-0.55, -0.42, -0.55]} size={[16.1, 0.7, ROOM[1] + 0.1]} color={CAFE_COLORS.walnut} />
@@ -98,15 +101,15 @@ export function Room({
       <CounterGate open={gateOpen} />
       {showLabels && (
         <>
-          <FloorLabel at={STATIONS.orders.prep} label="ORDER HANDOFF" />
-          <FloorLabel at={STATIONS.ingredients.prep} label="STORAGE" />
-          <FloorLabel at={STATIONS.grinder.prep} label="COFFEE MACHINE" />
-          <FloorLabel at={STATIONS.sugar.prep} label="SUGAR" />
-          <FloorLabel at={STATIONS.lids.prep} label="LIDS" />
-          <FloorLabel at={STATIONS.pickup.floor} label="DRINK PICKUP" />
-          <FloorLabel at={STATIONS.returns.floor} label="SINK" />
-          <FloorLabel at={STATIONS.togo.floor} label="TO-GO SHELF" />
-          <FloorLabel at={ENTRANCE} label="ENTER" />
+          <FloorLabel at={STATIONS.orders.prep} label={floor.handoff} />
+          <FloorLabel at={STATIONS.ingredients.prep} label={floor.storage} />
+          <FloorLabel at={STATIONS.grinder.prep} label={floor.machine} />
+          <FloorLabel at={STATIONS.sugar.prep} label={floor.sugar} />
+          <FloorLabel at={STATIONS.lids.prep} label={floor.lids} />
+          <FloorLabel at={STATIONS.pickup.floor} label={floor.pickup} />
+          <FloorLabel at={STATIONS.returns.floor} label={floor.sink} />
+          <FloorLabel at={STATIONS.togo.floor} label={floor.shelf} />
+          <FloorLabel at={ENTRANCE} label={floor.enter} />
         </>
       )}
       {TABLE_LAYOUT.map((t, i) => (

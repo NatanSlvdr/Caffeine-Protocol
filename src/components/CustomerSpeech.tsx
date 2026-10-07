@@ -2,6 +2,8 @@ import type { Customer } from '@/domain';
 import { heardToIconOrders } from '@/domain';
 import { BubbleTail } from './BubbleTail';
 import { OrderIcons } from './OrderIcons';
+import { SCENE_WORDS } from './sceneWords';
+import { useUntranslated, useWords } from '@/shared/language';
 
 /** Once intake begins, the customer's phrase and grouped order icons stay attached. */
 export function CustomerSpeech({
@@ -18,12 +20,14 @@ export function CustomerSpeech({
   counterLine?: string;
 }) {
   const heard = clarified ? (customer.clarification_heard_orders ?? []) : customer.heard_orders;
+  const english = useUntranslated();
+  // What the guest, the counter and Niko say is the café's English, as the routine hears it.
   return (
     <div className={`customer-speech${atCounter ? ' at-counter' : ''}`}>
-      <blockquote>“{customer.phrase}”</blockquote>
-      {counterLine && <small>{counterLine}</small>}
-      {clarified && <small>Niko: {customer.clarification || 'No clarification available.'}</small>}
-      <OrderIcons orders={heardToIconOrders(heard)} label="Heard orders" />
+      <blockquote lang={english}>“{customer.phrase}”</blockquote>
+      {counterLine && <small lang={english}>{counterLine}</small>}
+      {clarified && <small lang={english}>Niko: {customer.clarification || 'No clarification available.'}</small>}
+      <OrderIcons orders={heardToIconOrders(heard)} label={useWords(SCENE_WORDS).heard} />
       <BubbleTail />
     </div>
   );

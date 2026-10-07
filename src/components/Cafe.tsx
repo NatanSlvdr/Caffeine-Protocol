@@ -4,6 +4,8 @@ import { PixelArtEffect } from './cafe/PixelArtEffect';
 import { SceneCanvas } from './three/SceneCanvas';
 import { Snapshot, type TakeSnapshot } from './three/Snapshot';
 import { World } from './cafe/World';
+import { SCENE_WORDS } from './sceneWords';
+import { useWords } from '@/shared/language';
 
 export function Cafe({
   evening = false,
@@ -58,7 +60,7 @@ export function Cafe({
   snapshot?: React.RefObject<TakeSnapshot | null>;
 }) {
   return (
-    <div className="cafe-canvas" role="group" aria-label="The café: kitchen, order counter and dining room">
+    <div className="cafe-canvas" role="group" aria-label={useWords(SCENE_WORDS).scene}>
       <SceneCanvas pixelArt={pixelArt}>
         <World
           evening={evening}

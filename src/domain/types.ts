@@ -1,6 +1,7 @@
 import type { FailureCode, FailureContext } from './failures';
 import type { BenchEase } from './bench';
 import type { Challenge, ChallengeMeasure } from './challenges';
+import type { Place } from './blockPreview';
 
 export type Drink = 'coffee' | 'tea';
 export interface SpeechIntent {
@@ -260,8 +261,8 @@ export interface ActorSnapshot {
     progress: number;
     start: number;
     waiting?: WaitReason;
-    /** The station a Take, Deposit or Use reaches into: "Sugar", "Table 3". */
-    at?: string;
+    /** The station a Take, Deposit or Use reaches into: the sugar, table 3. */
+    at?: Place;
   };
   variables?: Record<string, VariableValue | undefined>;
   /** The innermost For loop as of the last finished block. */

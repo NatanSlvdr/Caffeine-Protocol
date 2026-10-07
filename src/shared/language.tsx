@@ -66,6 +66,20 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 /** The browser's language, and a way to change it. */
 export const useLanguage = () => use(LanguageContext);
 
+/**
+ * Carries the language into a React root of its own, such as an overlay over the 3D café, which context doesn't
+ * reach: read it with `useLanguage` where the root is made, and wrap what the root renders.
+ */
+export function LanguageRelay({
+  language,
+  children,
+}: {
+  language: ReturnType<typeof useLanguage>;
+  children: ReactNode;
+}) {
+  return <LanguageContext value={language}>{children}</LanguageContext>;
+}
+
 /** A no-break space, and the narrow one French sets before ; ? and !. */
 const NBSP = String.fromCharCode(0xa0);
 const NARROW_NBSP = String.fromCharCode(0x202f);

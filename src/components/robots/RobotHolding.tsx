@@ -1,5 +1,5 @@
 import type { ActorSnapshot, Cargo, OrderTicket, VariableValue } from '@/domain';
-import { blockFields, heldLabel, paperLabel, parseSugarWrite, placeLabel, variableLabels } from '@/domain';
+import { blockFields, parseSugarWrite, variableLabels } from '@/domain';
 import type { CastId } from '@/domain/dialogue';
 import { cast } from '@/data/campaign/cast';
 import { Coffee, Settings } from 'lucide-react';
@@ -11,6 +11,9 @@ import { OperandIcon } from '../OperandIcon';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
 import { OrderMarks } from '../OrderIcons';
 import { AutoHeight } from '@/shared/ui/AutoHeight';
+import { useUntranslated, useWords } from '@/shared/language';
+import { CARGO_WORDS } from '../cargoWords';
+import { SCENE_WORDS } from '../sceneWords';
 import { HoldingIcon } from './HoldingIcon';
 
 /**
@@ -38,6 +41,9 @@ export function RobotHolding({
   paused?: boolean;
   reduced?: boolean;
 }) {
+  const say = useWords(SCENE_WORDS);
+  const carried = useWords(CARGO_WORDS);
+  const english = useUntranslated();
   const memory = Object.entries(variables ?? {}).filter(
     (entry): entry is [string, VariableValue] => entry[1] !== undefined,
   );
@@ -51,8 +57,9 @@ export function RobotHolding({
       ? action
       : undefined;
   if (!paper && !inventory.length && !visibleAction && !memory.length) return null;
+  // Past thinking, an action is said as its block reads, in the blocks' own words.
   const actionLabel = thinking
-    ? 'Thinking'
+    ? say.thinking
     : action?.command.startsWith('STORE ')
       ? `Store ${variableLabels(action.command.split(' ')[1])} in memory`
       : action && parseSugarWrite(action.command) !== undefined
@@ -61,8 +68,8 @@ export function RobotHolding({
           ? variableLabels(`${fields.verb} ${fields.value}`).trim()
           : '';
   // A hand action names the station it reaches, so a Take at the sugar reads apart from one at the lids.
-  const station = !thinking && visibleAction?.at;
-  const paperText = paper ? paperLabel(paper) : '';
+  const station = !thinking && visibleAction?.at ? say.station(visibleAction.at) : undefined;
+  const paperText = paper ? carried.paper(paper) : '';
   // Robots carry their selector icon; Niko, covering the counter, carries a cup.
   const CrewIcon = (crew && robotIcons[crew as keyof typeof robotIcons]) || Coffee;
   const color = cast[name.toLowerCase() as CastId]?.color ?? '#ecd29b';
@@ -70,7 +77,7 @@ export function RobotHolding({
     <AutoHeight
       className="robot-holding"
       contentClassName="robot-holding-content"
-      label={`${name} is holding`}
+      label={say.holding(name)}
       paused={paused}
       reduced={reduced}
       extraHeight={20}
@@ -83,7 +90,7 @@ export function RobotHolding({
         <div
           className={`robot-action ${category(visibleAction.command)}`}
           role="group"
-          aria-label={`${name}: ${actionLabel}${station ? ` at ${station}` : ''}`}
+          aria-label={say.action(name, actionLabel, station)}
         >
           <span
             className={`robot-action-icon action-${thinking ? 'thinking' : fields?.family.toLowerCase()}`}
@@ -99,7 +106,7 @@ export function RobotHolding({
             )}
           </span>
           <span className="robot-action-label">
-            {actionLabel}
+            {thinking ? actionLabel : <span lang={english}>{actionLabel}</span>}
             {station && <span className="robot-action-at"> · {station}</span>}
           </span>
           <span
@@ -110,7 +117,7 @@ export function RobotHolding({
         </div>
       )}
       {(paper || inventory.length > 0) && (
-        <ul aria-label={`${name} inventory`}>
+        <ul aria-label={say.inventory(name)}>
           {paper && (
             <li
               key={`${paper.ticket_id}:${paper.item}:${paper.quantity}:${paper.sugar_count}`}
@@ -131,7 +138,7 @@ export function RobotHolding({
             </li>
           )}
           {inventory.map((cargo) => {
-            const label = heldLabel(cargo);
+            const label = carried.held(cargo);
             return (
               <li key={`${cargo.ticketId}:${cargo.stage}:${cargo.sugar}`} title={label} aria-label={label}>
                 <span className="holding-item-icon">
@@ -150,11 +157,11 @@ export function RobotHolding({
         </ul>
       )}
       {!!memory.length && (
-        <div className="robot-memory" role="group" aria-label={`${name} memory`}>
+        <div className="robot-memory" role="group" aria-label={say.memory(name)}>
           {memory.map(([variable, value]) => (
             <span key={variable}>
               <OperandIcon value={variable} />
-              {variableLabels(variable)} = {typeof value === 'number' ? value : placeLabel(value)}
+              {variableLabels(variable)} = {typeof value === 'number' ? value : carried.place(value)}
             </span>
           ))}
         </div>
