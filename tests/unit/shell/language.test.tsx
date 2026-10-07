@@ -30,6 +30,11 @@ import { PREVIEW_WORDS } from '../../../src/features/workspace/previewWords';
 import { BlockPreviewNote } from '../../../src/features/workspace/BlockPreviewNote';
 import { dryRound, visitWords } from '../../../src/features/workspace/blockPreview';
 import { PAUSE_WORDS } from '../../../src/features/workspace/pauseWords';
+import { ROUTE_WORDS } from '../../../src/features/workspace/routeWords';
+import { OrderRoute } from '../../../src/features/workspace/OrderRoute';
+import { ReplayTimeline } from '../../../src/features/workspace/ReplayTimeline';
+import { followable, legWords } from '../../../src/features/workspace/route';
+import { momentWords } from '../../../src/features/workspace/timeline';
 import { inspectRobot } from '../../../src/features/workspace/inspector';
 import { crewActivity } from '../../../src/features/workspace/crew';
 import { CARGO_WORDS } from '../../../src/components/cargoWords';
@@ -37,7 +42,16 @@ import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
 import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
-import { STATIONS, UNLOCKS, blockVisits, createLiveRun, recordRun, sampleReplay } from '../../../src/domain';
+import {
+  STATIONS,
+  UNLOCKS,
+  blockVisits,
+  createLiveRun,
+  orderRoute,
+  recordRun,
+  runMoments,
+  sampleReplay,
+} from '../../../src/domain';
 import type { OrderTicket } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
@@ -719,6 +733,100 @@ describe('the words themselves', () => {
     expect(PAUSE_WORDS.fr.when(1, 1, -2)).toBe('Avant l’ouverture');
   });
 
+  it('follows an order through the café in French, with why it stopped kept as English', () => {
+    const shift3 = { query: lessons[2].solution, prep: '', floor: '' };
+    const { result } = createLiveRun(levels[2], shift3).advance(1e9);
+    const guest = result.events[0];
+    expect(orderRoute(result, guest).map((leg) => legWords(leg, guest, 3, ROUTE_WORDS.fr))).toEqual([
+      'Entre',
+      'Query prend la commande',
+      'Query écrit le ticket',
+      'Moka prend le ticket',
+      'Moka prépare le café',
+      'Moka le pose au comptoir de retrait',
+      'Pip le récupère',
+      'Pip le sert à la table 1',
+      'Repart',
+      'Pip débarrasse la tasse',
+    ]);
+    // Two cups of one order are each named, with their article.
+    const two = createLiveRun(levels[20], referencePrograms(21)).advance(1e9).result;
+    const pair = two.events.find((e) => e.tickets.length > 1)!;
+    const legs = orderRoute(two, pair).filter((leg) => leg.cup);
+    for (const words of legs.map((leg) => legWords(leg, pair, 21, ROUTE_WORDS.fr)))
+      expect(words).toMatch(/ (le|la tasse du|le ticket du) ((premier|deuxième) )?(thé|café)( |$)/);
+
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const slipped = createLiveRun(levels[2], { query: 'LISTEN\nITEM coffee', prep: '', floor: '' }).advance(1e9);
+    const first = slipped.result.events[0];
+    const route = orderRoute(slipped.result, first);
+    render(
+      <LanguageProvider>
+        <OrderRoute
+          name="Client 1"
+          guest={first}
+          route={route}
+          done
+          round={1}
+          rounds={3}
+          start={0}
+          time={1e9}
+          level={3}
+          onStop={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const card = within(screen.getByRole('region', { name: 'Suivi de la commande de Client 1' }));
+    expect(card.getByRole('heading').textContent).toBe(`Suivi${NBSP}: Client 1 · Manche 1`);
+    expect(document.querySelector('.order-route-phrase')!.getAttribute('lang')).toBe('en');
+    const slip = document.querySelector('.order-route li.slip .order-route-words')!;
+    expect(slip.textContent).toBe(`Query s’est arrêté${NBSP}: Take the order paper before writing its item`);
+    expect(slip.querySelector('[lang="en"]')!.textContent).toBe('Take the order paper before writing its item');
+    expect(card.getByRole('button', { name: 'Arrêter le suivi' })).toBeTruthy();
+  });
+
+  it('looks back through a run in French', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const programs = referencePrograms(14);
+    const { result } = createLiveRun(levels[13], programs).advance(1e9);
+    const moments = runMoments(result, Infinity);
+    const handoff = moments.find((m) => m.kind === 'handoff' && m.event.role === 'prep')!;
+    expect(momentWords(handoff, programs, false, PAUSE_WORDS.fr, ROUTE_WORDS.fr)).toBe('Brew prend un ticket');
+    render(
+      <LanguageProvider>
+        <ReplayTimeline
+          head={60}
+          time={0}
+          viewing={false}
+          moments={moments.filter((m) => m.at <= 60)}
+          roundStarts={[]}
+          rounds={3}
+          when="Manche 1 · 0,0 s"
+          crew={['query', 'prep', 'floor']}
+          role="prep"
+          programs={programs}
+          textMode={false}
+          onView={() => {}}
+          followable={followable(levels[13], result, 60, ROUTE_WORDS.fr.guest)}
+          onFollow={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const timeline = within(screen.getByRole('group', { name: 'Revenir sur l’essai' }));
+    expect(timeline.getByRole('slider', { name: 'Temps du service' }).getAttribute('aria-valuetext')).toBe(
+      'Manche 1 · 0,0 s, maintenant',
+    );
+    for (const name of ['Moments clés', 'Commandes', 'Passages de relais', 'Blocs de Brew'])
+      expect(timeline.getByRole('button', { name })).toBeTruthy();
+    expect(timeline.getByRole('combobox', { name: 'Suivre une commande' }).textContent).toMatch(
+      /^Suivre une commande….*Client 2 · “tea, 1 sugar”/,
+    );
+    fireEvent.click(timeline.getByRole('button', { name: 'Moment clé suivant' }));
+    expect(document.querySelector('.replay-timeline [aria-live]')!.textContent).toMatch(
+      new RegExp(`^Manche 1 · \\d+,\\d s\\. (Query prend une commande${NBSP}: “.+”|Brew prend un ticket)`),
+    );
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
@@ -742,6 +850,7 @@ describe('the words themselves', () => {
       PREVIEW_WORDS,
       PAUSE_WORDS,
       CARGO_WORDS,
+      ROUTE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

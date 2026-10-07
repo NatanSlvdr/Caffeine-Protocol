@@ -34,6 +34,7 @@ import { followable, guestName, routeDone } from './route';
 import { counterLines } from './counterLines';
 import { markCount } from './breakpoints';
 import { PAUSE_WORDS } from './pauseWords';
+import { ROUTE_WORDS } from './routeWords';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
@@ -109,7 +110,8 @@ export function Workspace({
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
   const versionNames = useWords(OPTIONS_WORDS).versions;
-  const pauseWords = useWords(PAUSE_WORDS);
+  const pauseWords = useWords(PAUSE_WORDS),
+    routeWords = useWords(ROUTE_WORDS);
   const notebookWords = useWords(NOTEBOOK_WORDS);
   const benchWords = useWords(BENCH_WORDS);
   const label = shift.label ?? say.shift(pad2(index + 1));
@@ -550,7 +552,7 @@ export function Workspace({
             </p>
             {serviceView && followed && followedRound && result && (
               <OrderRoute
-                name={guestName(played, followed)}
+                name={guestName(played, followed, routeWords.guest)}
                 guest={followed}
                 route={route}
                 done={routeDone(
@@ -599,7 +601,7 @@ export function Workspace({
                 textMode={textMode}
                 onView={live.view}
                 onMoment={(moment) => showRobot(moment.event)}
-                followable={followable(played, result, head)}
+                followable={followable(played, result, head, routeWords.guest)}
                 following={following ?? undefined}
                 onFollow={follow}
               />

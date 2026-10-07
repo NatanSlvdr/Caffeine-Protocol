@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Route, X } from 'lucide-react';
 import type { Leg, ReplayEvent } from '@/domain';
-import { legWords } from './route';
-import { useWords } from '@/shared/language';
+import { actorName, legWords } from './route';
+import { useUntranslated, useWords } from '@/shared/language';
 import { PAUSE_WORDS } from './pauseWords';
+import { ROUTE_WORDS } from './routeWords';
 
 export interface OrderRouteProps {
   /** The guest, as the café knows them: "Guest 3", or a regular by name. */
@@ -44,39 +45,46 @@ export function OrderRoute({
   onStop,
 }: OrderRouteProps) {
   const [said, setSaid] = useState('');
-  const pauseWords = useWords(PAUSE_WORDS);
+  const pauseWords = useWords(PAUSE_WORDS),
+    say = useWords(ROUTE_WORDS),
+    english = useUntranslated();
   const current = route.findLastIndex((leg) => leg.at <= time + 1e-3);
   const when = (leg: Leg) => pauseWords.when(1, round, leg.at - start);
   return (
-    <section className="order-route" aria-label={`Following ${name}’s order`}>
+    <section className="order-route" aria-label={say.followingLabel(name)}>
       <header>
         <Route size={14} aria-hidden="true" />
         <h3>
-          Following {name}
-          {rounds > 1 && <span> · Round {round}</span>}
+          {say.following(name)}
+          {rounds > 1 && <span> · {say.round(round)}</span>}
         </h3>
-        <button
-          type="button"
-          className="order-route-stop"
-          aria-label="Stop following"
-          title="Stop following"
-          onClick={onStop}
-        >
+        <button type="button" className="order-route-stop" aria-label={say.stop} title={say.stop} onClick={onStop}>
           <X size={14} aria-hidden="true" />
         </button>
       </header>
-      <p className="order-route-phrase">“{guest.customer.phrase}”</p>
+      <p className="order-route-phrase" lang={english}>
+        “{guest.customer.phrase}”
+      </p>
       {route.length === 0 ? (
-        <p className="order-route-wait">Not in the café yet.</p>
+        <p className="order-route-wait">{say.notIn}</p>
       ) : (
         <ol>
           {route.map((leg, i) => {
-            const words = legWords(leg, guest, level);
+            const words = legWords(leg, guest, level, say);
             const state = i === current ? 'current' : i < current ? 'past' : 'later';
             const body = (
               <>
                 <span className="order-route-time">{when(leg)}</span>
-                <span className="order-route-words">{words}</span>
+                <span className="order-route-words">
+                  {leg.stage === 'slip' ? (
+                    <>
+                      {say.stopped(actorName(leg, level))}
+                      <span lang={english}>{leg.error?.replace(/\.$/, '')}</span>
+                    </>
+                  ) : (
+                    words
+                  )}
+                </span>
               </>
             );
             return (
@@ -103,7 +111,7 @@ export function OrderRoute({
           })}
           {!done && (
             <li className="order-route-more">
-              <span className="order-route-words">On its way…</span>
+              <span className="order-route-words">{say.onItsWay}</span>
             </li>
           )}
         </ol>

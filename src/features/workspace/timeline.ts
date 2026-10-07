@@ -1,5 +1,7 @@
 import { ROBOT_DISPLAY_NAMES, type Moment, type RobotPrograms, type RobotRole } from '@/domain';
 import { startedWords } from './inspector';
+import { PAUSE_WORDS, type PauseWords } from './pauseWords';
+import { ROUTE_WORDS, type RouteWords } from './routeWords';
 
 /** What the timeline jumps between: the run's big moments, one kind of them, or every start of one robot's. */
 export type JumpFilter = 'all' | 'order' | 'handoff' | RobotRole;
@@ -40,14 +42,20 @@ export const momentsAt = (moments: readonly Moment[], at: number) => moments.fil
  * A moment in a few words, for a screen reader and a tick's title: "Query takes an order: “tea, 1 sugar”", "Brew takes
  * a ticket", "Porter stopped: …", "Brew: take up, block 8."
  */
-export function momentWords(moment: Moment, programs: RobotPrograms, textMode: boolean): string {
+export function momentWords(
+  moment: Moment,
+  programs: RobotPrograms,
+  textMode: boolean,
+  say: PauseWords = PAUSE_WORDS.en,
+  route: RouteWords = ROUTE_WORDS.en,
+): string {
   const { event } = moment;
   const who = event.actor === 'niko' ? 'Niko' : ROBOT_DISPLAY_NAMES[event.role];
   if (moment.kind === 'order')
     return event.customerId === 'CLOSING'
-      ? 'The closing-time call'
-      : `${who} takes an order${moment.guest ? `: “${moment.guest.customer.phrase}”` : ''}`;
-  if (moment.kind === 'handoff') return `${who} takes a ${event.role === 'prep' ? 'ticket' : 'drink'}`;
-  if (moment.kind === 'slip') return `${who} stopped: ${event.error?.replace(/\.$/, '')}`;
-  return startedWords([event], [event.role], programs, textMode).replace(/\.$/, '');
+      ? say.closingCall
+      : route.order(who) + (moment.guest ? `${route.heard}“${moment.guest.customer.phrase}”` : '');
+  if (moment.kind === 'handoff') return say.reason({ reason: 'handoff', robot: event.role });
+  if (moment.kind === 'slip') return route.stopped(who) + (event.error ?? '').replace(/\.$/, '');
+  return startedWords([event], [event.role], programs, textMode, say).replace(/\.$/, '');
 }

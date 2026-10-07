@@ -18,8 +18,8 @@ export interface Leg {
   line?: number;
   /** The ticket, or one cup of it, a leg belongs to; nothing for what is the whole order's. */
   unit?: string;
-  /** What the cup or ticket is, like "tea", or "second tea" when the order has two; only when it has several. */
-  cup?: string;
+  /** What the cup or ticket is, when the order has several: its drink, and which of two of one it is. */
+  cup?: OrderCup;
   /** For a serve: handed over to go rather than set down at a table. */
   toGo?: boolean;
   /** For a slip: what went wrong. */
@@ -29,13 +29,17 @@ export interface Leg {
 /** What a robot does to a cup while making it, from taking the cup to putting its lid on. */
 const MAKING = new Set(['TAKE', 'GRIND', 'FILL WATER', 'BREW', 'STEEP', 'ADD SUGAR', 'LID']);
 
-const ORDINALS = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth'];
+/** A cup or ticket of an order, by its drink, and when the order has two of one, which it is, counting from 1. */
+export interface OrderCup {
+  item: string;
+  nth?: number;
+}
 
-/** Things named by what they are, told apart by order when there are two of one: "tea", or "first tea". */
-function named(items: readonly string[]): string[] {
+/** Things named by what they are, told apart by order when there are two of one: "tea", or the first tea. */
+function named(items: readonly string[]): OrderCup[] {
   return items.map((item, i) => {
     const same = items.flatMap((other, j) => (other === item ? [j] : []));
-    return same.length > 1 ? `${ORDINALS[same.indexOf(i)] ?? `#${same.indexOf(i) + 1}`} ${item}` : item;
+    return same.length > 1 ? { item, nth: same.indexOf(i) + 1 } : { item };
   });
 }
 

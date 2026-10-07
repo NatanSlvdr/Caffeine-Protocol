@@ -4,6 +4,7 @@ import { ROBOT_DISPLAY_NAMES, type Moment, type RobotPrograms, type RobotRole } 
 import { jumpTargets, landOn, momentWords, momentsAt, nextMoment, type JumpFilter } from './timeline';
 import { useWords } from '@/shared/language';
 import { PAUSE_WORDS } from './pauseWords';
+import { ROUTE_WORDS } from './routeWords';
 import type { Followable } from './route';
 
 export interface ReplayTimelineProps {
@@ -64,44 +65,34 @@ export function ReplayTimeline({
 }: ReplayTimelineProps) {
   const [kind, setKind] = useState<Kind>('all');
   const [said, setSaid] = useState('');
-  const pauseWords = useWords(PAUSE_WORDS);
+  const pauseWords = useWords(PAUSE_WORDS),
+    say = useWords(ROUTE_WORDS);
   const robot = crew.includes(role) ? role : crew[0];
   const shown: Kind = kind === 'handoff' && crew.length < 2 ? 'all' : kind;
   const filter: JumpFilter = shown === 'robot' ? robot : shown;
   const targets = jumpTargets(moments, filter, crew);
   const name = ROBOT_DISPLAY_NAMES[robot];
-  const kinds: { kind: Kind; label: string; noun: [string, string] }[] = [
-    { kind: 'all', label: 'Key moments', noun: ['Previous key moment', 'Next key moment'] },
-    { kind: 'order', label: 'Orders', noun: ['Previous order', 'Next order'] },
-    ...(crew.length > 1
-      ? [
-          {
-            kind: 'handoff' as const,
-            label: 'Handoffs',
-            noun: ['Previous handoff', 'Next handoff'] as [string, string],
-          },
-        ]
-      : []),
-    {
-      kind: 'robot',
-      label: textMode ? `${name}’s lines` : `${name}’s blocks`,
-      noun: [`${name}’s previous ${textMode ? 'line' : 'block'}`, `${name}’s next ${textMode ? 'line' : 'block'}`],
-    },
+  // Each kind's label, then its previous and next.
+  const kinds: { kind: Kind; words: [string, string, string] }[] = [
+    { kind: 'all', words: say.kinds.all },
+    { kind: 'order', words: say.kinds.order },
+    ...(crew.length > 1 ? [{ kind: 'handoff' as const, words: say.kinds.handoff }] : []),
+    { kind: 'robot', words: say.robot(name, textMode) },
   ];
-  const nouns = kinds.find((k) => k.kind === shown)!.noun;
+  const [, before, after] = kinds.find((k) => k.kind === shown)!.words;
   const previous = nextMoment(targets, time, -1),
     next = nextMoment(targets, time, 1);
   const at = (seconds: number) => `${(Math.min(Math.max(seconds / head, 0), 1) * 100).toFixed(3)}%`;
   const jump = (moment: Moment | undefined) => {
     if (!moment) {
       onView(null);
-      setSaid('Back to now.');
+      setSaid(`${say.backToNow}.`);
       return;
     }
     onView(landOn(moment));
     onMoment?.(moment);
     const words = momentsAt(targets, moment.at)
-      .map((m) => momentWords(m, programs, textMode))
+      .map((m) => momentWords(m, programs, textMode, pauseWords, say))
       .join('. ');
     setSaid(`${pauseWords.when(rounds, moment.round, moment.event.start)}. ${words}.`);
   };
@@ -134,7 +125,7 @@ export function ReplayTimeline({
     e.preventDefault();
   };
   return (
-    <div className="replay-timeline" role="group" aria-label="Look back through the run">
+    <div className="replay-timeline" role="group" aria-label={say.timeline}>
       <div className="replay-track">
         <div className="replay-marks" aria-hidden="true">
           {roundStarts.map((start) => (
@@ -147,8 +138,8 @@ export function ReplayTimeline({
         <input
           type="range"
           className="replay-scrubber"
-          aria-label="Service time"
-          aria-valuetext={viewing ? `${when}, earlier` : `${when}, now`}
+          aria-label={say.time}
+          aria-valuetext={say.at(when, viewing)}
           aria-keyshortcuts={viewing ? 'Escape' : undefined}
           min={0}
           max={head}
@@ -162,8 +153,8 @@ export function ReplayTimeline({
         <button
           type="button"
           className="replay-jump"
-          aria-label={nouns[0]}
-          title={nouns[0]}
+          aria-label={before}
+          title={before}
           disabled={!previous}
           onClick={() => jump(previous)}
         >
@@ -173,34 +164,34 @@ export function ReplayTimeline({
         <button
           type="button"
           className="replay-jump"
-          aria-label={next || !viewing ? nouns[1] : `${nouns[1]}: back to now`}
-          title={nouns[1]}
+          aria-label={next || !viewing ? after : say.nextToNow(after)}
+          title={after}
           disabled={!next && !viewing}
           onClick={() => jump(next)}
         >
           <ChevronRight size={16} aria-hidden="true" />
         </button>
-        <div className="replay-kinds" role="group" aria-label="Jump between">
+        <div className="replay-kinds" role="group" aria-label={say.jumpBetween}>
           {kinds.map((k) => (
             <button key={k.kind} type="button" aria-pressed={shown === k.kind} onClick={() => setKind(k.kind)}>
-              {k.label}
+              {k.words[0]}
             </button>
           ))}
         </div>
         {followable.length > 0 && (
           <select
             className="replay-follow"
-            aria-label="Follow an order"
+            aria-label={say.follow}
             value={following ? key(following) : ''}
             onChange={(e) => {
               const chosen = followable.find((f) => key(f) === e.target.value);
               onFollow(chosen ? { seed: chosen.seed, guest: chosen.guest } : null);
             }}
           >
-            <option value="">{following ? 'Stop following' : 'Follow an order…'}</option>
+            <option value="">{following ? say.stop : say.pick}</option>
             {byRound.length
               ? byRound.map((round) => (
-                  <optgroup key={round} label={`Round ${round}`}>
+                  <optgroup key={round} label={say.round(round)}>
                     {followable.filter((f) => f.round === round).map(option)}
                   </optgroup>
                 ))
@@ -210,7 +201,7 @@ export function ReplayTimeline({
         {viewing && (
           <button type="button" className="replay-now" onClick={() => jump(undefined)}>
             <Undo2 size={14} aria-hidden="true" />
-            Back to now
+            {say.backToNow}
           </button>
         )}
       </div>

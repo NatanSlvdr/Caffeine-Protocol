@@ -58,7 +58,7 @@ describe('following an order', () => {
     const route = orderRoute(result, guest);
     const cups = [...new Set(guest.tickets.map((paper) => paper.item))];
     for (const cup of cups) {
-      const own = route.filter((leg) => leg.cup === cup).map((leg) => leg.stage);
+      const own = route.filter((leg) => leg.cup?.item === cup).map((leg) => leg.stage);
       expect(own).toEqual(['write', 'claim', 'make', 'ready', 'pickup', 'serve', 'clear']);
     }
     // Each cup is served and cleared by its own id, and both are said by name.

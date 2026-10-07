@@ -262,18 +262,23 @@ and the drinks keeping warm; `inspectRobot`, `startedWords` and
 `crewActivity` take the words, English by default), with what a robot
 carries and remembers in `components/cargoWords.ts` (English is the domain's
 `heldLabel`, `paperLabel` and `placeLabel`; `storedPlace` names a remembered
-place as a key). Block names, what a guest said and what Query heard stay as
-they are. `CHALLENGE_WORDS` is a catalog too; the generated shift docs read
-its English. A window whose title is a shift's name marks it with
-`titleLang`. Short repeats is worded once, as `SHORT_REPEATS` beside
-`SettingRow`, for Settings and Options both. The rest of a shift (the crew's
-scenes and reactions, the timeline and an order's route, the editor's
-tools), the rail's windows (guestbook, shelf, drills and the rest), the
-story and the shift data are still in English, and so is the list of what
-bringing an old save up to date changed. Where English data sits on a French
-screen (a shift's name, its story and goal, a scene's logline), it carries
-`lang={useUntranslated()}`, so a screen reader says it as English; on an
-English page the attribute is left off. Act names and taglines for the
+place as a key). So do the replay timeline and the card that follows an
+order (`routeWords.ts`: the jumps, each moment, and every leg of the order's
+way; `legWords` and `momentWords` take the words, English by default). The
+domain names a cup of a two-drink order as an `OrderCup` (its drink and
+which of the two), so `cupName` says *second tea* and French *deuxième thé*;
+why a robot stopped stays English, marked so. Block names, what a guest said
+and what Query heard stay as they are. `CHALLENGE_WORDS` is a catalog too;
+the generated shift docs read its English. A window whose title is a shift's
+name marks it with `titleLang`. Short repeats is worded once, as
+`SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The rest
+of a shift (the crew's scenes and reactions, the service summary, the
+editor's tools), the rail's windows (guestbook, shelf, drills and the rest),
+the story and the shift data are still in English, and so is the list of
+what bringing an old save up to date changed. Where English data sits on a
+French screen (a shift's name, its story and goal, a scene's logline), it
+carries `lang={useUntranslated()}`, so a screen reader says it as English;
+on an English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
 the English-only windows still read. The save checks' refusals are keyed
 (`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field

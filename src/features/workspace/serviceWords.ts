@@ -15,6 +15,7 @@ import {
 } from '@/domain';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { crewActivity } from './crew';
+import { cupName } from './routeWords';
 import { guestName } from './route';
 
 type Sampled = ReturnType<typeof sampleReplay>;
@@ -160,8 +161,8 @@ export function happenings(result: RunResult, level: LevelDefinition, shift: num
           said.push({
             at,
             words: leg.toGo
-              ? `${name} gets ${leg.cup ? `the ${leg.cup}` : `their ${drinkOf(guest)}`} to go`
-              : `${name} is served ${leg.cup ? `the ${leg.cup} ` : ''}at table ${guest.table}`,
+              ? `${name} gets ${leg.cup ? `the ${cupName(leg.cup)}` : `their ${drinkOf(guest)}`} to go`
+              : `${name} is served ${leg.cup ? `the ${cupName(leg.cup)} ` : ''}at table ${guest.table}`,
           });
         else if (leg.stage === 'leave') said.push({ at, words: `${name} leaves` });
       }
