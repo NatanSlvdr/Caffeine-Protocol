@@ -1,7 +1,9 @@
 import { useState, type KeyboardEvent } from 'react';
 import { ChevronLeft, ChevronRight, Undo2 } from 'lucide-react';
 import { ROBOT_DISPLAY_NAMES, type Moment, type RobotPrograms, type RobotRole } from '@/domain';
-import { jumpTargets, landOn, momentWords, momentsAt, nextMoment, whenWords, type JumpFilter } from './timeline';
+import { jumpTargets, landOn, momentWords, momentsAt, nextMoment, type JumpFilter } from './timeline';
+import { useWords } from '@/shared/language';
+import { PAUSE_WORDS } from './pauseWords';
 import type { Followable } from './route';
 
 export interface ReplayTimelineProps {
@@ -62,6 +64,7 @@ export function ReplayTimeline({
 }: ReplayTimelineProps) {
   const [kind, setKind] = useState<Kind>('all');
   const [said, setSaid] = useState('');
+  const pauseWords = useWords(PAUSE_WORDS);
   const robot = crew.includes(role) ? role : crew[0];
   const shown: Kind = kind === 'handoff' && crew.length < 2 ? 'all' : kind;
   const filter: JumpFilter = shown === 'robot' ? robot : shown;
@@ -100,7 +103,7 @@ export function ReplayTimeline({
     const words = momentsAt(targets, moment.at)
       .map((m) => momentWords(m, programs, textMode))
       .join('. ');
-    setSaid(`${whenWords(rounds, moment.round, moment.event.start)}. ${words}.`);
+    setSaid(`${pauseWords.when(rounds, moment.round, moment.event.start)}. ${words}.`);
   };
   const key = (guest: { seed: string; guest: string }) => `${guest.seed}/${guest.guest}`;
   const byRound = rounds > 1 ? [...new Set(followable.map((f) => f.round))] : [];

@@ -32,8 +32,8 @@ import { ServiceSummary } from './ServiceSummary';
 import { summarize, useServiceAnnouncements } from './serviceWords';
 import { followable, guestName, routeDone } from './route';
 import { counterLines } from './counterLines';
-import { whenWords } from './timeline';
-import { markCount, pauseReason } from './breakpoints';
+import { markCount } from './breakpoints';
+import { PAUSE_WORDS } from './pauseWords';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
@@ -109,6 +109,7 @@ export function Workspace({
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
   const versionNames = useWords(OPTIONS_WORDS).versions;
+  const pauseWords = useWords(PAUSE_WORDS);
   const notebookWords = useWords(NOTEBOOK_WORDS);
   const benchWords = useWords(BENCH_WORDS);
   const label = shift.label ?? say.shift(pad2(index + 1));
@@ -366,7 +367,7 @@ export function Workspace({
     return () => window.removeEventListener('keydown', keys);
   });
   // When the service is paused: the round, if the shift has more than one, and the time into it.
-  const pausedAt = whenWords(rounds, round, roundTime);
+  const pausedAt = pauseWords.when(rounds, round, roundTime);
   // A failed run has already stopped, but the café holds its last frame for the crew's reaction.
   const serviceView = running || failed;
   // The round the followed guest came in, to time their order's way from its start.
@@ -634,7 +635,7 @@ export function Workspace({
             onStepCrew={crew.length > 1 ? () => live.stepTo(crew) : undefined}
             stepped={
               stepped
-                ? `${pausedAt}. ${stepped.by ? `${pauseReason(stepped.by)}. ` : ''}${startedWords(stepped.started, crew, programs, textMode)}`
+                ? `${pausedAt}. ${stepped.by ? `${pauseWords.reason(stepped.by)}. ` : ''}${startedWords(stepped.started, crew, programs, textMode, pauseWords)}`
                 : undefined
             }
             pauseMenu={
@@ -705,7 +706,7 @@ export function Workspace({
               reads={role === 'query' ? 'guest' : 'ticket'}
               when={pausedAt}
               earlier={viewing}
-              reason={viewing ? undefined : stepped?.by && pauseReason(stepped.by)}
+              reason={viewing ? undefined : stepped?.by && pauseWords.reason(stepped.by)}
             />
           )}
           {firstRoutine && save.settings.first_routine_tips && (

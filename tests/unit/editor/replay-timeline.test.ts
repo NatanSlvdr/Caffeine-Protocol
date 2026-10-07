@@ -3,7 +3,8 @@ import { lessons, levels } from '../../../src/data';
 import { referencePrograms } from '../../../src/data/extension';
 import { createLiveRun, runMoments } from '../../../src/domain';
 import type { Moment, RobotPrograms } from '../../../src/domain';
-import { jumpTargets, landOn, momentWords, nextMoment, whenWords } from '../../../src/features/workspace/timeline';
+import { jumpTargets, landOn, momentWords, nextMoment } from '../../../src/features/workspace/timeline';
+import { PAUSE_WORDS } from '../../../src/features/workspace/pauseWords';
 
 const played = (shift: number, programs: RobotPrograms, seconds = 1e9) =>
   createLiveRun(levels[shift - 1], programs).advance(seconds);
@@ -75,8 +76,8 @@ describe('jumping between moments', () => {
     expect(momentWords(handoff, programs, false)).toMatch(/^(Brew takes a ticket|Porter takes a drink)$/);
     const start = moments.find((m) => m.kind === 'start' && m.event.role === 'prep' && !m.event.waiting)!;
     expect(momentWords(start, programs, true)).toMatch(/^Brew: .+, line \d+$/);
-    expect(whenWords(3, 2, 42)).toBe('Round 2 · 42.0 s');
-    expect(whenWords(1, 1, -2)).toBe('Before opening');
+    expect(PAUSE_WORDS.en.when(3, 2, 42)).toBe('Round 2 · 42.0 s');
+    expect(PAUSE_WORDS.en.when(1, 1, -2)).toBe('Before opening');
     const slip = runMoments(
       played(3, { query: lessons[2].solution.replace('TAKE UP', 'MOVE RIGHT 1'), prep: '', floor: '' }).result,
       Infinity,

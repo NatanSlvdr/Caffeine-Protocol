@@ -38,12 +38,22 @@ export const QUERY_TILES: readonly Point[] = [
 export const MANUAL_INTAKE: Point = STATIONS.orders.floor;
 /** The one opening from the room into the prep aisle is left of the first appliance. */
 export const STAFF_ENTRY: Point = [-2, 4];
+/** A place a robot stored in memory, by what's there: a station, a table, or failing those its tile. */
+export type StoredPlace = 'pickup' | 'sink' | 'togo' | { table: number } | { tile: Point };
+
+/** What's at a place a robot stored in memory. */
+export function storedPlace(place: Point): StoredPlace {
+  const [x, z] = place;
+  if (x === STATIONS.pickup.floor[0] && z === STATIONS.pickup.floor[1]) return 'pickup';
+  if (x === STATIONS.returns.floor[0] && z === STATIONS.returns.floor[1]) return 'sink';
+  if (x === STATIONS.togo.floor[0] && z === STATIONS.togo.floor[1]) return 'togo';
+  const table = TABLE_LAYOUT.findIndex((_, i) => tableFront(i)[0] === x && tableFront(i)[1] === z);
+  return table >= 0 ? { table: table + 1 } : { tile: place };
+}
+
 /** A place a robot stored in memory, named after what's there: "Pickup", "Table 3", or its tile. */
 export function placeLabel(place: Point): string {
-  const [x, z] = place;
-  if (x === STATIONS.pickup.floor[0] && z === STATIONS.pickup.floor[1]) return 'Pickup';
-  if (x === STATIONS.returns.floor[0] && z === STATIONS.returns.floor[1]) return 'Sink';
-  if (x === STATIONS.togo.floor[0] && z === STATIONS.togo.floor[1]) return 'To-go shelf';
-  const table = TABLE_LAYOUT.findIndex((_, i) => tableFront(i)[0] === x && tableFront(i)[1] === z);
-  return table >= 0 ? `Table ${table + 1}` : `Tile ${x}, ${z}`;
+  const at = storedPlace(place);
+  if (typeof at === 'string') return { pickup: 'Pickup', sink: 'Sink', togo: 'To-go shelf' }[at];
+  return 'table' in at ? `Table ${at.table}` : `Tile ${at.tile[0]}, ${at.tile[1]}`;
 }

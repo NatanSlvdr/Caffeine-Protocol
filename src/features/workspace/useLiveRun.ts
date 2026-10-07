@@ -31,6 +31,9 @@ import type { EditKind } from './history';
 import { evidenceOf, isStale } from './evidence';
 import { crewActivity } from './crew';
 import { inspectRobot } from './inspector';
+import { PAUSE_WORDS } from './pauseWords';
+import { CARGO_WORDS } from '@/components';
+import { useWords } from '@/shared/language';
 import { challengesMet } from './challenges';
 import { carryMarks, noMarks, pauseNowhere, pauseWhen, pausedBy, toggleMark } from './breakpoints';
 import type { Marks, PauseAt, PausedBy } from './breakpoints';
@@ -50,6 +53,8 @@ export interface LiveRunArgs {
 
 /** Owns the live run lifecycle: programs, role, result, clock, and completion. View state stays in Workspace. */
 export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, onFinish }: LiveRunArgs) {
+  const pauseWords = useWords(PAUSE_WORDS),
+    cargoWords = useWords(CARGO_WORDS);
   const [programs, setPrograms] = useState(
       () => save.robotDrafts[index] ?? incomingRobotPrograms(save, index, lessons),
     ),
@@ -117,11 +122,20 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // A failed run has already stopped, but its last frame stays up until the code changes.
   const failed = showFailure && !!result && !result.passed;
   // Who is busy and who is waiting, while the run plays or is looked back on: the robot tabs show it.
-  const activity = (running || (failed && viewing)) && sampled ? crewActivity(sampled) : undefined;
+  const activity = (running || (failed && viewing)) && sampled ? crewActivity(sampled, pauseWords) : undefined;
   // The open robot, while the service is paused on it, or at an earlier moment of a run that slipped.
   const inspected =
     ((running && paused) || (failed && viewing)) && result && sampled
-      ? inspectRobot(result, sampled, role, source, save.settings.text_editor, level.service?.fresh)
+      ? inspectRobot(
+          result,
+          sampled,
+          role,
+          source,
+          save.settings.text_editor,
+          level.service?.fresh,
+          pauseWords,
+          cargoWords,
+        )
       : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));

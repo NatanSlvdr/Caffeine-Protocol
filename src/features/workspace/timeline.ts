@@ -51,7 +51,3 @@ export function momentWords(moment: Moment, programs: RobotPrograms, textMode: b
   if (moment.kind === 'slip') return `${who} stopped: ${event.error?.replace(/\.$/, '')}`;
   return startedWords([event], [event.role], programs, textMode).replace(/\.$/, '');
 }
-
-/** When a moment of the run was: the round, if the shift has more than one, and the time into it. */
-export const whenWords = (rounds: number, round: number, local: number) =>
-  (rounds > 1 ? `Round ${round} · ` : '') + (local < 0 ? 'Before opening' : `${local.toFixed(1)} s`);

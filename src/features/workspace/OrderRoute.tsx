@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Route, X } from 'lucide-react';
 import type { Leg, ReplayEvent } from '@/domain';
 import { legWords } from './route';
-import { whenWords } from './timeline';
+import { useWords } from '@/shared/language';
+import { PAUSE_WORDS } from './pauseWords';
 
 export interface OrderRouteProps {
   /** The guest, as the café knows them: "Guest 3", or a regular by name. */
@@ -43,8 +44,9 @@ export function OrderRoute({
   onStop,
 }: OrderRouteProps) {
   const [said, setSaid] = useState('');
+  const pauseWords = useWords(PAUSE_WORDS);
   const current = route.findLastIndex((leg) => leg.at <= time + 1e-3);
-  const when = (leg: Leg) => whenWords(1, round, leg.at - start);
+  const when = (leg: Leg) => pauseWords.when(1, round, leg.at - start);
   return (
     <section className="order-route" aria-label={`Following ${name}’s order`}>
       <header>

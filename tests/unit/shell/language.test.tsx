@@ -1,5 +1,5 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import App from '../../../src/App';
 import { CAFE_WORDS } from '../../../src/app/cafeWords';
 import { GUIDE_WORDS } from '../../../src/app/guideWords';
@@ -29,12 +29,19 @@ import { handoverFor } from '../../../src/features/workspace/handover';
 import { PREVIEW_WORDS } from '../../../src/features/workspace/previewWords';
 import { BlockPreviewNote } from '../../../src/features/workspace/BlockPreviewNote';
 import { dryRound, visitWords } from '../../../src/features/workspace/blockPreview';
+import { PAUSE_WORDS } from '../../../src/features/workspace/pauseWords';
+import { inspectRobot } from '../../../src/features/workspace/inspector';
+import { crewActivity } from '../../../src/features/workspace/crew';
+import { CARGO_WORDS } from '../../../src/components/cargoWords';
+import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
+import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
-import { UNLOCKS, blockVisits, createLiveRun, recordRun } from '../../../src/domain';
+import { STATIONS, UNLOCKS, blockVisits, createLiveRun, recordRun, sampleReplay } from '../../../src/domain';
+import type { OrderTicket } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
-import { runCampaignLevel } from '../../helpers/run';
+import { finishLiveRun, runCampaignLevel } from '../../helpers/run';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
@@ -43,6 +50,8 @@ vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.f
 
 const NBSP = ' ';
 const NARROW = ' ';
+/** Query's order sheet before anything is written on it. */
+const blankPaper = { item: '', with_sugar: null, sugar_count: null } as OrderTicket;
 
 beforeEach(() => {
   window.location.hash = '/';
@@ -233,6 +242,34 @@ describe('the shift screen in French', () => {
     expect(document.querySelector('.playback-toolbar [role="status"]')!.textContent).toMatch(
       /^Service en cours(, manche 1 sur \d+)?\. Les routines restent verrouillées jusqu’à l’arrêt\.$/,
     );
+  });
+
+  it('steps a paused service in French, and inspects the robot with what the guest said kept as English', () => {
+    vi.useFakeTimers();
+    onTestFinished(() => void vi.useRealTimers());
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    seedLocalStorage(
+      makeSave({ unlocked: 2, selected: 2, robotDrafts: { 2: { query: lessons[2].solution, prep: '', floor: '' } } }),
+    );
+    window.location.hash = '/shift/3';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /^Lancer le service/ }));
+    const toolbar = within(screen.getByRole('group', { name: 'Commandes du service' }));
+    act(() => void vi.advanceTimersByTime(100));
+    fireEvent.click(toolbar.getByRole('button', { name: 'Mettre en pause' }));
+    fireEvent.click(toolbar.getByRole('button', { name: 'Avancer Query' }));
+    expect(document.querySelector('.playback-toolbar [role="status"]')!.textContent).toBe(
+      `Manche 1 · 0,0 s. Query${NBSP}: wait for orders, bloc 2.`,
+    );
+    const inspector = within(screen.getByRole('complementary', { name: 'Query, en pause' }));
+    const row = (name: string) => inspector.getByText(name).nextElementSibling!;
+    expect(row('En cours').textContent).toBe('Wait for ordersBloc 2');
+    expect(row('Client').textContent).toBe('“coffee”');
+    expect(row('Client').querySelector('[lang="en"]')!.textContent).toBe('“coffee”');
+    expect(row('Porte').textContent).toBe('Rien');
+    expect(row('Mémoire').textContent).toBe('Aucune Var dans cette routine');
+    expect(row('Boucle').textContent).toBe('Hors de toute boucle');
   });
 
   it('opens the options in French', () => {
@@ -644,6 +681,44 @@ describe('the words themselves', () => {
     expect(within(note).getByText('Et 2 autres passages.')).toBeTruthy();
   });
 
+  it('reads a paused robot’s carrying, keeping warm and waiting in French', () => {
+    const shift21 = referencePrograms(UNLOCKS.together - 1);
+    const { level } = specialById('fresh')!;
+    const result = finishLiveRun(createLiveRun(level, shift21)).result;
+    const seed = result.execution!.find((s) => s.seed_id === result.first_failure!.seed_id)!;
+    const sampled = sampleReplay(result, seed.start + result.first_failure!.event_time!);
+    const state = inspectRobot(
+      result,
+      sampled,
+      'floor',
+      shift21.floor,
+      false,
+      FRESH_SECONDS,
+      PAUSE_WORDS.fr,
+      CARGO_WORDS.fr,
+    )!;
+    expect(state.warm?.[0]).toMatch(/^(Café|Thé) · Table \d · Sur le plateau · 0 s restante$/);
+    for (const held of state.holding)
+      expect(held).toMatch(/^(Café|Thé) · (\d sucres?|Sans sucre) · (Table \d|À emporter)/);
+    expect(state.doing).not.toMatch(/Waiting|Block/);
+    const opening = crewActivity(sampleReplay(result, 0), PAUSE_WORDS.fr);
+    const labels = Object.values(opening).map((tab) => tab.label);
+    expect(labels.length).toBeGreaterThan(1);
+    for (const label of labels) expect(label).toMatch(/^(Attend .+|En attente sur «.+»|Travaille sur «.+»)$/);
+    const [x, z] = STATIONS.pickup.floor;
+    expect([CARGO_WORDS.fr.place([x, z]), CARGO_WORDS.fr.place([99, 99])]).toEqual([
+      'Comptoir de retrait',
+      'Case (99, 99)',
+    ]);
+    expect(CARGO_WORDS.fr.paper({ ...blankPaper, item: 'tea', sugar_count: 2, to_go: true })).toBe(
+      'Feuille de commande · Thé · 2 sucres · À emporter',
+    );
+    expect(PAUSE_WORDS.fr.reason({ reason: 'mark', robot: 'prep' })).toBe('À la marque de Brew');
+    expect(PAUSE_WORDS.fr.reason({ reason: 'handoff', robot: 'floor' })).toBe('Porter prend une boisson');
+    expect(PAUSE_WORDS.fr.when(3, 2, 42)).toBe('Manche 2 · 42,0 s');
+    expect(PAUSE_WORDS.fr.when(1, 1, -2)).toBe('Avant l’ouverture');
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
@@ -665,6 +740,8 @@ describe('the words themselves', () => {
       FAILURE_WORDS,
       HANDOVER_WORDS,
       PREVIEW_WORDS,
+      PAUSE_WORDS,
+      CARGO_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

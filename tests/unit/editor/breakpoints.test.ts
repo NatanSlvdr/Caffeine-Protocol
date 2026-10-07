@@ -7,11 +7,11 @@ import {
   carryMarks,
   noMarks,
   pauseNowhere,
-  pauseReason,
   pauseWhen,
   pausedBy,
   toggleMark,
 } from '../../../src/features/workspace/breakpoints';
+import { PAUSE_WORDS } from '../../../src/features/workspace/pauseWords';
 
 const routine = ['POSITION top', 'LISTEN', 'TAKE UP', 'ITEM coffee', 'MOVE RIGHT 1', 'DEPOSIT RIGHT', 'MOVE LEFT 1'];
 const text = (lines: string[]) => [...lines, 'JUMP top'].join('\n');
@@ -94,7 +94,7 @@ describe('pausing a running service', () => {
     const events = pauses.flat().map((s) => s.event);
     expect(events.every((e) => e.command === 'LISTEN' && !e.waiting && e.role !== 'query')).toBe(true);
     expect(new Set(events.map((e) => e.role))).toEqual(new Set(['prep', 'floor']));
-    expect(pauseReason(pausedBy(noMarks, pauses[0]))).toMatch(/^(Brew takes a ticket|Porter takes a drink)$/);
+    expect(PAUSE_WORDS.en.reason(pausedBy(noMarks, pauses[0]))).toMatch(/^(Brew takes a ticket|Porter takes a drink)$/);
   });
 
   it('leaves the stand-ins alone: only the player’s robots pause the service', () => {
@@ -113,7 +113,7 @@ describe('pausing a running service', () => {
       reason: 'mark',
       robot: 'floor',
     });
-    expect(pauseReason({ reason: 'mark', robot: 'floor' })).toBe('At Porter’s mark');
-    expect(pauseReason({ reason: 'slip', robot: 'query' })).toBe('Query’s slip, before the crew reacts');
+    expect(PAUSE_WORDS.en.reason({ reason: 'mark', robot: 'floor' })).toBe('At Porter’s mark');
+    expect(PAUSE_WORDS.en.reason({ reason: 'slip', robot: 'query' })).toBe('Query’s slip, before the crew reacts');
   });
 });

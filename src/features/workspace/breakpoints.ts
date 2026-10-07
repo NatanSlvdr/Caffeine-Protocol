@@ -1,4 +1,4 @@
-import { ROBOT_DISPLAY_NAMES, canPauseAt, isHandoff, type RobotRole, type Start, type StopWhen } from '@/domain';
+import { canPauseAt, isHandoff, type RobotRole, type Start, type StopWhen } from '@/domain';
 
 /** The blocks each robot's routine is marked to pause at, by line. */
 export type Marks = Readonly<Record<RobotRole, ReadonlySet<number>>>;
@@ -19,14 +19,6 @@ export const pauseNowhere: PauseAt = { handoffs: false, slips: false };
 export interface PausedBy {
   reason: 'mark' | 'handoff' | 'slip';
   robot: RobotRole;
-}
-
-/** Why the service paused itself, in a few words: "At Brew’s mark". */
-export function pauseReason({ reason, robot }: PausedBy): string {
-  const name = ROBOT_DISPLAY_NAMES[robot];
-  if (reason === 'mark') return `At ${name}’s mark`;
-  if (reason === 'handoff') return `${name} takes a ${robot === 'prep' ? 'ticket' : 'drink'}`;
-  return `${name}’s slip, before the crew reacts`;
 }
 
 /**

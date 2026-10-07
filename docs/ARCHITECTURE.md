@@ -255,15 +255,23 @@ French follows them step by step) and the note beside a picked block's
 preview (`previewWords.ts`): the domain names the places a block reaches as
 `Place` keys (`reachedPlace`, `standingPlace`), so French can give each its
 article, and `visitWords` takes the words, with where a run stopped said
-apart, in English. `CHALLENGE_WORDS` is a catalog too; the generated shift
-docs read its English. A window whose title is a shift's name marks it with
+apart, in English. So do the robot inspector, the robot tabs' activity and
+what a paused step says (`pauseWords.ts`: when and why the service paused,
+what each robot is doing or waiting for, the inspector's rows, the ticket
+and the drinks keeping warm; `inspectRobot`, `startedWords` and
+`crewActivity` take the words, English by default), with what a robot
+carries and remembers in `components/cargoWords.ts` (English is the domain's
+`heldLabel`, `paperLabel` and `placeLabel`; `storedPlace` names a remembered
+place as a key). Block names, what a guest said and what Query heard stay as
+they are. `CHALLENGE_WORDS` is a catalog too; the generated shift docs read
+its English. A window whose title is a shift's name marks it with
 `titleLang`. Short repeats is worded once, as `SHORT_REPEATS` beside
 `SettingRow`, for Settings and Options both. The rest of a shift (the crew's
-scenes and reactions, the inspector and timeline, the editor's tools), the
-rail's windows (guestbook, shelf, drills and the rest), the story and the
-shift data are still in English, and so is the list of what bringing an old
-save up to date changed. Where English data sits on a French screen (a
-shift's name, its story and goal, a scene's logline), it carries
+scenes and reactions, the timeline and an order's route, the editor's
+tools), the rail's windows (guestbook, shelf, drills and the rest), the
+story and the shift data are still in English, and so is the list of what
+bringing an old save up to date changed. Where English data sits on a French
+screen (a shift's name, its story and goal, a scene's logline), it carries
 `lang={useUntranslated()}`, so a screen reader says it as English; on an
 English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
