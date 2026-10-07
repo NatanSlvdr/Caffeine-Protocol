@@ -18,6 +18,7 @@ import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
 import { PracticeCard } from './PracticeCard';
 import { easedWords } from './bench';
+import { BENCH_WORDS } from './modals/benchWords';
 import { FirstRoutineTips } from './FirstRoutineTips';
 import { firstRoutineStep } from './firstRoutine';
 import { HandoverCard } from './HandoverCard';
@@ -109,6 +110,7 @@ export function Workspace({
   const say = useWords(WORKSPACE_WORDS);
   const versionNames = useWords(OPTIONS_WORDS).versions;
   const notebookWords = useWords(NOTEBOOK_WORDS);
+  const benchWords = useWords(BENCH_WORDS);
   const label = shift.label ?? say.shift(pad2(index + 1));
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
@@ -622,7 +624,7 @@ export function Workspace({
             rounds={rounds}
             practice={practising !== null}
             bench={benching}
-            eased={benching && practising !== null ? easedWords(played.seeds[practising]?.eased) : ''}
+            eased={benching && practising !== null ? easedWords(played.seeds[practising]?.eased, benchWords) : ''}
             onRun={run}
             onTogglePause={() => {
               setPaused((p) => !p);
@@ -754,7 +756,7 @@ export function Workspace({
             <PracticeCard
               round={level.seeds.findIndex((seed) => seed.id === practiceCard.seeds[0]) + 1}
               bench={isBenchSeed(practiceCard.seeds[0])}
-              eased={easedWords(played.seeds.find((seed) => seed.id === practiceCard.seeds[0])?.eased)}
+              eased={easedWords(played.seeds.find((seed) => seed.id === practiceCard.seeds[0])?.eased, benchWords)}
               onRunService={() => startFromCard(run)}
             />
           )}

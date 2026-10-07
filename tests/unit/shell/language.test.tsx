@@ -14,11 +14,16 @@ import { RECEIPT_WORDS } from '../../../src/features/workspace/modals/receiptWor
 import { NOTEBOOK_WORDS } from '../../../src/features/workspace/modals/notebookWords';
 import { lessonText, NotebookRefusal, parseNotebook } from '../../../src/features/workspace/notebook';
 import { CHALLENGE_WORDS } from '../../../src/features/workspace/challenges';
-import { lessons, titleFor } from '../../../src/data';
+import { BENCH_WORDS } from '../../../src/features/workspace/modals/benchWords';
+import { COMPARE_WORDS } from '../../../src/features/workspace/modals/compareWords';
+import { CompareModal } from '../../../src/features/workspace/modals/CompareModal';
+import { easeChoice, easedWords } from '../../../src/features/workspace/bench';
+import { compareRuns, runName } from '../../../src/features/workspace/compare';
+import { lessons, levels, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
-import { UNLOCKS } from '../../../src/domain';
+import { UNLOCKS, createLiveRun, recordRun } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
-import { LANGUAGE_KEY, words } from '../../../src/shared/language';
+import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
@@ -57,7 +62,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, a shift’s controls, options, help, receipt and notebook, these settings and the handbook/,
+      /French covers the front door, the order rail, a shift’s controls and windows, these settings and the handbook/,
     );
   });
 
@@ -371,6 +376,28 @@ describe('the shift screen in French', () => {
     expect(notebook.getByRole('button', { name: 'La remettre' })).toBeTruthy();
   });
 
+  it('writes a bench in French, with what each guest says kept as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Banc d’essai' }));
+    const dialog = screen.getByRole('dialog', { name: 'Banc d’essai' });
+    const bench = within(dialog);
+    expect(dialog.querySelector('.modal-kicker')!.textContent).toBe('Sans étoiles');
+    expect(bench.getByRole('group', { name: 'Partir d’une manche du service' })).toBeTruthy();
+    const guests = within(bench.getByRole('list', { name: 'Clients du banc' }));
+    expect(guests.getByText('Arrive à l’ouverture du café')).toBeTruthy();
+    const says = dialog.querySelector('.bench-says')!;
+    expect(says.textContent).toMatch(new RegExp(`^Dit «${NBSP}[^«»]+${NBSP}» · Doit recevoir (café|thé)`));
+    expect(says.querySelector('span')!.getAttribute('lang')).toBe('en');
+    expect(bench.getByRole('button', { name: /^Lancer le banc · \d+ clients?$/ })).toBeTruthy();
+    fireEvent.click(guests.getAllByRole('button', { name: 'Retirer le client 1' })[0]);
+    expect(dialog.querySelector('.bench-status')!.textContent).toMatch(/^Client 1 retiré\./);
+    fireEvent.click(bench.getByRole('button', { name: /^La manche 1|^Les clients du service/ }));
+    expect(dialog.querySelector('.bench-status')!.textContent).toMatch(
+      new RegExp(`^Manche 1 copiée${NBSP}: \\d+ clients?\\.$`),
+    );
+  });
+
   it('leaves an English shift as it was', () => {
     open();
     expect(screen.getByRole('button', { name: /^Run service/ })).toBeTruthy();
@@ -426,6 +453,61 @@ describe('the words themselves', () => {
     );
   });
 
+  it('compares two runs in French, and eases a bench’s rules in French', () => {
+    const level = levels[2];
+    const runOf = (id: number, query: string) => {
+      const programs = { query, prep: '', floor: '' };
+      const { result } = createLiveRun(level, programs, {}).advance(1e9);
+      return recordRun(
+        id,
+        level,
+        programs,
+        result,
+        level.seeds.map((_, i) => i),
+      );
+    };
+    const stopped = runOf(1, 'LISTEN\nITEM coffee'),
+      served = runOf(2, lessons[2].solution);
+    const say = COMPARE_WORDS.fr;
+    expect(runName(level, stopped, say)).toBe('Essai 1 · Service · Arrêté');
+    const rows = compareRuns(level, stopped, served, say);
+    const row = (label: string) => rows.find((r) => r.label === label)!;
+    expect(row('Issue')).toMatchObject({
+      before: 'Query s’est arrêté · Manche 1 · Mr. Albert',
+      after: 'Servi',
+      delta: 'Servi désormais',
+    });
+    expect(row('Clients servis').before).toMatch(/^\d+ sur \d+$/);
+    expect(row('Durée du service').after).toMatch(/^\d+,\d s$/);
+    expect(row('Humeur des clients').after).toMatch(new RegExp(`^\\d+${NBSP}%$`));
+    expect(row('Humeur des clients').note).toBe(say.rows.unjudged);
+
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <CompareModal level={level} records={[stopped, served]} crew={['query']} onClose={() => {}} />
+      </LanguageProvider>,
+    );
+    const slip = within(screen.getByRole('dialog', { name: 'Comparer des essais' }));
+    expect(slip.getByRole('table', { name: 'Essai 1 face à l’essai 2' })).toBeTruthy();
+    expect(slip.getByRole('columnheader', { name: 'Écart' })).toBeTruthy();
+    expect(slip.getByRole('heading', { name: 'Ce qui a changé dans les routines' })).toBeTruthy();
+    expect(document.querySelector('.restore-compare-title span')!.textContent).toMatch(
+      /^\d+ lignes? ajoutées?( · \d+ lignes? retirées?)?$/,
+    );
+    expect(slip.getByRole('list', { name: 'Routine de Query, de l’essai 1 à l’essai 2' })).toBeTruthy();
+
+    expect(easeChoice(levels[17], 'cups', BENCH_WORDS.fr.eases)).toEqual({
+      label: 'Deux fois plus de tasses',
+      detail: '8 tasses au lieu de 4.',
+    });
+    const eased = easedWords(['cups', 'closing'], BENCH_WORDS.fr);
+    expect(eased).toBe('avec deux fois plus de tasses et sans heure de fermeture');
+    expect(WORKSPACE_WORDS.fr.practice.reason(true, eased)).toMatch(
+      /^Le banc d’essai a tourné avec deux fois plus de tasses et sans heure de fermeture, et ne rapporte pas d’étoiles/,
+    );
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause']);
@@ -442,6 +524,8 @@ describe('the words themselves', () => {
       RECEIPT_WORDS,
       CHALLENGE_WORDS,
       NOTEBOOK_WORDS,
+      BENCH_WORDS,
+      COMPARE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

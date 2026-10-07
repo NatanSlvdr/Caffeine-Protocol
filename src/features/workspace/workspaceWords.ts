@@ -5,7 +5,7 @@ import type { PhotoView } from './photo';
 /** How far the service has got, for the toolbar to say to a screen reader while it plays. */
 interface Playing {
   bench: boolean;
-  /** The bench eases some of the shift's rules, said after "with" in English: "twice the cups". */
+  /** The rules the bench eases, as `easedWords` says them: after "with" in English, whole in French. */
   eased: string;
   practice: boolean;
   round: number;
@@ -18,7 +18,7 @@ interface Playing {
 
 /**
  * The shift screen's words: the bar over the café, the playback toolbar and its pause menu. The shift's title, story
- * and goal are still in English, and so are the bench's eased rules, so the French toolbar says only that it eases some.
+ * and goal are still in English.
  */
 export const WORKSPACE_WORDS = words(
   {
@@ -190,7 +190,7 @@ export const WORKSPACE_WORDS = words(
       reason: (bench, eased) =>
         bench
           ? eased
-            ? 'Le banc d’essai a tourné avec des règles assouplies, et ne rapporte pas d’étoiles : elles viennent des clients et des règles du service, toutes manches comprises.'
+            ? `Le banc d’essai a tourné ${eased}, et ne rapporte pas d’étoiles : elles viennent des clients et des règles du service, toutes manches comprises.`
             : 'Le banc d’essai ne rapporte pas d’étoiles : elles viennent des clients du service, toutes manches comprises.'
           : 'L’entraînement ne rapporte pas d’étoiles : il faut que le service entier réussisse toutes ses manches.',
       runAll: 'Lancer tout le service',
@@ -241,7 +241,7 @@ export const WORKSPACE_WORDS = words(
       playing: ({ bench, eased, practice, round, rounds, counted, observation }) =>
         `${
           bench
-            ? `Banc d’essai en cours${eased ? ', règles assouplies' : ''}, sans étoiles`
+            ? `Banc d’essai en cours${eased ? `, ${eased}` : ''}, sans étoiles`
             : practice
               ? `Entraînement, manche ${round} sur ${rounds}, sans étoiles`
               : `Service en cours${counted ? `, manche ${round} sur ${rounds}${round > 1 ? `, ${countFr(round - 1, 'réussie', 'réussies')}` : ''}` : ''}`

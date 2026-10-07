@@ -12,6 +12,7 @@ import {
 } from '@/domain';
 import { cafeKey } from '@/features/campaign/save/cafes';
 import { andList } from './hints';
+import { BENCH_WORDS } from './modals/benchWords';
 
 /** The benches the player has written for the open café, by shift: beside its save and never in it. */
 export const benchKey = () => `${cafeKey()}.bench`;
@@ -82,29 +83,29 @@ export function writeBench(levelId: string, guests: readonly BenchGuest[], eased
 }
 
 /** A rule a bench can ease, as the bench offers it: what it's called, and what changes on this shift. */
-export function easeChoice(level: LevelDefinition, ease: BenchEase): { label: string; detail: string } {
+export function easeChoice(
+  level: LevelDefinition,
+  ease: BenchEase,
+  say = BENCH_WORDS.en.eases,
+): { label: string; detail: string } {
   const service = level.service;
   switch (ease) {
     case 'cups':
-      return { label: 'Twice the cups', detail: `${(service?.cups ?? 0) * 2} cups instead of ${service?.cups}.` };
-    case 'load': {
+      return { label: say.cups.label, detail: say.cups.detail(service?.cups ?? 0) };
+    case 'load':
       // The robot the shift asks for a full load: Brew until Porter joins, then Porter.
-      const porter = shiftNumber(level.id) >= ROBOT_UNLOCK_LEVELS.floor;
       return {
-        label: 'One at a time will do',
-        detail: `${porter ? 'Porter can carry' : 'Brew can make'} one drink a trip, not ${service?.minLoad}.`,
+        label: say.load.label,
+        detail: say.load.detail(shiftNumber(level.id) >= ROBOT_UNLOCK_LEVELS.floor, service?.minLoad ?? 0),
       };
-    }
     case 'closing':
-      return { label: 'No closing time', detail: 'Nobody calls closing, so no robot has to stop.' };
+      return { label: say.closing.label, detail: say.closing.detail };
   }
 }
 
-const EASED: Record<BenchEase, string> = {
-  cups: 'twice the cups',
-  load: 'one at a time',
-  closing: 'no closing time',
-};
-
 /** The rules a bench run eased, said after "with": "twice the cups and no closing time"; nothing when it eased none. */
-export const easedWords = (eased: readonly BenchEase[] = []) => andList(eased.map((ease) => EASED[ease]));
+export const easedWords = (eased: readonly BenchEase[] = [], say = BENCH_WORDS.en) =>
+  andList(
+    eased.map((ease) => say.eased[ease]),
+    say.and,
+  );

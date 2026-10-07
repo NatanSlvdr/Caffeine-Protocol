@@ -220,8 +220,9 @@ values, fails to type-check. A sentence built from a count or a name is a
 function, so each language builds it its own way (`countFr` counts zero and
 one in the singular). French is written with plain spaces and set by
 `words`: a no-break space before `:` and inside `« »`, a narrow one before
-`; ? !`, and one after `n°`. JSX in a catalog is left alone, so it spells
-those spaces as entities. `useWords(catalog)` gives the reader's.
+`; ? !`, and one after `n°` and before `%`. JSX in a catalog is left alone,
+so it spells those spaces as entities. `useWords(catalog)` gives the
+reader's.
 
 French covers the front door, the top bar, the order rail with its tickets
 and specials board, Settings with its cafés and the fresh-start slip, the
@@ -237,15 +238,20 @@ default), Help with its hints and clues (`modals/helpWords.ts`; `clueFor`
 takes the clue's sentences), the receipt (`modals/receiptWords.ts`) and the
 notebook with its lessons (`modals/notebookWords.ts`; `lessonText` takes the
 lesson file's words, and `parseNotebook` throws a `NotebookRefusal` keyed by
-why). `CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
+why), the test bench (`modals/benchWords.ts`; `easeChoice` and `easedWords`
+take its words, so the toolbar and practice card say the eased rules in
+French too, while what a guest says stays English, quoted, since a routine
+listens for its words) and Compare runs (`modals/compareWords.ts`; `runName`
+and `compareRuns` take its words, and `guestCalled` a guest's).
+`CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
 English. A window whose title is a shift's name marks it with `titleLang`.
 Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
-Settings and Options both. The rest of a shift (its other windows, the
-crew's scenes and reactions, the failure card, the editor's tools), the
-rail's windows (guestbook, shelf, drills and the rest), the story and the
-shift data are still in English, and so is the list of what bringing an old
-save up to date changed. Where English data sits on a French screen (a
-shift's name, its story and goal, a scene's logline), it carries
+Settings and Options both. The rest of a shift (the crew's scenes and
+reactions, the failure card, the inspector and timeline, the editor's
+tools), the rail's windows (guestbook, shelf, drills and the rest), the
+story and the shift data are still in English, and so is the list of what
+bringing an old save up to date changed. Where English data sits on a French
+screen (a shift's name, its story and goal, a scene's logline), it carries
 `lang={useUntranslated()}`, so a screen reader says it as English; on an
 English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names

@@ -10,14 +10,12 @@ import {
   benchSays,
   benchSeed,
   benchTicket,
-  count,
   freshGuest,
   ROBOT_DISPLAY_NAMES,
   type BenchEase,
   type BenchGuest,
   type BenchKit,
   type BenchOrder,
-  type BenchSugar,
   type Customer,
   type ExpectedTicket,
   type LevelDefinition,
@@ -25,7 +23,9 @@ import {
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
+import { useUntranslated, useWords } from '@/shared/language';
 import { easeChoice, readBench, readEased, writeBench } from '../bench';
+import { BENCH_WORDS } from './benchWords';
 
 export interface BenchModalProps {
   /** The shift on screen: its own guests say what the bench can ask for. */
@@ -36,21 +36,15 @@ export interface BenchModalProps {
   onClose: () => void;
 }
 
-const capital = (word: string) => word[0].toUpperCase() + word.slice(1);
-const sugarWords = (sugar: BenchSugar) =>
-  typeof sugar === 'number'
-    ? count(sugar, 'sugar')
-    : { plain: 'No word on sugar', with: 'With sugar', without: 'Without sugar' }[sugar];
-
 /** What a ticket should say, in words: "tea · 2 sugars · to go". */
-function ticketWords(ticket: ExpectedTicket): string {
+function ticketWords(ticket: ExpectedTicket, say = BENCH_WORDS.en.ticket): string {
   return [
-    ticket.item,
+    ticket.item && say.drink[ticket.item],
     ticket.sugar_count !== undefined
-      ? count(ticket.sugar_count, 'sugar')
-      : ticket.with_sugar !== undefined && (ticket.with_sugar ? 'sugar' : 'no sugar'),
-    ticket.to_go && 'to go',
-    ticket.rush && 'rushed',
+      ? say.sugars(ticket.sugar_count)
+      : ticket.with_sugar !== undefined && say.sugar(ticket.with_sugar),
+    ticket.to_go && say.toGo,
+    ticket.rush && say.rush,
   ]
     .filter(Boolean)
     .join(' · ');
@@ -64,6 +58,8 @@ function ticketWords(ticket: ExpectedTicket): string {
  * browser, per shift, and a bench run never earns stars.
  */
 export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) {
+  const words = useWords(BENCH_WORDS);
+  const english = useUntranslated();
   const kit = useMemo(() => benchKit(level), [level]);
   const rounds = level.seeds.map((seed) => benchGuests(seed.customers));
   const [guests, setGuests] = useState<BenchGuest[]>(() => readBench(level.id, kit) ?? rounds[0]);
@@ -93,16 +89,13 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
     });
   const addGuest = () => {
     if (guests.length >= BENCH_GUESTS) return;
-    commit([...guests, freshGuest(kit, !guests.length)], `Guest ${guests.length + 1} added.`);
+    commit([...guests, freshGuest(kit, !guests.length)], words.added(guests.length + 1));
     focusGuest(guests.length, 'choice');
   };
   const removeGuest = (at: number) => {
     // The guest after comes in as the café opens when the first one goes.
     const next = guests.filter((_, i) => i !== at).map((g, i) => (i === 0 ? { ...g, after: 0 } : g));
-    commit(
-      next,
-      `Guest ${at + 1} removed.${next.length > at ? ` The guests after are numbered on from ${at + 1}.` : ''}`,
-    );
+    commit(next, words.removed(at + 1, next.length > at));
     focusGuest(Math.min(at, next.length - 1), 'remove');
   };
   const ease = (which: BenchEase, on: boolean) => {
@@ -111,41 +104,38 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
     setKept(writeBench(level.id, guests, next));
   };
   const copyRound = (round: number) => {
-    commit(rounds[round], `Copied round ${round + 1}: ${count(rounds[round].length, 'guest')}.`);
+    commit(rounds[round], words.copied(round + 1, rounds[round].length));
     focusGuest(0, 'choice');
   };
 
   return (
     <Modal
       className="settings-window confirm-slip bench-slip"
-      kicker="For no stars"
-      title="Test bench"
+      kicker={words.kicker}
+      title={words.title}
       onClose={onClose}
     >
-      <p>
-        Write the guests to run the routines on: what each asks for, and when they come in. What each should get is
-        worked out the way it is for the shift’s own guests.
-      </p>
-      <div className="bench-copy" role="group" aria-label="Start from a round of the shift">
-        <span aria-hidden="true">Start from</span>
+      <p>{words.intro}</p>
+      <div className="bench-copy" role="group" aria-label={words.startFromLabel}>
+        <span aria-hidden="true">{words.startFrom}</span>
         {rounds.map((round, i) => (
           <button key={i} type="button" className="settings-chip" onClick={() => copyRound(i)}>
-            {level.seeds.length > 1 ? `Round ${i + 1}` : 'The shift’s guests'}
-            <span className="sr-only">, {count(round.length, 'guest')}</span>
+            {level.seeds.length > 1 ? words.round(i + 1) : words.shiftsGuests}
+            <span className="sr-only">, {words.guests(round.length)}</span>
           </button>
         ))}
       </div>
 
-      {!guests.length && (
-        <p className="bench-empty">No guests on the bench. Add one, or start from the shift’s guests.</p>
-      )}
-      <ol className="bench-guests" ref={list} aria-label="Bench guests" hidden={!guests.length}>
+      {!guests.length && <p className="bench-empty">{words.empty}</p>}
+      <ol className="bench-guests" ref={list} aria-label={words.list} hidden={!guests.length}>
         {guests.map((guest, at) => (
           <GuestRow
             key={at}
             at={at}
             guest={guest}
             kit={kit}
+            words={words}
+            english={english}
             onChange={(next) => edit(at, next)}
             onOrder={(which, order) => editOrder(at, which, order)}
             onRemove={() => removeGuest(at)}
@@ -160,14 +150,14 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
         onClick={addGuest}
       >
         <Plus size={15} aria-hidden="true" />
-        {guests.length >= BENCH_GUESTS ? `The bench takes ${BENCH_GUESTS} guests` : 'Add a guest'}
+        {guests.length >= BENCH_GUESTS ? words.full(BENCH_GUESTS) : words.add}
       </button>
 
       {offered.length > 0 && (
         <fieldset className="bench-eases" aria-describedby="bench-eases-note">
-          <legend>Ease the shift’s rules</legend>
+          <legend>{words.easeLegend}</legend>
           {offered.map((which) => {
-            const { label, detail } = easeChoice(level, which);
+            const { label, detail } = easeChoice(level, which, words.eases);
             return (
               <label key={which} className="bench-mark bench-ease">
                 <input
@@ -181,9 +171,7 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
               </label>
             );
           })}
-          <small id="bench-eases-note">
-            Practise one thing at a time. A bench that goes right eased says less: the shift keeps its own rules.
-          </small>
+          <small id="bench-eases-note">{words.easeNote}</small>
         </fieldset>
       )}
 
@@ -191,7 +179,7 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
         {said}
       </p>
       {problems.length > 0 && guests.length > 0 && (
-        <ul className="bench-problems" id="bench-problems">
+        <ul className="bench-problems" id="bench-problems" lang={english}>
           {problems.map((problem) => (
             <li key={problem}>{problem}</li>
           ))}
@@ -199,10 +187,10 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
       )}
       {!kept && (
         <p role="alert" className="error-text">
-          This browser isn’t keeping the bench, so it lasts until the café closes.
+          {words.notKept}
         </p>
       )}
-      {running && <p id="bench-running">Stop the service to run the bench.</p>}
+      {running && <p id="bench-running">{words.running}</p>}
       <div className="modal-buttons">
         <Button
           variant="primary"
@@ -211,9 +199,7 @@ export function BenchModal({ level, running, onRun, onClose }: BenchModalProps) 
           aria-describedby={running ? 'bench-running' : problems.length && guests.length ? 'bench-problems' : undefined}
           onClick={() => onRun(benchSeed(kit, guests).customers, eased)}
         >
-          {guests.length
-            ? `Run the bench · ${count(guests.length, 'guest')}${eased.length ? ' · eased' : ''}`
-            : 'Add a guest to run the bench'}
+          {guests.length ? words.run(guests.length, eased.length > 0) : words.addToRun}
         </Button>
       </div>
     </Modal>
@@ -224,6 +210,8 @@ function GuestRow({
   at,
   guest,
   kit,
+  words,
+  english,
   onChange,
   onOrder,
   onRemove,
@@ -231,11 +219,14 @@ function GuestRow({
   at: number;
   guest: BenchGuest;
   kit: BenchKit;
+  words: (typeof BENCH_WORDS)['en'];
+  /** The `lang` for what the guest says, which stays in English. */
+  english: string | undefined;
   onChange: (guest: BenchGuest) => void;
   onOrder: (which: number, order: BenchOrder) => void;
   onRemove: () => void;
 }) {
-  const who = `Guest ${at + 1}`;
+  const n = at + 1;
   const gaps = [...new Set([...BENCH_GAPS, kit.gap, guest.after])].filter((gap) => gap > 0).sort((a, b) => a - b);
   // What the guest should get, once they ask for nothing the shift hasn't taught; when they come in is checked apart.
   const fits = benchProblems(kit, [{ ...guest, after: 0 }]).length === 0;
@@ -245,50 +236,50 @@ function GuestRow({
   return (
     <li className="bench-guest">
       <div className="bench-guest-head">
-        <strong>{who}</strong>
+        <strong>{words.guest(n)}</strong>
         {at === 0 ? (
-          <span className="bench-when">Comes in as the café opens</span>
+          <span className="bench-when">{words.opens}</span>
         ) : (
           <select
             className="bench-when"
-            aria-label={`${who} comes in`}
+            aria-label={words.comesIn(n)}
             value={guest.after}
             onChange={(e) => onChange({ ...guest, after: Number(e.target.value) })}
           >
             {gaps.map((gap) => (
               <option key={gap} value={gap}>
-                {gap} s after guest {at}
+                {words.after(gap, at)}
               </option>
             ))}
           </select>
         )}
-        <button type="button" className="bench-remove" aria-label={`Remove ${who.toLowerCase()}`} onClick={onRemove}>
+        <button type="button" className="bench-remove" aria-label={words.remove(n)} onClick={onRemove}>
           <Trash2 size={14} aria-hidden="true" />
         </button>
       </div>
       {guest.orders.map((order, which) => {
-        const drink = guest.orders.length > 1 ? `${who}, drink ${which + 1}` : who;
+        const drink = guest.orders.length > 1 ? which + 1 : undefined;
         return (
           <div key={which} className="bench-order">
             {/* A choice the shift doesn't offer is only said. */}
             {kit.drinks.length > 1 ? (
               <select
-                aria-label={`${drink}: drink`}
+                aria-label={words.choice(n, drink, 'drink')}
                 value={order.drink}
                 onChange={(e) => onOrder(which, { ...order, drink: e.target.value as BenchOrder['drink'] })}
               >
                 {kit.drinks.map((d) => (
                   <option key={d} value={d}>
-                    {capital(d)}
+                    {words.drinks[d]}
                   </option>
                 ))}
               </select>
             ) : (
-              <span className="bench-fixed">{capital(order.drink)}</span>
+              <span className="bench-fixed">{words.drinks[order.drink]}</span>
             )}
             {kit.sugars.length > 1 ? (
               <select
-                aria-label={`${drink}: sugar`}
+                aria-label={words.choice(n, drink, 'sugar')}
                 value={String(order.sugar)}
                 onChange={(e) => {
                   const sugar = kit.sugars.find((s) => String(s) === e.target.value)!;
@@ -297,12 +288,12 @@ function GuestRow({
               >
                 {kit.sugars.map((s) => (
                   <option key={String(s)} value={String(s)}>
-                    {sugarWords(s)}
+                    {words.sugar(s)}
                   </option>
                 ))}
               </select>
             ) : (
-              <span className="bench-fixed">{sugarWords(order.sugar)}</span>
+              <span className="bench-fixed">{words.sugar(order.sugar)}</span>
             )}
             {kit.toGo && (
               <label className="bench-mark">
@@ -311,7 +302,7 @@ function GuestRow({
                   checked={!!order.toGo}
                   onChange={(e) => onOrder(which, { ...order, toGo: e.target.checked || undefined })}
                 />
-                To go
+                {words.toGo}
               </label>
             )}
             {kit.rush && (
@@ -321,14 +312,14 @@ function GuestRow({
                   checked={!!order.rush}
                   onChange={(e) => onOrder(which, { ...order, rush: e.target.checked || undefined })}
                 />
-                In a rush
+                {words.rush}
               </label>
             )}
             {guest.orders.length > 1 && (
               <button
                 type="button"
                 className="bench-remove"
-                aria-label={`Remove ${drink.toLowerCase()}`}
+                aria-label={words.remove(n, drink)}
                 onClick={() => onChange({ ...guest, orders: guest.orders.filter((_, i) => i !== which) })}
               >
                 <X size={14} aria-hidden="true" />
@@ -350,7 +341,7 @@ function GuestRow({
                 })
               }
             >
-              <Plus size={13} aria-hidden="true" /> Another drink
+              <Plus size={13} aria-hidden="true" /> {words.another}
             </button>
           )}
           {kit.together && guest.orders.length > 1 && (
@@ -360,7 +351,7 @@ function GuestRow({
                 checked={!!guest.together}
                 onChange={(e) => onChange({ ...guest, together: e.target.checked || undefined })}
               />
-              Orders together
+              {words.together}
             </label>
           )}
           {kit.mumble && (
@@ -377,18 +368,33 @@ function GuestRow({
                   })
                 }
               />
-              Mumbles first
+              {words.mumbles}
             </label>
           )}
         </div>
       )}
       <p className="bench-says">
-        {guest.mumbles ? <>Mumbles “The usual, please.”, then says “{says}” once asked</> : <>Says “{says}”</>}
+        {guest.mumbles ? (
+          <>
+            {words.mumbled[0]}
+            <span lang={english}>The usual, please.</span>
+            {words.mumbled[1]}
+            <span lang={english}>{says}</span>
+            {words.mumbled[2]}
+          </>
+        ) : (
+          <>
+            {words.says[0]}
+            <span lang={english}>{says}</span>
+            {words.says[1]}
+          </>
+        )}
         {tickets.length > 0 && (
           <>
             {' '}
-            · Should get <strong>{tickets.map(ticketWords).join(' and ')}</strong>
-            {guest.mumbles && `, once ${ROBOT_DISPLAY_NAMES.query} asks for help`}
+            · {words.shouldGet}{' '}
+            <strong>{tickets.map((ticket) => ticketWords(ticket, words.ticket)).join(` ${words.ticket.and} `)}</strong>
+            {guest.mumbles && words.onceHelped(ROBOT_DISPLAY_NAMES.query)}
           </>
         )}
       </p>

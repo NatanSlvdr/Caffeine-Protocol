@@ -1,8 +1,12 @@
 import { useId, useState } from 'react';
 import { ArrowDown, ArrowUp, Equal } from 'lucide-react';
 import { Modal } from '@/components';
-import { ROBOT_DISPLAY_NAMES, count, type LevelDefinition, type RobotRole, type RunRecord } from '@/domain';
-import { compareRuns, comparableTo, latestPair, routineChanges, runName, type Change } from '../compare';
+import { ROBOT_DISPLAY_NAMES, type LevelDefinition, type RobotRole, type RunRecord } from '@/domain';
+import { useWords } from '@/shared/language';
+import { compareRuns, comparableTo, latestPair, routineChanges, runName } from '../compare';
+import { andList } from '../hints';
+import { COMPARE_WORDS } from './compareWords';
+import { OPTIONS_WORDS } from './optionsWords';
 
 export interface CompareModalProps {
   level: LevelDefinition;
@@ -16,7 +20,6 @@ export interface CompareModalProps {
 }
 
 const CHANGE_ICON = { better: ArrowUp, worse: ArrowDown, same: Equal } as const;
-const CHANGE_WORDS: Record<Change, string> = { better: 'better', worse: 'worse', same: 'no change' };
 
 /**
  * Two of this visit's runs that played the same rounds, side by side: what each got right, its size and steps, and,
@@ -24,6 +27,9 @@ const CHANGE_WORDS: Record<Change, string> = { better: 'better', worse: 'worse',
  * between them, kept from the runs themselves, so the change can be read whatever the routines say now.
  */
 export function CompareModal({ level, records, crew, initial, onClose }: CompareModalProps) {
+  const words = useWords(COMPARE_WORDS);
+  // A routine's changed lines are counted and marked the way the restore window does it.
+  const diffWords = useWords(OPTIONS_WORDS).diff;
   const [opening] = useState(() => {
     const earlier = initial && comparableTo(records, initial).find((r) => r.id < initial.id);
     return initial && earlier ? ([earlier, initial] as const) : latestPair(records);
@@ -36,37 +42,34 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
   const pickable = records.filter((r) => comparableTo(records, r).length > 0).reverse();
   const heading = useId(),
     changes = useId();
-  const rows = before && after ? compareRuns(level, before, after) : [];
+  const rows = before && after ? compareRuns(level, before, after, words) : [];
   const routines = before && after ? routineChanges(crew, before, after) : [];
   const changed = routines.filter((r) => r.added + r.removed > 0);
   const same = routines.filter((r) => r.added + r.removed === 0);
   return (
     <Modal
       className="settings-window confirm-slip compare-slip"
-      kicker="This visit"
-      title="Compare runs"
+      kicker={words.kicker}
+      title={words.title}
       onClose={onClose}
     >
       {!after || !before ? (
-        <p>
-          Two runs of the same rounds can be compared: two services, or the same round practised twice. Run this shift
-          again to set a change against the run before it.
-        </p>
+        <p>{words.none}</p>
       ) : (
         <>
           <div className="compare-pick">
             <label>
-              <span>Before</span>
+              <span>{words.before}</span>
               <select value={before.id} onChange={(e) => setBeforeId(Number(e.target.value))}>
                 {choices.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {runName(level, r)}
+                    {runName(level, r, words)}
                   </option>
                 ))}
               </select>
             </label>
             <label>
-              <span>After</span>
+              <span>{words.after}</span>
               <select
                 value={after.id}
                 onChange={(e) => {
@@ -79,7 +82,7 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
               >
                 {pickable.map((r) => (
                   <option key={r.id} value={r.id}>
-                    {runName(level, r)}
+                    {runName(level, r, words)}
                   </option>
                 ))}
               </select>
@@ -87,14 +90,14 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
           </div>
           <table className="compare-table" aria-labelledby={heading}>
             <caption id={heading} className="sr-only">
-              Run {before.id} against run {after.id}
+              {words.caption(before.id, after.id)}
             </caption>
             <thead>
               <tr>
                 <td />
-                <th scope="col">Run {before.id}</th>
-                <th scope="col">Run {after.id}</th>
-                <th scope="col">Change</th>
+                <th scope="col">{words.run(before.id)}</th>
+                <th scope="col">{words.run(after.id)}</th>
+                <th scope="col">{words.change}</th>
               </tr>
             </thead>
             <tbody>
@@ -109,8 +112,8 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
                       {Icon ? (
                         <>
                           <Icon size={13} aria-hidden="true" />
-                          {row.delta ?? CHANGE_WORDS[row.change!]}
-                          {row.change !== 'same' && <span className="sr-only">, {CHANGE_WORDS[row.change!]}</span>}
+                          {row.delta ?? words.changes[row.change!]}
+                          {row.change !== 'same' && <span className="sr-only">, {words.changes[row.change!]}</span>}
                         </>
                       ) : (
                         <span title={row.note}>
@@ -125,16 +128,16 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
           </table>
           {rows.some((row) => row.note) && <p className="compare-note">{rows.find((row) => row.note)!.note}</p>}
           <section className="compare-routines" aria-labelledby={changes}>
-            <h3 id={changes}>What changed in the routines</h3>
-            {changed.length === 0 && <p>The same routines both times{crew.length > 1 ? ', for every robot' : ''}.</p>}
+            <h3 id={changes}>{words.routines}</h3>
+            {changed.length === 0 && <p>{words.allSame(crew.length > 1)}</p>}
             {changed.map((routine) => (
               <div key={routine.role} className="restore-compare">
                 <p className="restore-compare-title">
                   {ROBOT_DISPLAY_NAMES[routine.role]}
                   <span>
                     {[
-                      routine.added && `${count(routine.added, 'line')} in`,
-                      routine.removed && `${count(routine.removed, 'line')} out`,
+                      routine.added && diffWords.change(routine.added, 'in'),
+                      routine.removed && diffWords.change(routine.removed, 'out'),
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -142,7 +145,7 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
                 </p>
                 <ol
                   className="restore-diff"
-                  aria-label={`${ROBOT_DISPLAY_NAMES[routine.role]}’s routine, run ${before.id} to run ${after.id}`}
+                  aria-label={words.diff(ROBOT_DISPLAY_NAMES[routine.role], before.id, after.id)}
                 >
                   {routine.diff.map((line, i) => (
                     <li key={i} className={line.kind}>
@@ -150,7 +153,7 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
                         {line.kind === 'add' ? '+' : line.kind === 'remove' ? '−' : ''}
                       </span>
                       {line.kind !== 'same' && (
-                        <span className="sr-only">{line.kind === 'add' ? 'In: ' : 'Out: '}</span>
+                        <span className="sr-only">{diffWords.mark(line.kind === 'add' ? 'in' : 'out')}</span>
                       )}
                       <code>{line.text}</code>
                     </li>
@@ -160,7 +163,12 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
             ))}
             {changed.length > 0 && same.length > 0 && (
               <p className="compare-same">
-                {same.map((r) => ROBOT_DISPLAY_NAMES[r.role]).join(' and ')}: the same routine both times.
+                {words.sameRoutine(
+                  andList(
+                    same.map((r) => ROBOT_DISPLAY_NAMES[r.role]),
+                    words.and,
+                  ),
+                )}
               </p>
             )}
           </section>
@@ -168,7 +176,7 @@ export function CompareModal({ level, records, crew, initial, onClose }: Compare
       )}
       <div className="modal-buttons">
         <button className="settings-chip" data-autofocus onClick={onClose}>
-          Done
+          {words.done}
         </button>
       </div>
     </Modal>
