@@ -4,7 +4,9 @@ import { BlockLines, spokenLines } from '@/components';
 import { titleFor } from '@/data';
 import { drillLines, tryDrill } from '@/data/drills';
 import { kitLines, type Kit } from '@/data/kits';
-import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
+import { ROBOT_DISPLAY_NAMES } from '@/domain';
+import { useUntranslated, useWords } from '@/shared/language';
+import { DRILL_WORDS } from './drillWords';
 
 /** How many lines of the routine show on each side of the gap. */
 const CONTEXT = 3;
@@ -23,6 +25,8 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
   const tray = useRef<HTMLUListElement>(null);
   const serve = useRef<HTMLButtonElement>(null);
   useEffect(() => question.current?.focus(), []);
+  const say = useWords(DRILL_WORDS);
+  const english = useUntranslated();
 
   const robot = ROBOT_DISPLAY_NAMES[kit.robot];
   const worked = drillLines(kit);
@@ -42,7 +46,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
   const place = (at: number) => {
     if (built.includes(at)) return;
     const to = [...built, at];
-    change(to, `${spokenLines([{ command: kit.tiles[at] }])} placed, ${to.length} of ${kit.tiles.length}.`);
+    change(to, say.kit.placed(spokenLines([{ command: kit.tiles[at] }]), to.length, kit.tiles.length));
     // The next block still in the kit takes focus, or Serve once the kit is empty.
     const after = kit.tiles.findIndex((_, i) => i > at && !to.includes(i));
     const first = kit.tiles.findIndex((_, i) => !to.includes(i));
@@ -52,7 +56,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
     );
   };
   const takeBack = () =>
-    built.length && change(built.slice(0, -1), `${spokenLines([{ command: kit.tiles[built.at(-1)!] }])} taken back.`);
+    built.length && change(built.slice(0, -1), say.kit.takenBack(spokenLines([{ command: kit.tiles[built.at(-1)!] }])));
   const serveIt = () => {
     if (!built.length) return;
     const result = tryDrill(kit, passage.join('\n'));
@@ -64,17 +68,18 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
   return (
     <div className="drill kit">
       <button className="drill-back" onClick={onBack}>
-        <ArrowLeft size={15} aria-hidden="true" /> All drills
+        <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="drill-question" tabIndex={-1} ref={question}>
+      <p className="drill-question" tabIndex={-1} ref={question} lang={english}>
         {kit.question}
       </p>
       <p className="kit-rule">
-        <strong>The kit</strong> {count(kit.tiles.length, 'block')}, each used once · <em>{kit.rule}</em>
+        <strong>{say.kit.name}</strong> {say.kit.each(kit.tiles.length)} · <em lang={english}>{kit.rule}</em>
       </p>
       <figure className="drill-routine">
         <figcaption>
-          {robot}’s routine on Shift {kit.shift}, {titleFor(kit.shift - 1)}
+          {say.routine(robot, kit.shift)}
+          <span lang={english}>{titleFor(kit.shift - 1)}</span>
         </figcaption>
         {worked.before.length > above.length && <span className="drill-more" aria-hidden="true" />}
         <BlockLines lines={above} base={base} />
@@ -82,13 +87,13 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
         {left > 0 && (
           <span className="drill-gap" style={{ '--depth': next - base } as CSSProperties}>
             <span aria-hidden="true">?</span>
-            <span className="sr-only">{placed.length ? 'The rest of the gap' : 'The gap'}</span>
+            <span className="sr-only">{placed.length ? say.restOfGap : say.gap}</span>
           </span>
         )}
         <BlockLines lines={below} base={base} />
         {worked.after.length > below.length && <span className="drill-more" aria-hidden="true" />}
       </figure>
-      <ul className="drill-choices kit-tray" aria-label="The kit" ref={tray}>
+      <ul className="drill-choices kit-tray" aria-label={say.kit.name} ref={tray}>
         {kit.tiles.map((tile, at) => (
           <li key={at}>
             <button
@@ -105,7 +110,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
       <div className="kit-actions">
         {/* Greyed rather than disabled, so taking back the last block doesn't drop the focus. */}
         <button className="settings-chip" aria-disabled={!built.length || undefined} onClick={takeBack}>
-          <Undo2 size={15} aria-hidden="true" /> Take back the last block
+          <Undo2 size={15} aria-hidden="true" /> {say.kit.takeBack}
         </button>
         <button
           className="settings-chip kit-serve"
@@ -113,7 +118,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
           aria-disabled={!built.length || undefined}
           onClick={serveIt}
         >
-          Serve the shift
+          {say.kit.serve}
         </button>
       </div>
       <p className="sr-only" aria-live="polite">
@@ -124,14 +129,14 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>Served.</strong> {kit.idea}
+              <strong>{say.served}</strong> <span lang={english}>{kit.idea}</span>
             </p>
           </>
         ) : verdict ? (
           <>
             <CircleX size={18} aria-hidden="true" />
             <p>
-              <strong>Not served.</strong> {verdict.reason} Take blocks back and try again.
+              <strong>{say.notServed}</strong> <span lang={english}>{verdict.reason}</span> {say.takeBackAndTry}
             </p>
           </>
         ) : null}

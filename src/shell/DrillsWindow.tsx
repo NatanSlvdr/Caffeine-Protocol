@@ -6,18 +6,20 @@ import { drillLines, tryDrill, type Drill } from '@/data/drills';
 import { drillShift, flights, type Flight } from '@/data/flights';
 import type { Kit } from '@/data/kits';
 import type { Prediction } from '@/data/predictions';
-import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
+import { ROBOT_DISPLAY_NAMES } from '@/domain';
+import { useUntranslated, useWords } from '@/shared/language';
 import { useCafeName } from '@/state/GameStore';
 import { KitView } from './KitView';
 import { PredictionView } from './PredictionView';
 import { acts } from './rail/acts';
+import { RAIL_WORDS } from './rail/railWords';
+import { DRILL_WORDS } from './drillWords';
 
 /** How many lines of the routine show on each side of the gap. */
 const CONTEXT = 3;
 
 /** Any kind of drill: a gap to fill, a paused moment to call, or a gap to build from a limited kit. */
 type Entry = { kind: 'gap'; item: Drill } | { kind: 'next'; item: Prediction } | { kind: 'kit'; item: Kit };
-const KIND: Record<Entry['kind'], string> = { gap: 'Fill the gap', next: 'What runs next', kit: 'From a kit' };
 
 /**
  * Drills, away from the rail: each one on an idea a shift taught, open once that shift is served, so it never gives a
@@ -54,6 +56,9 @@ export function DrillsWindow({
   onClose: () => void;
 }) {
   const cafe = useCafeName();
+  const say = useWords(DRILL_WORDS);
+  const actWords = useWords(RAIL_WORDS).acts;
+  const english = useUntranslated();
   const [entry, setEntry] = useState<Entry>();
   // A flight being played: its open drills, one after another.
   const [flying, setFlying] = useState<{ flight: Flight; list: Entry[] }>();
@@ -83,8 +88,9 @@ export function DrillsWindow({
   return (
     <Modal
       className="settings-window drills-window"
-      kicker={`${cafe} · Away from the rail`}
-      title={entry ? entry.item.title : 'Drills.'}
+      kicker={say.kicker(cafe)}
+      title={entry ? entry.item.title : say.title}
+      titleLang={entry ? english : undefined}
       onClose={onClose}
       wide
     >
@@ -114,20 +120,17 @@ export function DrillsWindow({
         </>
       ) : (
         <>
-          <p className="drills-intro">
-            One idea from a served shift at a time: fill the gap in a routine, call which block runs next, or build a
-            passage from a kit that leaves a block out, and the café plays it out. A flight plays the drills on one idea
-            one after another. A drill got right on the first pick, or a kit once served, is ticked; none of it counts
-            toward stars.
-          </p>
+          <p className="drills-intro">{say.intro}</p>
           <FlightList entries={entries} done={done} left={left} onFly={fly} />
-          {acts.map((act) => {
+          {acts.map((act, i) => {
             const here = entries.filter((each) => each.item.shift - 1 >= act.from && each.item.shift - 1 < act.to);
             if (!here.length) return null;
+            const kicker = actWords[i].kicker ?? act.kicker,
+              crew = actWords[i].crew ?? act.crew;
             return (
-              <section key={act.kicker} className="drills-act" aria-label={`${act.kicker}, ${act.crew}`}>
+              <section key={act.kicker} className="drills-act" aria-label={`${kicker}, ${crew}`}>
                 <h3>
-                  {act.kicker} · {act.crew}
+                  {kicker} · {crew}
                 </h3>
                 <ul>
                   {here.map((each) => {
@@ -141,17 +144,18 @@ export function DrillsWindow({
                           onClick={() => setEntry(each)}
                         >
                           <strong>
-                            {title}
+                            <span lang={english}>{title}</span>
                             {done.includes(id) && (
                               <span className="drills-done">
                                 <Check size={14} strokeWidth={3} aria-hidden="true" />
-                                <span className="sr-only">, done</span>
+                                <span className="sr-only">{say.done}</span>
                               </span>
                             )}
                           </strong>
                           <small>
-                            {KIND[each.kind]} · Shift {shift} · {titleFor(shift - 1)} · {ROBOT_DISPLAY_NAMES[robot]}
-                            {fresh.includes(id) && <span className="drills-new"> · New</span>}
+                            {say.kinds[each.kind]} · {say.shift(shift)} ·{' '}
+                            <span lang={english}>{titleFor(shift - 1)}</span> · {ROBOT_DISPLAY_NAMES[robot]}
+                            {fresh.includes(id) && <span className="drills-new"> · {say.fresh}</span>}
                           </small>
                         </button>
                       </li>
@@ -161,11 +165,7 @@ export function DrillsWindow({
               </section>
             );
           })}
-          <p className="drills-waiting">
-            {ticked} of {count(entries.length, 'drill')} done.
-            {waiting > 0 &&
-              ` ${count(waiting, 'more drill')} ${waiting === 1 ? 'opens' : 'open'} as later shifts are served.`}
-          </p>
+          <p className="drills-waiting">{say.tally(ticked, entries.length, waiting)}</p>
         </>
       )}
     </Modal>
@@ -193,9 +193,11 @@ function FlightList({
     return { flight, list, shut, opens: Math.min(...shut.map(drillShift)) };
   });
   const first = rows.find((row) => row.list.length)?.flight;
+  const say = useWords(DRILL_WORDS);
+  const english = useUntranslated();
   return (
-    <section className="drills-act drills-flights" aria-label="Flights, by idea">
-      <h3>Flights · By idea</h3>
+    <section className="drills-act drills-flights" aria-label={say.flights.label}>
+      <h3>{say.flights.head}</h3>
       <ul>
         {rows.map(({ flight, list, shut, opens }) => {
           const ticks = list.filter((each) => done.includes(each.item.id)).length;
@@ -210,23 +212,22 @@ function FlightList({
                 onClick={() => list.length && onFly(flight, list)}
               >
                 <strong>
-                  {flight.title}
+                  <span lang={english}>{flight.title}</span>
                   {all && (
                     <span className="drills-done">
                       <Check size={14} strokeWidth={3} aria-hidden="true" />
-                      <span className="sr-only">, done</span>
+                      <span className="sr-only">{say.done}</span>
                     </span>
                   )}
                 </strong>
-                <span className="drills-flight-idea">{flight.idea}</span>
+                <span className="drills-flight-idea" lang={english}>
+                  {flight.idea}
+                </span>
                 <small>
                   {list.length
-                    ? `${ticks} of ${count(flight.items.length, 'drill')} done`
-                    : `${count(flight.items.length, 'drill')}`}
-                  {shut.length > 0 &&
-                    (list.length
-                      ? ` · ${shut.length} more once Shift ${opens} is served`
-                      : ` · Opens once Shift ${opens} is served`)}
+                    ? say.flights.progress(ticks, flight.items.length)
+                    : say.flights.size(flight.items.length)}
+                  {shut.length > 0 && (list.length ? say.flights.more(shut.length, opens) : say.flights.opens(opens))}
                 </small>
               </button>
             </li>
@@ -252,10 +253,12 @@ function FlightStep({
   onNext: () => void;
 }) {
   const last = step === list.length - 1;
+  const say = useWords(DRILL_WORDS).step;
+  const english = useUntranslated();
   return (
-    <nav className="flight-step" aria-label={`${flight.title}, drill ${step + 1} of ${list.length}`}>
+    <nav className="flight-step" aria-label={say.label(flight.title, step + 1, list.length)}>
       <span className="flight-step-name">
-        {flight.title} · {step + 1} of {list.length}
+        <span lang={english}>{flight.title}</span> · {say.count(step + 1, list.length)}
       </span>
       <ol className="flight-step-marks" aria-hidden="true">
         {list.map((each, i) => (
@@ -266,7 +269,13 @@ function FlightStep({
         ))}
       </ol>
       <button className="settings-chip flight-next" onClick={onNext}>
-        {last ? 'End of the flight' : `Next: ${list[step + 1].item.title}`}
+        {last ? (
+          say.end
+        ) : (
+          <span>
+            {say.next} <span lang={english}>{list[step + 1].item.title}</span>
+          </span>
+        )}
         <ArrowRight size={15} aria-hidden="true" />
       </button>
     </nav>
@@ -293,24 +302,27 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
     setVerdict({ served: result.passed, reason: result.first_failure?.reason });
   };
   const robot = ROBOT_DISPLAY_NAMES[drill.robot];
+  const say = useWords(DRILL_WORDS);
+  const english = useUntranslated();
   return (
     <div className="drill">
       <button className="drill-back" onClick={onBack}>
-        <ArrowLeft size={15} aria-hidden="true" /> All drills
+        <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="drill-question" tabIndex={-1} ref={question}>
+      <p className="drill-question" tabIndex={-1} ref={question} lang={english}>
         {drill.question}
       </p>
       <figure className="drill-routine">
         <figcaption>
-          {robot}’s routine on Shift {drill.shift}, {titleFor(drill.shift - 1)}
+          {say.routine(robot, drill.shift)}
+          <span lang={english}>{titleFor(drill.shift - 1)}</span>
         </figcaption>
         {worked.before.length > above.length && <span className="drill-more" aria-hidden="true" />}
         <BlockLines lines={above} base={base} />
         {picked === undefined ? (
           <span className="drill-gap" style={{ '--depth': gapDepth - base } as CSSProperties}>
             <span aria-hidden="true">?</span>
-            <span className="sr-only">The gap</span>
+            <span className="sr-only">{say.gap}</span>
           </span>
         ) : (
           <BlockLines className="drill-filled" lines={drillLines(drill, picked).gap} base={base} />
@@ -318,7 +330,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
         <BlockLines lines={below} base={base} />
         {worked.after.length > below.length && <span className="drill-more" aria-hidden="true" />}
       </figure>
-      <ul className="drill-choices" aria-label="Passages">
+      <ul className="drill-choices" aria-label={say.passages}>
         {drill.choices.map((choice) => {
           const lines = drillLines(drill, choice).gap;
           return (
@@ -326,7 +338,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
               <button
                 className="drill-choice"
                 aria-pressed={picked === choice}
-                aria-label={spokenLines(lines)}
+                aria-label={spokenLines(lines, say.then)}
                 onClick={() => pick(choice)}
               >
                 <BlockLines lines={lines} base={gapDepth} />
@@ -340,14 +352,14 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>Served.</strong> {drill.idea}
+              <strong>{say.served}</strong> <span lang={english}>{drill.idea}</span>
             </p>
           </>
         ) : verdict ? (
           <>
             <CircleX size={18} aria-hidden="true" />
             <p>
-              <strong>Not served.</strong> {verdict.reason} Try another passage.
+              <strong>{say.notServed}</strong> <span lang={english}>{verdict.reason}</span> {say.tryAnother}
             </p>
           </>
         ) : null}

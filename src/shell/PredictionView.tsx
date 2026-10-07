@@ -3,7 +3,10 @@ import { ArrowLeft, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, spokenLines } from '@/components';
 import { titleFor } from '@/data';
 import { momentOf, type Prediction } from '@/data/predictions';
-import { ROBOT_DISPLAY_NAMES, heldLabel, paperLabel, placeLabel, variableLabels } from '@/domain';
+import { ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
+import { CARGO_WORDS } from '@/components/cargoWords';
+import { useUntranslated, useWords } from '@/shared/language';
+import { DRILL_WORDS } from './drillWords';
 
 const letter = (i: number) => String.fromCharCode(65 + i);
 
@@ -23,6 +26,9 @@ export function PredictionView({
   onDone: () => void;
 }) {
   const moment = useMemo(() => momentOf(prediction), [prediction]);
+  const say = useWords(DRILL_WORDS);
+  const { held: heldLabel, paper: paperLabel, place: placeLabel } = useWords(CARGO_WORDS);
+  const english = useUntranslated();
   const [picked, setPicked] = useState<number>();
   const question = useRef<HTMLParagraphElement>(null);
   const routine = useRef<HTMLDivElement>(null);
@@ -47,9 +53,9 @@ export function PredictionView({
             ? 'missed'
             : undefined;
     const marks = [
-      line.line === prediction.after && 'just ran',
+      line.line === prediction.after && say.next.justRan,
       lettered.get(line.line),
-      revealed && line.line === next && 'ran next',
+      revealed && line.line === next && say.next.ranNext,
     ].filter(Boolean);
     return { ...line, tone, mark: marks.join(' · ') || undefined };
   });
@@ -64,25 +70,27 @@ export function PredictionView({
   return (
     <div className="drill">
       <button className="drill-back" onClick={onBack}>
-        <ArrowLeft size={15} aria-hidden="true" /> All drills
+        <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
       <p className="drill-question" tabIndex={-1} ref={question}>
-        Which block does {robot} run next?
+        {say.next.question(robot)}
       </p>
       <dl className="prediction-moment">
         <div>
-          <dt>The guest says</dt>
-          <dd>“{moment.phrase}”</dd>
+          <dt>{say.next.says}</dt>
+          <dd>
+            “<span lang={english}>{moment.phrase}</span>”
+          </dd>
         </div>
         {held.length > 0 && (
           <div>
-            <dt>{robot} holds</dt>
+            <dt>{say.next.holds(robot)}</dt>
             <dd>{held.join('; ')}</dd>
           </div>
         )}
         {memory.length > 0 && (
           <div>
-            <dt>{robot} remembers</dt>
+            <dt>{say.next.remembers(robot)}</dt>
             <dd>
               {memory
                 .map(
@@ -96,13 +104,14 @@ export function PredictionView({
       </dl>
       <figure className="drill-routine">
         <figcaption>
-          {robot}’s routine on Shift {prediction.shift}, {titleFor(prediction.shift - 1)}
+          {say.routine(robot, prediction.shift)}
+          <span lang={english}>{titleFor(prediction.shift - 1)}</span>
         </figcaption>
         <div className="prediction-routine" ref={routine}>
           <BlockLines lines={lines} />
         </div>
       </figure>
-      <ul className="drill-choices" aria-label="Blocks">
+      <ul className="drill-choices" aria-label={say.blocks}>
         {prediction.choices.map((line, i) => {
           const block = { ...lineAt(line), depth: 0 };
           return (
@@ -111,7 +120,7 @@ export function PredictionView({
                 className="drill-choice prediction-choice"
                 aria-pressed={picked === line}
                 aria-disabled={revealed || undefined}
-                aria-label={`${letter(i)}: ${spokenLines([block])}`}
+                aria-label={say.next.choice(letter(i), spokenLines([block]))}
                 onClick={() => call(line)}
               >
                 <span className="prediction-letter" aria-hidden="true">
@@ -128,15 +137,16 @@ export function PredictionView({
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>Called it.</strong> {prediction.why}
+              <strong>{say.next.calledIt}</strong> <span lang={english}>{prediction.why}</span>
             </p>
           </>
         ) : revealed ? (
           <>
             <CircleX size={18} aria-hidden="true" />
             <p>
-              <strong>Not this time.</strong> {robot} ran {lettered.get(next)}, {spokenLines([lineAt(next)])}, next.{' '}
-              {prediction.why}
+              <strong>{say.next.notThisTime}</strong>{' '}
+              {say.next.ran(robot, lettered.get(next)!, spokenLines([lineAt(next)]))}{' '}
+              <span lang={english}>{prediction.why}</span>
             </p>
           </>
         ) : null}

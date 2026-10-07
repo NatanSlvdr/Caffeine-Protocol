@@ -8,6 +8,9 @@ import { SAVE_NOTICE_WORDS } from '../../../src/app/saveNoticeWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { STORY_WORDS } from '../../../src/shell/storyWords';
+import { DRILL_WORDS } from '../../../src/shell/drillWords';
+import { predictions } from '../../../src/data/predictions';
+import { kits } from '../../../src/data/kits';
 import { PANE_WORDS } from '../../../src/components/paneWords';
 import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords';
 import { OPTIONS_WORDS } from '../../../src/features/workspace/modals/optionsWords';
@@ -369,6 +372,66 @@ describe('the dialogue box in French', () => {
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(onDone).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the drills in French', () => {
+  const moment = predictions.find((each) => each.id === 'tea-or-coffee')!;
+  const kit = kits.find((each) => each.id === 'two-ifs')!;
+  const drills = (served: number) => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    const stars = Object.fromEntries(Array.from({ length: served }, (_, i) => [i, 2]));
+    seedLocalStorage(makeSave({ unlocked: served, selected: served, stars }));
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: /^Exercices/ }));
+    return screen.getByRole('dialog', { name: 'Exercices.' });
+  };
+
+  it('lists the drills in French, with their own names kept as English', () => {
+    const list = within(drills(moment.shift));
+    expect(list.getByRole('region', { name: 'Séries, par idée' })).toBeTruthy();
+    expect(list.getByRole('region', { name: 'Acte I, Query' })).toBeTruthy();
+    const pick = list.getByRole('button', { name: new RegExp(`^${moment.title}`) });
+    expect(pick.querySelector('small')!.textContent).toMatch(
+      new RegExp(`^Ce qui s’exécute ensuite · Service ${moment.shift} · `),
+    );
+    expect(pick.querySelector('strong [lang="en"]')!.textContent).toBe(moment.title);
+    expect(document.querySelector('.drills-waiting')!.textContent).toMatch(/^0 fait sur \d+ exercices\./);
+  });
+
+  it('calls the next block in French, with the blocks and why kept as they are', () => {
+    drills(moment.shift);
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${moment.title}`) }));
+    const view = within(screen.getByRole('dialog', { name: moment.title }));
+    expect(document.activeElement!.textContent).toBe(`Quel bloc Query exécute-t-il ensuite${NARROW}?`);
+    expect(document.querySelector('.prediction-moment dt')!.textContent).toBe('Le client dit');
+    const blocks = within(view.getByRole('list', { name: 'Blocs' })).getAllByRole('button');
+    expect(blocks.map((block) => block.getAttribute('aria-label'))).toEqual([
+      `A${NBSP}: Write Tea`,
+      `B${NBSP}: Write Coffee`,
+      `C${NBSP}: Move right 1`,
+    ]);
+    fireEvent.click(blocks[1]);
+    expect(view.getByRole('status').textContent).toBe(
+      `Pas cette fois. Ensuite, Query a exécuté A, Write Tea. ${moment.why}`,
+    );
+    expect(document.querySelector('.block-line.next')!.textContent).toBe('Write Tea A · s’est exécuté ensuite');
+    expect(view.getByRole('button', { name: 'Tous les exercices' })).toBeTruthy();
+  });
+
+  it('builds from a kit in French', () => {
+    drills(kit.shift);
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${kit.title}`) }));
+    const view = within(screen.getByRole('dialog', { name: kit.title }));
+    expect(document.querySelector('.kit-rule')!.textContent).toBe(
+      `Le kit 6 blocs, chacun utilisé une fois · ${kit.rule}`,
+    );
+    expect(document.querySelector('.kit-rule em')!.getAttribute('lang')).toBe('en');
+    fireEvent.click(within(view.getByRole('list', { name: 'Le kit' })).getAllByRole('button')[2]);
+    expect(document.querySelector('.kit [aria-live]')!.textContent).toBe('If Tea in Orders posé, 1 sur 6.');
+    expect(view.getByRole('button', { name: 'Reprendre le dernier bloc' })).toBeTruthy();
+    expect(view.getByRole('button', { name: 'Lancer le service' })).toBeTruthy();
   });
 });
 
@@ -1173,6 +1236,7 @@ describe('the words themselves', () => {
       'Destination',
       'Ticket',
       'Dialogue',
+      'Passages',
     ]);
     const catalogs = [
       HOME_WORDS,
@@ -1202,6 +1266,7 @@ describe('the words themselves', () => {
       DIALOGUE_WORDS,
       STORY_WORDS,
       SAVE_NOTICE_WORDS,
+      DRILL_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

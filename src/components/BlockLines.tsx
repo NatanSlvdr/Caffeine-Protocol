@@ -66,6 +66,9 @@ export function BlockLines({
   );
 }
 
-/** A passage as one sentence, for a screen reader to hear where the tiles only show their order. */
-export const spokenLines = (lines: readonly { command: string }[]) =>
-  lines.map(({ command }) => blockWords(command)).join(', then ');
+/**
+ * A passage as one sentence, for a screen reader to hear where the tiles only show their order. The blocks' words are
+ * the same in either language; `then` joins them in the reader's.
+ */
+export const spokenLines = (lines: readonly { command: string }[], then = ', then ') =>
+  lines.map(({ command }) => blockWords(command)).join(then);
