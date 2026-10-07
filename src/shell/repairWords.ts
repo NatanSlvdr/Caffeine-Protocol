@@ -3,7 +3,7 @@ import { words } from '@/shared/language';
 
 /**
  * The repair bay's words: its frame, a bench's card, and the bench itself. A part's name and fault, its sensors and
- * actions, the cases it meets and the mend it gets are the story's, and stay English.
+ * actions, the cases it meets and the mend it gets are the bench's own, told in data/repairs.
  */
 export const REPAIR_WORDS = words(
   {

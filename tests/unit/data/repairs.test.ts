@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { levels } from '../../../src/data';
-import { repairById, repairOpen, repairs } from '../../../src/data/repairs';
+import { repairById, repairIn, repairOpen, repairs } from '../../../src/data/repairs';
+import { repairsFr } from '../../../src/data/repairs.fr';
 import { CAST_IDS } from '../../../src/domain/dialogue';
 import { exampleHolds, firedActions, fires, wiringMends } from '../../../src/domain/repair';
 import { UNLOCKS } from '../../../src/domain/unlocks';
 
+const NBSP = '\u00a0';
 const ids = (repair: (typeof repairs)[number]) => repair.actions.map((action) => action.id);
 
 describe('the repair bench', () => {
@@ -59,5 +61,46 @@ describe('the repair bench', () => {
       expect([...speakers].sort()).toEqual(['niko', repair.id].sort());
       for (const who of speakers) expect(CAST_IDS).toContain(who);
     }
+  });
+});
+
+describe('the repair bay in French', () => {
+  it('tells every bench the English does, and none it doesn’t', () => {
+    expect(Object.keys(repairsFr)).toEqual(repairs.map((repair) => repair.id));
+  });
+
+  it.each(repairs.map((repair) => [repair.id, repair] as const))(
+    '%s: says every sensor, action, case and line, on the same board',
+    (_, en) => {
+      const told = repairsFr[en.id];
+      expect(Object.keys(told.sensors)).toEqual(en.sensors.map((sensor) => sensor.id));
+      expect(Object.keys(told.actions)).toEqual(ids(en));
+      expect(told.examples).toHaveLength(en.examples.length);
+      expect(told.scene).toHaveLength(en.scene.length);
+      const fr = repairIn(en, 'fr');
+      // Only the words change: the wiring, what each case reads and asks for, and who speaks are the same.
+      expect(fr.starter).toBe(en.starter);
+      expect(fr.solution).toBe(en.solution);
+      expect(fr.examples.map(({ sensors, actions }) => ({ sensors, actions }))).toEqual(
+        en.examples.map(({ sensors, actions }) => ({ sensors, actions })),
+      );
+      expect(fr.scene.map(({ who, mood }) => ({ who, mood }))).toEqual(
+        en.scene.map(({ who, mood }) => ({ who, mood })),
+      );
+      expect(new Set(fr.examples.map((example) => example.input)).size).toBe(en.examples.length);
+      for (const [index, line] of fr.scene.entries())
+        expect((line.text.match(/\*[^*]+\*/g) ?? []).length, `line ${index + 1}`).toBe(
+          (en.scene[index].text.match(/\*[^*]+\*/g) ?? []).length,
+        );
+      expect(repairIn(en, 'en')).toBe(en);
+      expect(repairIn(en, 'fr')).toBe(fr);
+    },
+  );
+
+  it('keeps the words Query hears as the guest says them, in French quotation marks', () => {
+    const query = repairIn(repairById('query')!, 'fr');
+    expect(query.sensors[0].is).toBe(`entend «${NBSP}tea${NBSP}»`);
+    expect(query.examples.at(-1)!.input).toBe(`«${NBSP}tea without sugar${NBSP}»`);
+    expect(query.fault).toContain(`n’importe comment${NBSP}: il écrit`);
   });
 });

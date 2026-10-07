@@ -44,8 +44,8 @@ export interface DialogueBoxProps {
   /** Small caption above the box, e.g. the shift name. */
   kicker?: string;
   /**
-   * The scene's language when it isn't the page's, for its kicker, its lines and its answers: a cutscene is still English
-   * on a French page. A line can say otherwise for itself.
+   * The scene's language when it isn't the page's, for its kicker, its lines and its answers: a special's scenes are
+   * still English on a French page. A line can say otherwise for itself.
    */
   lang?: string;
   /** What comes before the kicker, in the reader's language: “Shift 04”. */

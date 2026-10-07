@@ -3,6 +3,9 @@ import { line } from '@/domain/dialogue';
 import { wiringMends, TERMINALS, type RepairExample, type Wiring } from '@/domain/repair';
 import type { ProgressSave, RobotRole } from '@/domain/types';
 import { UNLOCKS } from '@/domain/unlocks';
+import type { Language } from '@/shared/language';
+import { typeset } from '@/shared/typography';
+import { repairsFr, type RepairFr } from './repairs.fr';
 
 /** One sensor on the board, said both ways round: as it reads, and read the other way. */
 export interface RepairSensor {
@@ -181,6 +184,35 @@ export const repairs: readonly Repair[] = [
 ];
 
 export const repairById = (id: string): Repair | undefined => repairs.find((repair) => repair.id === id);
+
+/** A bench told in French: the same board, wiring and cases, in other words; anything not yet told keeps its English. */
+function inFrench(repair: Repair, fr: RepairFr): Repair {
+  const said = (text: string | undefined, english: string) => (text === undefined ? english : typeset(text));
+  return {
+    ...repair,
+    title: typeset(fr.title),
+    fault: typeset(fr.fault),
+    sensors: repair.sensors.map((sensor) => {
+      const [is, isnt] = fr.sensors[sensor.id] ?? [];
+      return { ...sensor, is: said(is, sensor.is), isnt: said(isnt, sensor.isnt) };
+    }),
+    actions: repair.actions.map((action) => ({ ...action, label: said(fr.actions[action.id], action.label) })),
+    examples: repair.examples.map((example, index) => ({ ...example, input: said(fr.examples[index], example.input) })),
+    touch: typeset(fr.touch),
+    scene: repair.scene.map((each, index) => ({ ...each, text: said(fr.scene[index], each.text) })),
+  };
+}
+
+const french = new Map(
+  repairs.map((repair) => {
+    const fr = repairsFr[repair.id];
+    return [repair.id, fr ? inFrench(repair, fr) : repair];
+  }),
+);
+
+/** A bench in the reader's language: the very same one in English. */
+export const repairIn = (repair: Repair, language: Language): Repair =>
+  language === 'fr' ? (french.get(repair.id) ?? repair) : repair;
 
 /** A bench is open once the shift that brings it out is served. */
 export const repairOpen = (save: Pick<ProgressSave, 'stars'>, repair: Repair): boolean =>

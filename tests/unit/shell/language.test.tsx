@@ -130,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook and the memories/,
+      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories and the repair bay/,
     );
   });
 
@@ -596,21 +596,32 @@ describe('the rail’s windows in French', () => {
     expect(plan.getByRole('button', { name: 'Servir ce menu, The Tea Table' })).toBeTruthy();
   });
 
-  it('opens the repair bay in French, with the robot’s own wiring kept as English', () => {
+  it('opens the repair bay and wires a robot in French', () => {
     campaign(UNLOCKS.sugar);
     fireEvent.click(screen.getByRole('button', { name: 'Atelier, 1 robot sur l’établi' }));
     const bay = within(screen.getByRole('dialog', { name: 'Après la fermeture.' }));
     expect(bay.getByText('Query · Sur l’établi')).toBeTruthy();
     expect(bay.getByText('2 autres robots arrivent sur l’établi au fil des services.')).toBeTruthy();
-    fireEvent.click(bay.getByRole('button', { name: 'Ouvrir le panneau, Query’s ears' }));
-    expect(bay.getByRole('heading', { name: 'Query’s ears' }).getAttribute('lang')).toBe('en');
+    expect(bay.getByRole('heading', { name: 'Les oreilles de Query' }).hasAttribute('lang')).toBe(false);
+    fireEvent.click(bay.getByRole('button', { name: 'Ouvrir le panneau, Les oreilles de Query' }));
+    expect(bay.getByRole('heading', { level: 2, name: 'Les oreilles de Query' }).hasAttribute('lang')).toBe(false);
     expect(bay.getByRole('group', { name: 'Le câblage de Query' })).toBeTruthy();
-    const select = bay.getByRole('combobox', { name: 'Writes tea, quand' });
+    const select = bay.getByRole('combobox', { name: 'Écrit thé, quand' });
     expect(select.querySelector('option[value=""]')!.textContent).toBe('Rien');
-    expect(select.querySelector('option[value="tea"]')!.getAttribute('lang')).toBe('en');
+    expect(select.querySelector('option[value="tea"]')!.textContent).toBe(`entend «${NBSP}tea${NBSP}»`);
+    expect(document.querySelector('.repair-bench [lang]')).toBeNull();
     expect(bay.getByRole('status').textContent).toBe('2 cas justes sur 6.');
     expect(bay.getAllByRole('img', { name: 'Pas encore' })).toHaveLength(4);
-    expect(bay.getByRole('button', { name: 'Fermer le panneau' })).toBeTruthy();
+    // Mended, the panel closes on its scene, told in French.
+    const wire = (name: string, value: string) =>
+      fireEvent.change(bay.getByRole('combobox', { name }), { target: { value } });
+    wire('Écrit café, quand', '!tea');
+    wire('Écrit thé, quand', 'tea');
+    wire('Écrit un sucre, quand', 'sugar');
+    wire('Écrit un sucre, et quand', '!no');
+    fireEvent.click(bay.getByRole('button', { name: 'Fermer le panneau' }));
+    expect(screen.getByRole('dialog', { name: 'Atelier · Les oreilles de Query' })).toBeTruthy();
+    expect(document.querySelector('.dialogue-box [lang]')).toBeNull();
   });
 
   it('names the tab and plays a memory in French', async () => {

@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { ArrowLeft, CircleCheck, CircleX, RotateCcw, Wrench } from 'lucide-react';
 import { Modal } from '@/components';
-import type { Repair } from '@/data/repairs';
+import { repairIn, type Repair } from '@/data/repairs';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';
 import { exampleHolds, firedActions, TERMINALS, type Terminal, type Wiring } from '@/domain/repair';
 import { Button } from '@/shared/ui/Button';
 import { useMusicMood } from '@/hooks/useMusicMood';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { REPAIR_WORDS } from './repairWords';
 
 /**
@@ -35,8 +35,9 @@ export function RepairBayWindow({
   // The back room, after hours: the café's music comes through the wall.
   useMusicMood('after-hours');
   const say = useWords(REPAIR_WORDS);
-  const english = useUntranslated();
+  const [language] = useLanguage();
   const [open, setOpen] = useState<Repair>();
+  const shown = open && repairIn(open, language);
   // Back from a bench, its own card's button takes focus again.
   const [left, setLeft] = useState<string>();
   const back = () => {
@@ -47,30 +48,30 @@ export function RepairBayWindow({
     <Modal
       className="settings-window specials-window repair-window"
       kicker={say.kicker}
-      title={open ? open.title : say.title}
-      titleLang={open ? english : undefined}
+      title={shown ? shown.title : say.title}
       onClose={onClose}
       wide
     >
-      {open ? (
-        <Bench key={open.id} repair={open} onBack={back} onMend={() => onMend(open)} />
+      {open && shown ? (
+        <Bench key={open.id} repair={shown} onBack={back} onMend={() => onMend(open)} />
       ) : (
         <>
           <p className="specials-intro">{say.intro}</p>
           <ul className="specials-list">
-            {repairs.map((repair, index) => {
+            {repairs.map((kept, index) => {
+              const repair = repairIn(kept, language);
               const done = mended.includes(repair.id);
               const arrived = fresh.includes(repair.id);
               const label = done ? say.again : say.open;
               return (
                 <li key={repair.id} className={arrived ? 'new' : undefined}>
                   <div>
-                    <h3 lang={english}>{repair.title}</h3>
+                    <h3>{repair.title}</h3>
                     <small>
                       {arrived ? say.fresh : ''}
                       {ROBOT_DISPLAY_NAMES[repair.robot]} · {done ? say.mended : say.onBench}
                     </small>
-                    <p lang={english}>{done ? repair.touch : repair.fault}</p>
+                    <p>{done ? repair.touch : repair.fault}</p>
                   </div>
                   <div className="specials-serve">
                     <Button
@@ -79,7 +80,7 @@ export function RepairBayWindow({
                       aria-label={`${label}, ${repair.title}`}
                       autoFocus={repair.id === left}
                       data-autofocus={(left === undefined && index === 0) || undefined}
-                      onClick={() => setOpen(repair)}
+                      onClick={() => setOpen(kept)}
                     >
                       <Wrench size={15} aria-hidden="true" />
                       {label}
@@ -121,16 +122,13 @@ const wiringOf = (board: Board): Wiring =>
 
 function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void; onMend: () => void }) {
   const say = useWords(REPAIR_WORDS).bench;
-  const english = useUntranslated();
   const [board, setBoard] = useState(() => boardFrom(repair));
   const wiring = wiringOf(board);
   const actionIds = repair.actions.map((action) => action.id);
   const right = repair.examples.filter((example) => exampleHolds(wiring, actionIds, example)).length;
   const mends = right === repair.examples.length;
   const labelOf = (id: string) => repair.actions.find((action) => action.id === id)?.label ?? id;
-  // The actions are the robot's own words, so only Nothing is the reader's.
-  const said = (ids: readonly string[]) =>
-    ids.length ? <span lang={english}>{ids.map(labelOf).join(', ')}</span> : say.nothing;
+  const said = (ids: readonly string[]) => (ids.length ? ids.map(labelOf).join(', ') : say.nothing);
   const wire = (action: string, at: number, value: string) =>
     setBoard((was) => ({ ...was, [action]: was[action].map((each, i) => (i === at ? value : each)) }));
   const robot = ROBOT_DISPLAY_NAMES[repair.robot];
@@ -139,18 +137,14 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
       <button className="drill-back" onClick={onBack} data-autofocus>
         <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="repair-fault" lang={english}>
-        {repair.fault}
-      </p>
+      <p className="repair-fault">{repair.fault}</p>
       <p className="repair-how">{say.how(robot)}</p>
 
       <fieldset className="repair-board">
         <legend>{say.wiring(robot)}</legend>
         {repair.actions.map((action) => (
           <div key={action.id} className="repair-wire">
-            <span className="repair-action" lang={english}>
-              {action.label}
-            </span>
+            <span className="repair-action">{action.label}</span>
             {board[action.id].map((value, at) => (
               <label key={at} className="repair-terminal">
                 <span>{say.when[at]}</span>
@@ -161,10 +155,10 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
                 >
                   <option value="">{say.nothing}</option>
                   {repair.sensors.flatMap((sensor) => [
-                    <option key={sensor.id} value={sensor.id} lang={english}>
+                    <option key={sensor.id} value={sensor.id}>
                       {sensor.is}
                     </option>,
-                    <option key={`!${sensor.id}`} value={`!${sensor.id}`} lang={english}>
+                    <option key={`!${sensor.id}`} value={`!${sensor.id}`}>
                       {sensor.isnt}
                     </option>,
                   ])}
@@ -192,7 +186,7 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
             const holds = exampleHolds(wiring, actionIds, example);
             return (
               <tr key={example.input} className={holds ? 'holds' : 'fails'}>
-                <th scope="row" lang={english}>
+                <th scope="row">
                   {example.input}
                   <small>
                     {repair.sensors

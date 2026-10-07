@@ -16,13 +16,13 @@ import { drills } from '@/data/drills';
 import { kits } from '@/data/kits';
 import { predictions } from '@/data/predictions';
 import { memories, memoryOpen } from '@/data/memories';
-import { repairOpen, repairs, type Repair } from '@/data/repairs';
+import { repairIn, repairOpen, repairs, type Repair } from '@/data/repairs';
 import { longDay } from '@/data/longDay';
 import { specials } from '@/data/specials';
 import { startDay } from '@/features/campaign/save/endurance';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
-import { useLanguage, useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useCafeName, useGame, useNarrative, useProgress } from '@/state/GameStore';
@@ -61,7 +61,7 @@ export function CampaignPage() {
   const progress = useProgress();
   const shop = useCafeName();
   const say = useWords(RAIL_WORDS);
-  const english = useUntranslated();
+  const [language] = useLanguage();
   const narrative = useNarrative();
   const titles = useMemo(() => narrative.map((row) => row.title), [narrative]);
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
@@ -395,9 +395,8 @@ export function CampaignPage() {
       )}
       {closingUp && (
         <DialogueBox
-          lines={closingUp.scene}
-          kicker={closingUp.title}
-          lang={english}
+          lines={repairIn(closingUp, language).scene}
+          kicker={repairIn(closingUp, language).title}
           kickerLabel={say.repairs.title}
           doneLabel={say.backToRail}
           instant={reducedMotion}
