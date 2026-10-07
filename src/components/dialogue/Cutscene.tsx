@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Clapperboard } from 'lucide-react';
 import { sceneLines, type Cutscene as CutsceneData } from '@/data/campaign/cutscenes';
 import type { DialogueChoices } from '@/domain';
+import { useUntranslated } from '@/shared/language';
 import { DialogueBox } from './DialogueBox';
 
 /**
@@ -25,6 +26,7 @@ export function stillUrl(scene: string, panel: number): string | undefined {
 export interface CutsceneProps {
   scene: CutsceneData;
   onDone: () => void;
+  /** Label on the last line's button; Continue, in the reader's language, if none. */
   doneLabel?: string;
   reduced?: boolean;
   /** The answers given before, by choice id: what the scene recalls, and which answer it marks as said last time. */
@@ -34,15 +36,9 @@ export interface CutsceneProps {
 }
 
 /** A story scene: stills dropped one by one like photos on a dark table as the dialogue moves on. */
-export function Cutscene({
-  scene,
-  onDone,
-  doneLabel = 'Continue',
-  reduced = false,
-  choices = {},
-  onChoose,
-}: CutsceneProps) {
+export function Cutscene({ scene, onDone, doneLabel, reduced = false, choices = {}, onChoose }: CutsceneProps) {
   // The answers as the scene began: one picked partway through is kept, but doesn't rewrite the scene being watched.
+  const english = useUntranslated();
   const [before] = useState(choices);
   const { lines, panels } = useMemo(() => sceneLines(scene, before), [scene, before]);
   const [line, setLine] = useState(0);
@@ -85,7 +81,7 @@ export function Cutscene({
         })}
       </div>
       {/* The stills are pictures only, so their art notes describe each one aloud as it lands. */}
-      <p className="sr-only" aria-live="polite">
+      <p className="sr-only" aria-live="polite" lang={english}>
         {voiced && scene.panels[shown]?.art}
       </p>
       <DialogueBox

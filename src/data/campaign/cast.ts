@@ -13,15 +13,18 @@ export interface CastMember {
   customer?: boolean;
 }
 
-/** The name over a line, with "Customer" set apart for guests; a plain guest is simply "Customer". */
-export function speakerParts(member: CastMember): { role?: string; name: string } {
+/**
+ * The name over a line, with "Customer" set apart for guests; a plain guest is simply "Customer". `customer` is the
+ * word in the reader's language.
+ */
+export function speakerParts(member: CastMember, customer = 'Customer'): { role?: string; name: string } {
   if (!member.customer) return { name: member.name };
-  return member.name === 'Guest' ? { name: 'Customer' } : { role: 'Customer', name: member.name };
+  return member.name === 'Guest' ? { name: customer } : { role: customer, name: member.name };
 }
 
 /** The same name as one string, for screen readers: "Juno, customer". */
-export function speakerLabel(member: CastMember): string {
-  const { role, name } = speakerParts(member);
+export function speakerLabel(member: CastMember, customer = 'Customer'): string {
+  const { role, name } = speakerParts(member, customer);
   return role ? `${name}, ${role.toLowerCase()}` : name;
 }
 

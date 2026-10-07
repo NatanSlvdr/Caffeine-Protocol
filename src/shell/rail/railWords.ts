@@ -217,7 +217,7 @@ export const RAIL_WORDS = words(
     lastShift: 'Le dernier service',
     beforeShift: (n) => `Service ${n}`,
     // The dialogue box's buttons are still in English, so the note names them as they read there.
-    sceneNote: 'Back, ou ←, revient sur une réplique ; Skip, ou Échap, termine la scène plus tôt.',
+    sceneNote: 'Retour, ou ←, revient sur une réplique ; Passer, ou Échap, termine la scène plus tôt.',
     watchScene: 'Voir la scène',
     toWatch: 'ou double-clic pour regarder',
   },

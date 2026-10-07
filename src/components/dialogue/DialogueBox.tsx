@@ -4,7 +4,9 @@ import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueChoices, DialogueLine, DialogueOption } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
+import { useUntranslated, useWords } from '@/shared/language';
 import { DialoguePaceContext } from './pace';
+import { DIALOGUE_WORDS } from './dialogueWords';
 import { Portrait, portraitUrl } from './Portrait';
 
 const TYPE_MS = 22;
@@ -37,7 +39,7 @@ export interface DialogueBoxProps {
   variant?: 'scene' | 'aside';
   /** Small caption above the box, e.g. the shift name. */
   kicker?: string;
-  /** Label on the last line's button. */
+  /** Label on the last line's button; Continue, in the reader's language, if none. */
   doneLabel?: string;
   /** Print each line whole instead of typing it out, as reduced motion asks; the house settings can ask for it too. */
   instant?: boolean;
@@ -58,12 +60,14 @@ export function DialogueBox({
   onDone,
   variant = 'scene',
   kicker,
-  doneLabel = 'Continue',
+  doneLabel,
   instant = false,
   onLine,
   choices = {},
   onChoose,
 }: DialogueBoxProps) {
+  const say = useWords(DIALOGUE_WORDS);
+  const english = useUntranslated();
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
   // The furthest line reached: a line gone back over is printed whole, since it has been read once already.
@@ -197,14 +201,14 @@ export function DialogueBox({
 
   if (!current) return null;
   const speaker = current.who ? cast[current.who] : undefined;
-  const label = speaker && speakerParts(speaker);
+  const label = speaker && speakerParts(speaker, say.customer);
   let left = shown;
   return (
     <div
       className={`dialogue dialogue-${variant}`}
       role="dialog"
       aria-modal={scene || undefined}
-      aria-label={kicker ?? 'Dialogue'}
+      aria-label={kicker ?? say.dialogue}
       onClick={scene ? advance : undefined}
     >
       <div
@@ -215,15 +219,19 @@ export function DialogueBox({
       >
         {current.who && <Portrait key={current.who} who={current.who} mood={current.mood} />}
         <div className="dialogue-box">
-          {kicker && scene && <p className="dialogue-kicker">{kicker}</p>}
+          {kicker && scene && (
+            <p className="dialogue-kicker" lang={english}>
+              {kicker}
+            </p>
+          )}
           {label && (
             <p className="dialogue-name">
-              {label.role && <span className="dialogue-role">{label.role}:</span>}
+              {label.role && <span className="dialogue-role">{say.role(label.role)}</span>}
               {label.name}
             </p>
           )}
           <p className="dialogue-text" aria-live="polite">
-            <span aria-hidden="true">
+            <span aria-hidden="true" lang={english}>
               {parts.map((part, i) => {
                 const typed = part.text.slice(0, Math.max(left, 0));
                 left -= part.text.length;
@@ -246,13 +254,21 @@ export function DialogueBox({
                 );
               })}
             </span>
-            <span className="sr-only">{voiced && (speaker ? `${speakerLabel(speaker)}: ${text}` : text)}</span>
+            {/* Who speaks is said in the reader's language; what they say is the story's English. */}
+            <span className="sr-only">
+              {voiced && (
+                <>
+                  {speaker && say.says(speakerLabel(speaker, say.customer))}
+                  <span lang={english}>{text}</span>
+                </>
+              )}
+            </span>
           </p>
           {asking && (
-            <div className="dialogue-choices" role="group" aria-label="What Niko says">
+            <div className="dialogue-choices" role="group" aria-label={say.choices}>
               {choice.options.map((option, i) => {
                 const chosen = (answered ?? choices[choice.id]) === option.id;
-                const mark = answered ? 'Said this time' : 'Said last time';
+                const mark = answered ? say.saidNow : say.saidBefore;
                 return (
                   <button
                     key={option.id}
@@ -268,7 +284,7 @@ export function DialogueBox({
                     }}
                   >
                     <kbd aria-hidden="true">{i + 1}</kbd>
-                    <span>{option.label}</span>
+                    <span lang={english}>{option.label}</span>
                     {chosen && <small aria-hidden="true">{mark}</small>}
                   </button>
                 );
@@ -280,22 +296,20 @@ export function DialogueBox({
               <span aria-hidden="true">
                 {index + 1}/{lines.length}
               </span>
-              <span className="sr-only">
-                Line {index + 1} of {lines.length}
-              </span>
+              <span className="sr-only">{say.line(index + 1, lines.length)}</span>
             </span>
             {index > 0 && (
               <button
                 type="button"
                 className="dialogue-back"
                 aria-keyshortcuts="ArrowLeft"
-                title="The line before · ←"
+                title={say.backTitle}
                 onClick={(e) => {
                   e.stopPropagation();
                   back();
                 }}
               >
-                <ArrowLeft size={14} aria-hidden="true" /> Back
+                <ArrowLeft size={14} aria-hidden="true" /> {say.back}
               </button>
             )}
             {!last && (
@@ -303,13 +317,13 @@ export function DialogueBox({
                 type="button"
                 className="dialogue-skip"
                 aria-keyshortcuts="Escape"
-                title="Skip the rest · Esc"
+                title={say.skipTitle}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDone();
                 }}
               >
-                Skip <FastForward size={14} aria-hidden="true" />
+                {say.skip} <FastForward size={14} aria-hidden="true" />
               </button>
             )}
             {(!asking || answered) && (
@@ -318,13 +332,13 @@ export function DialogueBox({
                 className="dialogue-next"
                 ref={next}
                 aria-keyshortcuts="Enter Space"
-                title="Enter or Space"
+                title={say.nextTitle}
                 onClick={(e) => {
                   e.stopPropagation();
                   advance();
                 }}
               >
-                {last && !typing ? doneLabel : 'Next'} <ArrowRight size={15} aria-hidden="true" />
+                {last && !typing ? (doneLabel ?? say.done) : say.next} <ArrowRight size={15} aria-hidden="true" />
               </button>
             )}
           </div>

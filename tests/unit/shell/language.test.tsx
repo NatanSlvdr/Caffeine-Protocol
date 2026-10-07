@@ -48,6 +48,8 @@ import { CustomerSpeech } from '../../../src/components/CustomerSpeech';
 import { createRoot } from 'react-dom/client';
 import { Editor } from '../../../src/components/Editor';
 import { EDITOR_WORDS } from '../../../src/components/editor/editorWords';
+import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
+import { DIALOGUE_WORDS } from '../../../src/components/dialogue/dialogueWords';
 import { BLOCK_HELP_WORDS } from '../../../src/components/editor/blockHelpWords';
 import { blockHelp, spokenHelp } from '../../../src/components/editor/blockHelp';
 import { dragAnnouncements, dragInstructions } from '../../../src/components/editor/dragAnnouncements';
@@ -320,13 +322,61 @@ describe('the code editor in French', () => {
   });
 });
 
+describe('the dialogue box in French', () => {
+  it('drives a scene in French, with who speaks named in French and what they say kept as English', () => {
+    vi.useFakeTimers();
+    onTestFinished(() => void vi.useRealTimers());
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const onDone = vi.fn();
+    const choice = {
+      id: 'greeting',
+      options: [
+        { id: 'warm', label: 'Welcome back!', lines: [] },
+        { id: 'plain', label: 'Hello.', lines: [] },
+      ],
+    };
+    render(
+      <LanguageProvider>
+        <DialogueBox
+          lines={[
+            { who: 'juno', text: 'Tea, no sugar.' },
+            { who: 'niko', text: 'Coming up.', choice },
+          ]}
+          choices={{ greeting: 'plain' }}
+          onDone={onDone}
+        />
+      </LanguageProvider>,
+    );
+    const dialog = screen.getByRole('dialog', { name: 'Dialogue' });
+    expect(dialog.querySelector('.dialogue-name')!.textContent).toBe(`Client${NBSP}:Juno`);
+    const spoken = dialog.querySelector('.dialogue-text .sr-only')!;
+    expect(spoken.textContent).toBe(`Juno, client${NBSP}: Tea, no sugar.`);
+    expect(spoken.querySelector('[lang="en"]')!.textContent).toBe('Tea, no sugar.');
+    expect(dialog.querySelector('.dialogue-text > [aria-hidden]')!.getAttribute('lang')).toBe('en');
+    expect(screen.getByText('Réplique 1 sur 2')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Passer' }).getAttribute('title')).toBe(`Passer la suite · Échap`);
+    act(() => void vi.advanceTimersByTime(5000));
+    fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
+    act(() => void vi.advanceTimersByTime(5000));
+    expect(screen.getByRole('button', { name: 'Retour' }).getAttribute('title')).toBe('La réplique précédente · ←');
+    // What Niko says stays the story's English; the mark on last time's answer is French.
+    const asked = within(screen.getByRole('group', { name: 'Ce que dit Niko' }));
+    expect(asked.getByRole('button', { name: 'Hello. (dit la dernière fois)' })).toBeTruthy();
+    expect(asked.getByText('Welcome back!').getAttribute('lang')).toBe('en');
+    fireEvent.click(asked.getByRole('button', { name: 'Welcome back!' }));
+    act(() => void vi.advanceTimersByTime(5000));
+    fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
+    expect(onDone).toHaveBeenCalledOnce();
+  });
+});
+
 describe('the shift screen in French', () => {
-  /** Shift 4, opened on its code with the scene skipped; the dialogue box's buttons are still in English. */
+  /** Shift 4, opened on its code with the scene skipped, in whichever language is set. */
   const open = () => {
     seedLocalStorage(makeSave({ unlocked: 3, selected: 3 }));
     window.location.hash = '/shift/4';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: /^(Skip|Passer)$/ }));
   };
 
   it('labels the bar, the toolbar and the coding pane in French, and keeps the shift’s own words said as English', () => {
@@ -378,7 +428,7 @@ describe('the shift screen in French', () => {
     );
     window.location.hash = '/shift/3';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Passer' }));
     fireEvent.click(screen.getByRole('button', { name: /^Lancer le service/ }));
     const toolbar = within(screen.getByRole('group', { name: 'Commandes du service' }));
     act(() => void vi.advanceTimersByTime(100));
@@ -423,7 +473,7 @@ describe('the shift screen in French', () => {
     );
     window.location.hash = '/shift/3';
     render(<App />);
-    const skip = screen.queryByRole('button', { name: 'Skip' });
+    const skip = screen.queryByRole('button', { name: 'Passer' });
     if (skip) fireEvent.click(skip);
     fireEvent.click(screen.getByRole('button', { name: 'Options' }));
     fireEvent.click(screen.getByRole('button', { name: /^Restaurer la routine de Query/ }));
@@ -458,7 +508,7 @@ describe('the shift screen in French', () => {
     seedLocalStorage(makeSave({ unlocked: 1, selected: 1 }));
     window.location.hash = '/shift/2';
     render(<App />);
-    const skip = screen.queryByRole('button', { name: 'Skip' });
+    const skip = screen.queryByRole('button', { name: 'Passer' });
     if (skip) fireEvent.click(skip);
     const tips = screen.getByRole('complementary', { name: /^Première routine ?· Étape 1 sur 3$/ });
     expect(tips.querySelector('.first-routine-text strong')!.textContent).toBe('Construire.');
@@ -502,7 +552,7 @@ describe('the shift screen in French', () => {
       });
       window.location.hash = '/shift/2';
       render(<App />);
-      const skip = screen.queryByRole('button', { name: 'Skip' });
+      const skip = screen.queryByRole('button', { name: 'Passer' });
       if (skip) fireEvent.click(skip);
       fireEvent.click(screen.getByRole('button', { name: /^Lancer le service/ }));
       for (let i = 0; i < 60 && !screen.queryByRole('dialog', { name: 'Dialogue' }); i++)
@@ -1069,7 +1119,18 @@ describe('the words themselves', () => {
 
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
-    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
+    const same = new Set([
+      'Cafés',
+      'Options',
+      'Tables',
+      'Service',
+      'Photo',
+      'Pause',
+      'Table',
+      'Destination',
+      'Ticket',
+      'Dialogue',
+    ]);
     const catalogs = [
       HOME_WORDS,
       SETTINGS_WORDS,
@@ -1095,6 +1156,7 @@ describe('the words themselves', () => {
       SCENE_WORDS,
       EDITOR_WORDS,
       BLOCK_HELP_WORDS,
+      DIALOGUE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));
