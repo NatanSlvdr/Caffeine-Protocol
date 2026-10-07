@@ -31,6 +31,9 @@ import { BlockPreviewNote } from '../../../src/features/workspace/BlockPreviewNo
 import { dryRound, visitWords } from '../../../src/features/workspace/blockPreview';
 import { PAUSE_WORDS } from '../../../src/features/workspace/pauseWords';
 import { ROUTE_WORDS } from '../../../src/features/workspace/routeWords';
+import { SUMMARY_WORDS } from '../../../src/features/workspace/summaryWords';
+import { ServiceSummary } from '../../../src/features/workspace/ServiceSummary';
+import { guestDoing, happenings, summarize } from '../../../src/features/workspace/serviceWords';
 import { OrderRoute } from '../../../src/features/workspace/OrderRoute';
 import { ReplayTimeline } from '../../../src/features/workspace/ReplayTimeline';
 import { followable, legWords } from '../../../src/features/workspace/route';
@@ -46,9 +49,11 @@ import {
   STATIONS,
   UNLOCKS,
   blockVisits,
+  compileProgram,
   createLiveRun,
   orderRoute,
   recordRun,
+  runLevel,
   runMoments,
   sampleReplay,
 } from '../../../src/domain';
@@ -827,6 +832,73 @@ describe('the words themselves', () => {
     );
   });
 
+  it('tells the café in words in French, keeping what guests said and why a robot stopped in English', () => {
+    const programs = referencePrograms(14);
+    const run = runLevel(levels[13], compileProgram(programs.query, 14), programs);
+    const fr = { summary: SUMMARY_WORDS.fr, pause: PAUSE_WORDS.fr, cargo: CARGO_WORDS.fr, route: ROUTE_WORDS.fr };
+    const dot = run.events.find((e) => e.seed_id === 'L14_A' && e.customer.customer_id === 'C3')!;
+    const { arrival, created, seating, seated, served, left } = dot.timing;
+    expect(
+      [arrival - 1, arrival, created, seating!, seated, served, left].map((t) =>
+        guestDoing(dot, t, false, SUMMARY_WORDS.fr.visit),
+      ),
+    ).toEqual([
+      'Arrive au café',
+      'Fait la queue pour commander',
+      'Attend une table',
+      `Va à la table ${dot.table}`,
+      `À la table ${dot.table}, attend son café`,
+      `Boit son café à la table ${dot.table}`,
+      'Repart, commande servie',
+    ]);
+    const summary = summarize(run, sampleReplay(run, 30), levels[13], 14, fr);
+    expect(summary.guests.map(({ who, what }) => [who, what])).toEqual([
+      ['Mr. Albert', 'À la table 1, attend son café'],
+      ['Client 2', 'À la table 2, attend son thé'],
+      ['Dot', 'Attend une table'],
+      ['Juno', 'Commande à la caisse'],
+    ]);
+    expect(summary.crew[1].what).toMatch(new RegExp(`${NARROW}; porte .*Ticket pour un thé · Table 2$`));
+    expect(summary.counters).toEqual([
+      { who: 'Tickets pour Brew', what: 'thé, café' },
+      { who: 'Prêt au comptoir de retrait', what: 'Rien' },
+    ]);
+    expect(summarize(run, sampleReplay(run, 90), levels[13], 14, fr).counters[0].what).toBe('2 thés');
+    const albert = run.events.find((e) => e.seed_id === 'L14_A' && e.customer.customer_id === 'C1')!.timing;
+    const second = run.execution![1].start;
+    const say = (from: number, to: number) => happenings(run, levels[13], 14, from, to, fr);
+    expect(say(-5, 0.5)).toBe('Mr. Albert entre.');
+    expect(say(albert.served - 1, albert.served)).toBe('Mr. Albert reçoit son café à la table 1.');
+    expect(say(albert.left - 1, albert.left)).toBe('Mr. Albert repart.');
+    expect(say(second - 1, second + 0.5)).toBe('La manche 2 sur 3 commence. Client 1 entre.');
+    expect(say(-5, 80)).toBe('Mr. Albert entre. Client 2 entre. Dot entre. Et 3 de plus.');
+
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const slipped = runLevel(levels[2], compileProgram('LISTEN\nITEM coffee', 3), {
+      query: 'LISTEN\nITEM coffee',
+      prep: '',
+      floor: '',
+    });
+    const slip = slipped.execution![0].events.find((e) => e.error)!;
+    const stopped = summarize(slipped, sampleReplay(slipped, slip.start), levels[2], 3, fr);
+    expect(stopped.stopped!.who).toBe('Query');
+    render(
+      <LanguageProvider>
+        <ServiceSummary summary={stopped} when="En pause" />
+      </LanguageProvider>,
+    );
+    const card = within(screen.getByRole('region', { name: 'Le café en mots' }));
+    expect(card.getByRole('heading', { name: 'Clients · 0 servi sur 4' })).toBeTruthy();
+    expect(card.getByRole('heading', { name: 'Équipe' })).toBeTruthy();
+    expect(card.getByRole('heading', { name: 'Comptoirs' })).toBeTruthy();
+    const why = document.querySelector('.service-summary-stopped')!;
+    expect(why.textContent).toBe(`Query s’est arrêté${NBSP}: ${slip.error!.replace(/\.$/, '')}.`);
+    expect(why.querySelector('[lang="en"]')!.textContent).toBe(slip.error!.replace(/\.$/, ''));
+    const guest = document.querySelector('.service-summary li strong')!;
+    expect(guest.textContent).toBe(`Mr. Albert · “${slipped.events[0].customer.phrase}”`);
+    expect(guest.querySelector('[lang="en"]')!.textContent).toBe(slipped.events[0].customer.phrase);
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
@@ -851,6 +923,7 @@ describe('the words themselves', () => {
       PAUSE_WORDS,
       CARGO_WORDS,
       ROUTE_WORDS,
+      SUMMARY_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Captions, Footprints, Store } from 'lucide-react';
 import { BLOCK_SECONDS, LOUS_DECOR, ROBOT_DISPLAY_NAMES, UNLOCKS, decorOf, isBenchSeed, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
-import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions, type TakeSnapshot } from '@/components';
+import {
+  CARGO_WORDS,
+  Cafe,
+  CodingPaneHeader,
+  DialogueBox,
+  Editor,
+  RobotOptions,
+  type TakeSnapshot,
+} from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { go } from '@/shared/lib/navigation';
@@ -35,6 +43,7 @@ import { counterLines } from './counterLines';
 import { markCount } from './breakpoints';
 import { PAUSE_WORDS } from './pauseWords';
 import { ROUTE_WORDS } from './routeWords';
+import { SUMMARY_WORDS } from './summaryWords';
 import { handoverFor } from './handover';
 import { isStale } from './evidence';
 import { HelpModal } from './modals/HelpModal';
@@ -112,6 +121,12 @@ export function Workspace({
   const versionNames = useWords(OPTIONS_WORDS).versions;
   const pauseWords = useWords(PAUSE_WORDS),
     routeWords = useWords(ROUTE_WORDS);
+  const serviceSay = {
+    summary: useWords(SUMMARY_WORDS),
+    pause: pauseWords,
+    cargo: useWords(CARGO_WORDS),
+    route: routeWords,
+  };
   const notebookWords = useWords(NOTEBOOK_WORDS);
   const benchWords = useWords(BENCH_WORDS);
   const label = shift.label ?? say.shift(pad2(index + 1));
@@ -388,7 +403,9 @@ export function Workspace({
   // The café in words beside the scene while the service plays or is looked back on, and what happens said aloud.
   const summaryOn = save.settings.service_summary;
   const summary =
-    summaryOn && serviceView && result && sampled ? summarize(result, sampled, played, index + 1) : undefined;
+    summaryOn && serviceView && result && sampled
+      ? summarize(result, sampled, played, index + 1, serviceSay)
+      : undefined;
   const told = useServiceAnnouncements({
     on: summaryOn,
     result,
@@ -397,6 +414,7 @@ export function Workspace({
     head,
     playing: running && !paused,
     speed,
+    say: serviceSay,
   });
   // An event looked back on, an order's leg or a moment on the timeline, opens the routine of the robot that did it,
   // where the marker is on the very block it began on.

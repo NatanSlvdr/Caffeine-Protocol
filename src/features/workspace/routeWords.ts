@@ -6,7 +6,7 @@ const FR_ORDINALS = ['premier', 'deuxième', 'troisième', 'quatrième', 'cinqui
 const FR_DRINKS: Record<string, string> = { coffee: 'café', tea: 'thé' };
 
 /** A cup of an order by its drink, told apart when there are two of one: "tea", "second tea". */
-export const cupName = ({ item, nth }: OrderCup) => (nth ? `${ORDINALS[nth - 1] ?? `#${nth}`} ${item}` : item);
+const cupName = ({ item, nth }: OrderCup) => (nth ? `${ORDINALS[nth - 1] ?? `#${nth}`} ${item}` : item);
 /** The same in French, after its article: “thé”, “deuxième thé”. Both drinks are masculine. */
 const frCup = ({ item, nth }: OrderCup) =>
   (nth ? `${FR_ORDINALS[nth - 1] ?? `${nth}e`} ` : '') + (FR_DRINKS[item] ?? item);
@@ -56,6 +56,8 @@ export const ROUTE_WORDS = words(
           return `${who} clears ${cup ? `the ${cupName(cup)} cup` : 'the cup'}`;
       }
     },
+    /** One cup of an order of several, with its article: "the second tea". */
+    cup: (cup: OrderCup) => `the ${cupName(cup)}`,
     /** Before why a robot stopped. */
     stopped: (who: string) => `${who} stopped: `,
     /** Anyone the café doesn't know by name, by their place in their round's line. */
@@ -120,6 +122,7 @@ export const ROUTE_WORDS = words(
           return `${who} débarrasse ${cup ? `la tasse du ${frCup(cup)}` : 'la tasse'}`;
       }
     },
+    cup: (cup) => `le ${frCup(cup)}`,
     stopped: (who) => `${who} s’est arrêté : `,
     guest: (n) => `Client ${n}`,
     following: (name) => `Suivi : ${name}`,

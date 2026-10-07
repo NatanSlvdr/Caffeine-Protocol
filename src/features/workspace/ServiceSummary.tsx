@@ -1,9 +1,13 @@
 import { Captions } from 'lucide-react';
 import { useId } from 'react';
+import { useUntranslated, useWords } from '@/shared/language';
+import { ROUTE_WORDS } from './routeWords';
 import type { ServiceSummary as Summary, SummaryLine } from './serviceWords';
+import { SUMMARY_WORDS } from './summaryWords';
 
 function Lines({ title, lines, empty }: { title: string; lines: readonly SummaryLine[]; empty?: string }) {
   const heading = useId();
+  const english = useUntranslated();
   return (
     <section aria-labelledby={heading}>
       <h4 id={heading}>{title}</h4>
@@ -11,7 +15,15 @@ function Lines({ title, lines, empty }: { title: string; lines: readonly Summary
         <ul>
           {lines.map((line, i) => (
             <li key={i}>
-              <strong>{line.who}</strong>
+              <strong>
+                {line.who}
+                {line.said !== undefined && (
+                  <>
+                    {' · “'}
+                    <span lang={english}>{line.said}</span>”
+                  </>
+                )}
+              </strong>
               <span>{line.what}</span>
             </li>
           ))}
@@ -29,21 +41,25 @@ function Lines({ title, lines, empty }: { title: string; lines: readonly Summary
  * the run does without speaking; what happens is said by the workspace's own announcements, a little at a time.
  */
 export function ServiceSummary({ summary, when }: { summary: Summary; when: string }) {
+  const say = useWords(SUMMARY_WORDS);
+  const stopped = useWords(ROUTE_WORDS).stopped;
+  const english = useUntranslated();
   return (
-    <section className="service-summary" aria-label="The café in words">
+    <section className="service-summary" aria-label={say.title}>
       <h3>
         <Captions size={14} aria-hidden="true" />
-        The café in words
+        {say.title}
         <span>{when}</span>
       </h3>
-      {summary.stopped && <p className="service-summary-stopped">{summary.stopped}</p>}
-      <Lines
-        title={`Guests · ${summary.served} of ${summary.total} served`}
-        lines={summary.guests}
-        empty="No one in the café just now."
-      />
-      <Lines title="Crew" lines={summary.crew} />
-      <Lines title="Counters" lines={summary.counters} />
+      {summary.stopped && (
+        <p className="service-summary-stopped">
+          {stopped(summary.stopped.who)}
+          <span lang={english}>{summary.stopped.error}</span>.
+        </p>
+      )}
+      <Lines title={say.guests(summary.served, summary.total)} lines={summary.guests} empty={say.nobody} />
+      <Lines title={say.crew} lines={summary.crew} />
+      <Lines title={say.counters} lines={summary.counters} />
     </section>
   );
 }

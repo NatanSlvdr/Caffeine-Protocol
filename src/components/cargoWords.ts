@@ -63,3 +63,5 @@ export const CARGO_WORDS = words(
     },
   },
 );
+
+export type CargoWords = (typeof CARGO_WORDS)['en'];

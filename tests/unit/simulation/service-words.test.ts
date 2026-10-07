@@ -30,10 +30,10 @@ describe('the café told in words', () => {
     const run = served(14);
     const summary = summarize(run, sampleReplay(run, 30), levels[13], 14);
     expect(summary.guests).toEqual([
-      { who: 'Mr. Albert · “coffee, 0 sugars”', what: 'At table 1, waiting for their coffee' },
-      { who: 'Guest 2 · “tea, 1 sugar”', what: 'At table 2, waiting for their tea' },
-      { who: 'Dot · “coffee, 2 sugars”', what: 'Waiting for a table' },
-      { who: 'Juno · “tea, 0 sugars”', what: 'Ordering at the register' },
+      { who: 'Mr. Albert', said: 'coffee, 0 sugars', what: 'At table 1, waiting for their coffee' },
+      { who: 'Guest 2', said: 'tea, 1 sugar', what: 'At table 2, waiting for their tea' },
+      { who: 'Dot', said: 'coffee, 2 sugars', what: 'Waiting for a table' },
+      { who: 'Juno', said: 'tea, 0 sugars', what: 'Ordering at the register' },
     ]);
     expect([summary.served, summary.total]).toEqual([0, 4]);
     expect(summary.crew.map((line) => line.who)).toEqual(['Query', 'Brew', 'Porter']);
@@ -60,9 +60,10 @@ describe('the café told in words', () => {
     const run = served(3, { query: lessons[2].solution.replace('DEPOSIT RIGHT', 'DEPOSIT DOWN'), prep: '', floor: '' });
     const slip = run.execution![0].events.find((e) => e.error)!;
     expect(summarize(run, sampleReplay(run, slip.start - 0.1), levels[2], 3).stopped).toBeUndefined();
-    expect(summarize(run, sampleReplay(run, slip.start), levels[2], 3).stopped).toBe(
-      `Query stopped: ${slip.error!.replace(/\.$/, '')}.`,
-    );
+    expect(summarize(run, sampleReplay(run, slip.start), levels[2], 3).stopped).toEqual({
+      who: 'Query',
+      error: slip.error!.replace(/\.$/, ''),
+    });
   });
 
   it('says what happened between two moments, and nothing of the steps between', () => {

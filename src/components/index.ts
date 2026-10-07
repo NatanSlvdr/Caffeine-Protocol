@@ -5,6 +5,7 @@ export { BlockSelect, DirectionSelect } from './BlockSelect';
 export type { BlockOption } from './BlockSelect';
 export { Cafe } from './Cafe';
 export { CARGO_WORDS } from './cargoWords';
+export type { CargoWords } from './cargoWords';
 export type { TakeSnapshot } from './three/Snapshot';
 export { CafeFloor } from './CafeFloor';
 export { Appliance, Box, Cylinder, Cup, TicketTray, SoftBox, RobotModel, CAFE_COLORS, SugarCubes } from './CafeModels';
