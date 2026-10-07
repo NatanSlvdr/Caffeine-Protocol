@@ -3,6 +3,7 @@ import type { DialogueChoices, DialogueLine, Speaker } from '../../domain/dialog
 import type { ProgressSave } from '../../domain/types';
 import { UNLOCKS } from '../../domain/unlocks';
 import type { Language } from '../../shared/language';
+import { typeset } from '../../shared/typography';
 import { cutscenesFr, type SceneFr } from './cutscenes.fr';
 
 /** One still of a cutscene and the lines spoken over it. */
@@ -374,18 +375,21 @@ export const cutscenes: Cutscene[] = [
   },
 ];
 
-/** A scene with the French words over the English ones, line for line; anything not yet in French stays English. */
+/**
+ * A scene with the French words over the English ones, line for line, set with French typography; anything not yet in
+ * French stays English.
+ */
 function inFrench(scene: Cutscene, fr: SceneFr): Cutscene {
   const retold = (lines: readonly DialogueLine[], said: readonly string[]) =>
-    lines.map((each, index) => ({ ...each, text: said[index] ?? each.text }));
+    lines.map((each, index) => ({ ...each, text: said[index] === undefined ? each.text : typeset(said[index]) }));
   return {
     ...scene,
-    title: fr.title,
-    logline: fr.logline,
+    title: typeset(fr.title),
+    logline: typeset(fr.logline),
     panels: scene.panels.map((panel, index) => {
-      const [art = panel.art, ...said] = fr.panels[index] ?? [];
+      const [art, ...said] = fr.panels[index] ?? [];
       return {
-        art,
+        art: art === undefined ? panel.art : typeset(art),
         lines: retold(panel.lines, said).map((each) =>
           each.choice
             ? {
@@ -393,8 +397,12 @@ function inFrench(scene: Cutscene, fr: SceneFr): Cutscene {
                 choice: {
                   ...each.choice,
                   options: each.choice.options.map((option) => {
-                    const [label = option.label, ...answer] = fr.options?.[option.id] ?? [];
-                    return { ...option, label, lines: retold(option.lines, answer) };
+                    const [label, ...answer] = fr.options?.[option.id] ?? [];
+                    return {
+                      ...option,
+                      label: label === undefined ? option.label : typeset(label),
+                      lines: retold(option.lines, answer),
+                    };
                   }),
                 },
               }

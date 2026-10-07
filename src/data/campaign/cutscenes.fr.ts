@@ -10,7 +10,8 @@ export interface SceneFr {
 
 /**
  * The scenes between shifts in French, keyed by scene id. Moka and Niko say “vous” to each other; Lou's card says “tu”
- * to Niko, and so does everyone to Pip. Written with plain spaces: the French catalog sets them with French typography.
+ * to Niko, and so does everyone to Pip. Mr. Albert keeps the name the café calls him by, on every speaker's plate.
+ * Written with plain spaces: the French catalog sets them with French typography.
  */
 export const cutscenesFr: Readonly<Record<string, SceneFr>> = {
   'the-keys': {
@@ -127,12 +128,12 @@ export const cutscenesFr: Readonly<Record<string, SceneFr>> = {
     logline: 'Query gagne son badge, et Moka ne veut pas de robot dans la cuisine de Lou.',
     panels: [
       [
-        'Une photo « Employé du mois » au mur. Query porte son badge ; M. Albert applaudit.',
+        'Une photo « Employé du mois » au mur. Query porte son badge ; Mr. Albert applaudit.',
         'Employé du mois. Premier mois. Seul employé. Ça compte quand même.',
         '*bip* Badge astiqué. Quarante-deux fois.',
       ],
       [
-        'Query tend sa tasse à M. Albert par-dessus le comptoir. Il rayonne.',
+        'Query tend sa tasse à Mr. Albert par-dessus le comptoir. Il rayonne.',
         'Monsieur Albert. Comme d’habitude. Café.',
         'Il s’est souvenu de mon habitude. Avant, il oubliait toujours.',
       ],
@@ -245,7 +246,7 @@ export const cutscenesFr: Readonly<Record<string, SceneFr>> = {
       [
         'Porter se réveille, plateau levé. Les trois stations de recharge sont occupées.',
         '*ding ding !* Bonjour ! Bonjour ! C’est laquelle, la table quatre ?',
-        'Leçon numéro un : M. Albert s’assoit près de la fenêtre.',
+        'Leçon numéro un : Mr. Albert s’assoit près de la fenêtre.',
         'Trois stations, trois robots. Pour la première fois depuis le printemps, toutes les lumières de l’arrière-boutique sont allumées.',
       ],
     ],
@@ -304,7 +305,7 @@ export const cutscenesFr: Readonly<Record<string, SceneFr>> = {
         'L’heure de la fermeture. La dernière tasse part vers l’évier.',
       ],
       [
-        'Les habitués s’en vont pour la nuit. Porter tient la porte ; M. Albert soulève son chapeau.',
+        'Les habitués s’en vont pour la nuit. Porter tient la porte ; Mr. Albert soulève son chapeau.',
         'À demain, même heure, Niko.',
         '*ding ding !* Bonne nuit, table de la fenêtre !',
       ],

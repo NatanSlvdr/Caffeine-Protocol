@@ -2,6 +2,9 @@ import type { Customer, LevelDefinition, ProgressSave, ValidationSeed } from '@/
 import type { DialogueLine } from '@/domain/dialogue';
 import { line } from '@/domain/dialogue';
 import { UNLOCKS } from '@/domain/unlocks';
+import type { Language } from '@/shared/language';
+import { typeset } from '@/shared/typography';
+import { memoriesFr, type MemoryFr } from './memories.fr';
 import { validateLessonData, validateLevelData } from './campaign/validate';
 
 /**
@@ -191,6 +194,38 @@ function dayOne(): Memory {
 export const memories: readonly Memory[] = [dayOne()];
 
 export const memoryById = (id: string): Memory | undefined => memories.find((memory) => memory.id === id);
+
+/** A memory with the French words over the English ones, set with French typography; a line not yet in French stays English. */
+function inFrench(memory: Memory, fr: MemoryFr): Memory {
+  const retold = (lines: readonly DialogueLine[], said: readonly string[]) =>
+    lines.map((each, index) => ({ ...each, text: said[index] === undefined ? each.text : typeset(said[index]) }));
+  return {
+    ...memory,
+    title: typeset(fr.title),
+    from: typeset(fr.from),
+    hint: typeset(fr.hint),
+    thanks: typeset(fr.thanks),
+    lesson: { ...memory.lesson, note: typeset(fr.note) },
+    brief: {
+      story: typeset(fr.brief.story),
+      objective: typeset(fr.brief.objective),
+      concept: typeset(fr.brief.concept),
+    },
+    intro: retold(memory.intro, fr.intro),
+    outro: retold(memory.outro, fr.outro),
+  };
+}
+
+const french = new Map(
+  memories.map((memory) => {
+    const fr = memoriesFr[memory.id];
+    return [memory.id, fr ? inFrench(memory, fr) : memory];
+  }),
+);
+
+/** A memory in the reader's language: the same level, routines and save key, told in their words. */
+export const memoryIn = (memory: Memory, language: Language): Memory =>
+  language === 'fr' ? (french.get(memory.id) ?? memory) : memory;
 
 /** A memory comes out once the shift that opens it has been served. */
 export const memoryOpen = (save: Pick<ProgressSave, 'stars'>, memory: Memory): boolean =>

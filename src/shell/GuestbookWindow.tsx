@@ -1,8 +1,8 @@
 import { Modal } from '@/components';
 import { cast } from '@/data/campaign/cast';
-import { guestbook, type GuestbookNote } from '@/data/campaign/guestbook';
+import { guestbook, noteText, type GuestbookNote } from '@/data/campaign/guestbook';
 import { pad2 } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { useCafeName, useNarrative } from '@/state/GameStore';
 import { KEPT_WORDS } from './keptWords';
 
@@ -19,7 +19,7 @@ export function GuestbookWindow({
 }) {
   const cafe = useCafeName();
   const say = useWords(KEPT_WORDS).guestbook;
-  const english = useUntranslated();
+  const [language] = useLanguage();
   const narrative = useNarrative();
   return (
     <Modal
@@ -35,8 +35,8 @@ export function GuestbookWindow({
           return (
             <li key={note.shift} className={fresh.includes(String(note.shift)) ? 'new' : undefined}>
               <figure>
-                <blockquote lang={english}>
-                  <p>{note.text}</p>
+                <blockquote>
+                  <p>{noteText(note, language)}</p>
                 </blockquote>
                 <figcaption>
                   {fresh.includes(String(note.shift)) && <strong className="guestbook-new">{say.fresh}</strong>}

@@ -59,10 +59,21 @@ describe('the scenes between shifts in French', () => {
 
   it('recalls an earlier answer in French, as the English does', () => {
     const closing = sceneIn(cutscenes.at(-1)!, 'fr');
-    const said = sceneLines(closing, { 'hello-query': 'minding', 'hot-chocolate': 'ours' }).lines.map((l) => l.text);
+    const said = sceneLines(closing, { 'hello-query': 'minding', 'hot-chocolate': 'ours' }).lines.map((l) =>
+      l.text.replace(/\s/g, ' '),
+    );
     expect(said).toContain('Et le chocolat chaud de samedi avait plein de guimauves. À notre façon.');
     expect(said).toContain('*bip* Mise à jour. Niko plus gardien. Café : Chez Niko. Enregistré.');
     expect(said).not.toContain('*bip* Café : Chez Niko. Enregistré depuis l’établi.');
+  });
+
+  it('sets the French with French typography', () => {
+    const keys = sceneIn(cutscenes[0], 'fr');
+    expect(keys.panels[1].art).toBe(
+      'Gros plan\u00a0: la carte postale dans la main de Niko, la pluie tachant l’encre.',
+    );
+    expect(keys.panels[1].lines[0].text).toMatch(/^«\u00a0Le café est à toi maintenant/);
+    expect(keys.panels[8].lines[0].text).toBe('C’est ouvert\u202f? Chez Lou, c’est rouvert\u202f?');
   });
 
   it('leaves an English reader’s scene as it is, and gives the French the same scene each time', () => {

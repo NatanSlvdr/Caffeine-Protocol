@@ -2,7 +2,7 @@ import { words } from '@/shared/language';
 
 /**
  * The words around what the café keeps of its story: the guestbook by the till and the memories of Lou's mornings.
- * The notes the regulars wrote and the memories themselves are the story's, and stay English.
+ * The notes the regulars wrote and the memories themselves are told in French in data/, beside their English.
  */
 export const KEPT_WORDS = words(
   {

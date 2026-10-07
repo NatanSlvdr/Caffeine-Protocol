@@ -18,7 +18,6 @@ import { REPAIR_WORDS } from '../../../src/shell/repairWords';
 import { SHELF_WORDS } from '../../../src/shell/shelfWords';
 import { KEPT_WORDS } from '../../../src/shell/keptWords';
 import { acts } from '../../../src/shell/rail/acts';
-import { memoryById } from '../../../src/data/memories';
 import { predictions } from '../../../src/data/predictions';
 import { kits } from '../../../src/data/kits';
 import { PANE_WORDS } from '../../../src/components/paneWords';
@@ -131,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, and each shift’s name, brief and scenes, and the story between acts/,
+      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook and the memories/,
     );
   });
 
@@ -538,28 +537,35 @@ describe('the rail’s windows in French', () => {
     expect(shelf.getByRole('radio', { name: /^Le port/ })).toBeTruthy();
   });
 
-  it('reads the guestbook in French, with the regulars’ notes kept as English', () => {
+  it('reads the guestbook in French, the regulars’ notes with it', () => {
     campaign(6);
     fireEvent.click(screen.getByRole('button', { name: /^Livre d’or, 3 mots/ }));
     const book = within(screen.getByRole('dialog', { name: 'Laissé près de la caisse.' }));
     const notes = book.getAllByRole('listitem');
     expect(notes[0].querySelector('small')!.textContent).toBe(`Juno · Après le service 04, Café ou thé${NARROW}?`);
     expect(notes[0].querySelector('small [lang]')).toBeNull();
-    expect(notes[0].querySelector('blockquote')!.getAttribute('lang')).toBe('en');
+    expect(notes[0].querySelector('blockquote')!.hasAttribute('lang')).toBe(false);
+    expect(notes[0].querySelector('blockquote')!.textContent).toBe(
+      'Du thé. Du vrai thé, dans une vraie tasse. Trois chapitres écrits à la table près de la fenêtre. Je reviens demain.',
+    );
+    expect(notes[1].querySelector('blockquote')!.textContent).toMatch(/^Au petit robot du comptoir\u00a0:/);
+    expect(notes[1].querySelector('cite')!.textContent).toBe('Dot x');
     expect(book.getByText('Le reste du livre est encore vierge.')).toBeTruthy();
   });
 
-  it('opens the memories in French, with each memory’s own words kept as English', () => {
+  it('opens the memories in French, each memory’s own words with them', () => {
     campaign(UNLOCKS.help);
     fireEvent.click(screen.getByRole('button', { name: /^Souvenirs, 1 souvenir/ }));
     const board = within(screen.getByRole('dialog', { name: 'Avant l’époque de Niko.' }));
-    const memory = memoryById('day-one')!;
-    expect(board.getByRole('heading', { name: memory.title }).getAttribute('lang')).toBe('en');
+    expect(board.getByRole('heading', { name: 'Premier jour' }).hasAttribute('lang')).toBe(false);
     expect(document.querySelector('.specials-window small')!.textContent).toBe(
-      `${memory.from} · Les outils du service 5`,
+      'Journal de Query · Les outils du service 5',
     );
+    expect(document.querySelector('.specials-window [lang]')).toBeNull();
+    expect(board.getByText(/^Il y a deux hivers, un samedi\./)).toBeTruthy();
+    expect(board.getByText('Les mêmes étapes pour tout le monde.')).toBeTruthy();
     expect(board.getByRole('img', { name: 'Pas encore joué' })).toBeTruthy();
-    expect(board.getByRole('button', { name: `Jouer ${memory.title}` }).textContent).toBe('Jouer');
+    expect(board.getByRole('button', { name: 'Jouer Premier jour' }).textContent).toBe('Jouer');
   });
 
   it('puts the specials up in French, with what the regulars asked for kept as English', () => {
@@ -607,21 +613,20 @@ describe('the rail’s windows in French', () => {
     expect(bay.getByRole('button', { name: 'Fermer le panneau' })).toBeTruthy();
   });
 
-  it('names the tab and a memory’s screen in French, with the memory’s own name kept as English', async () => {
+  it('names the tab and plays a memory in French', async () => {
     campaign(UNLOCKS.help);
     expect(document.title).toBe('Choisir un service · Caffeine Protocol');
     fireEvent.click(screen.getByRole('button', { name: /^Souvenirs/ }));
-    const memory = memoryById('day-one')!;
-    fireEvent.click(screen.getByRole('button', { name: `Jouer ${memory.title}` }));
-    await waitFor(() => expect(document.title).toBe(`Souvenir${NBSP}: ${memory.title} · Caffeine Protocol`));
-    expect(screen.getByRole('dialog', { name: `Souvenir · ${memory.title}` })).toBeTruthy();
-    // The kicker is French up to the memory's name, which is the story's.
-    const kicker = document.querySelector('.dialogue-kicker')!;
-    expect(kicker.getAttribute('lang')).toBeNull();
-    expect(kicker.querySelector('[lang="en"]')!.textContent).toBe(memory.title);
-    // A memory's own words are still the story's English, in the coding pane as in the kicker.
-    expect(screen.getByRole('heading', { level: 2, name: memory.title }).getAttribute('lang')).toBe('en');
-    expect(document.querySelector('.shift-objective')!.lastElementChild!.getAttribute('lang')).toBe('en');
+    fireEvent.click(screen.getByRole('button', { name: 'Jouer Premier jour' }));
+    await waitFor(() => expect(document.title).toBe(`Souvenir${NBSP}: Premier jour · Caffeine Protocol`));
+    expect(screen.getByRole('dialog', { name: 'Souvenir · Premier jour' })).toBeTruthy();
+    // The memory is told in French, in the kicker, the scene and the coding pane.
+    expect(document.querySelector('.dialogue-kicker [lang]')).toBeNull();
+    expect(document.querySelector('.dialogue-box [lang]')).toBeNull();
+    expect(screen.getByRole('heading', { level: 2, name: 'Premier jour' }).hasAttribute('lang')).toBe(false);
+    const objective = document.querySelector('.shift-objective')!.lastElementChild!;
+    expect(objective.hasAttribute('lang')).toBe(false);
+    expect(objective.textContent).toMatch(/^Écrivez un ticket pour chaque client de la matinée/);
   });
 });
 

@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { lessons } from '@/data';
-import type { Memory } from '@/data/memories';
+import { memoryIn, type Memory } from '@/data/memories';
 import type { ProgressSave } from '@/domain';
 import { shiftNumber } from '@/domain/unlocks';
 import { Workspace } from '@/features/workspace/Workspace';
@@ -8,7 +8,7 @@ import { completeLevel, keepMemory, projectMemory } from '@/features/campaign/sa
 import { useGame } from '@/state/GameStore';
 import { useMusicMood } from '@/hooks/useMusicMood';
 import { go } from '@/shared/lib/navigation';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /**
@@ -16,8 +16,9 @@ import { SCREEN_WORDS } from './screenWords';
  * that holds only the memory's progress: it opens on the memory's starter, never on the café's routines, and what it
  * changes is kept with the memory. The campaign's progress and stars are left as they were.
  */
-export function MemoryShift({ memory }: { memory: Memory }) {
+export function MemoryShift({ memory: kept }: { memory: Memory }) {
   const { save, update } = useGame();
+  const memory = memoryIn(kept, useLanguage()[0]);
   // Lou's café, two winters ago, plays like an old record.
   useMusicMood('memory');
   const { id } = memory;
@@ -33,14 +34,13 @@ export function MemoryShift({ memory }: { memory: Memory }) {
     [memory, slot],
   );
   const say = useWords(SCREEN_WORDS);
-  const english = useUntranslated();
   return (
     <Workspace
       index={slot}
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...memory, label: say.memory, memory: true, lang: english }}
+      shift={{ ...memory, label: say.memory, memory: true }}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>
         keep((s) => ({

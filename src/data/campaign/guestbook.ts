@@ -1,5 +1,8 @@
 import type { CastId } from '../../domain/dialogue';
 import type { ProgressSave } from '../../domain/types';
+import type { Language } from '../../shared/language';
+import { typeset } from '../../shared/typography';
+import { guestbookFr } from './guestbook.fr';
 
 /** A note a regular leaves in the café's guestbook after a shift they were part of. */
 export interface GuestbookNote {
@@ -81,4 +84,10 @@ export const guestbook: readonly GuestbookNote[] = [
 /** The notes left so far, oldest first: one for each shift served that a regular wrote about. */
 export function guestbookNotes(save: Pick<ProgressSave, 'stars'>): GuestbookNote[] {
   return guestbook.filter((note) => save.stars[note.shift - 1] !== undefined);
+}
+
+/** What a note says in the reader's language, set with its typography; one not yet written in French stays English. */
+export function noteText(note: GuestbookNote, language: Language): string {
+  const fr = language === 'fr' ? guestbookFr[note.shift] : undefined;
+  return fr === undefined ? note.text : typeset(fr);
 }

@@ -1,11 +1,11 @@
 import { Play } from 'lucide-react';
 import { Modal } from '@/components';
-import type { Memory } from '@/data/memories';
+import { memoryIn, type Memory } from '@/data/memories';
 import type { ProgressSave } from '@/domain';
 import { shiftNumber } from '@/domain/unlocks';
 import { Button } from '@/shared/ui/Button';
 import { starRow } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { KEPT_WORDS } from './keptWords';
 
 /**
@@ -27,28 +27,27 @@ export function MemoriesWindow({
   onClose: () => void;
 }) {
   const say = useWords(KEPT_WORDS).memories;
-  const english = useUntranslated();
+  const [language] = useLanguage();
   return (
     <Modal className="settings-window specials-window" kicker={say.kicker} title={say.title} onClose={onClose} wide>
       <p className="specials-intro">{say.intro}</p>
       <ul className="specials-list">
-        {memories.map((memory) => {
+        {memories.map((kept) => {
+          const memory = memoryIn(kept, language);
           const stars = save.memories?.[memory.id]?.stars;
           const arrived = fresh.includes(memory.id);
           const again = stars !== undefined;
           return (
             <li key={memory.id} className={arrived ? 'new' : undefined}>
               <div>
-                <h3 lang={english}>{memory.title}</h3>
+                <h3>{memory.title}</h3>
                 <small>
                   {arrived ? say.fresh : ''}
-                  <span lang={english}>{memory.from}</span>
+                  <span>{memory.from}</span>
                   {say.tools(shiftNumber(memory.level.id))}
                 </small>
-                <p lang={english}>{memory.brief.story}</p>
-                <p className="specials-hint" lang={english}>
-                  {memory.hint}
-                </p>
+                <p>{memory.brief.story}</p>
+                <p className="specials-hint">{memory.hint}</p>
               </div>
               <div className="specials-serve">
                 <span role="img" aria-label={again ? say.stars(stars) : say.unplayed}>
@@ -58,7 +57,7 @@ export function MemoriesWindow({
                   variant="primary"
                   // The visible words first, then which memory: every card has a Play button.
                   aria-label={`${again ? say.again : say.play} ${memory.title}`}
-                  onClick={() => onPlay(memory)}
+                  onClick={() => onPlay(kept)}
                 >
                   <Play size={15} fill="currentColor" aria-hidden="true" />
                   {again ? say.again : say.play}

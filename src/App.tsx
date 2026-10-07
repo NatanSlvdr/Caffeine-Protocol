@@ -9,7 +9,7 @@ import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
 import { drills } from '@/data/drills';
-import { memoryById, memoryOpen } from '@/data/memories';
+import { memoryById, memoryIn, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
 import { longDay } from '@/data/longDay';
 import { waveOpen } from '@/features/campaign/save/endurance';
@@ -92,7 +92,7 @@ function Shell() {
     campaign: tab.campaign,
     workspace: tab.shift(pad2(index + 1), shift.title),
     special: tab.special(special?.title ?? ''),
-    memory: tab.memory(memory?.title ?? ''),
+    memory: tab.memory(memory ? memoryIn(memory, language).title : ''),
     'long-day': tab.wave(longDay.title, wave),
     scene: scene ? sceneIn(scene, language).title : '',
     ending: tab.ending,
