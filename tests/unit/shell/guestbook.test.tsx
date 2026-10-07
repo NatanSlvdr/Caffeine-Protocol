@@ -82,10 +82,10 @@ describe('the guestbook', () => {
     expect(notes).toHaveLength(3);
     expect(within(notes[0]).getByText(/^Tea\. Real tea/)).toBeTruthy();
     expect(within(notes[0]).getByText('J.')).toBeTruthy();
-    expect(within(notes[0]).getByText(`Juno · After Shift 04, ${titleFor(3)}`)).toBeTruthy();
+    expect(notes[0].querySelector('small')?.textContent).toBe(`Juno · After Shift 04, ${titleFor(3)}`);
     // A regular who signs with their own name isn't named twice.
     expect(within(notes[2]).getByText('Rosa')).toBeTruthy();
-    expect(within(notes[2]).getByText(`After Shift 06, ${titleFor(5)}`)).toBeTruthy();
+    expect(notes[2].querySelector('small')?.textContent).toBe(`After Shift 06, ${titleFor(5)}`);
     expect(within(book).getByText('The rest of the book is still blank.')).toBeTruthy();
     expect(within(book).getAllByText('New')).toHaveLength(3);
     fireEvent.click(within(book).getByRole('button', { name: 'Close dialog' }));

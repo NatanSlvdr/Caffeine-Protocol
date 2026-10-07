@@ -229,6 +229,6 @@ function news(fresh: number) {
 }
 
 /** An act's name inside a sentence: “le prologue”, “l’acte I”. */
-function lower(act: string) {
+export function lower(act: string) {
   return act.startsWith('Acte') ? `l’acte${act.slice(4)}` : `le ${act.toLowerCase()}`;
 }

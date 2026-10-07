@@ -9,6 +9,10 @@ import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { STORY_WORDS } from '../../../src/shell/storyWords';
 import { DRILL_WORDS } from '../../../src/shell/drillWords';
+import { SHELF_WORDS } from '../../../src/shell/shelfWords';
+import { KEPT_WORDS } from '../../../src/shell/keptWords';
+import { acts } from '../../../src/shell/rail/acts';
+import { memoryById } from '../../../src/data/memories';
 import { predictions } from '../../../src/data/predictions';
 import { kits } from '../../../src/data/kits';
 import { PANE_WORDS } from '../../../src/components/paneWords';
@@ -448,6 +452,54 @@ describe('the save notice in French', () => {
     // Settings says it again under the save section, in the same words.
     await waitFor(() => expect(screen.getAllByText(/^La progression sauvegardée n’a pas pu être lue/)).toHaveLength(2));
     expect(SAVE_NOTICE_WORDS.fr.problems.blocked).toMatch(/^Ce navigateur ne laisse pas le café sauvegarder ici/);
+  });
+});
+
+describe('the rail’s windows in French', () => {
+  const campaign = (served: number) => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    const stars = Object.fromEntries(Array.from({ length: served }, (_, i) => [i, 2]));
+    seedLocalStorage(makeSave({ unlocked: served, selected: served, stars }));
+    render(<App />);
+  };
+
+  it('puts up the shelf in French, naming a wrapped keepsake’s act as the rail does', () => {
+    campaign(acts[1].to);
+    fireEvent.click(screen.getByRole('button', { name: /^Étagère, 1 objet sur 7/ }));
+    const shelf = within(screen.getByRole('dialog', { name: 'L’étagère.' }));
+    expect(shelf.getByRole('heading', { name: 'Le carnet de commandes de Query' })).toBeTruthy();
+    expect(shelf.getByText('Sur l’étagère')).toBeTruthy();
+    // Act II is open, so its card says what earns it, as the look it brings does;
+    // Act III's name tags, floor plan and stopwatch stay wrapped.
+    expect(shelf.getAllByText('Assurer tous les services de l’acte II.')).toHaveLength(2);
+    expect(shelf.getAllByText('Quelque chose pour l’acte III. Il sort une fois l’acte II servi.')).toHaveLength(3);
+    expect(shelf.getByRole('group', { name: 'Les coussins' })).toBeTruthy();
+    expect(shelf.getByRole('radio', { name: /^Le port/ })).toBeTruthy();
+  });
+
+  it('reads the guestbook in French, with the regulars’ notes and the shift names kept as English', () => {
+    campaign(6);
+    fireEvent.click(screen.getByRole('button', { name: /^Livre d’or, 3 mots/ }));
+    const book = within(screen.getByRole('dialog', { name: 'Laissé près de la caisse.' }));
+    const notes = book.getAllByRole('listitem');
+    expect(notes[0].querySelector('small')!.textContent).toBe(`Juno · Après le service 04, ${titleFor(3)}`);
+    expect(notes[0].querySelector('small [lang="en"]')!.textContent).toBe(titleFor(3));
+    expect(notes[0].querySelector('blockquote')!.getAttribute('lang')).toBe('en');
+    expect(book.getByText('Le reste du livre est encore vierge.')).toBeTruthy();
+  });
+
+  it('opens the memories in French, with each memory’s own words kept as English', () => {
+    campaign(UNLOCKS.help);
+    fireEvent.click(screen.getByRole('button', { name: /^Souvenirs, 1 souvenir/ }));
+    const board = within(screen.getByRole('dialog', { name: 'Avant l’époque de Niko.' }));
+    const memory = memoryById('day-one')!;
+    expect(board.getByRole('heading', { name: memory.title }).getAttribute('lang')).toBe('en');
+    expect(document.querySelector('.specials-window small')!.textContent).toBe(
+      `${memory.from} · Les outils du service 5`,
+    );
+    expect(board.getByRole('img', { name: 'Pas encore joué' })).toBeTruthy();
+    expect(board.getByRole('button', { name: `Jouer ${memory.title}` }).textContent).toBe('Jouer');
   });
 });
 
@@ -1267,6 +1319,8 @@ describe('the words themselves', () => {
       STORY_WORDS,
       SAVE_NOTICE_WORDS,
       DRILL_WORDS,
+      SHELF_WORDS,
+      KEPT_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

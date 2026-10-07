@@ -5,6 +5,8 @@ import type { ProgressSave } from '@/domain';
 import { shiftNumber } from '@/domain/unlocks';
 import { Button } from '@/shared/ui/Button';
 import { starRow } from '@/shared/lib/format';
+import { useUntranslated, useWords } from '@/shared/language';
+import { KEPT_WORDS } from './keptWords';
 
 /**
  * The memories: mornings at Lou's café, played back from the crew's logs. Each plays with the tools of its day and
@@ -24,18 +26,11 @@ export function MemoriesWindow({
   onPlay: (memory: Memory) => void;
   onClose: () => void;
 }) {
+  const say = useWords(KEPT_WORDS).memories;
+  const english = useUntranslated();
   return (
-    <Modal
-      className="settings-window specials-window"
-      kicker="Lou’s · Memories"
-      title="Before Niko’s time."
-      onClose={onClose}
-      wide
-    >
-      <p className="specials-intro">
-        Mornings at Lou’s, played back from the crew’s logs. Each plays with the tools of its day and a routine of its
-        own: your café’s routines stay as they are, and its stars are kept apart from the campaign’s.
-      </p>
+    <Modal className="settings-window specials-window" kicker={say.kicker} title={say.title} onClose={onClose} wide>
+      <p className="specials-intro">{say.intro}</p>
       <ul className="specials-list">
         {memories.map((memory) => {
           const stars = save.memories?.[memory.id]?.stars;
@@ -44,26 +39,29 @@ export function MemoriesWindow({
           return (
             <li key={memory.id} className={arrived ? 'new' : undefined}>
               <div>
-                <h3>{memory.title}</h3>
+                <h3 lang={english}>{memory.title}</h3>
                 <small>
-                  {arrived ? 'New · ' : ''}
-                  {memory.from} · Shift {shiftNumber(memory.level.id)}’s tools
+                  {arrived ? say.fresh : ''}
+                  <span lang={english}>{memory.from}</span>
+                  {say.tools(shiftNumber(memory.level.id))}
                 </small>
-                <p>{memory.brief.story}</p>
-                <p className="specials-hint">{memory.hint}</p>
+                <p lang={english}>{memory.brief.story}</p>
+                <p className="specials-hint" lang={english}>
+                  {memory.hint}
+                </p>
               </div>
               <div className="specials-serve">
-                <span role="img" aria-label={again ? `${stars} of 3 stars` : 'Not played yet'}>
+                <span role="img" aria-label={again ? say.stars(stars) : say.unplayed}>
                   {starRow(stars ?? 0)}
                 </span>
                 <Button
                   variant="primary"
                   // The visible words first, then which memory: every card has a Play button.
-                  aria-label={`${again ? 'Play again' : 'Play'} ${memory.title}`}
+                  aria-label={`${again ? say.again : say.play} ${memory.title}`}
                   onClick={() => onPlay(memory)}
                 >
                   <Play size={15} fill="currentColor" aria-hidden="true" />
-                  {again ? 'Play again' : 'Play'}
+                  {again ? say.again : say.play}
                 </Button>
               </div>
             </li>

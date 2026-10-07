@@ -55,7 +55,7 @@ describe('the memories', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Memories, 1 memory' }));
     const board = screen.getByRole('dialog');
     expect(within(board).getByRole('heading', { name: memory.title })).toBeTruthy();
-    expect(within(board).getByText(/Query’s log · Shift 5’s tools/)).toBeTruthy();
+    expect(board.querySelector('small')?.textContent).toBe('Query’s log · Shift 5’s tools');
     expect(within(board).getByRole('img', { name: 'Not played yet' })).toBeTruthy();
     fireEvent.click(within(board).getByRole('button', { name: `Play ${memory.title}` }));
     await waitFor(() => expect(window.location.hash).toBe('#/memory/day-one'));

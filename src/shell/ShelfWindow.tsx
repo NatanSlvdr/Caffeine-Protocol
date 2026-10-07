@@ -12,7 +12,10 @@ import {
 import { CushionSwatch, Modal, PrintSwatch } from '@/components';
 import { useCafeName, useGame } from '@/state/GameStore';
 import { DECOR_OPTIONS, LOUS_DECOR, decorOf, type Decor, type DecorSpot, type ProgressSave } from '@/domain';
+import { useWords } from '@/shared/language';
 import { acts } from './rail/acts';
+import { RAIL_WORDS } from './rail/railWords';
+import { SHELF_WORDS } from './shelfWords';
 import { keepsakes, veiled, type Keepsake, type KeepsakeId } from './shelf';
 
 const ICONS: Record<KeepsakeId, LucideIcon> = {
@@ -25,10 +28,10 @@ const ICONS: Record<KeepsakeId, LucideIcon> = {
   stopwatch: Timer,
 };
 
-/** What each spot is called on the shelf, and how its looks are shown there. */
-const SPOTS: { [Spot in DecorSpot]: { name: string; Swatch: (props: { id: Decor[Spot] }) => React.JSX.Element } } = {
-  cushions: { name: 'The cushions', Swatch: ({ id }) => <CushionSwatch cushions={id} /> },
-  print: { name: 'The print by the window', Swatch: ({ id }) => <PrintSwatch print={id} /> },
+/** How each spot's looks are shown on the shelf; what the spot is called is in `SHELF_WORDS`. */
+const SWATCHES: { [Spot in DecorSpot]: { Swatch: (props: { id: Decor[Spot] }) => React.JSX.Element } } = {
+  cushions: { Swatch: ({ id }) => <CushionSwatch cushions={id} /> },
+  print: { Swatch: ({ id }) => <PrintSwatch print={id} /> },
 };
 
 /**
@@ -49,33 +52,25 @@ export function ShelfWindow({
   onClose: () => void;
 }) {
   const cafe = useCafeName();
+  const say = useWords(SHELF_WORDS);
+  const actWords = useWords(RAIL_WORDS).acts;
+  const actName = (act: number) => actWords[act].kicker ?? acts[act].kicker;
   return (
-    <Modal
-      className="settings-window shelf-window"
-      kicker={`${cafe} · Behind the counter`}
-      title="The shelf."
-      onClose={onClose}
-      wide
-    >
+    <Modal className="settings-window shelf-window" kicker={say.kicker(cafe)} title={say.title} onClose={onClose} wide>
       <ul className="shelf-keepsakes">
         {keepsakes.map((keepsake) => {
           const on = earned.includes(keepsake);
           const arrived = on && fresh.includes(keepsake.id);
           const wrapped = veiled(keepsake, save);
           const Icon = wrapped ? Package : ICONS[keepsake.id];
+          const { name, goal, story } = say.keepsakes[keepsake.id];
           return (
             <li key={keepsake.id} className={on ? `earned${arrived ? ' new' : ''}` : ''}>
               <Icon size={22} aria-hidden="true" />
               <div>
-                <h3>{wrapped ? 'Under wraps' : keepsake.name}</h3>
-                <small>{arrived ? 'New on the shelf' : on ? 'On the shelf' : 'Not yet'}</small>
-                <p>
-                  {on
-                    ? keepsake.story
-                    : wrapped
-                      ? `Something for ${acts[keepsake.act].kicker}. It comes out once ${acts[keepsake.act - 1].kicker} is served.`
-                      : keepsake.goal}
-                </p>
+                <h3>{wrapped ? say.underWraps : name}</h3>
+                <small>{arrived ? say.fresh : on ? say.on : say.notYet}</small>
+                <p>{on ? story : wrapped ? say.wrapped(actName(keepsake.act), actName(keepsake.act - 1)) : goal}</p>
               </div>
             </li>
           );
@@ -90,12 +85,13 @@ export function ShelfWindow({
 function Looks({ save }: { save: Pick<ProgressSave, 'stars' | 'complete' | 'decor'> }) {
   const { pickDecor } = useGame();
   const decor = decorOf(save);
+  const say = useWords(SHELF_WORDS);
   return (
     <section className="shelf-looks" aria-labelledby="shelf-looks-title">
-      <h3 id="shelf-looks-title">The café’s looks</h3>
-      <p>Picked here, out for every shift. Lou’s are there from the start, and each act served brings another.</p>
+      <h3 id="shelf-looks-title">{say.looks}</h3>
+      <p>{say.looksIntro}</p>
       <div>
-        {(Object.keys(SPOTS) as DecorSpot[]).map((spot) => (
+        {(Object.keys(SWATCHES) as DecorSpot[]).map((spot) => (
           <SpotChoice key={spot} spot={spot} save={save} picked={decor[spot]} onPick={(id) => pickDecor(spot, id)} />
         ))}
       </div>
@@ -114,10 +110,11 @@ function SpotChoice<Spot extends DecorSpot>({
   picked: Decor[Spot];
   onPick: (id: Decor[Spot]) => void;
 }) {
-  const { name, Swatch } = SPOTS[spot];
+  const { Swatch } = SWATCHES[spot];
+  const say = useWords(SHELF_WORDS);
   return (
     <fieldset>
-      <legend>{name}</legend>
+      <legend>{say.spots[spot]}</legend>
       {DECOR_OPTIONS[spot].map((option) => {
         const earned = option.earned(save);
         const lous = option.id === LOUS_DECOR[spot];
@@ -132,8 +129,8 @@ function SpotChoice<Spot extends DecorSpot>({
             />
             <Swatch id={option.id} />
             <span>
-              <strong>{option.name}</strong>
-              {(lous || !earned) && <small>{option.goal}</small>}
+              <strong>{say.options[option.id].name}</strong>
+              {(lous || !earned) && <small>{say.options[option.id].goal}</small>}
             </span>
           </label>
         );
