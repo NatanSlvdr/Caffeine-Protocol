@@ -291,25 +291,24 @@ lines, the marks on Niko's answers, and a guest's role, which `speakerParts`
 and `speakerLabel` take), while the lines, the answers and the scene's title
 are said in the scene's language, and a screen reader hears who speaks in
 French and what they say in that language. So do the button that ends a
-scene between shifts and the closing receipt's bar, rows and ways on
-(`shell/storyWords.ts`, with each act's milestone in the order of `acts`);
-the receipt's heading and Niko's last lines stay English, marked so. So does
-the save notice over every screen (`app/saveNoticeWords.ts`): `readSave` and
-`writeSave` return a `SaveProblem` key (`SAVE_PROBLEMS` keeps the English),
-so the notice and Settings say why the café isn't being saved in the
-reader's language. Of the rail's windows, the drills read in French
-(`shell/drillWords.ts`): the list by act and by flight, a flight's progress,
-and the frame around a gap, a moment to call and a kit, with what a robot
-holds from `cargoWords` and `spokenLines` joining blocks in the reader's
-language. A drill's title, question and idea, a flight's, a kit's rule and
-why the café turned a pick away stay English, marked so. Block names, what a
-guest said and what Query heard stay as they are. So do the shelf
-(`shell/shelfWords.ts`: each keepsake's name, goal and story and each
-look's, by id, with the English taken from `keepsakes` and `DECOR_OPTIONS`,
-and a wrapped keepsake naming its act as the rail does, *l’acte III*,
-through `lower`), and the guestbook and memories' frames
-(`shell/keptWords.ts`); the regulars' notes and the memories stay the
-story's English, marked so. So do the specials board
+scene between shifts and the closing receipt: its bar, its note, its rows
+and the ways on (`shell/storyWords.ts`, with each act's milestone in the
+order of `acts`). So does the save notice over every screen
+(`app/saveNoticeWords.ts`): `readSave` and `writeSave` return a
+`SaveProblem` key (`SAVE_PROBLEMS` keeps the English), so the notice and
+Settings say why the café isn't being saved in the reader's language. Of the
+rail's windows, the drills read in French (`shell/drillWords.ts`): the list
+by act and by flight, a flight's progress, and the frame around a gap, a
+moment to call and a kit, with what a robot holds from `cargoWords` and
+`spokenLines` joining blocks in the reader's language. A drill's title,
+question and idea, a flight's, a kit's rule and why the café turned a pick
+away stay English, marked so. Block names, what a guest said and what Query
+heard stay as they are. So do the shelf (`shell/shelfWords.ts`: each
+keepsake's name, goal and story and each look's, by id, with the English
+taken from `keepsakes` and `DECOR_OPTIONS`, and a wrapped keepsake naming
+its act as the rail does, *l’acte III*, through `lower`), and the guestbook
+and memories' frames (`shell/keptWords.ts`); the regulars' notes and the
+memories stay the story's English, marked so. So do the specials board
 (`shell/specialsWords.ts`: a special's and a menu's card, a menu laid out
 card by card, and the Long Day's waves and ways in) and the repair bay
 (`shell/repairWords.ts`: the bay, a bench's card and the bench's frame,
@@ -321,10 +320,10 @@ do the tab's title and what a shift past the campaign is called in its bar
 the notices that stand in for the 3D café (`shared/ui/stageWords.ts`, with
 `NoGraphics` shared by `SceneBoundary` and `SceneCanvas`). `DialogueBox`
 takes a `kickerLabel` in the reader's language before the kicker, and a
-`lang` for a scene still English, its kicker with it: a cutscene, a repaired
-part's, a special's or a memory's. A `DialogueLine` can carry its own
-`lang`, for a line still English in a French scene. The shifts' titles and
-briefs read in French too (`data/campaign/narrative.fr.ts`, row for row with
+`lang` for a scene still English, its kicker with it: a repaired part's, a
+special's or a memory's. A `DialogueLine` can carry its own `lang`, for a
+line still English in a French scene. The shifts' titles and briefs read in
+French too (`data/campaign/narrative.fr.ts`, row for row with
 `campaignNarrative`, its lesson notes naming the same blocks in their own
 words): `useNarrative` gives every shift's in the reader's language and
 `useShift` the open one's, lesson note included, so the rail, the board, the
@@ -344,25 +343,31 @@ since why the run stopped is the simulation's English, which the card under
 the routine shows marked so. What a guest said is quoted in a French line
 between ⟪ and ⟫, which `DialogueBox` marks English on screen and aloud. A
 special's or a memory's payoff is still English, so `Workspace` marks it
-line by line before the French verdict. `CHALLENGE_WORDS` is a catalog too;
+line by line before the French verdict. So do the scenes between acts
+(`data/campaign/cutscenes.fr.ts`, keyed by scene id, panel for panel and
+line for line with the English, recalled lines included, and each answer's
+button and lines by option id): `sceneIn` lays the French over a scene,
+keeping its speakers, choices and stills, and the cutscene, the rail's
+ticket, the board, the front door and the tab read it, so the answers a café
+saved are the same in either language. `CHALLENGE_WORDS` is a catalog too;
 the generated shift docs read its English. A window whose title is still
 English marks it with `titleLang`. Short repeats is worded once, as
 `SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The
-scenes between acts, the levels' own data and the stories of the specials,
-memories, drills and repairs are still in English, and so is the list of
-what bringing an old save up to date changed, marked so under the notice's
-French heading. Where English data sits on a French screen (a special's
-name, its story and goal, a scene's logline), it carries
-`lang={useUntranslated()}`, so a screen reader says it as English; on an
-English page the attribute is left off. Act names and taglines for the
-tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
-the English-only windows still read. The save checks' refusals are keyed
-(`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
-is left out in French. The handbook names the buttons and windows as they
-read in French. The French toolbar reads longer, so its step buttons fold to
-their icons below 1360px rather than 1180px. Programming words (blocks,
-values, the text editor's syntax) are never translated, so a routine and a
-shared notebook read the same in either language.
+levels' own data and the stories of the specials, memories, drills and
+repairs are still in English, and so is the list of what bringing an old
+save up to date changed, marked so under the notice's French heading. Where
+English data sits on a French screen (a special's name, its story and goal),
+it carries `lang={useUntranslated()}`, so a screen reader says it as
+English; on an English page the attribute is left off. Act names and
+taglines for the tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps
+the English names the English-only windows still read. The save checks'
+refusals are keyed (`SAVE_REFUSALS`) so Settings can say them in French; a
+damaged file's field is left out in French. The handbook names the buttons
+and windows as they read in French. The French toolbar reads longer, so its
+step buttons fold to their icons below 1360px rather than 1180px.
+Programming words (blocks, values, the text editor's syntax) are never
+translated, so a routine and a shared notebook read the same in either
+language.
 
 ## Photo mode
 

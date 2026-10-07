@@ -1,7 +1,7 @@
 import { Clapperboard, LockKeyhole } from 'lucide-react';
 import { isRated } from '@/data';
-import { sceneBefore, type Cutscene } from '@/data/campaign/cutscenes';
-import { useUntranslated, useWords } from '@/shared/language';
+import { sceneBefore, sceneIn, type Cutscene } from '@/data/campaign/cutscenes';
+import { useLanguage, useWords } from '@/shared/language';
 import { pad2, starRow } from '@/shared/lib/format';
 import { acts, type Act } from './acts';
 import { RAIL_WORDS } from './railWords';
@@ -73,7 +73,7 @@ export function Ticket({
   // A sealed ticket shows only the act name, never the crew or the shift names.
   const sealed = state === 'locked';
   const say = useWords(RAIL_WORDS);
-  const english = useUntranslated();
+  const [language] = useLanguage();
   const named = say.acts[number];
   const kicker = named.kicker ?? act.kicker;
   const crew = named.crew ?? act.crew;
@@ -215,6 +215,7 @@ export function Ticket({
     const locked = !sceneOpen(scene);
     const seen = !locked && sceneSeen(scene);
     const next = !locked && !seen && scene.before === gated;
+    const { title } = sceneIn(scene, language);
     const classes = [
       'shift-card scene-card',
       locked && 'locked',
@@ -234,16 +235,14 @@ export function Ticket({
           onWatch(scene);
         }}
         aria-keyshortcuts={!locked && selectedScene === scene ? 'Enter' : undefined}
-        aria-label={say.sceneLine(scene.title, locked ? 'locked' : next ? 'next' : seen ? 'seen' : undefined)}
+        aria-label={say.sceneLine(title, locked ? 'locked' : next ? 'next' : seen ? 'seen' : undefined)}
         aria-pressed={!locked && selectedScene === scene}
-        title={scene.title}
+        title={title}
       >
         <span className="shift-no scene-icon" aria-hidden="true">
           <Clapperboard size={13} strokeWidth={2.2} />
         </span>
-        <span className="shift-name" lang={english}>
-          {scene.title}
-        </span>
+        <span className="shift-name">{title}</span>
         <span className="shift-leader" aria-hidden="true" />
         <span className="shift-mark" aria-hidden="true">
           {locked ? <LockKeyhole size={12} strokeWidth={2.4} /> : next ? say.next : seen ? say.seenMark : '···'}

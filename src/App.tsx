@@ -13,13 +13,13 @@ import { memoryById, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
 import { longDay } from '@/data/longDay';
 import { waveOpen } from '@/features/campaign/save/endurance';
-import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
+import { sceneById, sceneIn, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
 import { GameProvider, useGame, useNarrative, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { DialoguePaceContext } from '@/components';
-import { LanguageProvider, useWords } from '@/shared/language';
+import { LanguageProvider, useLanguage, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from '@/app/screenWords';
 
 export default function App() {
@@ -85,6 +85,7 @@ function Shell() {
   const shift = useShift(index);
   const narrative = useNarrative();
   const tab = useWords(SCREEN_WORDS).tab;
+  const [language] = useLanguage();
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
     home: '',
@@ -93,7 +94,7 @@ function Shell() {
     special: tab.special(special?.title ?? ''),
     memory: tab.memory(memory?.title ?? ''),
     'long-day': tab.wave(longDay.title, wave),
-    scene: scene?.title ?? '',
+    scene: scene ? sceneIn(scene, language).title : '',
     ending: tab.ending,
   }[screen];
   useEffect(() => {

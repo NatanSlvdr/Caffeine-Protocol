@@ -5,14 +5,19 @@ import { Tally } from '@/shared/ui/Tally';
 import { pad2 } from '@/shared/lib/format';
 import { go, openGuide, openSettings } from '@/shared/lib/navigation';
 import { useCafeName, useGame, useNarrative, useProgress } from '@/state/GameStore';
-import { useWords } from '@/shared/language';
+import { useLanguage, useWords, type Language } from '@/shared/language';
 import { HomeCafePreview } from './HomeCafePreview';
+import { sceneIn } from '@/data/campaign/cutscenes';
 import { resumePoint, type ResumePoint } from './resume';
 import { HOME_WORDS } from './homeWords';
 
 /** Where the shift stands: served and how well, changed since, or still to start. */
-function standing({ index, scene, stars, edited }: ResumePoint, say: (typeof HOME_WORDS)['en']): string {
-  if (scene) return say.scene(scene.title);
+function standing(
+  { index, scene, stars, edited }: ResumePoint,
+  say: (typeof HOME_WORDS)['en'],
+  language: Language,
+): string {
+  if (scene) return say.scene(sceneIn(scene, language).title);
   if (stars !== undefined) {
     const served = isRated(index) ? say.servedWith(stars) : say.served;
     return edited ? `${served} ${say.changedSince}` : served;
@@ -24,6 +29,7 @@ function standing({ index, scene, stars, edited }: ResumePoint, say: (typeof HOM
 export function HomePage() {
   const { save, launch, cafes, cafeId } = useGame();
   const say = useWords(HOME_WORDS);
+  const [language] = useLanguage();
   const progress = useProgress();
   const narrative = useNarrative();
   // With more than one café in the browser, the front door says which one this is, and opens the list of them.
@@ -55,7 +61,7 @@ export function HomePage() {
               </h2>
               <p>{narrative[resume.index].objective}</p>
               <p id="front-resume-standing" className="front-resume-standing">
-                {standing(resume, say)}
+                {standing(resume, say, language)}
               </p>
             </section>
           ) : (

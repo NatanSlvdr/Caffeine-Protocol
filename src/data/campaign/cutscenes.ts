@@ -2,6 +2,8 @@ import { isSaid, line } from '../../domain/dialogue';
 import type { DialogueChoices, DialogueLine, Speaker } from '../../domain/dialogue';
 import type { ProgressSave } from '../../domain/types';
 import { UNLOCKS } from '../../domain/unlocks';
+import type { Language } from '../../shared/language';
+import { cutscenesFr, type SceneFr } from './cutscenes.fr';
 
 /** One still of a cutscene and the lines spoken over it. */
 export interface CutscenePanel {
@@ -371,6 +373,48 @@ export const cutscenes: Cutscene[] = [
     ],
   },
 ];
+
+/** A scene with the French words over the English ones, line for line; anything not yet in French stays English. */
+function inFrench(scene: Cutscene, fr: SceneFr): Cutscene {
+  const retold = (lines: readonly DialogueLine[], said: readonly string[]) =>
+    lines.map((each, index) => ({ ...each, text: said[index] ?? each.text }));
+  return {
+    ...scene,
+    title: fr.title,
+    logline: fr.logline,
+    panels: scene.panels.map((panel, index) => {
+      const [art = panel.art, ...said] = fr.panels[index] ?? [];
+      return {
+        art,
+        lines: retold(panel.lines, said).map((each) =>
+          each.choice
+            ? {
+                ...each,
+                choice: {
+                  ...each.choice,
+                  options: each.choice.options.map((option) => {
+                    const [label = option.label, ...answer] = fr.options?.[option.id] ?? [];
+                    return { ...option, label, lines: retold(option.lines, answer) };
+                  }),
+                },
+              }
+            : each,
+        ),
+      };
+    }),
+  };
+}
+
+const french = new Map(
+  cutscenes.map((scene) => {
+    const fr = cutscenesFr[scene.id];
+    return [scene.id, fr ? inFrench(scene, fr) : scene];
+  }),
+);
+
+/** A scene in the reader's language: the same scene, the same choices and the same art, told in their words. */
+export const sceneIn = (scene: Cutscene, language: Language): Cutscene =>
+  language === 'fr' ? (french.get(scene.id) ?? scene) : scene;
 
 /** The scene that opens a shift, if there is one. */
 export const sceneBefore = (shift: number): Cutscene | undefined => cutscenes.find((scene) => scene.before === shift);

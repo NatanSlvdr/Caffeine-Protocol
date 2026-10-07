@@ -10,7 +10,7 @@ import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 import { useMusicMood } from '@/hooks/useMusicMood';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import { ShellBar } from './ShellBar';
 import { acts } from './rail/acts';
 import { restoredShift } from './homePreview';
@@ -70,7 +70,6 @@ export function EndingPage() {
   const progress = useProgress();
   const { save, select, choose } = useGame();
   const say = useWords(STORY_WORDS);
-  const english = useUntranslated();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   // Closing time: the café heard from the next room.
   useMusicMood('after-hours');
@@ -100,19 +99,11 @@ export function EndingPage() {
       ) : (
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
-          <p className="story-kicker" lang={english}>
-            Café Niko · Under new management
-          </p>
-          <h1 tabIndex={-1} ref={heading} lang={english}>
-            Closing time.
+          <p className="story-kicker">{say.kicker}</p>
+          <h1 tabIndex={-1} ref={heading}>
+            {say.heading}
           </h1>
-          <p className="story-narration" lang={english}>
-            Lou’s card hangs on the wall by the register. Niko sits down with a warm coffee: the café runs itself now,
-            and the name over the door is his.{' '}
-            {missing === undefined
-              ? 'Every shift at three stars: Lou would have framed this receipt.'
-              : 'Every guest went home with the right drink, and the stars still out there will keep.'}
-          </p>
+          <p className="story-narration">{say.narration(missing === undefined)}</p>
           <dl className="story-receipt">
             {/* The café's day, act by act: what each robot came to do, and the stars it was done for. */}
             {say.milestones.map(({ act, line }, i) => (

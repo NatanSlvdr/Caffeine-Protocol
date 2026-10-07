@@ -2,7 +2,15 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles, Wrench } from 'lucide-react';
 import { DialogueBox } from '@/components';
 import { levels } from '@/data';
-import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
+import {
+  cutscenes,
+  sceneBefore,
+  sceneIn,
+  sceneOpen,
+  sceneSeen,
+  waitingScene,
+  type Cutscene,
+} from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
 import { kits } from '@/data/kits';
@@ -14,7 +22,7 @@ import { specials } from '@/data/specials';
 import { startDay } from '@/features/campaign/save/endurance';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useUntranslated, useWords } from '@/shared/language';
 import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
 import { useCafeName, useGame, useNarrative, useProgress } from '@/state/GameStore';
@@ -557,10 +565,10 @@ export function CampaignPage() {
 }
 
 /** A scene chalked up on the specials board in place of a shift: what it shows, and a button to watch it. */
-function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; onWatch(): void }) {
-  const closing = scene.before >= levels.length;
+function SceneBoard({ scene: told, seen, onWatch }: { scene: Cutscene; seen: boolean; onWatch(): void }) {
+  const closing = told.before >= levels.length;
   const say = useWords(RAIL_WORDS);
-  const english = useUntranslated();
+  const scene = sceneIn(told, useLanguage()[0]);
   return (
     <aside className="recipe scene-recipe" aria-label={say.selectedScene} aria-live="polite" aria-atomic="true">
       <div className="board">
@@ -571,7 +579,7 @@ function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; 
             </span>
             <span className={`board-tag ${seen ? 'done' : 'next'}`}>{seen ? say.seen : say.fresh}</span>
           </p>
-          <h2 lang={english}>{scene.title}</h2>
+          <h2>{scene.title}</h2>
           <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
             <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
           </svg>
@@ -585,9 +593,7 @@ function SceneBoard({ scene, seen, onWatch }: { scene: Cutscene; seen: boolean; 
               <dd>{closing ? say.lastShift : say.beforeShift(pad2(scene.before + 1))}</dd>
             </div>
           </dl>
-          <p className="board-story" lang={english}>
-            {scene.logline}
-          </p>
+          <p className="board-story">{scene.logline}</p>
           <p className="board-note">
             <strong>{say.chefsNote}</strong> {say.sceneNote}
           </p>

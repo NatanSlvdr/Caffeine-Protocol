@@ -131,7 +131,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, and each shift’s name, brief and scenes/,
+      /French covers every screen and window, and each shift’s name, brief and scenes, and the story between acts/,
     );
   });
 
@@ -237,6 +237,15 @@ describe('the order rail in French', () => {
     expect(screen.getByRole('button', { name: 'Acte II, verrouillé tant que l’acte I n’est pas servi' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Acte I · Query, 2 sur \d+ servis, 5 étoiles sur \d+$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Comment jouer' })).toBeTruthy();
+    const scene = screen.getByRole('button', { name: new RegExp(`^Scène${NBSP}: La casse`) });
+    expect(scene.getAttribute('title')).toBe('La casse');
+    expect(scene.querySelector('.shift-name')!.hasAttribute('lang')).toBe(false);
+    fireEvent.click(scene);
+    const board = within(screen.getByRole('complementary', { name: 'Scène choisie' }));
+    expect(board.getByRole('heading', { name: 'La casse' }).hasAttribute('lang')).toBe(false);
+    expect(document.querySelector('.board-story')!.textContent).toBe(
+      'Trop de tickets pour une seule paire de mains, et le robot que Moka a jeté.',
+    );
   });
 
   it('leaves an English page’s names unmarked', () => {
@@ -617,13 +626,14 @@ describe('the rail’s windows in French', () => {
 });
 
 describe('the story pages in French', () => {
-  it('prints the closing receipt in French, with the café’s own last words kept as English', () => {
+  it('plays the crew’s last scene and prints the closing receipt in French', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 ? 2 : 3]));
     seedLocalStorage(makeSave({ unlocked: 20, complete: true, stars }));
     window.location.hash = '#/ending';
     render(<App />);
     expect(screen.getByRole('navigation', { name: 'Fermeture' })).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'L’heure de la fermeture' }).hasAttribute('lang')).toBe(false);
     fireEvent.click(screen.getByRole('button', { name: 'Passer' }));
     expect([...document.querySelectorAll('.story-milestone dt')].map((term) => term.textContent)).toEqual([
       'Acte I · Query a pris les commandes, étoiles',
@@ -634,8 +644,11 @@ describe('the story pages in French', () => {
     // Shift 5 is Query's: Act I's line carries its missing star.
     expect(document.querySelector('.story-milestone dd .sr-only')!.textContent).toBe('20 sur 21');
     expect(screen.getByText('Services trois étoiles')).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Closing time.' }).getAttribute('lang')).toBe('en');
-    expect(screen.getByText(/^Lou’s card hangs/).getAttribute('lang')).toBe('en');
+    expect(screen.getByRole('heading', { name: 'L’heure de la fermeture.' }).hasAttribute('lang')).toBe(false);
+    expect(document.querySelector('.story-kicker')!.textContent).toBe('Café Niko · Nouvelle direction');
+    expect(document.querySelector('.story-narration')!.textContent).toMatch(
+      /^La carte de Lou est accrochée au mur.*les étoiles qui manquent attendront\.$/,
+    );
     expect(screen.getByRole('button', { name: 'Retourner chercher les étoiles manquantes' })).toBeTruthy();
     expect(screen.getByText('Merci d’avoir passé un moment dans notre café')).toBeTruthy();
   });
