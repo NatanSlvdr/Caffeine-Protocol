@@ -1,10 +1,12 @@
 import { ArrowRight, GitCompareArrows } from 'lucide-react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
-import { count, type ChallengeMeasure, type LevelDefinition, type ReplayEvent, type RunResult } from '@/domain';
+import type { ChallengeMeasure, LevelDefinition, ReplayEvent, RunResult } from '@/domain';
 import { starRow } from '@/shared/lib/format';
-import { guestWaits, WAIT_LABELS, WAIT_LEADS } from '../waits';
-import { challengeOutcomes, type ChallengeOutcome } from '../challenges';
+import { useUntranslated, useWords } from '@/shared/language';
+import { guestWaits } from '../waits';
+import { challengeOutcomes, CHALLENGE_WORDS } from '../challenges';
+import { RECEIPT_WORDS } from './receiptWords';
 
 export interface ReceiptModalProps {
   /** What the kicker calls the shift: "Shift 03", or "Special". */
@@ -53,6 +55,9 @@ export function ReceiptModal({
   onNext,
   onClose,
 }: ReceiptModalProps) {
+  const say = useWords(RECEIPT_WORDS);
+  const english = useUntranslated();
+  const challengeWords = useWords(CHALLENGE_WORDS);
   const blocks = result.block_count ?? 0;
   // A passed service served every guest. Tickets count drinks, so a two-drink order would count twice.
   const guests = level.seeds.reduce(
@@ -67,74 +72,68 @@ export function ReceiptModal({
   const nextStar = observation
     ? ''
     : stepsHeld
-      ? `Steps are on target too, but stars climb in order: trim ${count(blocks - level.block_target, 'block')} first.`
+      ? say.held(blocks - level.block_target)
       : !blocksMet
-        ? `One more star: use ${count(blocks - level.block_target, 'fewer block')}, ${level.block_target} or fewer.`
+        ? say.fewerBlocks(blocks - level.block_target, level.block_target)
         : !stepsMet
-          ? `One more star: run ${count(result.executed_instructions - level.instruction_target, 'fewer step')}, ${level.instruction_target} or fewer.`
+          ? say.fewerSteps(result.executed_instructions - level.instruction_target, level.instruction_target)
           : '';
   // A replay says whether it beat the shift's best, so going back for stars has a point.
   const replay =
     observation || best === undefined
       ? ''
       : result.stars > best
-        ? `New best, up from ${count(best, 'star')}!`
+        ? say.newBest(best)
         : result.stars < best
-          ? `Your best stays at ${count(best, 'star')}.`
+          ? say.bestStays(best)
           : '';
   // Where the guests' time went, so a slow service says which part to look at. The opening day was served by hand.
   const waits = observation ? [] : guestWaits(result.events ?? []);
   // The challenges come to light with the first pass, and every service after says how it measured up.
-  const challenges = observation ? [] : challengeOutcomes(level.challenges ?? [], result, metBefore);
+  const challenges = observation ? [] : challengeOutcomes(level.challenges ?? [], result, metBefore, challengeWords);
   const together = level.service?.together === undefined ? undefined : servedTogether(result.events);
   return (
     <Modal
-      title="Service complete"
-      kicker={`${label} · Service receipt`}
+      title={say.title}
+      kicker={say.kicker(label)}
       onClose={onClose}
       className="settings-window confirm-slip receipt-slip"
     >
-      <p className="receipt-lead">
-        {/* The watch-only shift is the opening day, before any robot: the café's people serve it by hand. */}
-        {observation ? 'Niko, Moka and Pip served every order by hand.' : 'Every order, taken care of.'}
-      </p>
+      <p className="receipt-lead">{observation ? say.byHand : say.served}</p>
       {!observation && (
-        <p className="receipt-stars" role="img" aria-label={`${result.stars} of 3 stars`}>
+        <p className="receipt-stars" role="img" aria-label={say.stars(result.stars)}>
           {starRow(result.stars)}
         </p>
       )}
       {replay && <p className="receipt-best">{replay}</p>}
       <dl className="receipt-totals">
         <div>
-          <dt>Guests served</dt>
+          <dt>{say.guests}</dt>
           <dd>{guests}</dd>
         </div>
         {!observation && (
           <>
             <div className={blocksMet ? 'met' : ''}>
-              <dt>Blocks used</dt>
+              <dt>{say.blocks}</dt>
               <dd>
                 {blocks} <small aria-hidden="true">/ {level.block_target}</small>
-                <TargetMet target={level.block_target} met={blocksMet} />
+                <span className="sr-only">{say.target(level.block_target, blocksMet)}</span>
               </dd>
             </div>
             <div className={stepsHeld ? 'met held' : stepsMet ? 'met' : ''}>
-              <dt>Steps run</dt>
+              <dt>{say.steps}</dt>
               <dd>
                 {result.executed_instructions} <small aria-hidden="true">/ {level.instruction_target}</small>
-                <TargetMet target={level.instruction_target} met={stepsMet} />
+                <span className="sr-only">{say.target(level.instruction_target, stepsMet)}</span>
               </dd>
             </div>
           </>
         )}
         {together && (
           <div className="met">
-            <dt>Tables served together</dt>
+            <dt>{say.together}</dt>
             <dd>
-              {together.tables}{' '}
-              <small>
-                · {together.tables === 1 ? 'within' : 'all within'} {together.gap} s
-              </small>
+              {together.tables} <small>{say.within(together.tables, together.gap)}</small>
             </dd>
           </div>
         )}
@@ -144,17 +143,17 @@ export function ReceiptModal({
         <p className="receipt-compare">
           <button type="button" aria-haspopup="dialog" onClick={onCompare}>
             <GitCompareArrows size={14} aria-hidden="true" />
-            Compare with run {compareWith}
+            {say.compare(compareWith)}
           </button>
         </p>
       )}
       {waits.length > 0 && (
         <section className="receipt-waits" aria-labelledby="receipt-waits-lead">
-          <p id="receipt-waits-lead">{WAIT_LEADS[waits[0].stage]}</p>
+          <p id="receipt-waits-lead">{say.waitedMost[waits[0].stage]}</p>
           <dl>
             {waits.map(({ stage, percent }) => (
               <div key={stage}>
-                <dt>{WAIT_LABELS[stage]}</dt>
+                <dt>{say.waits[stage]}</dt>
                 <dd>
                   <span className="receipt-wait-bar" style={{ inlineSize: `${percent}%` }} aria-hidden="true" />
                   {percent}%
@@ -167,16 +166,16 @@ export function ReceiptModal({
       {challenges.length > 0 && (
         <section className="receipt-challenges" aria-labelledby="receipt-challenges-lead">
           <p id="receipt-challenges-lead">
-            Challenges <small>· optional, for no stars</small>
+            {say.challenges} <small>{say.optional}</small>
           </p>
           <ul>
             {challenges.map((outcome) => (
               <li key={outcome.challenge.measure} className={outcome.met ? 'met' : ''}>
                 <span className="receipt-challenge-head">
-                  <strong>{outcome.words.name}</strong> <span>{challengeVerdict(outcome)}</span>
+                  <strong>{outcome.words.name}</strong> <span>{say.verdict(outcome.met, outcome.before)}</span>
                 </span>
                 <span className="receipt-challenge-goal">
-                  {outcome.words.goal(outcome.challenge.target)} This service: {outcome.words.amount(outcome.value)}.
+                  {outcome.words.goal(outcome.challenge.target)} {say.thisService(outcome.words.amount(outcome.value))}
                 </span>
               </li>
             ))}
@@ -185,18 +184,18 @@ export function ReceiptModal({
       )}
       <p className="receipt-thanks">
         {thanks ? (
-          thanks
+          <span lang={english}>{thanks}</span>
         ) : nextShift ? (
           <>
-            Thank you. Next up: <strong>{nextShift}</strong>
+            {say.nextUp} <strong lang={english}>{nextShift}</strong>
           </>
         ) : (
-          'Last order of the day.'
+          say.lastOrder
         )}
       </p>
       <div className="modal-buttons">
         <button className="settings-chip" onClick={onClose}>
-          Stay on this shift
+          {say.stay}
         </button>
         {onward && (
           <Button
@@ -216,7 +215,7 @@ export function ReceiptModal({
             onNext();
           }}
         >
-          {onward ? onward.next : thanks ? 'Back to the campaign' : nextShift ? 'Next shift' : 'Closing time'}
+          {onward ? onward.next : thanks ? say.backToCampaign : nextShift ? say.nextShift : say.closing}
           <ArrowRight size={16} aria-hidden="true" />
         </Button>
       </div>
@@ -233,15 +232,4 @@ function servedTogether(events: readonly ReplayEvent[]): { tables: number; gap: 
   if (!tables.length) return undefined;
   const gaps = tables.map(({ timing }) => timing.served - (timing.firstServed ?? timing.served));
   return { tables: tables.length, gap: Math.round(Math.max(...gaps) * 10) / 10 };
-}
-
-/** Whether this service met a challenge, and whether that's news. */
-function challengeVerdict({ met, before }: ChallengeOutcome): string {
-  if (met) return before ? 'Met' : 'Met, for the first time';
-  return before ? 'Not this time · met before' : 'Not yet';
-}
-
-/** The "/ 4" and the ✓ are drawn for the eye, so screen readers hear the target and the verdict here instead. */
-function TargetMet({ target, met }: { target: number; met: boolean }) {
-  return <span className="sr-only">{`, star target ${target}, ${met ? 'met' : 'missed'}`}</span>;
 }

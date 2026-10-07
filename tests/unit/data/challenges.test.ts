@@ -90,7 +90,7 @@ describe('optional challenges', () => {
     challenged.filter(({ level }) => level.challenges!.some((challenge) => challenge.measure === measure));
 
   it('walk: a guest drinks up sooner than Porter walks back out, so lingering walks less and serves no later', () => {
-    expect(CHALLENGE_WORDS.walk.note).toContain(`${DRINK_SECONDS} s`);
+    for (const say of [CHALLENGE_WORDS.en, CHALLENGE_WORDS.fr]) expect(say.walk.note).toContain(`${DRINK_SECONDS} s`);
     for (const { n } of shiftsWith('walk')) {
       const lingering = run(n, { floor: lingeringPorter(n) });
       const reference = run(n);

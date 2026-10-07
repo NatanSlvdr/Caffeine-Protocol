@@ -223,23 +223,26 @@ one in the singular). French is written with plain spaces and set by
 `; ? !`, and one after `n°`. JSX in a catalog is left alone, so it spells
 those spaces as entities. `useWords(catalog)` gives the reader's.
 
-French covers the front door, the top bar, the order rail with its
-tickets and specials board, Settings with its cafés and the fresh-start
-slip, the handbook, and the close button every window shares. On a shift
-screen it covers the controls: the bar over the café
+French covers the front door, the top bar, the order rail with its tickets
+and specials board, Settings with its cafés and the fresh-start slip, the
+handbook, and the close button every window shares. On a shift screen it
+covers the controls: the bar over the café
 (`features/workspace/workspaceWords.ts`), the playback toolbar with its
 pause menu, the coding pane's tools and robot tabs
 (`components/paneWords.ts`), the photo bar, the practice card and the first
 routine's tips. Of the shift's windows it covers Options and Restore, with
 the line-by-line comparison and the versions' names
 (`modals/optionsWords.ts`; `routineVersions` takes those names, English by
-default). Short repeats is worded once, as `SHORT_REPEATS` beside
-`SettingRow`, for Settings and Options both. The rest of a shift (its other
-windows, the crew's scenes and reactions, the failure card, the editor's
-tools), the rail's
-windows (guestbook, shelf, drills and the rest), the story and the shift
-data are still in English, and so is the list of what bringing an old save
-up to date changed. Where English data sits on a French screen (a shift's
+default), Help with its hints and clues (`modals/helpWords.ts`; `clueFor`
+takes the clue's sentences) and the receipt (`modals/receiptWords.ts`).
+`CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
+English. A window whose title is a shift's name marks it with `titleLang`.
+Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
+Settings and Options both. The rest of a shift (its other windows, the
+crew's scenes and reactions, the failure card, the editor's tools), the
+rail's windows (guestbook, shelf, drills and the rest), the story and the
+shift data are still in English, and so is the list of what bringing an old
+save up to date changed. Where English data sits on a French screen (a shift's
 name, its story and goal, a scene's logline), it carries
 `lang={useUntranslated()}`, so a screen reader says it as English; on an
 English page the attribute is left off. Act names and taglines for the

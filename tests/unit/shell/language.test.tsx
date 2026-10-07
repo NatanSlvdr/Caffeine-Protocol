@@ -9,6 +9,9 @@ import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { PANE_WORDS } from '../../../src/components/paneWords';
 import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords';
 import { OPTIONS_WORDS } from '../../../src/features/workspace/modals/optionsWords';
+import { HELP_WORDS } from '../../../src/features/workspace/modals/helpWords';
+import { RECEIPT_WORDS } from '../../../src/features/workspace/modals/receiptWords';
+import { CHALLENGE_WORDS } from '../../../src/features/workspace/challenges';
 import { lessons, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { UNLOCKS } from '../../../src/domain';
@@ -52,7 +55,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, the controls and options of a shift, these settings and the handbook/,
+      /French covers the front door, the order rail, a shift’s controls, options, help and receipt, these settings and the handbook/,
     );
   });
 
@@ -282,6 +285,66 @@ describe('the shift screen in French', () => {
     expect(within(tips).getByRole('button', { name: WORKSPACE_WORDS.fr.tips.hide })).toBeTruthy();
   });
 
+  it('opens the field notes in French, with the shift’s own words said as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Aide' }));
+    const notes = screen.getByRole('dialog', { name: titleFor(3) });
+    expect(notes.querySelector('.modal-kicker')!.textContent).toBe('Service 04 · Notes de terrain');
+    expect(notes.querySelector('h2')!.lang).toBe('en');
+    expect(notes.querySelector('.lesson-note')!.getAttribute('lang')).toBe('en');
+    const help = within(notes);
+    expect(help.getByRole('button', { name: /Revoir l’introduction/ })).toBeTruthy();
+    expect(help.getByText('Deux étoiles')).toBeTruthy();
+    expect(help.getByText('Les indices viennent un par un')).toBeTruthy();
+    fireEvent.click(help.getByRole('button', { name: 'Rappeler l’idée' }));
+    fireEvent.click(help.getByRole('button', { name: 'Donner un indice' }));
+    const hints = help.getByRole('list', { name: 'Indices' });
+    expect([...hints.querySelectorAll('.help-hint-label')].map((label) => label.textContent)).toEqual([
+      'Rappel',
+      'Indice',
+    ]);
+    expect(hints.querySelector('li:last-child p')!.textContent).toMatch(/^(L’exemple corrigé|La routine de Query)/);
+    expect(help.getByText('2 indices sur 3')).toBeTruthy();
+    fireEvent.click(help.getByRole('button', { name: 'Révéler l’exemple corrigé' }));
+    expect(help.getByRole('button', { name: /^Utiliser cet exemple/ })).toBeTruthy();
+  });
+
+  it('hands over the receipt in French', () => {
+    vi.useFakeTimers();
+    try {
+      localStorage.setItem(LANGUAGE_KEY, 'fr');
+      const save = makeSave({ unlocked: 2, selected: 1, stars: { 1: 3 } });
+      seedLocalStorage({
+        ...save,
+        settings: { ...save.settings, short_repeats: true },
+        robotDrafts: { 1: { query: lessons[1].solution, prep: '', floor: '' } },
+      });
+      window.location.hash = '/shift/2';
+      render(<App />);
+      const skip = screen.queryByRole('button', { name: 'Skip' });
+      if (skip) fireEvent.click(skip);
+      fireEvent.click(screen.getByRole('button', { name: /^Lancer le service/ }));
+      for (let i = 0; i < 60 && !screen.queryByRole('dialog', { name: 'Dialogue' }); i++)
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+      fireEvent.keyDown(window, { key: 'Escape' });
+      const receipt = screen.getByRole('dialog', { name: 'Service terminé' });
+      expect(receipt.querySelector('.modal-kicker')!.textContent).toBe('Service 02 · Addition');
+      const slip = within(receipt);
+      expect(slip.getByRole('img', { name: '3 étoiles sur 3' })).toBeTruthy();
+      for (const total of ['Clients servis', 'Blocs utilisés', 'Pas exécutés'])
+        expect(slip.getByText(total)).toBeTruthy();
+      expect(receipt.querySelector('.receipt-thanks')!.textContent).toBe(`Merci. À suivre${NBSP}: ${titleFor(2)}`);
+      expect(receipt.querySelector('.receipt-thanks strong')!.getAttribute('lang')).toBe('en');
+      expect(slip.getByRole('button', { name: 'Rester sur ce service' })).toBeTruthy();
+      expect(slip.getByRole('button', { name: /^Service suivant/ })).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it('leaves an English shift as it was', () => {
     open();
     expect(screen.getByRole('button', { name: /^Run service/ })).toBeTruthy();
@@ -323,6 +386,9 @@ describe('the words themselves', () => {
       WORKSPACE_WORDS,
       PANE_WORDS,
       OPTIONS_WORDS,
+      HELP_WORDS,
+      RECEIPT_WORDS,
+      CHALLENGE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

@@ -11,10 +11,12 @@ import {
   type RobotRole,
 } from '@/domain';
 import { RUN_MODIFIER } from '@/shared/lib/format';
+import { useUntranslated, useWords } from '@/shared/language';
 import type { ShiftBrief } from '../Workspace';
 import type { RunEvidence } from '../evidence';
 import { clueFor, HINT_TIERS, type Clue, type WorkspaceDrill } from '../hints';
 import { CHALLENGE_WORDS } from '../challenges';
+import { HELP_WORDS } from './helpWords';
 
 export interface HelpModalProps {
   /** What the kicker calls the shift: "Shift 03", or "Special". */
@@ -73,6 +75,9 @@ export function HelpModal({
   onReplayIntro,
   onClose,
 }: HelpModalProps) {
+  const say = useWords(HELP_WORDS);
+  const challengeWords = useWords(CHALLENGE_WORDS);
+  const english = useUntranslated();
   const example = lesson.robotSolution?.[role] ?? lesson.solution;
   const robot = ROBOT_DISPLAY_NAMES[role];
   // The example replaces the routine wholesale, so the player's own edits get a second look first, and a reminder
@@ -80,8 +85,8 @@ export function HelpModal({
   const edited = ![opening, example].some((kept) => kept.trim() === source.trim());
   // Already the routine: using it again would change nothing.
   const inUse = example.trim() === source.trim();
-  const showSolution = hints >= HINT_TIERS.length;
-  const clue = hints >= 2 ? clueFor(role, source, example, evidence, stale) : undefined;
+  const showSolution = hints >= HINT_TIERS;
+  const clue = hints >= 2 ? clueFor(role, source, example, evidence, stale, say.clue) : undefined;
   const [confirming, setConfirming] = useState(false);
   // Backing out of the warning puts focus back on the button that raised it, not on the page.
   const useButton = useRef<HTMLButtonElement>(null);
@@ -102,71 +107,59 @@ export function HelpModal({
   return (
     <Modal
       className="settings-window confirm-slip help-slip"
-      kicker={`${label} · Field notes`}
+      kicker={say.kicker(label)}
       title={title}
+      titleLang={english}
       onClose={onClose}
     >
-      <div className="lesson-note">{lesson.note}</div>
-      <p>{brief.story}</p>
+      <div className="lesson-note" lang={english}>
+        {lesson.note}
+      </div>
+      <p lang={english}>{brief.story}</p>
       <button
         className="settings-chip help-replay-intro"
         disabled={running}
         aria-describedby={running ? 'help-running' : undefined}
         onClick={onReplayIntro}
       >
-        <MessageCircle size={14} aria-hidden="true" /> Replay the intro
+        <MessageCircle size={14} aria-hidden="true" /> {say.replay}
       </button>
       {/* Greyed-out buttons say why: the café is mid-service. */}
       {running && (
         <p id="help-running" className="help-running">
-          Stop the service to replay the intro{!observation && showSolution && !inUse ? ' or use the example' : ''}.
+          {say.running(!observation && showSolution && !inUse)}
         </p>
       )}
       <p>
-        <strong>Your goal:</strong> {brief.objective}
+        <strong>{say.goal}</strong> <span lang={english}>{brief.objective}</span>
       </p>
       {!observation && (
         <>
           <dl className="help-targets">
-            <div>
-              <dt>
-                <span aria-hidden="true">★</span>
-                <span className="sr-only">One star</span>
-              </dt>
-              <dd>
-                Every ticket correct<small>Every guest gets what they asked for</small>
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <span aria-hidden="true">★★</span>
-                <span className="sr-only">Two stars</span>
-              </dt>
-              <dd>
-                {level.block_target} blocks or fewer<small>A short routine is easy to change</small>
-              </dd>
-            </div>
-            <div>
-              <dt>
-                <span aria-hidden="true">★★★</span>
-                <span className="sr-only">Three stars</span>
-              </dt>
-              <dd>
-                {level.instruction_target} steps or fewer<small>Every block run, by every robot</small>
-              </dd>
-            </div>
+            {say.targets(level.block_target, level.instruction_target).map(({ stars, goal, why }, i) => (
+              <div key={stars}>
+                <dt>
+                  <span aria-hidden="true">{'★'.repeat(i + 1)}</span>
+                  <span className="sr-only">{stars}</span>
+                </dt>
+                <dd>
+                  {goal}
+                  <small>{why}</small>
+                </dd>
+              </div>
+            ))}
           </dl>
           {challengesMet && level.challenges && (
             <section className="help-challenges" aria-labelledby="help-challenges-lead">
-              <p id="help-challenges-lead">Challenges · optional, for no stars</p>
+              <p id="help-challenges-lead">{say.challenges}</p>
               <ul>
                 {level.challenges.map(({ measure, target }) => {
-                  const words = CHALLENGE_WORDS[measure];
+                  const words = challengeWords[measure];
                   const met = challengesMet.includes(measure);
                   return (
                     <li key={measure} className={met ? 'met' : ''}>
                       <strong>{words.name}</strong>
-                      {met && <span className="help-challenge-met"> · Met</span>}
+                      {met && <span className="help-challenge-met">{say.met}</span>}
                       <span className="help-challenge-goal">{words.goal(target)}</span>
                       <small>{words.note}</small>
                     </li>
@@ -176,26 +169,24 @@ export function HelpModal({
             </section>
           )}
           {hints > 0 && (
-            <ol className="help-hints" aria-label="Hints">
+            <ol className="help-hints" aria-label={say.hints}>
               <li>
-                <span className="help-hint-label">{HINT_TIERS[0]}</span>
-                <p>{brief.concept}</p>
+                <span className="help-hint-label">{say.tiers[0]}</span>
+                <p lang={english}>{brief.concept}</p>
               </li>
               {clue && (
                 <li>
-                  <span className="help-hint-label">{HINT_TIERS[1]}</span>
+                  <span className="help-hint-label">{say.tiers[1]}</span>
                   <p>{clue.text}</p>
                   {clue.show && (
                     <button className="settings-chip help-hint-show" onClick={() => onShowClue(clue.show!)}>
-                      <Crosshair size={14} aria-hidden="true" /> Show this block
+                      <Crosshair size={14} aria-hidden="true" /> {say.show}
                     </button>
                   )}
                   {drill && (
                     <p className="help-drill">
                       <Dumbbell size={14} aria-hidden="true" />
-                      <span>
-                        The order rail’s Drills have one on this, from Shift {drill.shift}: “{drill.title}”.
-                      </span>
+                      <span>{say.drill(drill.shift, drill.title)}</span>
                     </p>
                   )}
                 </li>
@@ -205,8 +196,7 @@ export function HelpModal({
           {confirming ? (
             <>
               <p className="help-example-warning" role="alert">
-                The example replaces {robot}’s routine. If you change your mind, Undo ({RUN_MODIFIER} Z) brings your
-                version back.
+                {say.warning(robot, RUN_MODIFIER)}
               </p>
               <div className="modal-buttons help-example-actions">
                 <button
@@ -217,10 +207,10 @@ export function HelpModal({
                     setConfirming(false);
                   }}
                 >
-                  Keep my edits
+                  {say.keep}
                 </button>
                 <Button variant="primary" disabled={running} onClick={() => onUseExample(example)}>
-                  Replace my edits <ArrowRight size={15} aria-hidden="true" />
+                  {say.replace} <ArrowRight size={15} aria-hidden="true" />
                 </Button>
               </div>
             </>
@@ -229,20 +219,20 @@ export function HelpModal({
               {/* One button climbs the tiers; at the top it hides and shows the example, keeping the hints above. */}
               <button
                 className="settings-chip"
-                aria-expanded={hints >= HINT_TIERS.length - 1 ? showSolution : undefined}
+                aria-expanded={hints >= HINT_TIERS - 1 ? showSolution : undefined}
                 aria-controls={showSolution ? 'worked-example' : undefined}
                 onClick={() => {
                   setConfirming(false);
-                  revealing.current = hints === HINT_TIERS.length - 1;
+                  revealing.current = hints === HINT_TIERS - 1;
                   onHints(showSolution ? hints - 1 : hints + 1);
                 }}
               >
-                {['Remind me of the idea', 'Give me a clue', 'Reveal worked example', 'Hide worked example'][hints]}
+                {say.next[hints]}
               </button>
               {showSolution &&
                 (inUse ? (
                   <Button variant="primary" disabled>
-                    Example in use
+                    {say.inUse}
                   </Button>
                 ) : (
                   <Button
@@ -252,21 +242,19 @@ export function HelpModal({
                     aria-describedby={running ? 'help-running' : undefined}
                     onClick={() => (edited ? setConfirming(true) : onUseExample(example))}
                   >
-                    Use this example <ArrowRight size={15} aria-hidden="true" />
+                    {say.use} <ArrowRight size={15} aria-hidden="true" />
                   </Button>
                 ))}
               {!showSolution && (
                 <span className="help-hint-count" aria-hidden="true">
-                  {hints ? `${hints} of ${HINT_TIERS.length} hints` : 'Hints come one at a time'}
+                  {hints ? say.asked(hints, HINT_TIERS) : say.oneAtATime}
                 </span>
               )}
             </div>
           )}
           {showSolution && (
             <>
-              {lesson.robotSolution && (
-                <p className="code-example-label">{robot}’s routine · the other robots keep theirs</p>
-              )}
+              {lesson.robotSolution && <p className="code-example-label">{say.exampleFor(robot)}</p>}
               <pre className="code-example" id="worked-example" ref={exampleRef}>
                 {indentSource(example)}
               </pre>

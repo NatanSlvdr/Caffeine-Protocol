@@ -1,9 +1,10 @@
 import { blockFields, familyFor, ROBOT_DISPLAY_NAMES, spokenBlock } from '@/domain';
 import type { FailureCode, ProgressSave, RobotRole } from '@/domain';
 import type { RunEvidence } from './evidence';
+import { HELP_WORDS } from './modals/helpWords';
 
-/** The tiers of Help's hints, each asked for in turn: the idea, a clue about the routine, then the worked example. */
-export const HINT_TIERS = ['Reminder', 'Clue', 'Worked example'] as const;
+/** How many tiers Help's hints have, each asked for in turn: the idea, a clue about the routine, the worked example. */
+export const HINT_TIERS = HELP_WORDS.en.tiers.length;
 
 /** A clue about the open routine: one sentence, and the block it points at when there is one to show. */
 export interface Clue {
@@ -29,9 +30,9 @@ function blockName(command: string): string {
 /** Which library block a command is, telling the two kinds of Wait apart. */
 const kindOf = (command: string) => (familyFor(command) === 'WAIT' ? command : familyFor(command));
 
-/** Items said as a list: “a”, “a and b”, “a, b and c”. */
-export const andList = (items: readonly string[]) =>
-  items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+/** Items said as a list: “a”, “a and b”, “a, b and c”, with the language's own “and”. */
+export const andList = (items: readonly string[], and = 'and') =>
+  items.length < 2 ? (items[0] ?? '') : `${items.slice(0, -1).join(', ')} ${and} ${items[items.length - 1]}`;
 
 /**
  * Where to look, short of the answer. A last run that stopped in another robot's routine comes first: that's where
@@ -45,13 +46,14 @@ export function clueFor(
   example: string,
   evidence: RunEvidence | null,
   stale: boolean,
+  say = HELP_WORDS.en.clue,
 ): Clue {
   const robot = ROBOT_DISPLAY_NAMES[role];
   const stopped = evidence && !stale ? (evidence.failure.role ?? 'query') : undefined;
   if (stopped && stopped !== role) {
     const other = ROBOT_DISPLAY_NAMES[stopped];
     return {
-      text: `The last run stopped in ${other}’s routine, not ${robot}’s. Look there first.`,
+      text: say.elsewhere(other, robot),
       show: evidence!.failure.error_line >= 0 ? { role: stopped, line: evidence!.failure.error_line } : undefined,
     };
   }
@@ -64,27 +66,23 @@ export function clueFor(
       theirs.filter((b) => b.command !== 'END' && !have.has(kindOf(b.command))).map((b) => blockName(b.command)),
     ),
   ];
-  if (missing.length)
-    return {
-      text: `The worked example uses ${andList(missing)}, which ${robot}’s routine doesn’t have yet.`,
-    };
+  if (missing.length) return { text: say.missing(andList(missing, say.and), robot) };
   const at = mine.findIndex((block, i) => block.command !== theirs[i]?.command);
-  if (at < 0 && mine.length === theirs.length)
-    return { text: `${robot}’s routine matches the worked example, block for block.` };
-  const words = (i: number) => `“${spokenBlock(mine[i].command)}”`;
+  if (at < 0 && mine.length === theirs.length) return { text: say.matches(robot) };
+  const words = (i: number) => say.quote(spokenBlock(mine[i].command));
   if (at < 0) {
     const last = mine.length - 1;
     return {
-      text: `${robot}’s routine follows the worked example as far as it goes, then ends at ${words(last)}, where the example carries on.`,
+      text: say.ends(robot, words(last)),
       show: { role, line: mine[last].line },
     };
   }
   const where =
     at >= theirs.length
-      ? `${robot}’s routine follows the whole worked example, then carries on at ${words(at)}.`
+      ? say.beyond(robot, words(at))
       : at === 0
-        ? `${robot}’s routine and the worked example part ways at the very first block, ${words(0)}.`
-        : `${robot}’s routine follows the worked example as far as ${words(at - 1)}, then parts ways at ${words(at)}.`;
+        ? say.first(robot, words(0))
+        : say.parts(robot, words(at - 1), words(at));
   return { text: where, show: { role, line: mine[at].line } };
 }
 

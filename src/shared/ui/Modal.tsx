@@ -15,6 +15,7 @@ export function Modal({
   children,
   wide = false,
   className = '',
+  titleLang,
 }: {
   title: string;
   kicker?: ReactNode;
@@ -22,6 +23,8 @@ export function Modal({
   children: ReactNode;
   wide?: boolean;
   className?: string;
+  /** The title's language when it differs from the page's: a shift's English name on a French page. */
+  titleLang?: string;
 }) {
   const say = useWords(WORDS);
   const ref = useRef<HTMLDialogElement>(null);
@@ -64,10 +67,10 @@ export function Modal({
         {kicker ? (
           <div>
             <p className="modal-kicker">{kicker}</p>
-            <h2>{title}</h2>
+            <h2 lang={titleLang}>{title}</h2>
           </div>
         ) : (
-          <h2>{title}</h2>
+          <h2 lang={titleLang}>{title}</h2>
         )}
         {/* Icon only, so it names itself on hover like the other icon buttons, with the key that does the same. */}
         <button aria-label={say.close} aria-keyshortcuts="Escape" title={say.hover} onClick={onClose}>

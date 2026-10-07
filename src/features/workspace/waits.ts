@@ -3,23 +3,6 @@ import type { ReplayEvent } from '@/domain';
 /** The parts of a guest's wait, from walking in to having every drink. */
 export type WaitStage = 'ordering' | 'making' | 'seating' | 'clearing' | 'delivery';
 
-export const WAIT_LABELS: Record<WaitStage, string> = {
-  ordering: 'Ordering',
-  making: 'Making drinks',
-  seating: 'Finding a table',
-  clearing: 'Clearing a table',
-  delivery: 'Carrying drinks out',
-};
-
-/** What held guests up most, said once on the receipt. */
-export const WAIT_LEADS: Record<WaitStage, string> = {
-  ordering: 'Most of the guests’ wait was in line to order.',
-  making: 'Most of the guests’ wait was for their drinks to be made.',
-  seating: 'Most of the guests’ wait was for a free table.',
-  clearing: 'Most of the guests’ wait was for a table to be cleared.',
-  delivery: 'Most of the guests’ wait was for ready drinks to be carried out.',
-};
-
 export interface WaitShare {
   stage: WaitStage;
   seconds: number;

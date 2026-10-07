@@ -154,7 +154,7 @@ export const GUIDE_WORDS = words(
     undo: (modifier) => (
       <>
         Changé d’avis&#8239;? <strong>Annuler</strong> (<kbd>{modifier} + Z</kbd>) revient sur chaque modification,
-        réinitialisation et exemple résolu, un robot à la fois, et <strong>Rétablir</strong> (
+        réinitialisation et exemple corrigé, un robot à la fois, et <strong>Rétablir</strong> (
         <kbd>{modifier} + Maj + Z</kbd>) repart en avant.
       </>
     ),
@@ -186,7 +186,7 @@ export const GUIDE_WORDS = words(
       <>
         {one}&nbsp;: chaque commande servie correctement. {two}&nbsp;: l’objectif de blocs atteint en plus. {three}
         &nbsp;: l’objectif de pas en prime. L’<strong>Aide</strong> de chaque service donne sa leçon, puis des indices
-        un par un&nbsp;: l’idée, une piste sur votre routine, et un exemple résolu.
+        un par un&nbsp;: un rappel de l’idée, un indice sur votre routine, et un exemple corrigé.
       </>
     ),
     foot: 'Bienvenue dans l’équipe',

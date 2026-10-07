@@ -60,7 +60,7 @@ function renderShift(index: number): string {
   if (level.challenges) {
     out.push('**Challenges.** Optional, for no stars, and shown once the shift has been served.', '');
     for (const { measure, target } of level.challenges) {
-      const words = CHALLENGE_WORDS[measure];
+      const words = CHALLENGE_WORDS.en[measure];
       out.push(`- _${words.name}._ ${words.goal(target)} ${words.note}`);
     }
     out.push('');
