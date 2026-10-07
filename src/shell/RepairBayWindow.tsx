@@ -2,10 +2,12 @@ import { useState } from 'react';
 import { ArrowLeft, CircleCheck, CircleX, RotateCcw, Wrench } from 'lucide-react';
 import { Modal } from '@/components';
 import type { Repair } from '@/data/repairs';
-import { ROBOT_DISPLAY_NAMES, count } from '@/domain';
+import { ROBOT_DISPLAY_NAMES } from '@/domain';
 import { exampleHolds, firedActions, TERMINALS, type Terminal, type Wiring } from '@/domain/repair';
 import { Button } from '@/shared/ui/Button';
 import { useMusicMood } from '@/hooks/useMusicMood';
+import { useUntranslated, useWords } from '@/shared/language';
+import { REPAIR_WORDS } from './repairWords';
 
 /**
  * The repair bay: the back room where Niko opens a robot's panel after closing. Each bench's card says what is wrong
@@ -32,6 +34,8 @@ export function RepairBayWindow({
 }) {
   // The back room, after hours: the café's music comes through the wall.
   useMusicMood('after-hours');
+  const say = useWords(REPAIR_WORDS);
+  const english = useUntranslated();
   const [open, setOpen] = useState<Repair>();
   // Back from a bench, its own card's button takes focus again.
   const [left, setLeft] = useState<string>();
@@ -42,8 +46,9 @@ export function RepairBayWindow({
   return (
     <Modal
       className="settings-window specials-window repair-window"
-      kicker="Lou’s · Repair bay"
-      title={open ? open.title : 'After closing.'}
+      kicker={say.kicker}
+      title={open ? open.title : say.title}
+      titleLang={open ? english : undefined}
       onClose={onClose}
       wide
     >
@@ -51,25 +56,21 @@ export function RepairBayWindow({
         <Bench key={open.id} repair={open} onBack={back} onMend={() => onMend(open)} />
       ) : (
         <>
-          <p className="specials-intro">
-            The scrapyard put the crew’s wires back any old way, and the café has run on Niko’s patches since. Open a
-            panel and wire each sensor to what it should set off, until every case on the bench comes out right. None of
-            it counts toward stars.
-          </p>
+          <p className="specials-intro">{say.intro}</p>
           <ul className="specials-list">
             {repairs.map((repair, index) => {
               const done = mended.includes(repair.id);
               const arrived = fresh.includes(repair.id);
-              const label = done ? 'Rewire again' : 'Open the panel';
+              const label = done ? say.again : say.open;
               return (
                 <li key={repair.id} className={arrived ? 'new' : undefined}>
                   <div>
-                    <h3>{repair.title}</h3>
+                    <h3 lang={english}>{repair.title}</h3>
                     <small>
-                      {arrived ? 'New · ' : ''}
-                      {ROBOT_DISPLAY_NAMES[repair.robot]} · {done ? 'Mended' : 'On the bench'}
+                      {arrived ? say.fresh : ''}
+                      {ROBOT_DISPLAY_NAMES[repair.robot]} · {done ? say.mended : say.onBench}
                     </small>
-                    <p>{done ? repair.touch : repair.fault}</p>
+                    <p lang={english}>{done ? repair.touch : repair.fault}</p>
                   </div>
                   <div className="specials-serve">
                     <Button
@@ -88,11 +89,7 @@ export function RepairBayWindow({
               );
             })}
           </ul>
-          {waiting > 0 && (
-            <p className="specials-hint repair-waiting">
-              {count(waiting, 'more robot')} {waiting === 1 ? 'comes' : 'come'} to the bench as the shifts go on.
-            </p>
-          )}
+          {waiting > 0 && <p className="specials-hint repair-waiting">{say.waiting(waiting)}</p>}
         </>
       )}
     </Modal>
@@ -123,46 +120,51 @@ const wiringOf = (board: Board): Wiring =>
   );
 
 function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void; onMend: () => void }) {
+  const say = useWords(REPAIR_WORDS).bench;
+  const english = useUntranslated();
   const [board, setBoard] = useState(() => boardFrom(repair));
   const wiring = wiringOf(board);
   const actionIds = repair.actions.map((action) => action.id);
   const right = repair.examples.filter((example) => exampleHolds(wiring, actionIds, example)).length;
   const mends = right === repair.examples.length;
   const labelOf = (id: string) => repair.actions.find((action) => action.id === id)?.label ?? id;
-  const said = (ids: readonly string[]) => (ids.length ? ids.map(labelOf).join(', ') : 'Nothing');
+  // The actions are the robot's own words, so only Nothing is the reader's.
+  const said = (ids: readonly string[]) =>
+    ids.length ? <span lang={english}>{ids.map(labelOf).join(', ')}</span> : say.nothing;
   const wire = (action: string, at: number, value: string) =>
     setBoard((was) => ({ ...was, [action]: was[action].map((each, i) => (i === at ? value : each)) }));
   const robot = ROBOT_DISPLAY_NAMES[repair.robot];
   return (
     <div className="repair-bench">
       <button className="drill-back" onClick={onBack} data-autofocus>
-        <ArrowLeft size={15} aria-hidden="true" /> All benches
+        <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="repair-fault">{repair.fault}</p>
-      <p className="repair-how">
-        Wire each of {robot}’s actions to up to two sensors. An action goes off when every sensor wired to it reads as
-        set; one wired to nothing never does.
+      <p className="repair-fault" lang={english}>
+        {repair.fault}
       </p>
+      <p className="repair-how">{say.how(robot)}</p>
 
       <fieldset className="repair-board">
-        <legend>{robot}’s wiring</legend>
+        <legend>{say.wiring(robot)}</legend>
         {repair.actions.map((action) => (
           <div key={action.id} className="repair-wire">
-            <span className="repair-action">{action.label}</span>
+            <span className="repair-action" lang={english}>
+              {action.label}
+            </span>
             {board[action.id].map((value, at) => (
               <label key={at} className="repair-terminal">
-                <span>{at === 0 ? 'when it' : 'and it'}</span>
+                <span>{say.when[at]}</span>
                 <select
-                  aria-label={`${action.label}, ${at === 0 ? 'when' : 'and when'}`}
+                  aria-label={`${action.label}, ${say.whenLabel[at]}`}
                   value={value}
                   onChange={(event) => wire(action.id, at, event.target.value)}
                 >
-                  <option value="">Nothing</option>
+                  <option value="">{say.nothing}</option>
                   {repair.sensors.flatMap((sensor) => [
-                    <option key={sensor.id} value={sensor.id}>
+                    <option key={sensor.id} value={sensor.id} lang={english}>
                       {sensor.is}
                     </option>,
-                    <option key={`!${sensor.id}`} value={`!${sensor.id}`}>
+                    <option key={`!${sensor.id}`} value={`!${sensor.id}`} lang={english}>
                       {sensor.isnt}
                     </option>,
                   ])}
@@ -174,14 +176,14 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
       </fieldset>
 
       <table className="repair-cases">
-        <caption>The cases on the bench</caption>
+        <caption>{say.cases}</caption>
         <thead>
           <tr>
-            <th scope="col">It meets</th>
-            <th scope="col">It should</th>
-            <th scope="col">It does</th>
+            <th scope="col">{say.meets}</th>
+            <th scope="col">{say.should}</th>
+            <th scope="col">{say.does}</th>
             <th scope="col">
-              <span className="sr-only">Right?</span>
+              <span className="sr-only">{say.right}</span>
             </th>
           </tr>
         </thead>
@@ -190,7 +192,7 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
             const holds = exampleHolds(wiring, actionIds, example);
             return (
               <tr key={example.input} className={holds ? 'holds' : 'fails'}>
-                <th scope="row">
+                <th scope="row" lang={english}>
                   {example.input}
                   <small>
                     {repair.sensors
@@ -201,7 +203,7 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
                 <td>{said(example.actions)}</td>
                 <td>{said(firedActions(wiring, actionIds, example.sensors))}</td>
                 <td>
-                  <span role="img" aria-label={holds ? 'Right' : 'Not yet'}>
+                  <span role="img" aria-label={holds ? say.holds : say.notYet}>
                     {holds ? <CircleCheck size={18} aria-hidden="true" /> : <CircleX size={18} aria-hidden="true" />}
                   </span>
                 </td>
@@ -213,17 +215,15 @@ function Bench({ repair, onBack, onMend }: { repair: Repair; onBack: () => void;
 
       <div className="repair-foot">
         <p role="status" className={mends ? 'repair-mends' : undefined}>
-          {mends
-            ? `All ${repair.examples.length} cases right. ${robot} is ready to close up.`
-            : `${right} of ${count(repair.examples.length, 'case')} right.`}
+          {mends ? say.mends(repair.examples.length, robot) : say.tally(right, repair.examples.length)}
         </p>
         <Button onClick={() => setBoard(boardFrom(repair))}>
           <RotateCcw size={15} aria-hidden="true" />
-          Start over
+          {say.over}
         </Button>
         <Button variant="primary" disabled={!mends} onClick={onMend}>
           <Wrench size={15} aria-hidden="true" />
-          Close the panel
+          {say.close}
         </Button>
       </div>
     </div>

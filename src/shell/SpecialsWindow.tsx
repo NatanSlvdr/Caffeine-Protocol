@@ -4,10 +4,12 @@ import { Modal } from '@/components';
 import { cast } from '@/data/campaign/cast';
 import { longDay } from '@/data/longDay';
 import { menuById, type Menu, type Special } from '@/data/specials';
-import { count, type ProgressSave } from '@/domain';
+import type { ProgressSave } from '@/domain';
 import { Button } from '@/shared/ui/Button';
 import { starRow } from '@/shared/lib/format';
+import { useUntranslated, useWords } from '@/shared/language';
 import { useCafeName } from '@/state/GameStore';
+import { SPECIALS_WORDS } from './specialsWords';
 
 /** A place on the board: a special on its own, or a menu with its cards behind it. */
 type Entry = { special: Special } | { menu: Menu; cards: Special[] };
@@ -47,6 +49,8 @@ export function SpecialsWindow({
   onClose: () => void;
 }) {
   const cafe = useCafeName();
+  const say = useWords(SPECIALS_WORDS);
+  const english = useUntranslated();
   const entries = entriesOf(specials);
   const [planning, setPlanning] = useState<string>();
   // Back from a menu, its own button takes focus again.
@@ -56,8 +60,9 @@ export function SpecialsWindow({
   return (
     <Modal
       className="settings-window specials-window"
-      kicker={`${cafe} · Specials`}
-      title={open && 'menu' in open ? open.menu.title : 'Asked for by the regulars.'}
+      kicker={say.kicker(cafe)}
+      title={open && 'menu' in open ? open.menu.title : say.title}
+      titleLang={open ? english : undefined}
       onClose={onClose}
       wide
     >
@@ -75,10 +80,7 @@ export function SpecialsWindow({
         />
       ) : (
         <>
-          <p className="specials-intro">
-            Shifts past the campaign, each with something new to it. They open on the routines the last shift was served
-            with, and keep their stars apart from the campaign’s.
-          </p>
+          <p className="specials-intro">{say.intro}</p>
           <ul className="specials-list">
             {entries.map((entry) => {
               if ('special' in entry) {
@@ -88,23 +90,26 @@ export function SpecialsWindow({
                 return (
                   <li key={special.id} className={arrived ? 'new' : undefined}>
                     <div>
-                      <h3>{special.title}</h3>
+                      <h3 lang={english}>{special.title}</h3>
                       <small>
-                        {arrived ? 'New · ' : ''}Asked for by {cast[special.by].name}
+                        {arrived ? say.fresh : ''}
+                        {say.askedBy(cast[special.by].name)}
                       </small>
-                      <p>{special.brief.story}</p>
-                      <p className="specials-hint">{special.hint}</p>
+                      <p lang={english}>{special.brief.story}</p>
+                      <p className="specials-hint" lang={english}>
+                        {special.hint}
+                      </p>
                     </div>
                     <div className="specials-serve">
                       <Stars stars={stars} />
                       <Button
                         variant="primary"
                         // The visible words first, then which special: every card has a Serve button.
-                        aria-label={`${stars === undefined ? 'Serve' : 'Serve again'} ${special.title}`}
+                        aria-label={`${stars === undefined ? say.serve : say.again} ${special.title}`}
                         onClick={() => onServe(special)}
                       >
                         <Play size={15} fill="currentColor" aria-hidden="true" />
-                        {stars === undefined ? 'Serve' : 'Serve again'}
+                        {stars === undefined ? say.serve : say.again}
                       </Button>
                     </div>
                   </li>
@@ -116,25 +121,26 @@ export function SpecialsWindow({
               return (
                 <li key={menu.id} className={arrived ? 'new' : undefined}>
                   <div>
-                    <h3>{menu.title}</h3>
+                    <h3 lang={english}>{menu.title}</h3>
                     <small>
-                      {arrived ? 'New · ' : ''}Asked for by {cast[menu.by].name}
+                      {arrived ? say.fresh : ''}
+                      {say.askedBy(cast[menu.by].name)}
                     </small>
-                    <p>{menu.story}</p>
-                    <p className="specials-hint">{menu.hint}</p>
+                    <p lang={english}>{menu.story}</p>
+                    <p className="specials-hint" lang={english}>
+                      {menu.hint}
+                    </p>
                   </div>
                   <div className="specials-serve">
-                    <span className="specials-menus">
-                      {served} of {count(cards.length, 'menu')} served
-                    </span>
+                    <span className="specials-menus">{say.menus(served, cards.length)}</span>
                     <Button
                       variant="primary"
-                      aria-label={`Plan the menu, ${menu.title}`}
+                      aria-label={`${say.plan}, ${menu.title}`}
                       autoFocus={menu.id === left}
                       onClick={() => setPlanning(menu.id)}
                     >
                       <NotebookPen size={15} aria-hidden="true" />
-                      Plan the menu
+                      {say.plan}
                     </Button>
                   </div>
                 </li>
@@ -166,46 +172,47 @@ function LongDay({
   const open = current && day.wave !== undefined ? day.wave : undefined;
   const best = current ? day.best : undefined;
   const waves = longDay.waves.length;
+  const say = useWords(SPECIALS_WORDS);
+  const english = useUntranslated();
   return (
     <li className={arrived ? 'new' : undefined}>
       <div>
-        <h3>{longDay.title}</h3>
+        <h3 lang={english}>{longDay.title}</h3>
         <small>
-          {arrived ? 'New · ' : ''}Asked for by {cast[longDay.by].name}
+          {arrived ? say.fresh : ''}
+          {say.askedBy(cast[longDay.by].name)}
         </small>
-        <p>{longDay.story}</p>
-        <p className="specials-hint">
-          {day && !current
-            ? 'The waves have changed since your last day. It starts again from the first, with your routines.'
-            : longDay.hint}
-        </p>
+        <p lang={english}>{longDay.story}</p>
+        {day && !current ? (
+          <p className="specials-hint">{say.day.changed}</p>
+        ) : (
+          <p className="specials-hint" lang={english}>
+            {longDay.hint}
+          </p>
+        )}
       </div>
       <div className="specials-serve">
         <span className="specials-menus">
-          {best === waves
-            ? `All ${waves} waves served`
-            : best
-              ? `Best: wave ${best} of ${waves}`
-              : count(waves, 'wave')}
+          {best === waves ? say.day.all(waves) : best ? say.day.best(best, waves) : say.day.waves(waves)}
         </span>
         {open === undefined ? (
-          <Button variant="primary" aria-label={`Start the day, ${longDay.title}`} onClick={() => onDay(true)}>
+          <Button variant="primary" aria-label={`${say.day.start}, ${longDay.title}`} onClick={() => onDay(true)}>
             <Sun size={15} aria-hidden="true" />
-            Start the day
+            {say.day.start}
           </Button>
         ) : (
           <>
             <Button
               variant="primary"
-              aria-label={`Carry on: wave ${open}, ${longDay.title}`}
+              aria-label={`${say.day.carryOn(open)}, ${longDay.title}`}
               onClick={() => onDay(false)}
             >
               <Play size={15} fill="currentColor" aria-hidden="true" />
-              Carry on: wave {open}
+              {say.day.carryOn(open)}
             </Button>
-            <Button aria-label={`Start over, ${longDay.title}`} onClick={() => onDay(true)}>
+            <Button aria-label={`${say.day.over}, ${longDay.title}`} onClick={() => onDay(true)}>
               <RotateCcw size={15} aria-hidden="true" />
-              Start over
+              {say.day.over}
             </Button>
           </>
         )}
@@ -215,8 +222,9 @@ function LongDay({
 }
 
 function Stars({ stars }: { stars: number | undefined }) {
+  const say = useWords(SPECIALS_WORDS);
   return (
-    <span role="img" aria-label={stars === undefined ? 'Not served yet' : `${stars} of 3 stars`}>
+    <span role="img" aria-label={stars === undefined ? say.unserved : say.stars(stars)}>
       {starRow(stars ?? 0)}
     </span>
   );
@@ -239,37 +247,38 @@ function MenuPlan({
   onServe: (special: Special) => void;
   onBack: () => void;
 }) {
+  const say = useWords(SPECIALS_WORDS);
+  const english = useUntranslated();
   return (
     <div className="menu-plan">
       <button className="drill-back" onClick={onBack} data-autofocus>
-        <ArrowLeft size={15} aria-hidden="true" /> All specials
+        <ArrowLeft size={15} aria-hidden="true" /> {say.menu.back}
       </button>
       <p className="specials-intro">
-        {menu.story} Each card is a shift of its own, with its own guests and its own stars: pick one, serve it, and
-        come back for the others whenever you like.
+        <span lang={english}>{menu.story}</span> {say.menu.each}
       </p>
       <ul className="menu-cards">
         {cards.map((special) => {
           const stars = starsOf(special);
-          const label = stars === undefined ? 'Serve this menu' : 'Serve again';
+          const label = stars === undefined ? say.menu.serve : say.again;
           const { card, level } = special;
           if (!card) return null;
           return (
             <li key={special.id}>
-              <h3>{special.title}</h3>
+              <h3 lang={english}>{special.title}</h3>
               <dl>
-                <dt>On the board</dt>
-                <dd>{card.recipes}</dd>
-                <dt>Who comes</dt>
-                <dd>{card.demand}</dd>
-                <dt>The rule</dt>
-                <dd>{card.constraint}</dd>
-                <dt>Targets</dt>
-                <dd>
-                  {level.block_target} blocks or fewer · {level.instruction_target} steps or fewer
-                </dd>
+                <dt>{say.menu.board}</dt>
+                <dd lang={english}>{card.recipes}</dd>
+                <dt>{say.menu.who}</dt>
+                <dd lang={english}>{card.demand}</dd>
+                <dt>{say.menu.rule}</dt>
+                <dd lang={english}>{card.constraint}</dd>
+                <dt>{say.menu.targets}</dt>
+                <dd>{say.menu.target(level.block_target, level.instruction_target)}</dd>
               </dl>
-              <p className="specials-hint">{special.hint}</p>
+              <p className="specials-hint" lang={english}>
+                {special.hint}
+              </p>
               <div className="menu-card-foot">
                 <Stars stars={stars} />
                 <Button

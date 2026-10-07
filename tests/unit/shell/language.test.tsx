@@ -9,6 +9,8 @@ import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { STORY_WORDS } from '../../../src/shell/storyWords';
 import { DRILL_WORDS } from '../../../src/shell/drillWords';
+import { SPECIALS_WORDS } from '../../../src/shell/specialsWords';
+import { REPAIR_WORDS } from '../../../src/shell/repairWords';
 import { SHELF_WORDS } from '../../../src/shell/shelfWords';
 import { KEPT_WORDS } from '../../../src/shell/keptWords';
 import { acts } from '../../../src/shell/rail/acts';
@@ -500,6 +502,51 @@ describe('the rail’s windows in French', () => {
     );
     expect(board.getByRole('img', { name: 'Pas encore joué' })).toBeTruthy();
     expect(board.getByRole('button', { name: `Jouer ${memory.title}` }).textContent).toBe('Jouer');
+  });
+
+  it('puts the specials up in French, with what the regulars asked for kept as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
+    seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    const board = within(screen.getByRole('dialog', { name: 'Demandées par les habitués.' }));
+    expect(board.getByRole('heading', { name: 'The Saturday Market' }).getAttribute('lang')).toBe('en');
+    expect(board.getAllByText('Une demande de Mr. Albert').length).toBeGreaterThan(0);
+    expect([...document.querySelectorAll('.specials-menus')].map((tally) => tally.textContent)).toEqual([
+      `Menus servis${NBSP}: 0 sur 3`,
+      '6 vagues',
+    ]);
+    expect(board.getAllByRole('img', { name: 'Pas encore servi' }).length).toBeGreaterThan(0);
+    expect(board.getByRole('button', { name: 'Commencer la journée, The Long Day' })).toBeTruthy();
+    fireEvent.click(board.getByRole('button', { name: 'Composer le menu, The Saturday Market' }));
+    const tea = specialById('tea-table')!;
+    const plan = within(screen.getByRole('dialog', { name: 'The Saturday Market' }));
+    expect(plan.getByRole('button', { name: 'Toutes les commandes spéciales' })).toBeTruthy();
+    expect(plan.getByText(tea.card!.constraint).getAttribute('lang')).toBe('en');
+    expect(plan.getAllByText('La règle')).toHaveLength(3);
+    expect(
+      plan.getByText(`${tea.level.block_target} blocs ou moins · ${tea.level.instruction_target} pas ou moins`),
+    ).toBeTruthy();
+    expect(plan.getByRole('button', { name: 'Servir ce menu, The Tea Table' })).toBeTruthy();
+  });
+
+  it('opens the repair bay in French, with the robot’s own wiring kept as English', () => {
+    campaign(UNLOCKS.sugar);
+    fireEvent.click(screen.getByRole('button', { name: 'Atelier, 1 robot sur l’établi' }));
+    const bay = within(screen.getByRole('dialog', { name: 'Après la fermeture.' }));
+    expect(bay.getByText('Query · Sur l’établi')).toBeTruthy();
+    expect(bay.getByText('2 autres robots arrivent sur l’établi au fil des services.')).toBeTruthy();
+    fireEvent.click(bay.getByRole('button', { name: 'Ouvrir le panneau, Query’s ears' }));
+    expect(bay.getByRole('heading', { name: 'Query’s ears' }).getAttribute('lang')).toBe('en');
+    expect(bay.getByRole('group', { name: 'Le câblage de Query' })).toBeTruthy();
+    const select = bay.getByRole('combobox', { name: 'Writes tea, quand' });
+    expect(select.querySelector('option[value=""]')!.textContent).toBe('Rien');
+    expect(select.querySelector('option[value="tea"]')!.getAttribute('lang')).toBe('en');
+    expect(bay.getByRole('status').textContent).toBe('2 cas justes sur 6.');
+    expect(bay.getAllByRole('img', { name: 'Pas encore' })).toHaveLength(4);
+    expect(bay.getByRole('button', { name: 'Fermer le panneau' })).toBeTruthy();
   });
 });
 
@@ -1321,6 +1368,8 @@ describe('the words themselves', () => {
       DRILL_WORDS,
       SHELF_WORDS,
       KEPT_WORDS,
+      SPECIALS_WORDS,
+      REPAIR_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));
