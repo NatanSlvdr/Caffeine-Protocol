@@ -19,11 +19,16 @@ import { COMPARE_WORDS } from '../../../src/features/workspace/modals/compareWor
 import { CompareModal } from '../../../src/features/workspace/modals/CompareModal';
 import { easeChoice, easedWords } from '../../../src/features/workspace/bench';
 import { compareRuns, runName } from '../../../src/features/workspace/compare';
+import { FAILURE_WORDS } from '../../../src/features/workspace/failureWords';
+import { FailureCard } from '../../../src/features/workspace/FailureCard';
+import { evidenceOf } from '../../../src/features/workspace/evidence';
+import { failureHint } from '../../../src/features/workspace/reactions';
 import { lessons, levels, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { UNLOCKS, createLiveRun, recordRun } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
+import { runCampaignLevel } from '../../helpers/run';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
@@ -62,7 +67,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, a shift’s controls and windows, these settings and the handbook/,
+      /French covers the front door, the order rail, a shift’s controls, windows and failure card, these settings and the handbook/,
     );
   });
 
@@ -508,9 +513,66 @@ describe('the words themselves', () => {
     );
   });
 
+  it('reads a failure card in French, with why it stopped and what Query heard kept as English', () => {
+    // Shift 5's routine, with its sugar check needing coffee too: Mr. Albert's tea with sugar goes out without it.
+    const query = lessons[4].solution.replace(
+      'IF sugar IN CUSTOMER SPEECH',
+      'IF sugar IN CUSTOMER SPEECH AND coffee IN CUSTOMER SPEECH',
+    );
+    const level = levels[4];
+    const evidence = evidenceOf(
+      level,
+      recordRun(
+        1,
+        level,
+        { query, prep: '', floor: '' },
+        runCampaignLevel(4, query),
+        level.seeds.map((_, i) => i),
+      ),
+    )!;
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <FailureCard
+          evidence={evidence}
+          stale
+          rounds={level.seeds.length}
+          onShowLine={() => {}}
+          onPractise={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const card = within(screen.getByRole('region', { name: /^Query s’est arrêté ?· Manche 1 · Client 3$/ }));
+    expect(document.querySelector('.failure-card-stale')!.textContent).toBe(
+      `De votre dernier essai. La routine a changé depuis${NBSP}: entraînez-vous sur cette manche pour vérifier, ou lancez tout le service.`,
+    );
+    expect(card.getByText('“tea with sugar”').getAttribute('lang')).toBe('en');
+    expect(document.querySelector('.failure-card-reason')!.getAttribute('lang')).toBe('en');
+    expect(card.getByRole('table', { name: 'Ce qui était demandé, face à ce qui s’est passé' })).toBeTruthy();
+    expect(card.getByRole('row', { name: 'Sucre Avec sucre Sans sucre' })).toBeTruthy();
+    const decided = within(card.getByRole('region', { name: 'Ce que Query a décidé' }));
+    expect(decided.getByText('if sugar in orders and coffee in orders').getAttribute('lang')).toBe('en');
+    expect(document.querySelectorAll('.failure-decision-if')[1].textContent).toBe(
+      `if sugar in orders and coffee in orders${NARROW}? Non`,
+    );
+    expect(document.querySelectorAll('.failure-decision-parts')[0].textContent).toBe(
+      `sugar in orders${NBSP}: oui · coffee in orders${NBSP}: non`,
+    );
+    expect(document.querySelectorAll('.failure-decision-heard')[0].textContent).toBe('Entendu dans orders: tea, sugar');
+    expect(document.querySelector('.failure-card-next')!.textContent).toBe(
+      `À essayer ${failureHint('ticket-sugar', FAILURE_WORDS.fr.hints)}`,
+    );
+    expect(card.getByRole('button', { name: 'S’entraîner sur la manche 1' })).toBeTruthy();
+    expect(FAILURE_WORDS.fr.hints.compile).toBe('Corrigez le bloc surligné, et le service pourra tourner.');
+    expect(FAILURE_WORDS.fr.title('Brew', true)).toBe('La routine de Brew ne peut pas tourner');
+    expect(FAILURE_WORDS.fr.eased(easedWords(['closing'], BENCH_WORDS.fr))).toBe(
+      'Le banc d’essai a tourné sans heure de fermeture.',
+    );
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
-    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause']);
+    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination']);
     const catalogs = [
       HOME_WORDS,
       SETTINGS_WORDS,
@@ -526,6 +588,7 @@ describe('the words themselves', () => {
       NOTEBOOK_WORDS,
       BENCH_WORDS,
       COMPARE_WORDS,
+      FAILURE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

@@ -47,6 +47,13 @@ export function legWords(leg: Leg, guest: ReplayEvent, level: number): string {
   }
 }
 
+/** A regular's name, "Mr. Albert"; nothing for a guest the café doesn't know by name. */
+export function regularCalled(level: LevelDefinition, seedId: string, customerId: string): string | undefined {
+  const seed = level.seeds.find((s) => s.id === seedId);
+  const regular = seed && regularsOf(seed.customers).get(customerId);
+  return regular && REGULAR_NAMES[regular];
+}
+
 /**
  * A guest as the café knows them: a regular by name, "Mr. Albert", anyone else by their place in their round's line,
  * "Guest 3". The failure card, the comparison and the order card all call a guest the same.
@@ -58,9 +65,10 @@ export function guestCalled(
   guest = (n: number) => `Guest ${n}`,
 ): string {
   const seed = level.seeds.find((s) => s.id === seedId);
-  const regular = seed && regularsOf(seed.customers).get(customerId);
-  if (regular) return REGULAR_NAMES[regular];
-  return guest((seed?.customers.findIndex((c) => c.customer_id === customerId) ?? -1) + 1);
+  return (
+    regularCalled(level, seedId, customerId) ??
+    guest((seed?.customers.findIndex((c) => c.customer_id === customerId) ?? -1) + 1)
+  );
 }
 
 /** A guest of a run, as the café knows them. */

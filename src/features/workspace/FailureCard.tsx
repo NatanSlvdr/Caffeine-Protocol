@@ -1,4 +1,4 @@
-import { useId, useState } from 'react';
+import { Fragment, useId, useState } from 'react';
 import {
   Armchair,
   Candy,
@@ -19,10 +19,13 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
 import type { FailureCode } from '@/domain';
+import { useUntranslated, useWords } from '@/shared/language';
 import { comparisonOf } from './evidence';
 import type { Aspect, RunEvidence } from './evidence';
 import { failureHint } from './reactions';
 import { easedWords } from './bench';
+import { FAILURE_WORDS } from './failureWords';
+import { BENCH_WORDS } from './modals/benchWords';
 
 const ASPECT_ICONS: Record<Aspect, LucideIcon> = {
   drink: Coffee,
@@ -79,20 +82,24 @@ export function FailureCard({
   onFollow,
 }: FailureCardProps) {
   const [open, setOpen] = useState(true);
+  const words = useWords(FAILURE_WORDS),
+    benchWords = useWords(BENCH_WORDS),
+    english = useUntranslated();
   const heading = useId(),
     body = useId(),
     decisionsHeading = useId();
   const { failure, round, guest, name, bench } = evidence;
   const robot = ROBOT_DISPLAY_NAMES[failure.role ?? 'query'],
     routine = ROUTINE_CODES.has(failure.code),
-    comparison = comparisonOf(failure);
-  const title = failure.code === 'compile' ? `${robot}’s routine won’t run` : `${robot} stopped`;
+    comparison = comparisonOf(failure, words.compare),
+    called = name ?? (guest && words.guest(guest));
+  const title = words.title(robot, failure.code === 'compile');
   const when = routine
     ? undefined
     : [
-        bench ? 'Bench' : evidence.practice && 'Practice',
-        !bench && rounds > 1 && `Round ${round}`,
-        guest ? (name ?? `Guest ${guest}`) : 'Closing time',
+        bench ? words.bench : evidence.practice && words.practice,
+        !bench && rounds > 1 && words.round(round),
+        called || words.closing,
       ]
         .filter(Boolean)
         .join(' · ');
@@ -119,25 +126,20 @@ export function FailureCard({
       <div id={body} className="failure-card-body" hidden={!open}>
         {stale && (
           <p className="failure-card-stale">
-            From your last run. The routine has changed since:{' '}
-            {bench
-              ? 'run the bench again to check it.'
-              : practisable
-                ? 'practise this round to check it, or run the whole service.'
-                : 'run again to check.'}
+            {words.stale} {words.recheck(bench ? 'bench' : practisable ? 'round' : 'run')}
           </p>
         )}
-        {!routine && guest && failure.phrase && <blockquote>“{failure.phrase}”</blockquote>}
-        <p className="failure-card-reason">{variableLabels(failure.reason)}</p>
-        {evidence.eased && <p className="failure-card-eased">The bench ran with {easedWords(evidence.eased)}.</p>}
+        {!routine && guest && failure.phrase && <blockquote lang={english}>“{failure.phrase}”</blockquote>}
+        <p className="failure-card-reason" lang={english}>
+          {variableLabels(failure.reason)}
+        </p>
+        {evidence.eased && <p className="failure-card-eased">{words.eased(easedWords(evidence.eased, benchWords))}</p>}
         {comparison && (
           <table className="failure-compare">
-            <caption className="sr-only">
-              What was wanted, against what happened{comparison.ticket ? `, on ticket ${comparison.ticket}` : ''}
-            </caption>
+            <caption className="sr-only">{words.caption(comparison.ticket)}</caption>
             <thead>
               <tr>
-                <td>{comparison.ticket && <span>Ticket {comparison.ticket}</span>}</td>
+                <td>{comparison.ticket && <span>{words.ticket(comparison.ticket)}</span>}</td>
                 <th scope="col">{comparison.columns[0]}</th>
                 <th scope="col">{comparison.columns[1]}</th>
               </tr>
@@ -162,55 +164,64 @@ export function FailureCard({
         {decisions.length > 0 && (
           <section className="failure-decisions" aria-labelledby={decisionsHeading}>
             <h3 id={decisionsHeading}>
-              What {ROBOT_DISPLAY_NAMES.query} decided
-              {earlier > 0 && <span> · last {decisions.length}</span>}
+              {words.decided(ROBOT_DISPLAY_NAMES.query)}
+              {earlier > 0 && <span>{words.last(decisions.length)}</span>}
             </h3>
             <ol>
               {decisions.map((decision, i) => (
                 <li key={i}>
-                  <span className="failure-decision-block">Block {decision.line + 1}</span>
+                  <span className="failure-decision-block">{words.block(decision.line + 1)}</span>
                   <span className="failure-decision-if">
-                    {decision.condition}?{' '}
-                    <strong className={decision.holds ? 'yes' : 'no'}>{decision.holds ? 'Yes' : 'No'}</strong>
+                    <span lang={english}>{decision.condition}</span>
+                    {words.asked}{' '}
+                    <strong className={decision.holds ? 'yes' : 'no'}>{words.holds(decision.holds)}</strong>
                   </span>
                   {decision.parts.length > 0 && (
                     <span className="failure-decision-parts">
-                      {decision.parts.map((part) => `${part.text}: ${part.holds ? 'yes' : 'no'}`).join(' · ')}
+                      {decision.parts.map((part, j) => (
+                        <Fragment key={j}>
+                          {j > 0 && ' · '}
+                          <span lang={english}>{part.text}</span>
+                          {words.part(part.holds)}
+                        </Fragment>
+                      ))}
                     </span>
                   )}
-                  <span className="failure-decision-heard">Heard in {decision.heard.join('; ')}</span>
+                  <span className="failure-decision-heard">
+                    {words.heard} <span lang={english}>{decision.heard.join('; ')}</span>
+                  </span>
                 </li>
               ))}
             </ol>
           </section>
         )}
         <p className="failure-card-next">
-          <strong>Try</strong> {failureHint(failure.code)}
+          <strong>{words.try}</strong> {failureHint(failure.code, words.hints)}
         </p>
         {(showable || practisable || onCompareServed || followable) && (
           <div className="failure-card-actions">
             {showable && (
               <button type="button" className="failure-card-show" onClick={onShowLine}>
                 <Crosshair size={14} aria-hidden="true" />
-                Show where {robot} stopped
+                {words.show(robot)}
               </button>
             )}
             {followable && (
               <button type="button" className="failure-card-show" onClick={onFollow}>
                 <Route size={14} aria-hidden="true" />
-                Follow {name ?? `Guest ${guest}`}’s order
+                {words.follow(called || '')}
               </button>
             )}
             {practisable && (
               <button type="button" className="failure-card-show" onClick={onPractise}>
                 <RotateCcw size={14} aria-hidden="true" />
-                {bench ? 'Run the bench again' : `Practise round ${round}`}
+                {bench ? words.again : words.practise(round)}
               </button>
             )}
             {onCompareServed && (
               <button type="button" className="failure-card-show" aria-haspopup="dialog" onClick={onCompareServed}>
                 <History size={14} aria-hidden="true" />
-                Compare with last served
+                {words.compareServed}
               </button>
             )}
           </div>

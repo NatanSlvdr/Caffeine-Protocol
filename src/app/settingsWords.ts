@@ -17,7 +17,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Music volume',
     language: 'Language',
     languageHint:
-      'Shared by every café in this browser. French covers the front door, the order rail, a shift’s controls and windows, these settings and the handbook so far; the rest of a shift, the story and the shift names are still in English.',
+      'Shared by every café in this browser. French covers the front door, the order rail, a shift’s controls, windows and failure card, these settings and the handbook so far; the rest of a shift, the story and the shift names are still in English.',
     display: 'Display & motion',
     reducedMotion: 'Reduced motion',
     reducedBySystem: 'On, because your device asks for less motion.',
@@ -94,7 +94,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Volume de la musique',
     language: 'Langue',
     languageHint:
-      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre l’accueil, la barre à bons, les commandes et les fenêtres d’un service, ces réglages et le guide ; le reste des services, l’histoire et le nom des services sont encore en anglais.',
+      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre l’accueil, la barre à bons, les commandes, les fenêtres et la carte d’arrêt d’un service, ces réglages et le guide ; le reste des services, l’histoire et le nom des services sont encore en anglais.',
     display: 'Affichage et mouvement',
     reducedMotion: 'Mouvement réduit',
     reducedBySystem: 'Activé, car votre appareil demande moins de mouvement.',
