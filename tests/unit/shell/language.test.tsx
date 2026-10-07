@@ -64,6 +64,7 @@ import { createRoot } from 'react-dom/client';
 import { Editor } from '../../../src/components/Editor';
 import { EDITOR_WORDS } from '../../../src/components/editor/editorWords';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
+import { REACTION_WORDS } from '../../../src/features/workspace/reactionWords';
 import { shiftIntro } from '../../../src/data/campaign/dialogue';
 import { DIALOGUE_WORDS } from '../../../src/components/dialogue/dialogueWords';
 import { BLOCK_HELP_WORDS } from '../../../src/components/editor/blockHelpWords';
@@ -408,6 +409,24 @@ describe('the dialogue box in French', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
     expect(said().textContent).toBe('Trois étoiles.');
     expect(said().hasAttribute('lang')).toBe(false);
+  });
+
+  it('marks what a guest said as English inside a French line, on screen and aloud', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <DialogueBox
+          lines={[{ who: 'juno', text: REACTION_WORDS.fr.failed['ticket-item']!('Tea, please.') }]}
+          instant
+          onDone={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const text = document.querySelector('.dialogue-text')!;
+    const shown = text.querySelector('[aria-hidden]')!;
+    expect(shown.textContent).toBe(`J’ai dit «${NBSP}Tea, please.${NBSP}». Ce n’est pas ce que j’ai commandé.`);
+    expect(shown.querySelector('[lang="en"]')!.textContent).toBe('Tea, please.');
+    expect(text.querySelector('.sr-only [lang="en"]')!.textContent).toBe('Tea, please.');
   });
 });
 

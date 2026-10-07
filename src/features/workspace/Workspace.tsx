@@ -19,11 +19,12 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import { useLiveRun, type LiveRunArgs } from './useLiveRun';
 import { drillFor, type WorkspaceDrill } from './hints';
 import { PlaybackToolbar } from './PlaybackToolbar';
 import { FailureCard } from './FailureCard';
+import { FAILURE_WORDS } from './failureWords';
 import { PracticeCard } from './PracticeCard';
 import { easedWords } from './bench';
 import { BENCH_WORDS } from './modals/benchWords';
@@ -125,7 +126,7 @@ export function Workspace({
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
   const reactionSay = useWords(REACTION_WORDS);
-  const english = useUntranslated();
+  const failureHints = useWords(FAILURE_WORDS).hints;
   // A special's or a memory's payoff is still English, so it says so line by line before the crew's verdict.
   const payoff = useMemo(
     () => (shift.lang ? outro.map((said) => ({ ...said, lang: shift.lang })) : outro),
@@ -442,6 +443,8 @@ export function Workspace({
           role,
           shortRepeats && firstHeard !== undefined && firstHeard !== records.at(-1)?.id,
           save.robotSolutions[index],
+          reactionSay,
+          failureHints,
         )
       : scene === 'success' && result?.passed
         ? successLines(result, role, index, level, payoff, briefSuccess, live.bestBefore, reactionSay)
@@ -612,7 +615,6 @@ export function Workspace({
                 key={`${scene}-${result?.first_failure?.reason}`}
                 variant="aside"
                 lines={reaction}
-                lang={scene === 'failure' ? english : undefined}
                 instant={reduced}
                 doneLabel={scene === 'success' ? say.seeReceipt : say.backToCode}
                 onDone={closeReaction}

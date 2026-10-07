@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { levels } from '@/data';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { introsFr, outrosFr } from '@/data/campaign/dialogue.fr';
-import type { DialogueLine } from '@/domain';
+import { FAILURE_WORDS } from '@/features/workspace/failureWords';
 import { REACTION_WORDS } from '@/features/workspace/reactionWords';
+import { failureHint, failureLines } from '@/features/workspace/reactions';
+import type { DialogueLine, FailureCode, RunResult } from '@/domain';
 
 /** The blocks a line shows, as written: the same block in either language. */
 const blocks = (text: string) => text.match(/\[[A-Z][^\]|]*\|[^\]]+\]/g) ?? [];
@@ -52,5 +54,52 @@ describe('the crew’s reactions in French', () => {
     }
     expect(REACTION_WORDS.fr.verdict.one(9, 6)).toContain('9 blocs, et 6 suffiraient');
     expect(REACTION_WORDS.fr.verdict.two(40, 30)).toContain('40 pas là où 30 suffiraient');
+  });
+
+  it('reacts to every failure the English does, quoting what a guest said as they said it', () => {
+    const codes = Object.keys(REACTION_WORDS.en.failed) as FailureCode[];
+    expect(Object.keys(REACTION_WORDS.fr.failed).sort()).toEqual([...codes].sort());
+    for (const code of codes) {
+      const [en, fr] = [REACTION_WORDS.en.failed[code], REACTION_WORDS.fr.failed[code]];
+      expect(fr === undefined, code).toBe(en === undefined);
+      if (!en || !fr) continue;
+      const quotes = en('two teas').includes('two teas');
+      expect(fr('two teas').includes('⟪two teas⟫'), code).toBe(quotes);
+      expect(sounds(fr('two teas')), code).toBe(sounds(en('two teas')));
+    }
+  });
+
+  it('tells a failed run in French, Niko nudging with the card’s own hint', () => {
+    const result = {
+      passed: false,
+      observation: false,
+      stars: 0,
+      events: [],
+      first_failure: {
+        role: 'query',
+        phrase: 'Two teas, please.',
+        code: 'ticket-item',
+        reason: 'Ticket 1 has the wrong item.',
+      },
+    } as unknown as RunResult;
+    const [guest, niko, restore] = failureLines(
+      result,
+      'query',
+      false,
+      { query: 'listen' },
+      REACTION_WORDS.fr,
+      FAILURE_WORDS.fr.hints,
+    );
+    expect(guest.text).toBe('J’ai dit «\u00a0⟪Two teas, please.⟫\u00a0». Ce n’est pas ce que j’ai commandé.');
+    expect(niko.text).toBe(failureHint('ticket-item', FAILURE_WORDS.fr.hints));
+    expect(restore.text).toContain('Options → Restaurer la routine de Query');
+    const robot = failureLines(
+      { ...result, first_failure: { ...result.first_failure!, code: 'compile' } },
+      'query',
+      true,
+      undefined,
+      REACTION_WORDS.fr,
+    );
+    expect(robot[0]).toMatchObject({ who: 'query', text: 'Instruction pas claire. *bzzt* Arrêt.' });
   });
 });

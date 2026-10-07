@@ -4,7 +4,7 @@ import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueChoices, DialogueLine, DialogueOption } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
-import { useWords } from '@/shared/language';
+import { useUntranslated, useWords } from '@/shared/language';
 import { DialoguePaceContext } from './pace';
 import { DIALOGUE_WORDS } from './dialogueWords';
 import { Portrait, portraitUrl } from './Portrait';
@@ -18,15 +18,19 @@ const writing = (element: Element | null) =>
   element instanceof HTMLElement &&
   (element.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(element.tagName));
 
-type Part = { kind: 'text' | 'sfx'; text: string } | { kind: 'block'; text: string; command: string };
+type Part = { kind: 'text' | 'sfx' | 'english'; text: string } | { kind: 'block'; text: string; command: string };
 
-/** `*whirr*` in a script is a sound effect; `[LISTEN|Wait for Orders]` shows the command as its block. */
+/**
+ * `*whirr*` in a script is a sound effect; `[LISTEN|Wait for Orders]` shows the command as its block; `⟪a coffee⟫` is
+ * what a guest said, kept in English inside a line in another language.
+ */
 function segments(text: string): Part[] {
   return text
-    .split(/(\*[^*]+\*|\[[A-Z][^\]|]*\|[^\]]+\])/)
+    .split(/(\*[^*]+\*|\[[A-Z][^\]|]*\|[^\]]+\]|⟪[^⟫]+⟫)/)
     .filter(Boolean)
     .map((part) => {
       if (/^\*[^*]+\*$/.test(part)) return { kind: 'sfx', text: part.slice(1, -1) };
+      if (/^⟪[^⟫]+⟫$/.test(part)) return { kind: 'english', text: part.slice(1, -1) };
       const block = /^\[([^\]|]+)\|([^\]]+)\]$/.exec(part);
       return block ? { kind: 'block', command: block[1], text: block[2] } : { kind: 'text', text: part };
     });
@@ -76,6 +80,7 @@ export function DialogueBox({
   onChoose,
 }: DialogueBoxProps) {
   const say = useWords(DIALOGUE_WORDS);
+  const english = useUntranslated();
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
   // The furthest line reached: a line gone back over is printed whole, since it has been read once already.
@@ -257,7 +262,11 @@ export function DialogueBox({
                     </span>
                   );
                 return (
-                  <span key={i} className={part.kind === 'sfx' ? 'dialogue-sfx' : undefined}>
+                  <span
+                    key={i}
+                    className={part.kind === 'sfx' ? 'dialogue-sfx' : undefined}
+                    lang={part.kind === 'english' ? english : undefined}
+                  >
                     {typed}
                     <span className="dialogue-unread">{part.text.slice(typed.length)}</span>
                   </span>
@@ -269,7 +278,17 @@ export function DialogueBox({
               {voiced && (
                 <>
                   {speaker && say.says(speakerLabel(speaker, say.customer))}
-                  <span lang={said}>{text}</span>
+                  <span lang={said}>
+                    {parts.map((part, i) =>
+                      part.kind === 'english' ? (
+                        <span key={i} lang={english}>
+                          {part.text}
+                        </span>
+                      ) : (
+                        part.text
+                      ),
+                    )}
+                  </span>
                 </>
               )}
             </span>

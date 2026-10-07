@@ -246,10 +246,10 @@ and `compareRuns` take its words, and `guestCalled` a guest's). Under the
 routine, the failure card reads in French too (`failureWords.ts`): where the
 run stopped, the comparison (`comparisonOf` takes its words), Query's
 decisions and the hint by code (`failureHint` takes the hints, English by
-default, so Niko's line in the crew's scene still says it in English). Why
-the run stopped, what the guest said and the IFs Query tested stay English,
-marked so. The evidence keeps only a regular's name (`regularCalled`), so
-anyone else is numbered in the reader's language. So do the handover card
+default; Niko's nudge in the crew's scene is the same hint). Why the run
+stopped, what the guest said and the IFs Query tested stay English, marked
+so. The evidence keeps only a regular's name (`regularCalled`), so anyone
+else is numbered in the reader's language. So do the handover card
 (`handoverWords.ts`: the jobs are written once in `HANDOVERS`, and the
 French follows them step by step) and the note beside a picked block's
 preview (`previewWords.ts`): the domain names the places a block reaches as
@@ -335,31 +335,34 @@ the intro carry. The shifts' scenes read in French too
 (`data/campaign/dialogue.fr.ts`, keyed like the English and line for line
 with it: the same speakers, the same blocks, as many sounds): `shiftIntro`
 and `shiftOutro` take a language, and `useShift` gives the open shift's, set
-with French typography. So do the crew's words once a service is served
-(`features/workspace/reactionWords.ts`: the robots' cheers and new bests and
-Niko's verdict on the stars, which `successLines` takes, English by
-default). A special's or a memory's payoff is still English, so `Workspace`
-marks it line by line before the French verdict, and the crew's reaction to
-a failed run is still English, marked so on the box. `CHALLENGE_WORDS` is a
-catalog too; the generated shift docs read its English. A window whose title
-is still English marks it with `titleLang`. Short repeats is worded once, as
-`SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. What the
-crew says when a run goes wrong, the scenes between acts, the levels' own
-data and the stories of the specials, memories, drills and repairs are still
-in English, and so is the list of what bringing an old save up to date
-changed, marked so under the notice's French heading. Where English data
-sits on a French screen (a special's name, its story and goal, a scene's
-logline), it carries `lang={useUntranslated()}`, so a screen reader says it
-as English; on an English page the attribute is left off. Act names and
-taglines for the tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps
-the English names the English-only windows still read. The save checks'
-refusals are keyed (`SAVE_REFUSALS`) so Settings can say them in French; a
-damaged file's field is left out in French. The handbook names the buttons
-and windows as they read in French. The French toolbar reads longer, so its
-step buttons fold to their icons below 1360px rather than 1180px.
-Programming words (blocks, values, the text editor's syntax) are never
-translated, so a routine and a shared notebook read the same in either
-language.
+with French typography. So do the crew's words once a service ends
+(`features/workspace/reactionWords.ts`, which `successLines` and
+`failureLines` take, English by default): the robots' cheers and new bests
+and Niko's verdict on the stars, and on a failure the guest's or the robot's
+reaction, by code, and Niko's nudge. In French Niko gives only the hint,
+since why the run stopped is the simulation's English, which the card under
+the routine shows marked so. What a guest said is quoted in a French line
+between ⟪ and ⟫, which `DialogueBox` marks English on screen and aloud. A
+special's or a memory's payoff is still English, so `Workspace` marks it
+line by line before the French verdict. `CHALLENGE_WORDS` is a catalog too;
+the generated shift docs read its English. A window whose title is still
+English marks it with `titleLang`. Short repeats is worded once, as
+`SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The
+scenes between acts, the levels' own data and the stories of the specials,
+memories, drills and repairs are still in English, and so is the list of
+what bringing an old save up to date changed, marked so under the notice's
+French heading. Where English data sits on a French screen (a special's
+name, its story and goal, a scene's logline), it carries
+`lang={useUntranslated()}`, so a screen reader says it as English; on an
+English page the attribute is left off. Act names and taglines for the
+tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
+the English-only windows still read. The save checks' refusals are keyed
+(`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
+is left out in French. The handbook names the buttons and windows as they
+read in French. The French toolbar reads longer, so its step buttons fold to
+their icons below 1360px rather than 1180px. Programming words (blocks,
+values, the text editor's syntax) are never translated, so a routine and a
+shared notebook read the same in either language.
 
 ## Photo mode
 
