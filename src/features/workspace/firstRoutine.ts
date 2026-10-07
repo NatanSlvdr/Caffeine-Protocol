@@ -1,13 +1,3 @@
-/** The steps of the first routine's tips, each ticked off by what the player has done, never by a button. */
-export const FIRST_ROUTINE_STEPS = [
-  {
-    title: 'Build it',
-    text: 'Add Take, Write, Move and Deposit under Wait for Orders: tap a library block or drag it into place, then set its fields.',
-  },
-  { title: 'Run it', text: 'Press Run service and watch Query follow the routine, from top to bottom.' },
-  { title: 'Fix it', text: 'The card below says where Query stopped. Change that block, then run again.' },
-] as const;
-
 /** The blocks a first ticket needs, by the command each one starts with. */
 const NEEDED = ['TAKE ', 'ITEM ', 'MOVE ', 'DEPOSIT '];
 

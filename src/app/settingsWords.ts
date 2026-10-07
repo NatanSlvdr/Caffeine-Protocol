@@ -2,7 +2,7 @@ import type { BackupReason } from '@/features/campaign/save/persistence';
 import type { DialoguePace } from '@/domain';
 import { SAVE_REFUSALS } from '@/features/campaign/save/persistence';
 import { words } from '@/shared/language';
-import { SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
+import { SHORT_REPEATS } from '@/shared/ui/SettingRow';
 
 /** Whose progress a replaced café takes with it: the open café's, by name when the browser keeps more than one. */
 type Replaced = { kept: boolean; holdsOrFresh: string; open?: string; untouched: boolean; full: boolean };
@@ -17,7 +17,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Music volume',
     language: 'Language',
     languageHint:
-      'Shared by every café in this browser. French covers the front door, the order rail, the controls on a shift’s screen, these settings and the handbook so far; the rest of a shift, the story and the shift names are still in English.',
+      'Shared by every café in this browser. French covers the front door, the order rail, the controls and options of a shift, these settings and the handbook so far; the rest of a shift, the story and the shift names are still in English.',
     display: 'Display & motion',
     reducedMotion: 'Reduced motion',
     reducedBySystem: 'On, because your device asks for less motion.',
@@ -28,8 +28,8 @@ export const SETTINGS_WORDS = words(
     paces: { typed: 'Typed', quick: 'Quick', whole: 'Whole lines' } satisfies Record<DialoguePace, string>,
     pixelArt: 'Pixel-art shader',
     pixelArtHint: 'Crisp pixels and outlined edges.',
-    shortRepeats: 'Shorter repeats',
-    shortRepeatsHint: SHORT_REPEATS_HINT,
+    shortRepeats: SHORT_REPEATS.en.title,
+    shortRepeatsHint: SHORT_REPEATS.en.hint,
     fullscreen: 'Fullscreen',
     fullscreenHint: 'A little more room for your café.',
     exitFullscreen: 'Exit fullscreen',
@@ -94,7 +94,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Volume de la musique',
     language: 'Langue',
     languageHint:
-      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre l’accueil, la barre à bons, les commandes de l’écran d’un service, ces réglages et le guide ; le reste des services, l’histoire et le nom des services sont encore en anglais.',
+      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre l’accueil, la barre à bons, les commandes et les options d’un service, ces réglages et le guide ; le reste des services, l’histoire et le nom des services sont encore en anglais.',
     display: 'Affichage et mouvement',
     reducedMotion: 'Mouvement réduit',
     reducedBySystem: 'Activé, car votre appareil demande moins de mouvement.',
@@ -105,9 +105,8 @@ export const SETTINGS_WORDS = words(
     paces: { typed: 'Lettre à lettre', quick: 'Rapide', whole: 'Entières' },
     pixelArt: 'Shader pixel art',
     pixelArtHint: 'Des pixels nets et des contours marqués.',
-    shortRepeats: 'Reprises plus courtes',
-    shortRepeatsHint:
-      'Ouvrir un service déjà travaillé directement sur le code, et réduire à une ligne les réactions déjà entendues. L’aide rejoue n’importe quelle introduction.',
+    shortRepeats: SHORT_REPEATS.fr.title,
+    shortRepeatsHint: SHORT_REPEATS.fr.hint,
     fullscreen: 'Plein écran',
     fullscreenHint: 'Un peu plus de place pour votre café.',
     exitFullscreen: 'Quitter le plein écran',

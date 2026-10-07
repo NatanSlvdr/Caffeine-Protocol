@@ -228,9 +228,15 @@ tickets and specials board, Settings with its cafés and the fresh-start
 slip, the handbook, and the close button every window shares. On a shift
 screen it covers the controls: the bar over the café
 (`features/workspace/workspaceWords.ts`), the playback toolbar with its
-pause menu, and the coding pane's tools and robot tabs
-(`components/paneWords.ts`). The rest of a shift (its windows, the crew's
-scenes and reactions, the failure card, the editor's tools), the rail's
+pause menu, the coding pane's tools and robot tabs
+(`components/paneWords.ts`), the photo bar, the practice card and the first
+routine's tips. Of the shift's windows it covers Options and Restore, with
+the line-by-line comparison and the versions' names
+(`modals/optionsWords.ts`; `routineVersions` takes those names, English by
+default). Short repeats is worded once, as `SHORT_REPEATS` beside
+`SettingRow`, for Settings and Options both. The rest of a shift (its other
+windows, the crew's scenes and reactions, the failure card, the editor's
+tools), the rail's
 windows (guestbook, shelf, drills and the rest), the story and the shift
 data are still in English, and so is the list of what bringing an old save
 up to date changed. Where English data sits on a French screen (a shift's

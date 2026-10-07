@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Modal } from '@/components';
 import { Button } from '@/shared/ui/Button';
 import { RUN_MODIFIER } from '@/shared/lib/format';
+import { useWords } from '@/shared/language';
 import { sameRoutine, type RoutineVersion } from '../versions';
 import { RoutineDiff } from './RoutineDiff';
+import { OPTIONS_WORDS } from './optionsWords';
 
 export interface RestoreModalProps {
   /** The robot whose routine goes back: only the open tab changes, the other robots keep theirs. */
@@ -23,17 +25,18 @@ export interface RestoreModalProps {
  * as it is now. A version just like it can't be picked, and Undo brings the player's own back.
  */
 export function RestoreModal({ robot, alone, current, versions, onClose, onRestore }: RestoreModalProps) {
+  const say = useWords(OPTIONS_WORDS);
   const [chosen, setChosen] = useState(() => versions.find((v) => !sameRoutine(v.source, current))?.id);
   const version = versions.find((v) => v.id === chosen);
   return (
     <Modal
       className="settings-window confirm-slip restore-slip"
-      kicker="Workspace options"
-      title={`Restore ${robot}’s routine`}
+      kicker={say.restoring.kicker}
+      title={say.restore(robot)}
       onClose={onClose}
     >
       <fieldset className="restore-versions">
-        <legend className="sr-only">Version to restore</legend>
+        <legend className="sr-only">{say.restoring.legend}</legend>
         {versions.map((v) => {
           const same = sameRoutine(v.source, current);
           return (
@@ -47,23 +50,20 @@ export function RestoreModal({ robot, alone, current, versions, onClose, onResto
               />
               <span>
                 <strong>{v.label}</strong>
-                <small>{same ? `The same as ${robot}’s routine now.` : v.detail}</small>
+                <small>{same ? say.restoring.same(robot) : v.detail}</small>
               </span>
             </label>
           );
         })}
       </fieldset>
       {version && <RoutineDiff robot={robot} current={current} next={version.source} />}
-      <p>
-        Only {robot}’s routine changes{alone ? '' : '; the other robots keep theirs'}. Undo ({RUN_MODIFIER} Z) brings
-        yours back.
-      </p>
+      <p>{say.restoring.only(robot, alone, RUN_MODIFIER)}</p>
       <div className="modal-buttons">
         <button className="settings-chip" data-autofocus onClick={onClose}>
-          Keep my edits
+          {say.restoring.keep}
         </button>
         <Button variant="primary" disabled={!version} onClick={() => version && onRestore(version)}>
-          Restore this version
+          {say.restoring.confirm}
         </Button>
       </div>
     </Modal>

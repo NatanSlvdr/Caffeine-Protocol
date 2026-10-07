@@ -133,22 +133,22 @@ Play a shift through each of these, start to finish.
 
 Before each release, someone plays through the list below and fills in a row. A release ships when every row is signed off or has an issue filed against it.
 
-| Check                                                                      | Chrome | Firefox | Safari | iPad | Notes |
-| -------------------------------------------------------------------------- | ------ | ------- | ------ | ---- | ----- |
-| Default checks and `npm run test:e2e` pass                                 |        |         |        |      |       |
-| A new café, from the opening day to Shift 3's receipt                      |        |         |        |      |       |
-| One Brew shift and one Porter shift, to three stars                        |        |         |        |      |       |
-| An Act IV shift with all three robots                                      |        |         |        |      |       |
-| A failed run: the crew's reaction, the timeline, the fix                   |        |         |        |      |       |
-| Robot motion at 1× and the fastest speed: reaches, waits, a failure        |        |         |        |      |       |
-| Every viewport above fits without scrolling                                |        |         |        |      |       |
-| Keyboard only, through one shift                                           |        |         |        |      |       |
-| Touch only, through one shift                                              | n/a    | n/a     | n/a    |      |       |
-| Offline reload and update                                                  |        |         |        |      |       |
-| Each accessibility path                                                    |        |         |        |      |       |
-| Music: default volume, muted, in the repair bay and in a memory            |        |         |        |      |       |
-| The shelf's looks: pick a print and cushions, see them in the café         |        |         |        |      |       |
-| In French: home, rail, shift controls, Settings, handbook, nothing cut off |        |         |        |      |       |
-| Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks    |        |         |        |      |       |
-| Export a save, reset progress, import it back                              |        |         |        |      |       |
-| The routine notebook, as above                                             |        |         |        |      |       |
+| Check                                                                               | Chrome | Firefox | Safari | iPad | Notes |
+| ----------------------------------------------------------------------------------- | ------ | ------- | ------ | ---- | ----- |
+| Default checks and `npm run test:e2e` pass                                          |        |         |        |      |       |
+| A new café, from the opening day to Shift 3's receipt                               |        |         |        |      |       |
+| One Brew shift and one Porter shift, to three stars                                 |        |         |        |      |       |
+| An Act IV shift with all three robots                                               |        |         |        |      |       |
+| A failed run: the crew's reaction, the timeline, the fix                            |        |         |        |      |       |
+| Robot motion at 1× and the fastest speed: reaches, waits, a failure                 |        |         |        |      |       |
+| Every viewport above fits without scrolling                                         |        |         |        |      |       |
+| Keyboard only, through one shift                                                    |        |         |        |      |       |
+| Touch only, through one shift                                                       | n/a    | n/a     | n/a    |      |       |
+| Offline reload and update                                                           |        |         |        |      |       |
+| Each accessibility path                                                             |        |         |        |      |       |
+| Music: default volume, muted, in the repair bay and in a memory                     |        |         |        |      |       |
+| The shelf's looks: pick a print and cushions, see them in the café                  |        |         |        |      |       |
+| In French: home, rail, shift controls, Options, Settings, handbook, nothing cut off |        |         |        |      |       |
+| Readiness, frame time and memory, as [Performance](PERFORMANCE.md) asks             |        |         |        |      |       |
+| Export a save, reset progress, import it back                                       |        |         |        |      |       |
+| The routine notebook, as above                                                      |        |         |        |      |       |

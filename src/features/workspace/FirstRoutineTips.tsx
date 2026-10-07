@@ -1,6 +1,7 @@
 import { Lightbulb, X } from 'lucide-react';
 import { useId } from 'react';
-import { FIRST_ROUTINE_STEPS } from './firstRoutine';
+import { useWords } from '@/shared/language';
+import { WORKSPACE_WORDS } from './workspaceWords';
 
 export interface FirstRoutineTipsProps {
   /** The step the player is on, counting from 0. */
@@ -13,25 +14,23 @@ export interface FirstRoutineTipsProps {
  * there's nothing to click through, and they can be put away for good; Workspace options brings them back.
  */
 export function FirstRoutineTips({ step, onHide }: FirstRoutineTipsProps) {
+  const say = useWords(WORKSPACE_WORDS).tips;
   const heading = useId();
-  const { title, text } = FIRST_ROUTINE_STEPS[step];
+  const { title, text } = say.steps[step];
   return (
     <aside className="first-routine-tips" aria-labelledby={heading}>
       <header>
         <p id={heading}>
           <Lightbulb size={14} aria-hidden="true" />
-          First routine
-          <span className="first-routine-step">
-            {' '}
-            · Step {step + 1} of {FIRST_ROUTINE_STEPS.length}
-          </span>
+          {say.heading}
+          <span className="first-routine-step"> · {say.step(step + 1, say.steps.length)}</span>
         </p>
         <ol className="first-routine-pips" aria-hidden="true">
-          {FIRST_ROUTINE_STEPS.map((s, i) => (
+          {say.steps.map((s, i) => (
             <li key={s.title} className={i < step ? 'done' : i === step ? 'current' : undefined} />
           ))}
         </ol>
-        <button type="button" aria-label="Hide the first-routine tips" title="Hide tips" onClick={onHide}>
+        <button type="button" aria-label={say.hide} title={say.hideTitle} onClick={onHide}>
           <X size={14} aria-hidden="true" />
         </button>
       </header>

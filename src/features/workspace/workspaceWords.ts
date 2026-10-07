@@ -1,5 +1,6 @@
 import { count, type RobotRole } from '@/domain';
 import { countFr, words } from '@/shared/language';
+import type { PhotoView } from './photo';
 
 /** How far the service has got, for the toolbar to say to a screen reader while it plays. */
 interface Playing {
@@ -54,6 +55,46 @@ export const WORKSPACE_WORDS = words(
         ? `${direction === 'undo' ? 'Undid' : 'Redid'} an edit to ${robot}’s routine.`
         : `Nothing to ${direction} in ${robot}’s routine.`,
     tipsHidden: 'Tips hidden. Workspace options brings them back.',
+    /** A version of the routine put back, named as the restore window lists it. */
+    restored: (robot: string, version: string) =>
+      `${robot}’s routine is back to the ${version.toLowerCase()} version. Undo brings yours back.`,
+    photoBar: {
+      framing: 'Framing',
+      views: { cafe: 'Whole café', query: 'Counter', prep: 'Kitchen', floor: 'Dining room' } as Record<
+        PhotoView,
+        string
+      >,
+      saving: 'Saving…',
+      save: 'Save photo',
+      done: 'Done',
+      escape: 'Esc',
+    },
+    /** Practice, or a bench, that went right, said beside the code. */
+    practice: {
+      title: (round: number, bench: boolean) => (bench ? 'The bench went right' : `Round ${round} went right`),
+      reason: (bench: boolean, eased: string): string =>
+        bench
+          ? eased
+            ? `The bench ran with ${eased}, and earns no stars: they come from the shift’s own guests and rules, every round of them.`
+            : 'The bench earns no stars: they come from the shift’s own guests, every round of them.'
+          : 'Practice earns no stars: the whole service has to get every round right.',
+      runAll: 'Run the whole service',
+    },
+    /** The first routine's tips, each step ticked off by what the player has done, never by a button. */
+    tips: {
+      heading: 'First routine',
+      step: (step: number, steps: number) => `Step ${step} of ${steps}`,
+      hide: 'Hide the first-routine tips',
+      hideTitle: 'Hide tips',
+      steps: [
+        {
+          title: 'Build it',
+          text: 'Add Take, Write, Move and Deposit under Wait for Orders: tap a library block or drag it into place, then set its fields.',
+        },
+        { title: 'Run it', text: 'Press Run service and watch Query follow the routine, from top to bottom.' },
+        { title: 'Fix it', text: 'The card below says where Query stopped. Change that block, then run again.' },
+      ],
+    },
     toolbar: {
       group: 'Simulation controls',
       /** The run button, for a service stopped or playing; the watch-only shift has no routine to go back to. */
@@ -134,6 +175,40 @@ export const WORKSPACE_WORDS = words(
         ? `Modification ${direction === 'undo' ? 'annulée' : 'rétablie'} dans la routine de ${robot}.`
         : `Rien à ${direction === 'undo' ? 'annuler' : 'rétablir'} dans la routine de ${robot}.`,
     tipsHidden: 'Conseils masqués. Le bouton Options les fait revenir.',
+    restored: (robot, version) =>
+      `La routine de ${robot} revient à la version « ${version} ». Annuler ramène la vôtre.`,
+    photoBar: {
+      framing: 'Cadrage',
+      views: { cafe: 'Tout le café', query: 'Comptoir', prep: 'Cuisine', floor: 'Salle' },
+      saving: 'Enregistrement…',
+      save: 'Enregistrer la photo',
+      done: 'Terminé',
+      escape: 'Échap',
+    },
+    practice: {
+      title: (round, bench) => (bench ? 'Le banc d’essai s’est bien passé' : `La manche ${round} s’est bien passée`),
+      reason: (bench, eased) =>
+        bench
+          ? eased
+            ? 'Le banc d’essai a tourné avec des règles assouplies, et ne rapporte pas d’étoiles : elles viennent des clients et des règles du service, toutes manches comprises.'
+            : 'Le banc d’essai ne rapporte pas d’étoiles : elles viennent des clients du service, toutes manches comprises.'
+          : 'L’entraînement ne rapporte pas d’étoiles : il faut que le service entier réussisse toutes ses manches.',
+      runAll: 'Lancer tout le service',
+    },
+    tips: {
+      heading: 'Première routine',
+      step: (step, steps) => `Étape ${step} sur ${steps}`,
+      hide: 'Masquer les conseils de la première routine',
+      hideTitle: 'Masquer les conseils',
+      steps: [
+        {
+          title: 'Construire',
+          text: 'Ajoutez Take, Write, Move et Deposit sous Wait for Orders : touchez un bloc de la bibliothèque ou faites-le glisser à sa place, puis remplissez ses champs.',
+        },
+        { title: 'Lancer', text: 'Appuyez sur Lancer le service et regardez Query suivre la routine, de haut en bas.' },
+        { title: 'Corriger', text: 'La carte ci-dessous dit où Query s’est arrêté. Changez ce bloc, puis relancez.' },
+      ],
+    },
     toolbar: {
       group: 'Commandes du service',
       run: (running, observation) =>

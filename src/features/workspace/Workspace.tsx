@@ -49,6 +49,7 @@ import { failureLines, successLines } from './reactions';
 import { PhotoBar } from './PhotoBar';
 import { framePhoto, photoCaption, photoFocus, type PhotoView } from './photo';
 import { WORKSPACE_WORDS } from './workspaceWords';
+import { OPTIONS_WORDS } from './modals/optionsWords';
 
 export interface ShiftBrief {
   story: string;
@@ -105,6 +106,7 @@ export function Workspace({
 }: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
+  const versionNames = useWords(OPTIONS_WORDS).versions;
   const label = shift.label ?? say.shift(pad2(index + 1));
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
@@ -202,7 +204,9 @@ export function Workspace({
       ? practised
       : undefined;
   // The earlier versions of the open routine that Workspace options can restore.
-  const versions = observation ? [] : routineVersions(save, index, lessons, role, ROBOT_DISPLAY_NAMES[role]);
+  const versions = observation
+    ? []
+    : routineVersions(save, index, lessons, role, ROBOT_DISPLAY_NAMES[role], versionNames);
   // A robot's routine has been broken since it last served this shift: the failure card offers the way back.
   const servedBefore = (robot: RobotRole) => {
     const served = save.robotSolutions[index]?.[robot];
@@ -838,9 +842,7 @@ export function Workspace({
           onRestore={(version) => {
             change(version.source);
             setModal('');
-            sayHistory(
-              `${ROBOT_DISPLAY_NAMES[role]}’s routine is back to the ${version.label.toLowerCase()} version. Undo brings yours back.`,
-            );
+            sayHistory(say.restored(ROBOT_DISPLAY_NAMES[role], version.label));
           }}
         />
       )}

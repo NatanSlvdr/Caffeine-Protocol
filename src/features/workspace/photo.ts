@@ -1,13 +1,8 @@
 import type { RobotRole } from '@/domain';
 
 /** The framings photo mode offers: the whole café, or one robot's corner of it. */
-export const PHOTO_VIEWS = [
-  { id: 'cafe', label: 'Whole café' },
-  { id: 'query', label: 'Counter' },
-  { id: 'prep', label: 'Kitchen' },
-  { id: 'floor', label: 'Dining room' },
-] as const;
-export type PhotoView = (typeof PHOTO_VIEWS)[number]['id'];
+export const PHOTO_VIEWS = ['cafe', 'query', 'prep', 'floor'] as const;
+export type PhotoView = (typeof PHOTO_VIEWS)[number];
 
 /** The robot whose corner a framing shows; the whole café has none. */
 export const photoFocus = (view: PhotoView): RobotRole | undefined => (view === 'cafe' ? undefined : view);

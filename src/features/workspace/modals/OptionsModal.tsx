@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Bug, Download, GitCompareArrows, History } from 'lucide-react';
 import { Modal } from '@/components';
 import { download, saveFileName } from '@/shared/lib/download';
-import { SettingRow, SHORT_REPEATS_HINT } from '@/shared/ui/SettingRow';
+import { SettingRow, SHORT_REPEATS } from '@/shared/ui/SettingRow';
+import { useLanguage, useWords } from '@/shared/language';
+import { OPTIONS_WORDS } from './optionsWords';
 
 export interface OptionsModalProps {
   /** The robot whose tab is open, named on the reset button. */
@@ -48,48 +50,40 @@ export function OptionsModal({
   report,
   onClose,
 }: OptionsModalProps) {
+  const say = useWords(OPTIONS_WORDS);
+  const repeats = SHORT_REPEATS[useLanguage()[0]];
   // The report is shown in full before it's saved: the player sees everything the file holds.
   const [preview, setPreview] = useState<string>();
   const [status, setStatus] = useState('');
   // Says why restoring is greyed out, when nothing else in the window does.
-  const note = observation
-    ? 'This shift is watch-only: the crew serves by hand, so there’s no routine to edit or restore.'
-    : !restorable
-      ? `${robot}’s routine is just like every earlier version.`
-      : running
-        ? `Stop the service to restore ${robot}’s routine.`
-        : '';
+  const why = observation ? 'observation' : !restorable ? 'same' : running ? 'running' : undefined;
+  const note = why && say.restoreNote(robot, why);
   return (
-    <Modal className="settings-window confirm-slip" kicker="This shift" title="Workspace options" onClose={onClose}>
+    <Modal className="settings-window confirm-slip" kicker={say.kicker} title={say.title} onClose={onClose}>
       <SettingRow
-        title="Pixel-art shader"
-        hint="Render the café with crisp pixels and outlined edges."
+        title={say.pixelArt}
+        hint={say.pixelArtHint}
         checked={pixelArt}
         onChange={(e) => onTogglePixelArt(e.target.checked)}
       />
       <SettingRow
-        title="Text editor"
-        // A greyed-out switch says why in its own hint, which is what a screen reader reads with it.
-        hint={
-          observation
-            ? 'Not on this shift: it’s watch-only, so there’s no routine to show.'
-            : 'The same routine, in a plain-text view. Kept for every shift.'
-        }
+        title={say.textEditor}
+        hint={say.textEditorHint(observation)}
         checked={textMode}
         disabled={observation}
         onChange={(e) => onToggleTextMode(e.target.checked)}
       />
-      <p>Comments and empty lines remain intact when switching views. Editing is locked during playback.</p>
+      <p>{say.views}</p>
       <SettingRow
-        title="Shorter repeats"
-        hint={SHORT_REPEATS_HINT}
+        title={repeats.title}
+        hint={repeats.hint}
         checked={shortRepeats}
         onChange={(e) => onToggleShortRepeats(e.target.checked)}
       />
       {tips && (
         <SettingRow
-          title="First-routine tips"
-          hint="Build, run, fix: one step at a time, under the routine, until the shift is served."
+          title={say.tips}
+          hint={say.tipsHint}
           checked={tips.on}
           onChange={(e) => tips.onToggle(e.target.checked)}
         />
@@ -101,7 +95,7 @@ export function OptionsModal({
         aria-haspopup="dialog"
         onClick={onRequestRestore}
       >
-        <History size={15} aria-hidden="true" /> Restore {robot}’s routine
+        <History size={15} aria-hidden="true" /> {say.restore(robot)}
       </button>
       {note && <p id="restore-note">{note}</p>}
       {!observation && (
@@ -113,21 +107,14 @@ export function OptionsModal({
             aria-haspopup="dialog"
             onClick={onCompare}
           >
-            <GitCompareArrows size={15} aria-hidden="true" /> Compare runs
+            <GitCompareArrows size={15} aria-hidden="true" /> {say.compare}
           </button>
-          {!onCompare && (
-            <p id="compare-note">
-              Run the same rounds twice, two services or one round practised twice, to compare them.
-            </p>
-          )}
+          {!onCompare && <p id="compare-note">{say.compareNote}</p>}
         </>
       )}
       <section className="options-report" aria-labelledby="options-report-title">
-        <h3 id="options-report-title">Something wrong with the game?</h3>
-        <p>
-          A problem report holds this shift, your routines and your last run, so the problem can be played back. It’s
-          saved as a file on this computer, and goes nowhere unless you share it.
-        </p>
+        <h3 id="options-report-title">{say.report}</h3>
+        <p>{say.reportText}</p>
         {preview === undefined ? (
           <button
             className="settings-chip"
@@ -136,12 +123,12 @@ export function OptionsModal({
               setStatus('');
             }}
           >
-            <Bug size={15} aria-hidden="true" /> Review a problem report
+            <Bug size={15} aria-hidden="true" /> {say.review}
           </button>
         ) : (
           <>
             {/* Focusable, so the report can be scrolled and read from the keyboard. */}
-            <pre className="options-report-preview" tabIndex={0} aria-label="Problem report, as it will be saved">
+            <pre className="options-report-preview" tabIndex={0} aria-label={say.preview}>
               {preview}
             </pre>
             <div className="settings-actions">
@@ -151,13 +138,13 @@ export function OptionsModal({
                   const name = saveFileName(new Date(), 'report');
                   download(preview, name);
                   setPreview(undefined);
-                  setStatus(`Report saved as ${name}. Look for it with your downloads.`);
+                  setStatus(say.saved(name));
                 }}
               >
-                <Download size={15} aria-hidden="true" /> Save report
+                <Download size={15} aria-hidden="true" /> {say.save}
               </button>
               <button className="settings-chip" onClick={() => setPreview(undefined)}>
-                Not now
+                {say.notNow}
               </button>
             </div>
           </>

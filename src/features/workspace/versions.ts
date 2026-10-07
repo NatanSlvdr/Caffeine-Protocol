@@ -2,6 +2,7 @@ import type { ProgressSave, RobotRole } from '@/domain';
 import { resetRobotPrograms } from '@/features/campaign/save/persistence';
 import type { LessonCatalog } from '@/features/campaign/save/persistence';
 import { pad2 } from '@/shared/lib/format';
+import { OPTIONS_WORDS } from './modals/optionsWords';
 
 /** A routine the player can go back to, named for where it comes from. */
 export interface RoutineVersion {
@@ -14,7 +15,8 @@ export interface RoutineVersion {
 /**
  * The earlier versions of one robot's routine on a shift, newest first: the last one that served this shift, the one
  * carried in from the shift before, and the shift's own starter. Each comes once: a shift that opened on its starter
- * offers it as the starter, and a robot with no routine on this shift has none to offer.
+ * offers it as the starter, and a robot with no routine on this shift has none to offer. Each is named in the reader's
+ * language, English unless `say` is the French.
  */
 export function routineVersions(
   save: ProgressSave,
@@ -22,6 +24,7 @@ export function routineVersions(
   lessons: LessonCatalog,
   role: RobotRole,
   robot: string,
+  say = OPTIONS_WORDS.en.versions,
 ): RoutineVersion[] {
   const lesson = lessons[index];
   const starter = lesson.robotStarter?.[role] ?? (role === 'query' ? lesson.starter : '');
@@ -31,22 +34,22 @@ export function routineVersions(
   if (served?.trim())
     versions.push({
       id: 'served',
-      label: 'Last served',
-      detail: `${robot}’s routine from the last service on this shift that went right.`,
+      label: say.served.label,
+      detail: say.served.detail(robot),
       source: served,
     });
   if (opened.trim() && opened.trim() !== starter.trim())
     versions.push({
       id: 'carried',
-      label: `From Shift ${pad2(index)}`,
-      detail: `${robot}’s routine as it came in from the shift before, the way this shift opened.`,
+      label: say.carried.label(pad2(index)),
+      detail: say.carried.detail(robot),
       source: opened,
     });
   if (starter.trim())
     versions.push({
       id: 'starter',
-      label: 'Shift starter',
-      detail: `The routine this shift starts ${robot} on, before anything is carried in.`,
+      label: say.starter.label,
+      detail: say.starter.detail(robot),
       source: starter,
     });
   return versions;

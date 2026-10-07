@@ -1,8 +1,8 @@
 import { useId } from 'react';
 import { indentSource } from '@/domain';
+import { useWords } from '@/shared/language';
 import { lineDiff } from '../versions';
-
-const count = (n: number, block: string) => `${n} ${block}${n === 1 ? '' : 's'}`;
+import { OPTIONS_WORDS } from './optionsWords';
 
 /**
  * What putting another routine in place of the open one would change, line by line: the lines it brings `in` (or
@@ -22,16 +22,15 @@ export function RoutineDiff({
   const diff = lineDiff(indentSource(current), indentSource(next));
   const added = diff.filter((line) => line.kind === 'add').length,
     removed = diff.filter((line) => line.kind === 'remove').length;
+  const say = useWords(OPTIONS_WORDS).diff;
   const heading = useId();
-  const word = brings === 'back' ? 'Back' : 'In';
   return (
     <section className="restore-compare" aria-labelledby={heading}>
       <p id={heading} className="restore-compare-title">
-        Against {robot}’s routine now
+        {say.heading(robot)}
         <span>
-          {[added && `${count(added, 'line')} ${brings}`, removed && `${count(removed, 'line')} out`]
-            .filter(Boolean)
-            .join(' · ') || 'Only the spacing differs'}
+          {[added && say.change(added, brings), removed && say.change(removed, 'out')].filter(Boolean).join(' · ') ||
+            say.spacing}
         </span>
       </p>
       <ol className="restore-diff">
@@ -40,7 +39,7 @@ export function RoutineDiff({
             <span className="restore-diff-mark" aria-hidden="true">
               {line.kind === 'add' ? '+' : line.kind === 'remove' ? '−' : ''}
             </span>
-            {line.kind !== 'same' && <span className="sr-only">{line.kind === 'add' ? `${word}: ` : 'Out: '}</span>}
+            {line.kind !== 'same' && <span className="sr-only">{say.mark(line.kind === 'add' ? brings : 'out')}</span>}
             <code>{line.text}</code>
           </li>
         ))}

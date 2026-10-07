@@ -1,5 +1,7 @@
 import { CircleCheck, Play } from 'lucide-react';
 import { useId } from 'react';
+import { useWords } from '@/shared/language';
+import { WORKSPACE_WORDS } from './workspaceWords';
 
 export interface PracticeCardProps {
   /** The round that went right, counting from 1. */
@@ -16,26 +18,22 @@ export interface PracticeCardProps {
  * the next step is one button away.
  */
 export function PracticeCard({ round, bench = false, eased = '', onRunService }: PracticeCardProps) {
+  const words = useWords(WORKSPACE_WORDS),
+    say = words.practice;
   const heading = useId();
   return (
     <section className="failure-card practice-card" aria-labelledby={heading}>
       <p className="practice-card-title" id={heading}>
         <CircleCheck size={15} aria-hidden="true" />
-        {bench ? 'The bench went right' : `Round ${round} went right`}
-        <span className="failure-card-when"> · {bench ? 'Bench' : 'Practice'}</span>
+        {say.title(round, bench)}
+        <span className="failure-card-when"> · {bench ? words.toolbar.bench : words.toolbar.practice}</span>
       </p>
       <div className="failure-card-body">
-        <p className="failure-card-reason">
-          {bench
-            ? eased
-              ? `The bench ran with ${eased}, and earns no stars: they come from the shift’s own guests and rules, every round of them.`
-              : 'The bench earns no stars: they come from the shift’s own guests, every round of them.'
-            : 'Practice earns no stars: the whole service has to get every round right.'}
-        </p>
+        <p className="failure-card-reason">{say.reason(bench, eased)}</p>
         <div className="failure-card-actions">
           <button type="button" className="failure-card-show" onClick={onRunService}>
             <Play size={14} aria-hidden="true" />
-            Run the whole service
+            {say.runAll}
           </button>
         </div>
       </div>
