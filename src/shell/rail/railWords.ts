@@ -40,7 +40,6 @@ export const RAIL_WORDS = words(
       label: (n: number, fresh: number) => `Repair bay, ${count(n, 'robot')} on the bench${news(fresh)}`,
     },
     drills: { title: 'Drills', label: (n: number, fresh: number) => `Drills, ${count(n, 'drill')}${news(fresh)}` },
-    repairKicker: (title: string) => `Repair bay · ${title}`,
     backToRail: 'Back to the rail',
     kicker: (cafe: string) => `${cafe} · Order rail`,
     title: 'Choose a shift',
@@ -145,7 +144,6 @@ export const RAIL_WORDS = words(
       label: (n, fresh) =>
         `Exercices, ${countFr(n, 'exercice')}${fresh ? `, dont ${countFr(fresh, 'nouveau', 'nouveaux')}` : ''}`,
     },
-    repairKicker: (title) => `Atelier · ${title}`,
     backToRail: 'Retour à la barre',
     kicker: (cafe) => `${cafe} · Barre à bons`,
     title: 'Choisir un service',

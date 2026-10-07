@@ -54,7 +54,7 @@ describe('the Long Day', () => {
     await waitFor(() => expect(window.location.hash).toBe('#/long-day/1'));
     expect(stored().endurance).toEqual({ version, wave: 1 });
     expect(document.title).toBe(`${longDay.title}: wave 1 · Caffeine Protocol`);
-    expect(screen.getByText(`Wave 1 of 6 · ${longDay.waves[0].title}`)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: `Wave 1 of 6 · ${longDay.waves[0].title}` })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Campaign/ }).textContent).toMatch(/Campaign \/ Wave 1 of 6$/);
     expect(document.querySelector('.app.workspace.long-day')).toBeTruthy();
   });

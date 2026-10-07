@@ -5,10 +5,14 @@ import { CAFE_WORDS } from '../../../src/app/cafeWords';
 import { GUIDE_WORDS } from '../../../src/app/guideWords';
 import { SETTINGS_WORDS } from '../../../src/app/settingsWords';
 import { SAVE_NOTICE_WORDS } from '../../../src/app/saveNoticeWords';
+import { SCREEN_WORDS } from '../../../src/app/screenWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { STORY_WORDS } from '../../../src/shell/storyWords';
 import { DRILL_WORDS } from '../../../src/shell/drillWords';
+import { STAGE_WORDS } from '../../../src/shared/ui/stageWords';
+import { SceneBoundary } from '../../../src/shared/ui/SceneBoundary';
+import { SceneCanvas } from '../../../src/components/three/SceneCanvas';
 import { SPECIALS_WORDS } from '../../../src/shell/specialsWords';
 import { REPAIR_WORDS } from '../../../src/shell/repairWords';
 import { SHELF_WORDS } from '../../../src/shell/shelfWords';
@@ -548,6 +552,20 @@ describe('the rail’s windows in French', () => {
     expect(bay.getAllByRole('img', { name: 'Pas encore' })).toHaveLength(4);
     expect(bay.getByRole('button', { name: 'Fermer le panneau' })).toBeTruthy();
   });
+
+  it('names the tab and a memory’s screen in French, with the memory’s own name kept as English', async () => {
+    campaign(UNLOCKS.help);
+    expect(document.title).toBe('Choisir un service · Caffeine Protocol');
+    fireEvent.click(screen.getByRole('button', { name: /^Souvenirs/ }));
+    const memory = memoryById('day-one')!;
+    fireEvent.click(screen.getByRole('button', { name: `Jouer ${memory.title}` }));
+    await waitFor(() => expect(document.title).toBe(`Souvenir${NBSP}: ${memory.title} · Caffeine Protocol`));
+    expect(screen.getByRole('dialog', { name: `Souvenir · ${memory.title}` })).toBeTruthy();
+    // The kicker is French up to the memory's name, which is the story's.
+    const kicker = document.querySelector('.dialogue-kicker')!;
+    expect(kicker.getAttribute('lang')).toBeNull();
+    expect(kicker.querySelector('[lang="en"]')!.textContent).toBe(memory.title);
+  });
 });
 
 describe('the story pages in French', () => {
@@ -834,6 +852,27 @@ describe('the shift screen in French', () => {
 });
 
 describe('the words themselves', () => {
+  it('says the café is still open in French when it can’t be drawn', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(null);
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    onTestFinished(() => void vi.restoreAllMocks());
+    const Broken = () => {
+      throw new Error('no context');
+    };
+    render(
+      <LanguageProvider>
+        <SceneCanvas pixelArt={false}>{null}</SceneCanvas>
+        <SceneBoundary onRetry={() => {}}>
+          <Broken />
+        </SceneBoundary>
+      </LanguageProvider>,
+    );
+    expect(screen.getAllByText('Le café est toujours ouvert.')).toHaveLength(2);
+    expect(screen.getAllByText(/^Les graphismes 3D ne sont pas disponibles sur cet appareil\./)).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Réessayer le café en 3D' })).toBeTruthy();
+  });
+
   it('sets French with its own typography, and leaves English alone', () => {
     const said = words(
       { ask: 'Ready?', name: (cafe: string) => `“${cafe}”: open` },
@@ -1370,6 +1409,8 @@ describe('the words themselves', () => {
       KEPT_WORDS,
       SPECIALS_WORDS,
       REPAIR_WORDS,
+      STAGE_WORDS,
+      SCREEN_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

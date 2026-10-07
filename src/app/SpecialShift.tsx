@@ -7,6 +7,8 @@ import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepSpecial, projectSpecial } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
+import { useWords } from '@/shared/language';
+import { SCREEN_WORDS } from './screenWords';
 
 /** The special plays as the shift after the campaign's last, so it opens on the routines that shift was served with. */
 const SLOT = CAMPAIGN_LENGTH;
@@ -26,13 +28,14 @@ export function SpecialShift({ special }: { special: Special }) {
     [update, id],
   );
   const catalog = useMemo(() => [...lessons, special.lesson], [special]);
+  const say = useWords(SCREEN_WORDS);
   return (
     <Workspace
       index={SLOT}
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...special, label: special.card ? 'Menu card' : 'Special' }}
+      shift={{ ...special, label: special.card ? say.menuCard : say.special }}
       drills={drills}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>

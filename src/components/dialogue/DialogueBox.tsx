@@ -37,8 +37,10 @@ export interface DialogueBoxProps {
   onDone: () => void;
   /** `scene` dims the whole screen like a visual novel; `aside` sits over the café and leaves the code free. */
   variant?: 'scene' | 'aside';
-  /** Small caption above the box, e.g. the shift name. */
+  /** Small caption above the box, e.g. the shift name: the story's, so marked English on a French page. */
   kicker?: string;
+  /** What comes before the kicker, in the reader's language: “Shift 04”. */
+  kickerLabel?: string;
   /** Label on the last line's button; Continue, in the reader's language, if none. */
   doneLabel?: string;
   /** Print each line whole instead of typing it out, as reduced motion asks; the house settings can ask for it too. */
@@ -60,6 +62,7 @@ export function DialogueBox({
   onDone,
   variant = 'scene',
   kicker,
+  kickerLabel,
   doneLabel,
   instant = false,
   onLine,
@@ -208,7 +211,7 @@ export function DialogueBox({
       className={`dialogue dialogue-${variant}`}
       role="dialog"
       aria-modal={scene || undefined}
-      aria-label={kicker ?? say.dialogue}
+      aria-label={kicker ? (kickerLabel ? `${kickerLabel} · ${kicker}` : kicker) : say.dialogue}
       onClick={scene ? advance : undefined}
     >
       <div
@@ -220,8 +223,9 @@ export function DialogueBox({
         {current.who && <Portrait key={current.who} who={current.who} mood={current.mood} />}
         <div className="dialogue-box">
           {kicker && scene && (
-            <p className="dialogue-kicker" lang={english}>
-              {kicker}
+            <p className="dialogue-kicker">
+              {kickerLabel && `${kickerLabel} · `}
+              <span lang={english}>{kicker}</span>
             </p>
           )}
           {label && (

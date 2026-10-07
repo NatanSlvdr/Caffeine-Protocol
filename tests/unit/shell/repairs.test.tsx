@@ -78,7 +78,7 @@ describe('the repair bay', () => {
     fireEvent.click(within(bay).getByRole('button', { name: /Close the panel/ }));
     expect(kept().repairs).toEqual(['query']);
     expect(screen.queryByRole('heading', { name: query.title })).toBeNull();
-    expect(screen.getByText(`Repair bay · ${query.title}`)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: `Repair bay · ${query.title}` })).toBeTruthy();
   });
 
   it('shows a mended robot’s touch on its card, and lets it be rewired again', () => {

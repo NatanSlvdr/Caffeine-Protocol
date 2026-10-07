@@ -56,7 +56,7 @@ describe('the specials', () => {
     fireEvent.click(within(board).getByRole('button', { name: `Serve ${special.title}` }));
     await waitFor(() => expect(window.location.hash).toBe('#/special/together'));
     expect(document.title).toBe(`Special: ${special.title} · Caffeine Protocol`);
-    expect(screen.getByText(`Special · ${special.title}`)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: `Special · ${special.title}` })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Campaign/ }).textContent).toMatch(/Campaign \/ Special$/);
     // Laid out as a shift.
     expect(document.querySelector('.app.workspace.special')).toBeTruthy();
@@ -129,7 +129,7 @@ describe('the specials', () => {
     fireEvent.click(within(board).getByRole('button', { name: /^Plan the menu/ }));
     fireEvent.click(within(board).getByRole('button', { name: 'Serve this menu, The Tea Table' }));
     await waitFor(() => expect(window.location.hash).toBe('#/special/tea-table'));
-    expect(screen.getByText('Menu card · The Tea Table')).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: 'Menu card · The Tea Table' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Campaign/ }).textContent).toMatch(/Campaign \/ Menu card$/);
   });
 

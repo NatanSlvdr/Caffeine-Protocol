@@ -8,6 +8,8 @@ import { completeLevel, keepMemory, projectMemory } from '@/features/campaign/sa
 import { useGame } from '@/state/GameStore';
 import { useMusicMood } from '@/hooks/useMusicMood';
 import { go } from '@/shared/lib/navigation';
+import { useWords } from '@/shared/language';
+import { SCREEN_WORDS } from './screenWords';
 
 /**
  * A memory in the shift workspace. It plays in the place of the shift whose toolkit it borrows, on a café of its own
@@ -30,13 +32,14 @@ export function MemoryShift({ memory }: { memory: Memory }) {
     () => lessons.map((lesson, index) => (index === slot ? memory.lesson : lesson)),
     [memory, slot],
   );
+  const say = useWords(SCREEN_WORDS);
   return (
     <Workspace
       index={slot}
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...memory, label: 'Memory', memory: true }}
+      shift={{ ...memory, label: say.memory, memory: true }}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>
         keep((s) => ({

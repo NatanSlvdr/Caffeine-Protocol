@@ -389,7 +389,8 @@ export function CampaignPage() {
       {closingUp && (
         <DialogueBox
           lines={closingUp.scene}
-          kicker={say.repairKicker(closingUp.title)}
+          kicker={closingUp.title}
+          kickerLabel={say.repairs.title}
           doneLabel={say.backToRail}
           instant={reducedMotion}
           onDone={() => {

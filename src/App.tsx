@@ -20,7 +20,8 @@ import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { DialoguePaceContext } from '@/components';
-import { LanguageProvider } from '@/shared/language';
+import { LanguageProvider, useWords } from '@/shared/language';
+import { SCREEN_WORDS } from '@/app/screenWords';
 
 export default function App() {
   return (
@@ -83,16 +84,17 @@ function Shell() {
                   ? 'ending'
                   : 'home';
   const shift = useShift(index);
+  const tab = useWords(SCREEN_WORDS).tab;
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
     home: '',
-    campaign: 'Choose a shift',
-    workspace: `Shift ${pad2(index + 1)}: ${shift.title}`,
-    special: `Special: ${special?.title}`,
-    memory: `Memory: ${memory?.title}`,
-    'long-day': `${longDay.title}: wave ${wave}`,
+    campaign: tab.campaign,
+    workspace: tab.shift(pad2(index + 1), shift.title),
+    special: tab.special(special?.title ?? ''),
+    memory: tab.memory(memory?.title ?? ''),
+    'long-day': tab.wave(longDay.title, wave),
     scene: scene?.title ?? '',
-    ending: 'Closing time',
+    ending: tab.ending,
   }[screen];
   useEffect(() => {
     document.title = title ? `${title} · Caffeine Protocol` : 'Caffeine Protocol';

@@ -1,6 +1,8 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { SceneBoundary } from '@/shared/ui/SceneBoundary';
+import { NoGraphics, SceneBoundary } from '@/shared/ui/SceneBoundary';
+import { STAGE_WORDS } from '@/shared/ui/stageWords';
+import { useWords } from '@/shared/language';
 import { reclaimFocus } from '@/shared/lib/focus';
 
 /** Three's renderer requires WebGL 2; probe before its asynchronous creation can throw. */
@@ -24,6 +26,7 @@ export function SceneCanvas({
   fallback?: React.ReactNode;
   children: React.ReactNode;
 }) {
+  const say = useWords(STAGE_WORDS);
   const [supported] = useState(webglSupported);
   const [lost, setLost] = useState(false);
   // Each try builds the renderer afresh. The scene draws from its props alone, so it comes back at the same moment
@@ -38,34 +41,20 @@ export function SceneCanvas({
     if (attempt) reclaimFocus();
   }, [attempt]);
   if (fallback !== undefined && (!supported || lost)) return <>{fallback}</>;
-  if (!supported)
-    return (
-      <div className="webgl-fallback">
-        <strong>The café is still open.</strong>
-        <p>
-          3D graphics are unavailable on this device. You can still program Query, run service, and follow each
-          customer’s order.
-        </p>
-      </div>
-    );
+  if (!supported) return <NoGraphics />;
   return (
     <>
       {lost ? (
         <div className="webgl-fallback">
-          <strong>The café’s picture went dark.</strong>
-          <p>
-            The browser took back the graphics for a moment, as it can when a device is busy or wakes from sleep. Your
-            routines and this service are safe.
-          </p>
+          <strong>{say.dark}</strong>
+          <p>{say.darkWhy}</p>
           <button className="webgl-retry" onClick={retry}>
-            Draw the café again
+            {say.redraw}
           </button>
         </div>
       ) : (
         <SceneBoundary key={attempt} fallback={fallback} onRetry={fallback === undefined ? retry : undefined}>
-          <Suspense
-            fallback={fallback !== undefined ? fallback : <div className="scene-loading">Warming up the café…</div>}
-          >
+          <Suspense fallback={fallback !== undefined ? fallback : <div className="scene-loading">{say.warming}</div>}>
             <Canvas
               key={pixelArt ? 'pixelated' : 'smooth'}
               shadows

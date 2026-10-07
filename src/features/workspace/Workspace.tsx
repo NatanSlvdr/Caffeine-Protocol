@@ -789,7 +789,8 @@ export function Workspace({
       {scene === 'intro' && (
         <DialogueBox
           lines={intro}
-          kicker={`${label} · ${shift.title}`}
+          kicker={shift.title}
+          kickerLabel={label}
           doneLabel={say.startShift}
           instant={reduced}
           onDone={() => setScene('')}

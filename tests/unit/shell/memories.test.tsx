@@ -60,7 +60,7 @@ describe('the memories', () => {
     fireEvent.click(within(board).getByRole('button', { name: `Play ${memory.title}` }));
     await waitFor(() => expect(window.location.hash).toBe('#/memory/day-one'));
     expect(document.title).toBe(`Memory: ${memory.title} · Caffeine Protocol`);
-    expect(screen.getByText(`Memory · ${memory.title}`)).toBeTruthy();
+    expect(screen.getByRole('dialog', { name: `Memory · ${memory.title}` })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Campaign/ }).textContent).toMatch(/Campaign \/ Memory$/);
     // Laid out as a shift, in the colours of an old photo.
     expect(document.querySelector('.app.workspace.memory')).toBeTruthy();

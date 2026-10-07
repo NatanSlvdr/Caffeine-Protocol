@@ -1,5 +1,23 @@
 import { Component } from 'react';
 import type { ReactNode } from 'react';
+import { useWords } from '@/shared/language';
+import { STAGE_WORDS } from './stageWords';
+
+/** The notice in place of a café that can't be drawn here, with a way to try again where there is one. */
+export function NoGraphics({ onRetry }: { onRetry?: () => void }) {
+  const say = useWords(STAGE_WORDS);
+  return (
+    <div className="webgl-fallback">
+      <strong>{say.open}</strong>
+      <p>{say.unavailable}</p>
+      {onRetry && (
+        <button className="webgl-retry" onClick={onRetry}>
+          {say.retry}
+        </button>
+      )}
+    </div>
+  );
+}
 
 /**
  * Keep scene failures local, with an optional replacement for decorative scenes. Given `onRetry`, the notice offers
@@ -15,21 +33,6 @@ export class SceneBoundary extends Component<
   }
   render() {
     if (this.state.failed && this.props.fallback !== undefined) return this.props.fallback;
-    return this.state.failed ? (
-      <div className="webgl-fallback">
-        <strong>The café is still open.</strong>
-        <p>
-          3D graphics are unavailable on this device. You can still program Query, run service, and follow each
-          customer’s order.
-        </p>
-        {this.props.onRetry && (
-          <button className="webgl-retry" onClick={this.props.onRetry}>
-            Try the 3D café again
-          </button>
-        )}
-      </div>
-    ) : (
-      this.props.children
-    );
+    return this.state.failed ? <NoGraphics onRetry={this.props.onRetry} /> : this.props.children;
   }
 }

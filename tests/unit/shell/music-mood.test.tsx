@@ -46,7 +46,7 @@ describe('the music, voiced for the place on screen', () => {
 
   it('plays like an old record in a memory, until the memory is left', async () => {
     const { unmount } = open(served(UNLOCKS.help), '#/memory/day-one');
-    expect(await screen.findByText(/^Memory · /)).toBeTruthy();
+    expect(await screen.findByRole('dialog', { name: /^Memory · / })).toBeTruthy();
     expect(audioService.mood).toBe('memory');
     window.location.hash = '#/campaign';
     await screen.findByRole('heading', { name: 'Choose a shift' });
