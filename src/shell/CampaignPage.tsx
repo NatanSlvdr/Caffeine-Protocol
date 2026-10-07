@@ -389,7 +389,7 @@ export function CampaignPage() {
         <DialogueBox
           lines={closingUp.scene}
           kicker={closingUp.title}
-          kickerLang={english}
+          lang={english}
           kickerLabel={say.repairs.title}
           doneLabel={say.backToRail}
           instant={reducedMotion}

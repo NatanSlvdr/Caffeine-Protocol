@@ -64,6 +64,7 @@ import { createRoot } from 'react-dom/client';
 import { Editor } from '../../../src/components/Editor';
 import { EDITOR_WORDS } from '../../../src/components/editor/editorWords';
 import { DialogueBox } from '../../../src/components/dialogue/DialogueBox';
+import { shiftIntro } from '../../../src/data/campaign/dialogue';
 import { DIALOGUE_WORDS } from '../../../src/components/dialogue/dialogueWords';
 import { BLOCK_HELP_WORDS } from '../../../src/components/editor/blockHelpWords';
 import { blockHelp, spokenHelp } from '../../../src/components/editor/blockHelp';
@@ -129,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, and each shift’s name and brief/,
+      /French covers every screen and window, and each shift’s name, brief and scenes/,
     );
   });
 
@@ -341,7 +342,7 @@ describe('the code editor in French', () => {
 });
 
 describe('the dialogue box in French', () => {
-  it('drives a scene in French, with who speaks named in French and what they say kept as English', () => {
+  it('drives an English scene in French, with who speaks named in French and what they say kept as English', () => {
     vi.useFakeTimers();
     onTestFinished(() => void vi.useRealTimers());
     localStorage.setItem(LANGUAGE_KEY, 'fr');
@@ -361,6 +362,7 @@ describe('the dialogue box in French', () => {
             { who: 'niko', text: 'Coming up.', choice },
           ]}
           choices={{ greeting: 'plain' }}
+          lang="en"
           onDone={onDone}
         />
       </LanguageProvider>,
@@ -385,6 +387,27 @@ describe('the dialogue box in French', () => {
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(onDone).toHaveBeenCalledOnce();
+  });
+
+  it('says a French scene unmarked, and marks only a line still in English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <DialogueBox
+          lines={[
+            { who: 'juno', text: 'Lovely tea.', lang: 'en' },
+            { who: 'niko', text: 'Trois étoiles.' },
+          ]}
+          instant
+          onDone={() => {}}
+        />
+      </LanguageProvider>,
+    );
+    const said = () => screen.getByRole('dialog').querySelector('.dialogue-text > [aria-hidden]')!;
+    expect(said().getAttribute('lang')).toBe('en');
+    fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
+    expect(said().textContent).toBe('Trois étoiles.');
+    expect(said().hasAttribute('lang')).toBe(false);
   });
 });
 
@@ -630,6 +653,21 @@ describe('the shift screen in French', () => {
     expect(screen.getByRole('region', { name: 'Routine de Query' })).toBeTruthy();
   });
 
+  it('opens the shift on its scene in French, with the blocks named in it kept as they are', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    seedLocalStorage(makeSave({ unlocked: 3, selected: 3 }));
+    window.location.hash = '/shift/4';
+    render(<App />);
+    const scene = screen.getByRole('dialog', { name: `Service 04 · Café ou thé${NARROW}?` });
+    expect(scene.querySelector('.dialogue-kicker [lang]')).toBeNull();
+    const said = scene.querySelector('.dialogue-text > [aria-hidden]')!;
+    expect(said.textContent).toBe(`Grande nouvelle${NBSP}: le thé arrive à la carte${NARROW}!`);
+    expect(said.hasAttribute('lang')).toBe(false);
+    const block = (text: string) => shiftIntro(3, 'fr').find((l) => l.text.includes(text))!.text;
+    expect(block('Nouveau bloc')).toContain('[IF tea IN CUSTOMER SPEECH|If]');
+    expect(block('Nouveau bloc')).toContain('[ELSE|Else]');
+  });
+
   it('says where the service pauses by itself, in French', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     open();
@@ -794,6 +832,10 @@ describe('the shift screen in French', () => {
         act(() => {
           vi.advanceTimersByTime(1000);
         });
+      // A shift served before gets only Niko's verdict, in French.
+      const verdict = screen.getByRole('dialog', { name: 'Dialogue' }).querySelector('.dialogue-text > [aria-hidden]')!;
+      expect(verdict.textContent).toBe('Trois étoiles. C’est la routine la plus soignée que j’aie jamais vue.');
+      expect(verdict.hasAttribute('lang')).toBe(false);
       fireEvent.keyDown(window, { key: 'Escape' });
       const receipt = screen.getByRole('dialog', { name: 'Service terminé' });
       expect(receipt.querySelector('.modal-kicker')!.textContent).toBe('Service 02 · Addition');

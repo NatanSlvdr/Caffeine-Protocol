@@ -87,7 +87,7 @@ export function Cutscene({ scene, onDone, doneLabel, reduced = false, choices = 
       <DialogueBox
         lines={lines}
         kicker={scene.title}
-        kickerLang={english}
+        lang={english}
         doneLabel={doneLabel}
         instant={reduced}
         onLine={setLine}

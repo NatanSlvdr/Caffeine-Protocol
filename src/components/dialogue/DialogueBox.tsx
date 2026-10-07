@@ -4,7 +4,7 @@ import { cast, speakerLabel, speakerParts } from '@/data/campaign/cast';
 import type { DialogueChoices, DialogueLine, DialogueOption } from '@/domain';
 import { BlockIcon } from '../BlockIcon';
 import { category } from '../editor/blockMeta';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import { DialoguePaceContext } from './pace';
 import { DIALOGUE_WORDS } from './dialogueWords';
 import { Portrait, portraitUrl } from './Portrait';
@@ -39,8 +39,11 @@ export interface DialogueBoxProps {
   variant?: 'scene' | 'aside';
   /** Small caption above the box, e.g. the shift name. */
   kicker?: string;
-  /** The kicker's language when it isn't the page's: a scene's title, still English on a French page. */
-  kickerLang?: string;
+  /**
+   * The scene's language when it isn't the page's, for its kicker, its lines and its answers: a cutscene is still English
+   * on a French page. A line can say otherwise for itself.
+   */
+  lang?: string;
   /** What comes before the kicker, in the reader's language: “Shift 04”. */
   kickerLabel?: string;
   /** Label on the last line's button; Continue, in the reader's language, if none. */
@@ -64,7 +67,7 @@ export function DialogueBox({
   onDone,
   variant = 'scene',
   kicker,
-  kickerLang,
+  lang,
   kickerLabel,
   doneLabel,
   instant = false,
@@ -73,7 +76,6 @@ export function DialogueBox({
   onChoose,
 }: DialogueBoxProps) {
   const say = useWords(DIALOGUE_WORDS);
-  const english = useUntranslated();
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState(0);
   // The furthest line reached: a line gone back over is printed whole, since it has been read once already.
@@ -208,6 +210,7 @@ export function DialogueBox({
   if (!current) return null;
   const speaker = current.who ? cast[current.who] : undefined;
   const label = speaker && speakerParts(speaker, say.customer);
+  const said = current.lang ?? lang;
   let left = shown;
   return (
     <div
@@ -228,7 +231,7 @@ export function DialogueBox({
           {kicker && scene && (
             <p className="dialogue-kicker">
               {kickerLabel && `${kickerLabel} · `}
-              <span lang={kickerLang}>{kicker}</span>
+              <span lang={lang}>{kicker}</span>
             </p>
           )}
           {label && (
@@ -238,7 +241,7 @@ export function DialogueBox({
             </p>
           )}
           <p className="dialogue-text" aria-live="polite">
-            <span aria-hidden="true" lang={english}>
+            <span aria-hidden="true" lang={said}>
               {parts.map((part, i) => {
                 const typed = part.text.slice(0, Math.max(left, 0));
                 left -= part.text.length;
@@ -261,12 +264,12 @@ export function DialogueBox({
                 );
               })}
             </span>
-            {/* Who speaks is said in the reader's language; what they say is the story's English. */}
+            {/* Who speaks is said in the reader's language; what they say, in the scene's. */}
             <span className="sr-only">
               {voiced && (
                 <>
                   {speaker && say.says(speakerLabel(speaker, say.customer))}
-                  <span lang={english}>{text}</span>
+                  <span lang={said}>{text}</span>
                 </>
               )}
             </span>
@@ -291,7 +294,7 @@ export function DialogueBox({
                     }}
                   >
                     <kbd aria-hidden="true">{i + 1}</kbd>
-                    <span lang={english}>{option.label}</span>
+                    <span lang={lang}>{option.label}</span>
                     {chosen && <small aria-hidden="true">{mark}</small>}
                   </button>
                 );

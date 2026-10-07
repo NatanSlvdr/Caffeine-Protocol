@@ -317,12 +317,18 @@ const NARRATIVE = words(
   campaignNarrative.map((row, index) => ({ ...row, ...campaignNarrativeFr[index] })),
 );
 
+/** Every shift's opening and closing scenes, set with French typography in French. */
+const SCENES = words(
+  { intro: levels.map((_, i) => shiftIntro(i)), outro: levels.map((_, i) => shiftOutro(i)) },
+  { intro: levels.map((_, i) => shiftIntro(i, 'fr')), outro: levels.map((_, i) => shiftOutro(i, 'fr')) },
+);
+
 /** Every shift's title and brief, in the reader's language. */
 export const useNarrative = (): readonly ShiftNarrative[] => useWords(NARRATIVE);
 
 /**
- * Everything a shift screen needs: level, lesson, brief, intro and payoff scenes, and title. The title, the brief and
- * the lesson note are in the reader's language; the scenes are still English.
+ * Everything a shift screen needs: level, lesson, brief, intro and payoff scenes, and title, all in the reader's
+ * language.
  */
 export function useShift(index: number): {
   level: (typeof levels)[number];
@@ -342,8 +348,8 @@ export function useShift(index: number): {
     level: levels[index],
     lesson,
     brief,
-    intro: shiftIntro(index),
-    outro: shiftOutro(index),
+    intro: SCENES[language].intro[index] ?? shiftIntro(index),
+    outro: SCENES[language].outro[index] ?? shiftOutro(index),
     title: brief.title,
   };
 }

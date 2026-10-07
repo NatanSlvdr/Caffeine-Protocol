@@ -17,7 +17,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Music volume',
     language: 'Language',
     languageHint:
-      'Shared by every café in this browser. French covers every screen and window, and each shift’s name and brief, so far; the crew’s scenes and the stories of the specials, memories, drills and repairs are still in English.',
+      'Shared by every café in this browser. French covers every screen and window, and each shift’s name, brief and scenes, so far; what the crew says when a run goes wrong, the scenes between acts and the stories of the specials, memories, drills and repairs are still in English.',
     display: 'Display & motion',
     reducedMotion: 'Reduced motion',
     reducedBySystem: 'On, because your device asks for less motion.',
@@ -94,7 +94,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Volume de la musique',
     language: 'Langue',
     languageHint:
-      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre chaque écran et chaque fenêtre, ainsi que le nom et le descriptif de chaque service ; les scènes de l’équipe et les histoires des commandes spéciales, des souvenirs, des exercices et des réparations sont encore en anglais.',
+      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre chaque écran et chaque fenêtre, ainsi que le nom, le descriptif et les scènes de chaque service ; ce que dit l’équipe quand un service tourne mal, les scènes entre les actes et les histoires des commandes spéciales, des souvenirs, des exercices et des réparations sont encore en anglais.',
     display: 'Affichage et mouvement',
     reducedMotion: 'Mouvement réduit',
     reducedBySystem: 'Activé, car votre appareil demande moins de mouvement.',

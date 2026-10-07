@@ -19,7 +19,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
-import { useWords } from '@/shared/language';
+import { useUntranslated, useWords } from '@/shared/language';
 import { useLiveRun, type LiveRunArgs } from './useLiveRun';
 import { drillFor, type WorkspaceDrill } from './hints';
 import { PlaybackToolbar } from './PlaybackToolbar';
@@ -58,6 +58,7 @@ import { CompareModal } from './modals/CompareModal';
 import { comparableTo, latestPair } from './compare';
 import { problemReport } from './report';
 import { failureLines, successLines } from './reactions';
+import { REACTION_WORDS } from './reactionWords';
 import { PhotoBar } from './PhotoBar';
 import { framePhoto, photoCaption, photoFocus, type PhotoView } from './photo';
 import { WORKSPACE_WORDS } from './workspaceWords';
@@ -123,6 +124,13 @@ export function Workspace({
 }: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
+  const reactionSay = useWords(REACTION_WORDS);
+  const english = useUntranslated();
+  // A special's or a memory's payoff is still English, so it says so line by line before the crew's verdict.
+  const payoff = useMemo(
+    () => (shift.lang ? outro.map((said) => ({ ...said, lang: shift.lang })) : outro),
+    [outro, shift.lang],
+  );
   const versionNames = useWords(OPTIONS_WORDS).versions;
   const pauseWords = useWords(PAUSE_WORDS),
     routeWords = useWords(ROUTE_WORDS);
@@ -436,7 +444,7 @@ export function Workspace({
           save.robotSolutions[index],
         )
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index, level, outro, briefSuccess, live.bestBefore)
+        ? successLines(result, role, index, level, payoff, briefSuccess, live.bestBefore, reactionSay)
         : undefined;
   // The latest run before the one just served that played the same rounds, for the receipt to compare with.
   const latest = records.at(-1);
@@ -604,6 +612,7 @@ export function Workspace({
                 key={`${scene}-${result?.first_failure?.reason}`}
                 variant="aside"
                 lines={reaction}
+                lang={scene === 'failure' ? english : undefined}
                 instant={reduced}
                 doneLabel={scene === 'success' ? say.seeReceipt : say.backToCode}
                 onDone={closeReaction}
@@ -796,7 +805,7 @@ export function Workspace({
         <DialogueBox
           lines={intro}
           kicker={shift.title}
-          kickerLang={shift.lang}
+          lang={shift.lang}
           kickerLabel={label}
           doneLabel={say.startShift}
           instant={reduced}

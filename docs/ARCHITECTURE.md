@@ -289,9 +289,9 @@ does the dialogue box around a scene
 (`components/dialogue/dialogueWords.ts`: Back, Skip and Next, the count of
 lines, the marks on Niko's answers, and a guest's role, which `speakerParts`
 and `speakerLabel` take), while the lines, the answers and the scene's title
-stay the story's English, marked so; a screen reader hears who speaks in
-French and what they say in English. So do the button that ends a scene
-between shifts and the closing receipt's bar, rows and ways on
+are said in the scene's language, and a screen reader hears who speaks in
+French and what they say in that language. So do the button that ends a
+scene between shifts and the closing receipt's bar, rows and ways on
 (`shell/storyWords.ts`, with each act's milestone in the order of `acts`);
 the receipt's heading and Niko's last lines stay English, marked so. So does
 the save notice over every screen (`app/saveNoticeWords.ts`): `readSave` and
@@ -321,33 +321,44 @@ do the tab's title and what a shift past the campaign is called in its bar
 the notices that stand in for the 3D café (`shared/ui/stageWords.ts`, with
 `NoGraphics` shared by `SceneBoundary` and `SceneCanvas`). `DialogueBox`
 takes a `kickerLabel` in the reader's language before the kicker, and a
-`kickerLang` for a kicker still English: a scene's, a special's or a part's
-name. The shifts' titles and briefs read in French too
-(`data/campaign/narrative.fr.ts`, row for row with `campaignNarrative`, its
-lesson notes naming the same blocks in their own words): `useNarrative`
-gives every shift's in the reader's language and `useShift` the open one's,
-lesson note included, so the rail, the board, the front door, Help, the
-coding pane, the receipt and the windows that cite a shift say its French
-name. A special's, a memory's and a Long Day wave's are still English, so
-`WorkspaceShift` takes a `lang` that the pane, Help and the intro's kicker
-carry. `CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
-English. A window whose title is still English marks it with `titleLang`.
-Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
-Settings and Options both. The words of the crew's scenes and reactions, the
-levels' own data and the stories of the specials, memories, drills and
-repairs are still in English, and so is the list of what bringing an old
-save up to date changed, marked so under the notice's French heading. Where
-English data sits on a French screen (a special's name, its story and goal,
-a scene's logline), it carries `lang={useUntranslated()}`, so a screen
-reader says it as English; on an English page the attribute is left off. Act
-names and taglines for the tickets are in `shell/rail/railWords.ts`;
-`acts.ts` keeps the English names the English-only windows still read. The
-save checks' refusals are keyed (`SAVE_REFUSALS`) so Settings can say them
-in French; a damaged file's field is left out in French. The handbook names
-the buttons and windows as they read in French. The French toolbar reads
-longer, so its step buttons fold to their icons below 1360px rather than
-1180px. Programming words (blocks, values, the text editor's syntax) are
-never translated, so a routine and a shared notebook read the same in either
+`lang` for a scene still English, its kicker with it: a cutscene, a repaired
+part's, a special's or a memory's. A `DialogueLine` can carry its own
+`lang`, for a line still English in a French scene. The shifts' titles and
+briefs read in French too (`data/campaign/narrative.fr.ts`, row for row with
+`campaignNarrative`, its lesson notes naming the same blocks in their own
+words): `useNarrative` gives every shift's in the reader's language and
+`useShift` the open one's, lesson note included, so the rail, the board, the
+front door, Help, the coding pane, the receipt and the windows that cite a
+shift say its French name. A special's, a memory's and a Long Day wave's are
+still English, so `WorkspaceShift` takes a `lang` that the pane, Help and
+the intro carry. The shifts' scenes read in French too
+(`data/campaign/dialogue.fr.ts`, keyed like the English and line for line
+with it: the same speakers, the same blocks, as many sounds): `shiftIntro`
+and `shiftOutro` take a language, and `useShift` gives the open shift's, set
+with French typography. So do the crew's words once a service is served
+(`features/workspace/reactionWords.ts`: the robots' cheers and new bests and
+Niko's verdict on the stars, which `successLines` takes, English by
+default). A special's or a memory's payoff is still English, so `Workspace`
+marks it line by line before the French verdict, and the crew's reaction to
+a failed run is still English, marked so on the box. `CHALLENGE_WORDS` is a
+catalog too; the generated shift docs read its English. A window whose title
+is still English marks it with `titleLang`. Short repeats is worded once, as
+`SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. What the
+crew says when a run goes wrong, the scenes between acts, the levels' own
+data and the stories of the specials, memories, drills and repairs are still
+in English, and so is the list of what bringing an old save up to date
+changed, marked so under the notice's French heading. Where English data
+sits on a French screen (a special's name, its story and goal, a scene's
+logline), it carries `lang={useUntranslated()}`, so a screen reader says it
+as English; on an English page the attribute is left off. Act names and
+taglines for the tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps
+the English names the English-only windows still read. The save checks'
+refusals are keyed (`SAVE_REFUSALS`) so Settings can say them in French; a
+damaged file's field is left out in French. The handbook names the buttons
+and windows as they read in French. The French toolbar reads longer, so its
+step buttons fold to their icons below 1360px rather than 1180px.
+Programming words (blocks, values, the text editor's syntax) are never
+translated, so a routine and a shared notebook read the same in either
 language.
 
 ## Photo mode

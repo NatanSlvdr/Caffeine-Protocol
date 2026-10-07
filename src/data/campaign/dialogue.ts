@@ -1,11 +1,16 @@
 import { line } from '../../domain/dialogue';
 import type { DialogueLine, Speaker } from '../../domain/dialogue';
+import type { Language } from '../../shared/language';
+import { introsFr, outrosFr } from './dialogue.fr';
 import { narrativeFor } from './narrative';
+import { campaignNarrativeFr } from './narrative.fr';
 
 /** Script shorthand: `['niko:happy', 'text']`, `['query', 'text']`, or `['', 'narration']`. `*whirr*` marks a sound effect. */
 type ScriptLine = readonly [Speaker, string];
 
-const script = (lines: readonly ScriptLine[]): DialogueLine[] => lines.map(([speaker, text]) => line(speaker, text));
+/** A scene as said, in English or with the same speakers saying the `translated` lines. */
+const script = (lines: readonly ScriptLine[], translated?: readonly string[]): DialogueLine[] =>
+  lines.map(([speaker, text], i) => line(speaker, translated?.[i] ?? text));
 
 /** Shift intros, keyed by 1-based level. They play every time a shift opens, unless shorter repeats skips one already worked on. */
 const intros: Record<number, readonly ScriptLine[]> = {
@@ -271,10 +276,12 @@ const intros: Record<number, readonly ScriptLine[]> = {
   ],
 };
 
-/** The scene that opens a shift. Shifts without a written scene get Niko reading the story beat. */
-export function shiftIntro(index: number): DialogueLine[] {
+/** The scene that opens a shift, in `language`. Shifts without a written scene get Niko reading the story beat. */
+export function shiftIntro(index: number, language: Language = 'en'): DialogueLine[] {
   const written = intros[index + 1];
-  return written ? script(written) : [line('niko', narrativeFor(index).story)];
+  const french = language === 'fr';
+  if (written) return script(written, french ? introsFr[index + 1] : undefined);
+  return [line('niko', (french && campaignNarrativeFr[index]?.story) || narrativeFor(index).story)];
 }
 
 /** Shift payoffs, keyed by 1-based level: whoever the intro left waiting gets what they came for. */
@@ -375,8 +382,8 @@ const outros: Record<number, readonly ScriptLine[]> = {
   ],
 };
 
-/** The scene that closes a passed shift, before Niko's star verdict. Empty when none is written. */
-export function shiftOutro(index: number): DialogueLine[] {
+/** The scene that closes a passed shift, in `language`, before Niko's star verdict. Empty when none is written. */
+export function shiftOutro(index: number, language: Language = 'en'): DialogueLine[] {
   const written = outros[index + 1];
-  return written ? script(written) : [];
+  return written ? script(written, language === 'fr' ? outrosFr[index + 1] : undefined) : [];
 }
