@@ -3,6 +3,8 @@ import type { RobotRole } from '@/domain';
 import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
 import { BookOpen, FlaskConical, NotebookPen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
 import { RUN_MODIFIER } from '@/shared/lib/format';
+import { useUntranslated, useWords } from '@/shared/language';
+import { PANE_WORDS } from './paneWords';
 import { RobotOptions } from './RobotChoice';
 import type { RobotTabActivity } from './RobotChoice';
 
@@ -38,6 +40,9 @@ export function CodingPaneHeader({
   /** Each robot's activity while a run plays, shown on its tab. */
   activity?: Partial<Record<RobotRole, RobotTabActivity>>;
 }) {
+  const say = useWords(PANE_WORDS);
+  // The shift's title, story and goal are still in English.
+  const english = useUntranslated();
   // Undoing the last step greys Undo out under the pointer or keyboard focus; focus moves across to Redo, and back.
   const undoButton = useRef<HTMLButtonElement>(null),
     redoButton = useRef<HTMLButtonElement>(null),
@@ -58,18 +63,18 @@ export function CodingPaneHeader({
     <section className="coding-pane">
       <header className="coding-pane-heading">
         <div className="coding-title-row">
-          <h2 data-screen-title tabIndex={-1}>
+          <h2 data-screen-title tabIndex={-1} lang={english}>
             {shift}
           </h2>
           <div className="coding-tools">
             {history && (
-              <div className="history-tools" role="group" aria-label="Edit history">
+              <div className="history-tools" role="group" aria-label={say.history}>
                 <button
                   ref={undoButton}
                   type="button"
-                  aria-label="Undo"
+                  aria-label={say.undo}
                   aria-keyshortcuts="Control+Z Meta+Z"
-                  title={`Undo (${RUN_MODIFIER} Z)`}
+                  title={`${say.undo} (${RUN_MODIFIER} Z)`}
                   disabled={!history.canUndo}
                   onClick={() => press(undoButton.current, history.onUndo)}
                 >
@@ -78,9 +83,9 @@ export function CodingPaneHeader({
                 <button
                   ref={redoButton}
                   type="button"
-                  aria-label="Redo"
+                  aria-label={say.redo}
                   aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y"
-                  title={`Redo (${RUN_MODIFIER} ⇧ Z)`}
+                  title={`${say.redo} (${RUN_MODIFIER} ⇧ Z)`}
                   disabled={!history.canRedo}
                   onClick={() => press(redoButton.current, history.onRedo)}
                 >
@@ -89,40 +94,50 @@ export function CodingPaneHeader({
               </div>
             )}
             {onHelp && (
-              <button type="button" aria-label="Help" aria-haspopup="dialog" title="Help" onClick={onHelp}>
+              <button type="button" aria-label={say.help} aria-haspopup="dialog" title={say.help} onClick={onHelp}>
                 <BookOpen size={14} aria-hidden="true" />
               </button>
             )}
             {onNotebook && (
               <button
                 type="button"
-                aria-label="Notebook"
+                aria-label={say.notebook}
                 aria-haspopup="dialog"
-                title="Routine notebook"
+                title={say.notebookTitle}
                 onClick={onNotebook}
               >
                 <NotebookPen size={14} aria-hidden="true" />
               </button>
             )}
             {onBench && (
-              <button type="button" aria-label="Test bench" aria-haspopup="dialog" title="Test bench" onClick={onBench}>
+              <button type="button" aria-label={say.bench} aria-haspopup="dialog" title={say.bench} onClick={onBench}>
                 <FlaskConical size={14} aria-hidden="true" />
               </button>
             )}
             {onOptions && (
-              <button type="button" aria-label="Options" aria-haspopup="dialog" title="Options" onClick={onOptions}>
+              <button
+                type="button"
+                aria-label={say.options}
+                aria-haspopup="dialog"
+                title={say.options}
+                onClick={onOptions}
+              >
                 <SlidersHorizontal size={14} aria-hidden="true" />
               </button>
             )}
           </div>
         </div>
-        {story && <p className="shift-story">{story}</p>}
+        {story && (
+          <p className="shift-story" lang={english}>
+            {story}
+          </p>
+        )}
         <p className="shift-objective">
-          <span>Your goal</span>
-          {objective}
+          <span>{say.goal}</span>
+          <span lang={english}>{objective}</span>
         </p>
       </header>
-      <div className="robot-tabs" role="tablist" aria-label="Robot routines">
+      <div className="robot-tabs" role="tablist" aria-label={say.robots}>
         <RobotOptions
           level={level}
           selected={role}

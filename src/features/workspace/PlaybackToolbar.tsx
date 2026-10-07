@@ -1,7 +1,9 @@
 import { ChevronsRight, Pause, Play, Square, StepForward } from 'lucide-react';
 import { BLOCK_SECONDS, MAX_PLAYBACK_SPEED } from '@/domain';
 import { RUN_MODIFIER } from '@/shared/lib/format';
+import { useWords } from '@/shared/language';
 import { PauseAtMenu, type PauseAtMenuProps } from './PauseAtMenu';
+import { WORKSPACE_WORDS } from './workspaceWords';
 
 export interface PlaybackToolbarProps {
   running: boolean;
@@ -54,10 +56,11 @@ export function PlaybackToolbar({
   stepped,
   pauseMenu,
 }: PlaybackToolbarProps) {
+  const say = useWords(WORKSPACE_WORDS).toolbar;
   // A shift of one round has nothing to count.
   const counted = running && rounds > 1;
   return (
-    <div className="playback-toolbar" role="group" aria-label="Simulation controls">
+    <div className="playback-toolbar" role="group" aria-label={say.group}>
       <button
         className={`primary run-button ${running ? 'stop-button' : ''}`}
         aria-keyshortcuts={`Control+Enter Meta+Enter${running ? ' Escape' : ''}`}
@@ -65,33 +68,33 @@ export function PlaybackToolbar({
       >
         {running ? <Square size={15} aria-hidden="true" /> : <Play size={15} fill="currentColor" aria-hidden="true" />}
         {/* The watch-only shift has no routine to go back to. */}
-        {running ? (observation ? 'Stop watching' : 'Stop & edit') : observation ? 'Watch service' : 'Run service'}
+        {say.run(running, observation)}
         <kbd aria-hidden="true">{RUN_MODIFIER} ↵</kbd>
       </button>
-      <button aria-label={paused ? 'Resume playback' : 'Pause playback'} disabled={!pausable} onClick={onTogglePause}>
+      <button aria-label={paused ? say.resumeLabel : say.pauseLabel} disabled={!pausable} onClick={onTogglePause}>
         {paused ? <Play size={15} aria-hidden="true" /> : <Pause size={15} aria-hidden="true" />}{' '}
-        {paused ? 'Resume' : 'Pause'}
+        {paused ? say.resume : say.pause}
       </button>
       {running && robot && onStep && (
         <>
           <button
             className="step-button"
             disabled={!paused}
-            title={paused ? `Play on until ${robot} starts its next block, or starts waiting` : 'Pause to step'}
+            title={paused ? say.stepTitle(robot) : say.pauseToStep}
             onClick={onStep}
           >
             <StepForward size={15} aria-hidden="true" />
-            <span className="step-label">Step {robot}</span>
+            <span className="step-label">{say.step(robot)}</span>
           </button>
           {onStepCrew && (
             <button
               className="step-button"
               disabled={!paused}
-              title={paused ? 'Play on until any of your robots starts a block, or starts waiting' : 'Pause to step'}
+              title={paused ? say.nextEventTitle : say.pauseToStep}
               onClick={onStepCrew}
             >
               <ChevronsRight size={15} aria-hidden="true" />
-              <span className="step-label">Next event</span>
+              <span className="step-label">{say.nextEvent}</span>
             </button>
           )}
         </>
@@ -99,15 +102,15 @@ export function PlaybackToolbar({
       {pauseMenu && <PauseAtMenu {...pauseMenu} />}
       {running && bench && (
         <span className="playback-round practice" aria-hidden="true">
-          <strong>Bench</strong>
-          {eased ? 'Eased, for no stars' : 'For no stars'}
+          <strong>{say.bench}</strong>
+          {say.noStars(!!eased)}
         </span>
       )}
       {counted && !bench && (
         <span className={'playback-round' + (practice ? ' practice' : '')} aria-hidden="true">
           {/* A service stops at its first slip, so every round before this one went right. */}
           {practice ? (
-            <strong>Practice</strong>
+            <strong>{say.practice}</strong>
           ) : (
             <span className="round-pips">
               {Array.from({ length: rounds }, (_, i) => (
@@ -115,18 +118,18 @@ export function PlaybackToolbar({
               ))}
             </span>
           )}
-          Round {round} of {rounds}
+          {say.round(round, rounds)}
         </span>
       )}
       <label className="playback-speed">
         <span>
-          Speed <strong>{speed}×</strong>
-          <small>1 block · {(BLOCK_SECONDS / speed).toFixed(2)}s</small>
+          {say.speed} <strong>{say.times(speed)}</strong>
+          <small>{say.perBlock(BLOCK_SECONDS / speed)}</small>
         </span>
         <input
           type="range"
-          aria-label="Playback speed"
-          aria-valuetext={`${speed}× speed`}
+          aria-label={say.speedLabel}
+          aria-valuetext={say.speedSaid(speed)}
           min={1}
           max={MAX_PLAYBACK_SPEED}
           step={0.25}
@@ -138,8 +141,8 @@ export function PlaybackToolbar({
       <p className="sr-only" role="status">
         {running &&
           (paused
-            ? (stepped ?? 'Service paused.')
-            : `${bench ? `Running the bench${eased ? ` with ${eased}` : ''}, for no stars` : practice ? `Practising round ${round} of ${rounds}, for no stars` : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`}.${observation ? '' : ' The routines are locked until it stops.'}`)}
+            ? (stepped ?? say.paused)
+            : say.playing({ bench, eased, practice, round, rounds, counted, observation }))}
       </p>
     </div>
   );

@@ -3,6 +3,8 @@ import { ChefHat, ConciergeBell, ReceiptText } from 'lucide-react';
 import { ROBOT_UNLOCK_LEVELS, splitByUnlock } from '@/domain/robots';
 import type { RobotRole } from '@/domain';
 import { pad2 } from '@/shared/lib/format';
+import { useWords } from '@/shared/language';
+import { PANE_WORDS } from './paneWords';
 
 export const robotIcons = { query: ReceiptText, prep: ChefHat, floor: ConciergeBell };
 
@@ -21,16 +23,12 @@ export function RobotChoice({ robot, label }: { robot: RobotRole; label: string 
   );
 }
 
-const joins = (robot: RobotRole) => `Joins the crew on Shift ${pad2(ROBOT_UNLOCK_LEVELS[robot])}`;
-
 /** What a robot is up to while a run plays, shown on its tab: busy, waiting for work, or done for the day. */
 export interface RobotTabActivity {
   state: 'working' | 'waiting' | 'stopped';
   /** What it's doing or waiting for, in the words its blocks use. */
   label: string;
 }
-
-const ACTIVITY_WORDS = { working: 'working', waiting: 'waiting', stopped: 'stopped' } as const;
 
 interface RobotListProps {
   level: number;
@@ -43,6 +41,8 @@ interface RobotListProps {
 }
 
 function RobotList({ level, selected, labels, onSelect, tabs, activity }: RobotListProps) {
+  const say = useWords(PANE_WORDS);
+  const joins = (robot: RobotRole) => say.joins(pad2(ROBOT_UNLOCK_LEVELS[robot]));
   const { unlocked, locked } = splitByUnlock(level);
   const current = selected && unlocked.includes(selected) ? selected : unlocked[0];
   // Tabs follow the arrow keys, Home and End, wrapping round the robots already running.
@@ -82,7 +82,7 @@ function RobotList({ level, selected, labels, onSelect, tabs, activity }: RobotL
         <RobotChoice robot={robot} label={labels[robot]} />
         {doing && (
           <span className="robot-activity" aria-hidden="true">
-            {ACTIVITY_WORDS[doing.state]}
+            {say.activity[doing.state]}
           </span>
         )}
       </button>

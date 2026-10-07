@@ -1,7 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { CircleDot } from 'lucide-react';
-import { count } from '@/domain';
+import { useWords } from '@/shared/language';
 import type { PauseAt } from './breakpoints';
+import { WORKSPACE_WORDS } from './workspaceWords';
 
 export interface PauseAtMenuProps {
   pauseAt: PauseAt;
@@ -20,6 +21,7 @@ export interface PauseAtMenuProps {
  * make and can clear, each handoff, and a slip, held before the crew reacts.
  */
 export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs, textMode }: PauseAtMenuProps) {
+  const say = useWords(WORKSPACE_WORDS).pauseAt;
   const [open, setOpen] = useState(false);
   const root = useRef<HTMLDivElement>(null),
     trigger = useRef<HTMLButtonElement>(null);
@@ -33,9 +35,6 @@ export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs,
     return () => document.removeEventListener('pointerdown', close);
   }, [open]);
   const set = marks + Number(handoffs && pauseAt.handoffs) + Number(pauseAt.slips);
-  const where = textMode
-    ? 'Click a line number, or press F9 on a line, to mark it.'
-    : 'Click a block’s number, or press F9 on a block, to mark it.';
   return (
     <div
       className="pause-at"
@@ -55,12 +54,12 @@ export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs,
         className="pause-at-button"
         aria-expanded={open}
         aria-controls={open ? menu : undefined}
-        aria-label={`Pause at${set ? `, ${count(set, 'setting')} on` : ''}`}
-        title="Where the service pauses by itself"
+        aria-label={say.label(set)}
+        title={say.title}
         onClick={() => setOpen((o) => !o)}
       >
         <CircleDot size={15} aria-hidden="true" />
-        <span className="step-label">Pause at</span>
+        <span className="step-label">{say.button}</span>
         {set > 0 && (
           <span className="pause-at-count" aria-hidden="true">
             {set}
@@ -68,18 +67,16 @@ export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs,
         )}
       </button>
       {open && (
-        <div className="pause-at-menu" id={menu} role="group" aria-label="Pause the service by itself">
-          <p className="pause-at-title">Pause the service by itself</p>
+        <div className="pause-at-menu" id={menu} role="group" aria-label={say.heading}>
+          <p className="pause-at-title">{say.heading}</p>
           <div className="pause-at-marks">
             <p>
-              <strong>
-                {marks ? `At ${count(marks, textMode ? 'marked line' : 'marked block')}` : 'No marks yet'}
-              </strong>
-              <span>{where}</span>
+              <strong>{say.marks(marks, textMode)}</strong>
+              <span>{say.where(textMode)}</span>
             </p>
             {marks > 0 && (
-              <button type="button" aria-label="Clear marks" onClick={onClearMarks}>
-                Clear
+              <button type="button" aria-label={say.clearMarks} onClick={onClearMarks}>
+                {say.clear}
               </button>
             )}
           </div>
@@ -91,8 +88,8 @@ export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs,
                 onChange={(e) => onPauseAt({ ...pauseAt, handoffs: e.target.checked })}
               />
               <span>
-                Every handoff
-                <small>When Brew takes a ticket, or Porter a drink</small>
+                {say.handoffs}
+                <small>{say.handoffsNote}</small>
               </span>
             </label>
           )}
@@ -103,8 +100,8 @@ export function PauseAtMenu({ pauseAt, onPauseAt, marks, onClearMarks, handoffs,
               onChange={(e) => onPauseAt({ ...pauseAt, slips: e.target.checked })}
             />
             <span>
-              A slip
-              <small>Look around the moment it goes wrong, before the crew reacts</small>
+              {say.slips}
+              <small>{say.slipsNote}</small>
             </span>
           </label>
         </div>

@@ -7,13 +7,6 @@ export const ROBOT_ROLES: readonly RobotRole[] = ['query', 'prep', 'floor'];
 /** Display names keyed by robot id — the single RobotMeta name source. */
 export const ROBOT_DISPLAY_NAMES: Record<RobotRole, string> = { query: 'Query', prep: 'Brew', floor: 'Porter' };
 
-/** Area labels keyed by robot id. */
-export const ROBOT_AREA_LABELS: Record<RobotRole, string> = {
-  query: 'Query’s counter',
-  prep: 'Brew’s kitchen',
-  floor: 'Porter’s dining room',
-};
-
 /** 1-based campaign level at which each robot becomes programmable. */
 export const ROBOT_UNLOCK_LEVELS: Record<RobotRole, number> = {
   query: UNLOCKS.query,

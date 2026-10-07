@@ -6,6 +6,8 @@ import { GUIDE_WORDS } from '../../../src/app/guideWords';
 import { SETTINGS_WORDS } from '../../../src/app/settingsWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
+import { PANE_WORDS } from '../../../src/components/paneWords';
+import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords';
 import { titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
 import { UNLOCKS } from '../../../src/domain';
@@ -14,6 +16,7 @@ import { LANGUAGE_KEY, words } from '../../../src/shared/language';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
+vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div /> }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
 
 const NBSP = ' ';
@@ -48,7 +51,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, these settings and the handbook/,
+      /French covers the front door, the order rail, the controls on a shift’s screen, these settings and the handbook/,
     );
   });
 
@@ -161,6 +164,62 @@ describe('the order rail in French', () => {
   });
 });
 
+describe('the shift screen in French', () => {
+  /** Shift 4, opened on its code with the scene skipped; the dialogue box's buttons are still in English. */
+  const open = () => {
+    seedLocalStorage(makeSave({ unlocked: 3, selected: 3 }));
+    window.location.hash = '/shift/4';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Skip' }));
+  };
+
+  it('labels the bar, the toolbar and the coding pane in French, and keeps the shift’s own words said as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    expect(screen.getByRole('button', { name: 'Campagne Service 04' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Le café en mots' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Vue de la caméra' }).textContent).toMatch(/Tout le café/);
+    const toolbar = within(screen.getByRole('group', { name: 'Commandes du service' }));
+    expect(toolbar.getByRole('button', { name: /^Lancer le service/ })).toBeTruthy();
+    expect(toolbar.getByRole('button', { name: 'Mettre en pause' })).toBeTruthy();
+    expect(toolbar.getByRole('slider', { name: 'Vitesse de lecture' })).toBeTruthy();
+    expect(document.querySelector('.playback-speed small')!.textContent).toMatch(/^1 bloc · \d+,\d\d s$/);
+    expect(screen.getByRole('heading', { level: 2, name: titleFor(3) }).lang).toBe('en');
+    expect(document.querySelector('.shift-objective')!.firstElementChild!.textContent).toBe('Objectif');
+    expect(document.querySelector('.shift-objective')!.lastElementChild!.getAttribute('lang')).toBe('en');
+    for (const name of ['Annuler', 'Rétablir', 'Aide', 'Carnet', 'Banc d’essai', 'Options'])
+      expect(screen.getByRole('button', { name })).toBeTruthy();
+    expect(screen.getByRole('tablist', { name: 'Routines des robots' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Routine de Query' })).toBeTruthy();
+  });
+
+  it('says where the service pauses by itself, in French', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Pause auto' }));
+    const menu = within(screen.getByRole('group', { name: 'Mettre le service en pause de lui-même' }));
+    expect(menu.getByText('Aucune marque pour l’instant')).toBeTruthy();
+    fireEvent.click(menu.getByRole('checkbox', { name: /^Un faux pas/ }));
+    expect(screen.getByRole('button', { name: 'Pause auto, 1 réglage actif' })).toBeTruthy();
+  });
+
+  it('runs the service in French, and says so', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: /^Lancer le service/ }));
+    expect(screen.getByRole('button', { name: /^Retour au code/ })).toBeTruthy();
+    expect(document.querySelector('.playback-toolbar [role="status"]')!.textContent).toMatch(
+      /^Service en cours(, manche 1 sur \d+)?\. Les routines restent verrouillées jusqu’à l’arrêt\.$/,
+    );
+  });
+
+  it('leaves an English shift as it was', () => {
+    open();
+    expect(screen.getByRole('button', { name: /^Run service/ })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 2, name: titleFor(3) }).hasAttribute('lang')).toBe(false);
+  });
+});
+
 describe('the words themselves', () => {
   it('sets French with its own typography, and leaves English alone', () => {
     const said = words(
@@ -185,8 +244,9 @@ describe('the words themselves', () => {
 
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
-    const same = new Set(['Cafés', 'Options', 'Tables', 'Service']);
-    for (const catalog of [HOME_WORDS, SETTINGS_WORDS, CAFE_WORDS, GUIDE_WORDS, RAIL_WORDS]) {
+    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause']);
+    const catalogs = [HOME_WORDS, SETTINGS_WORDS, CAFE_WORDS, GUIDE_WORDS, RAIL_WORDS, WORKSPACE_WORDS, PANE_WORDS];
+    for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));
       for (const [path, line] of lines(catalog.fr))
         if (!same.has(line)) expect({ path, line }).not.toEqual({ path, line: english.get(path) });

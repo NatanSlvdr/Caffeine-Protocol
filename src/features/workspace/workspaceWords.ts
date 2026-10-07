@@ -1,0 +1,201 @@
+import { count, type RobotRole } from '@/domain';
+import { countFr, words } from '@/shared/language';
+
+/** How far the service has got, for the toolbar to say to a screen reader while it plays. */
+interface Playing {
+  bench: boolean;
+  /** The bench eases some of the shift's rules, said after "with" in English: "twice the cups". */
+  eased: string;
+  practice: boolean;
+  round: number;
+  rounds: number;
+  /** The shift sends in more than one round, so there are rounds to count. */
+  counted: boolean;
+  /** The watch-only shift, which has no routines to lock. */
+  observation: boolean;
+}
+
+/**
+ * The shift screen's words: the bar over the café, the playback toolbar and its pause menu. The shift's title, story
+ * and goal are still in English, and so are the bench's eased rules, so the French toolbar says only that it eases some.
+ */
+export const WORKSPACE_WORDS = words(
+  {
+    /** A campaign shift's name beside its title. */
+    shift: (n: string) => `Shift ${n}`,
+    campaign: 'Campaign',
+    blockPaths: 'Block paths',
+    blockPathsTitle: 'Show where the picked Move, Take, Deposit or Use block goes in the café',
+    photo: 'Photo',
+    photoMode: 'Photo mode',
+    photoReady: 'Hold the café still and save a photo of it, without the routines',
+    photoWaits: 'Photos are taken with the scene and windows closed, and a service paused',
+    photoFailed: 'The café couldn’t be photographed just now. Try again in a moment.',
+    photoSaved: (name: string) => `Saved as ${name}. Look for it with your downloads.`,
+    inWords: 'Café in words',
+    inWordsTitle: 'Tell the service in words: the guests, the crew, the counters, and what happens as it plays',
+    camera: 'Camera view',
+    fullCafe: 'Full café',
+    areas: { query: 'Query’s counter', prep: 'Brew’s kitchen', floor: 'Porter’s dining room' } as Record<
+      RobotRole,
+      string
+    >,
+    /** Where the café in words says the service is while it plays. */
+    round: (round: number, rounds: number) => `Round ${round} of ${rounds}`,
+    benching: 'Running the bench',
+    playing: 'Playing',
+    seeReceipt: 'See the receipt',
+    backToCode: 'Back to the code',
+    startShift: 'Start the shift',
+    routine: (robot: string) => `${robot}’s routine`,
+    /** What undo or redo did to the open robot's routine, or that there was nothing to do. */
+    history: (direction: 'undo' | 'redo', robot: string, done: boolean) =>
+      done
+        ? `${direction === 'undo' ? 'Undid' : 'Redid'} an edit to ${robot}’s routine.`
+        : `Nothing to ${direction} in ${robot}’s routine.`,
+    tipsHidden: 'Tips hidden. Workspace options brings them back.',
+    toolbar: {
+      group: 'Simulation controls',
+      /** The run button, for a service stopped or playing; the watch-only shift has no routine to go back to. */
+      run: (running: boolean, observation: boolean): string =>
+        running ? (observation ? 'Stop watching' : 'Stop & edit') : observation ? 'Watch service' : 'Run service',
+      resume: 'Resume',
+      pause: 'Pause',
+      resumeLabel: 'Resume playback',
+      pauseLabel: 'Pause playback',
+      step: (robot: string) => `Step ${robot}`,
+      stepTitle: (robot: string) => `Play on until ${robot} starts its next block, or starts waiting`,
+      nextEvent: 'Next event',
+      nextEventTitle: 'Play on until any of your robots starts a block, or starts waiting',
+      pauseToStep: 'Pause to step',
+      bench: 'Bench',
+      noStars: (eased: boolean): string => (eased ? 'Eased, for no stars' : 'For no stars'),
+      practice: 'Practice',
+      round: (round: number, rounds: number) => `Round ${round} of ${rounds}`,
+      speed: 'Speed',
+      times: (speed: number) => `${speed}×`,
+      perBlock: (seconds: number) => `1 block · ${seconds.toFixed(2)}s`,
+      speedLabel: 'Playback speed',
+      speedSaid: (speed: number) => `${speed}× speed`,
+      paused: 'Service paused.',
+      playing: ({ bench, eased, practice, round, rounds, counted, observation }: Playing) =>
+        `${
+          bench
+            ? `Running the bench${eased ? ` with ${eased}` : ''}, for no stars`
+            : practice
+              ? `Practising round ${round} of ${rounds}, for no stars`
+              : `Service running${counted ? `, round ${round} of ${rounds}${round > 1 ? `, ${round - 1} passed` : ''}` : ''}`
+        }.${observation ? '' : ' The routines are locked until it stops.'}`,
+    },
+    pauseAt: {
+      button: 'Pause at',
+      label: (set: number) => `Pause at${set ? `, ${count(set, 'setting')} on` : ''}`,
+      title: 'Where the service pauses by itself',
+      heading: 'Pause the service by itself',
+      marks: (marks: number, lines: boolean) =>
+        marks ? `At ${count(marks, lines ? 'marked line' : 'marked block')}` : 'No marks yet',
+      where: (lines: boolean): string =>
+        lines
+          ? 'Click a line number, or press F9 on a line, to mark it.'
+          : 'Click a block’s number, or press F9 on a block, to mark it.',
+      clear: 'Clear',
+      clearMarks: 'Clear marks',
+      handoffs: 'Every handoff',
+      handoffsNote: 'When Brew takes a ticket, or Porter a drink',
+      slips: 'A slip',
+      slipsNote: 'Look around the moment it goes wrong, before the crew reacts',
+    },
+  },
+  {
+    shift: (n) => `Service ${n}`,
+    campaign: 'Campagne',
+    blockPaths: 'Trajets des blocs',
+    blockPathsTitle: 'Montrer où va dans le café le bloc Move, Take, Deposit ou Use choisi',
+    photo: 'Photo',
+    photoMode: 'Mode photo',
+    photoReady: 'Figer le café et en prendre une photo, sans les routines',
+    photoWaits: 'Les photos se prennent scène et fenêtres fermées, le service en pause',
+    photoFailed: 'Impossible de photographier le café pour l’instant. Réessayez dans un moment.',
+    photoSaved: (name) => `Enregistrée sous ${name}, avec vos téléchargements.`,
+    inWords: 'Le café en mots',
+    inWordsTitle: 'Raconter le service en mots : les clients, l’équipe, les comptoirs, et ce qui se passe à mesure',
+    camera: 'Vue de la caméra',
+    fullCafe: 'Tout le café',
+    areas: { query: 'Le comptoir de Query', prep: 'La cuisine de Brew', floor: 'La salle de Porter' },
+    round: (round, rounds) => `Manche ${round} sur ${rounds}`,
+    benching: 'Banc d’essai en cours',
+    playing: 'En cours',
+    seeReceipt: 'Voir l’addition',
+    backToCode: 'Retour au code',
+    startShift: 'Commencer le service',
+    routine: (robot) => `Routine de ${robot}`,
+    history: (direction, robot, done) =>
+      done
+        ? `Modification ${direction === 'undo' ? 'annulée' : 'rétablie'} dans la routine de ${robot}.`
+        : `Rien à ${direction === 'undo' ? 'annuler' : 'rétablir'} dans la routine de ${robot}.`,
+    tipsHidden: 'Conseils masqués. Le bouton Options les fait revenir.',
+    toolbar: {
+      group: 'Commandes du service',
+      run: (running, observation) =>
+        running
+          ? observation
+            ? 'Arrêter'
+            : 'Retour au code'
+          : observation
+            ? 'Regarder le service'
+            : 'Lancer le service',
+      resume: 'Reprendre',
+      pause: 'Pause',
+      resumeLabel: 'Reprendre la lecture',
+      pauseLabel: 'Mettre en pause',
+      step: (robot) => `Avancer ${robot}`,
+      stepTitle: (robot) => `Avancer jusqu’à ce que ${robot} commence son prochain bloc, ou se mette à attendre`,
+      nextEvent: 'Événement suivant',
+      nextEventTitle: 'Avancer jusqu’à ce qu’un de vos robots commence un bloc, ou se mette à attendre',
+      pauseToStep: 'Mettez en pause pour avancer pas à pas',
+      bench: 'Banc d’essai',
+      noStars: (eased) => (eased ? 'Assoupli, sans étoiles' : 'Sans étoiles'),
+      practice: 'Entraînement',
+      round: (round, rounds) => `Manche ${round} sur ${rounds}`,
+      speed: 'Vitesse',
+      times: (speed) => `${decimal(speed)}×`,
+      perBlock: (seconds) => `1 bloc · ${decimal(seconds, 2)} s`,
+      speedLabel: 'Vitesse de lecture',
+      speedSaid: (speed) => `vitesse ${decimal(speed)}×`,
+      paused: 'Service en pause.',
+      playing: ({ bench, eased, practice, round, rounds, counted, observation }) =>
+        `${
+          bench
+            ? `Banc d’essai en cours${eased ? ', règles assouplies' : ''}, sans étoiles`
+            : practice
+              ? `Entraînement, manche ${round} sur ${rounds}, sans étoiles`
+              : `Service en cours${counted ? `, manche ${round} sur ${rounds}${round > 1 ? `, ${countFr(round - 1, 'réussie', 'réussies')}` : ''}` : ''}`
+        }.${observation ? '' : ' Les routines restent verrouillées jusqu’à l’arrêt.'}`,
+    },
+    pauseAt: {
+      button: 'Pause auto',
+      label: (set) => `Pause auto${set ? `, ${countFr(set, 'réglage actif', 'réglages actifs')}` : ''}`,
+      title: 'Où le service se met en pause de lui-même',
+      heading: 'Mettre le service en pause de lui-même',
+      marks: (marks, lines) =>
+        marks
+          ? `Sur ${lines ? countFr(marks, 'ligne marquée', 'lignes marquées') : countFr(marks, 'bloc marqué', 'blocs marqués')}`
+          : 'Aucune marque pour l’instant',
+      where: (lines) =>
+        lines
+          ? 'Cliquez sur un numéro de ligne, ou appuyez sur F9 sur une ligne, pour la marquer.'
+          : 'Cliquez sur le numéro d’un bloc, ou appuyez sur F9 sur un bloc, pour le marquer.',
+      clear: 'Effacer',
+      clearMarks: 'Effacer les marques',
+      handoffs: 'Chaque passage de relais',
+      handoffsNote: 'Quand Brew prend un ticket, ou Porter une boisson',
+      slips: 'Un faux pas',
+      slipsNote: 'Regarder autour de soi à l’instant où ça déraille, avant que l’équipe réagisse',
+    },
+  },
+);
+
+/** A number with a decimal comma, to as many places as asked or as it needs: “1,25”. */
+function decimal(n: number, places?: number) {
+  return (places === undefined ? String(n) : n.toFixed(places)).replace('.', ',');
+}

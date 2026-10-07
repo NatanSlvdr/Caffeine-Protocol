@@ -225,19 +225,27 @@ those spaces as entities. `useWords(catalog)` gives the reader's.
 
 French covers the front door, the top bar, the order rail with its
 tickets and specials board, Settings with its cafés and the fresh-start
-slip, the handbook, and the close button every window shares. The shift
-screens, the rail's windows (guestbook, shelf, drills and the rest), the
-story and the shift data are still in English, and so is the list of what
-bringing an old save up to date changed. Where English data sits on a
-French screen (a shift's name, its story, a scene's logline), it carries
+slip, the handbook, and the close button every window shares. On a shift
+screen it covers the controls: the bar over the café
+(`features/workspace/workspaceWords.ts`), the playback toolbar with its
+pause menu, and the coding pane's tools and robot tabs
+(`components/paneWords.ts`). The rest of a shift (its windows, the crew's
+scenes and reactions, the failure card, the editor's tools), the rail's
+windows (guestbook, shelf, drills and the rest), the story and the shift
+data are still in English, and so is the list of what bringing an old save
+up to date changed. Where English data sits on a French screen (a shift's
+name, its story and goal, a scene's logline), it carries
 `lang={useUntranslated()}`, so a screen reader says it as English; on an
 English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
-the English-only windows still read. The save checks' refusals are keyed (`SAVE_REFUSALS`) so Settings
-can say them in French; a damaged file's field is left out in French. The
-handbook names a shift screen's buttons as they read there. Programming
-words (blocks, values, the text editor's syntax) are never translated, so a
-routine and a shared notebook read the same in either language.
+the English-only windows still read. The save checks' refusals are keyed
+(`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
+is left out in French. The handbook names the French toolbar's buttons, and
+the English windows' as they still read there. The French toolbar reads
+longer, so its step buttons fold to their icons below 1360px rather than
+1180px. Programming words (blocks, values, the text editor's syntax) are
+never translated, so a routine and a shared notebook read the same in
+either language.
 
 ## Photo mode
 

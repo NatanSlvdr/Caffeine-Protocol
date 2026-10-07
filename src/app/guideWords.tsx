@@ -6,8 +6,9 @@ type Job = { job: string; ticket: string };
 type Robot = 'Query' | 'Brew' | 'Porter';
 
 /**
- * The handbook's words. The buttons on a shift's screen are still in English, so the French names them as they read
- * there (**Run service**, **Notebook**); the keys are the French keyboard's.
+ * The handbook's words. The shift's toolbar reads in French, but its windows and the editor's tools are still in
+ * English, so the French names those as they read there (**Text editor**, **Write a lesson**); the keys are the French
+ * keyboard's.
  */
 export const GUIDE_WORDS = words(
   {
@@ -152,19 +153,19 @@ export const GUIDE_WORDS = words(
     ),
     undo: (modifier) => (
       <>
-        Changé d’avis&#8239;? <strong>Undo</strong> (<kbd>{modifier} + Z</kbd>) revient sur chaque modification,
-        réinitialisation et exemple résolu, un robot à la fois, et <strong>Redo</strong> (
+        Changé d’avis&#8239;? <strong>Annuler</strong> (<kbd>{modifier} + Z</kbd>) revient sur chaque modification,
+        réinitialisation et exemple résolu, un robot à la fois, et <strong>Rétablir</strong> (
         <kbd>{modifier} + Maj + Z</kbd>) repart en avant.
       </>
     ),
     notebook: (
       <>
-        Une routine à garder&#8239;? Le carnet, <strong>Notebook</strong>, à côté de Help, garde celle du robot ouvert
-        sous un nom, pour la ressortir à n’importe quel service, le sien ou un suivant. Une page signale quand elle
-        utilise des blocs que le service n’a pas encore, ou ceux d’un autre robot. Avec <strong>Write a lesson</strong>,
-        dites sur une page ce qu’elle montre et annotez les blocs qui le méritent, puis exportez-la en fichier texte
-        pour la partager. Le carnet reste dans ce navigateur, commun à tous ses cafés&#8239;; exportez-le pour
-        l’emporter ailleurs.
+        Une routine à garder&#8239;? Le <strong>Carnet</strong>, à côté de l’Aide, garde celle du robot ouvert sous un
+        nom, pour la ressortir à n’importe quel service, le sien ou un suivant. Une page signale quand elle utilise des
+        blocs que le service n’a pas encore, ou ceux d’un autre robot. Avec <strong>Write a lesson</strong>, dites sur
+        une page ce qu’elle montre et annotez les blocs qui le méritent, puis exportez-la en fichier texte pour la
+        partager. Le carnet reste dans ce navigateur, commun à tous ses cafés&#8239;; exportez-le pour l’emporter
+        ailleurs.
       </>
     ),
     aroundHeading: 'Dans le café',
@@ -174,18 +175,18 @@ export const GUIDE_WORDS = words(
     serviceHeading: 'Service et étoiles',
     running: (modifier) => (
       <>
-        <strong>Run service</strong> (ou <kbd>{modifier} + Entrée</kbd>) met l’équipe au travail, et{' '}
-        <strong>Stop &amp; edit</strong> (ou <kbd>Échap</kbd>) vous ramène au code. Si une instruction échoue, sa ligne
-        s’allume et vous pouvez la corriger tout de suite. La plupart des services envoient quelques vagues de clients,
-        l’une après l’autre, et chacune doit bien se passer. Quand le café est au repos, <kbd>Échap</kbd> ramène à la
+        <strong>Lancer le service</strong> (ou <kbd>{modifier} + Entrée</kbd>) met l’équipe au travail, et{' '}
+        <strong>Retour au code</strong> (ou <kbd>Échap</kbd>) vous y ramène. Si une instruction échoue, sa ligne
+        s’allume et vous pouvez la corriger tout de suite. La plupart des services se jouent en quelques manches, l’une
+        après l’autre, et chacune doit bien se passer. Quand le café est au repos, <kbd>Échap</kbd> ramène à la
         campagne.
       </>
     ),
     rating: (one, two, three) => (
       <>
         {one}&nbsp;: chaque commande servie correctement. {two}&nbsp;: l’objectif de blocs atteint en plus. {three}
-        &nbsp;: l’objectif de pas en prime. L’aide de chaque service, <strong>Help</strong>, donne sa leçon, puis des
-        indices un par un&nbsp;: l’idée, une piste sur votre routine, et un exemple résolu.
+        &nbsp;: l’objectif de pas en prime. L’<strong>Aide</strong> de chaque service donne sa leçon, puis des indices
+        un par un&nbsp;: l’idée, une piste sur votre routine, et un exemple résolu.
       </>
     ),
     foot: 'Bienvenue dans l’équipe',

@@ -372,6 +372,24 @@
     white-space: nowrap;
   }
 }
+/* The French toolbar reads about 160px longer while a service is paused, so its step buttons fold to their icons on
+   a stage that much wider; their titles still name them. */
+@media (min-width: 1181px) and (max-width: 1360px) {
+  .workspace-main:lang(fr) .playback-toolbar > .step-button {
+    justify-content: center;
+    width: 40px;
+    padding: 0;
+  }
+  .workspace-main:lang(fr) .playback-toolbar .step-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
 .workspace-main .playback-round {
   color: var(--desk-muted);
   font-size: 12px;

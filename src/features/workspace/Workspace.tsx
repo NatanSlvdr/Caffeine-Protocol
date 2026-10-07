@@ -1,15 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, Camera, Captions, Footprints, Store } from 'lucide-react';
-import {
-  BLOCK_SECONDS,
-  LOUS_DECOR,
-  ROBOT_AREA_LABELS,
-  ROBOT_DISPLAY_NAMES,
-  UNLOCKS,
-  decorOf,
-  isBenchSeed,
-  robotUnlocked,
-} from '@/domain';
+import { BLOCK_SECONDS, LOUS_DECOR, ROBOT_DISPLAY_NAMES, UNLOCKS, decorOf, isBenchSeed, robotUnlocked } from '@/domain';
 import type { DialogueLine, FailureCode, LevelDefinition, ProgressSave, RobotPrograms, RobotRole } from '@/domain';
 import { Cafe, CodingPaneHeader, DialogueBox, Editor, RobotOptions, type TakeSnapshot } from '@/components';
 import { resetRobotPrograms, saveRobotDraft } from '@/features/campaign/save/persistence';
@@ -20,6 +11,7 @@ import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { pad2 } from '@/shared/lib/format';
+import { useWords } from '@/shared/language';
 import { useLiveRun, type LiveRunArgs } from './useLiveRun';
 import { drillFor, type WorkspaceDrill } from './hints';
 import { PlaybackToolbar } from './PlaybackToolbar';
@@ -56,6 +48,7 @@ import { problemReport } from './report';
 import { failureLines, successLines } from './reactions';
 import { PhotoBar } from './PhotoBar';
 import { framePhoto, photoCaption, photoFocus, type PhotoView } from './photo';
+import { WORKSPACE_WORDS } from './workspaceWords';
 
 export interface ShiftBrief {
   story: string;
@@ -111,7 +104,8 @@ export function Workspace({
   drills = [],
 }: WorkspaceProps) {
   const { level, lesson, brief, intro, outro } = shift;
-  const label = shift.label ?? `Shift ${pad2(index + 1)}`;
+  const say = useWords(WORKSPACE_WORDS);
+  const label = shift.label ?? say.shift(pad2(index + 1));
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
   const textMode = save.settings.text_editor;
@@ -254,8 +248,7 @@ export function Workspace({
   const [historySaid, sayHistory] = useAnnouncement();
   const stepHistory = (direction: 'undo' | 'redo') => {
     const robot = ROBOT_DISPLAY_NAMES[role];
-    if (live[direction]()) sayHistory(`${direction === 'undo' ? 'Undid' : 'Redid'} an edit to ${robot}’s routine.`);
-    else sayHistory(`Nothing to ${direction} in ${robot}’s routine.`);
+    sayHistory(say.history(direction, robot, live[direction]()));
   };
 
   // A new service puts the last one's reaction away: run again from under it, and it would talk over the new run.
@@ -421,13 +414,13 @@ export function Workspace({
     try {
       const shot = await snapshot.current?.();
       if (!shot) {
-        sayPhoto('The café couldn’t be photographed just now. Try again in a moment.');
+        sayPhoto(say.photoFailed);
         return;
       }
       const caption = photoCaption({ label, title: shift.title, when: serviceView ? pausedAt : undefined });
       const name = photoFileName();
       downloadBlob(await framePhoto(shot, caption, { memory: shift.memory }), name);
-      sayPhoto(`Saved as ${name}. Look for it with your downloads.`);
+      sayPhoto(say.photoSaved(name));
     } finally {
       setDeveloping(false);
     }
@@ -444,7 +437,7 @@ export function Workspace({
               onClick={() => go('/campaign')}
             >
               {/* Read as "Campaign Shift 03": the arrow and the slash are only drawn. */}
-              <ArrowLeft size={14} aria-hidden="true" /> Campaign <span aria-hidden="true">/</span> {label}
+              <ArrowLeft size={14} aria-hidden="true" /> {say.campaign} <span aria-hidden="true">/</span> {label}
             </button>
             <div className="heading-tools">
               {!observation && (
@@ -452,52 +445,53 @@ export function Workspace({
                   type="button"
                   className="heading-toggle preview-toggle"
                   aria-pressed={save.settings.block_preview}
-                  title="Show where the picked Move, Take, Deposit or Use block goes in the café"
+                  title={say.blockPathsTitle}
                   onClick={() =>
                     update((s) => ({ ...s, settings: { ...s.settings, block_preview: !s.settings.block_preview } }))
                   }
                 >
                   <Footprints size={16} aria-hidden="true" />
-                  <span>Block paths</span>
+                  <span>{say.blockPaths}</span>
                 </button>
               )}
               <button
                 ref={photoButton}
                 type="button"
                 className="heading-toggle photo-toggle"
-                aria-label="Photo mode"
-                title={
-                  photographable
-                    ? 'Hold the café still and save a photo of it, without the routines'
-                    : 'Photos are taken with the scene and windows closed, and a service paused'
-                }
+                aria-label={say.photoMode}
+                title={photographable ? say.photoReady : say.photoWaits}
                 disabled={!photographable}
                 onClick={enterPhoto}
               >
                 <Camera size={16} aria-hidden="true" />
-                <span>Photo</span>
+                <span>{say.photo}</span>
               </button>
               <button
                 type="button"
                 className="heading-toggle summary-toggle"
                 aria-pressed={summaryOn}
-                title="Tell the service in words: the guests, the crew, the counters, and what happens as it plays"
+                title={say.inWordsTitle}
                 onClick={() =>
                   update((s) => ({ ...s, settings: { ...s.settings, service_summary: !s.settings.service_summary } }))
                 }
               >
                 <Captions size={16} aria-hidden="true" />
-                <span>Café in words</span>
+                <span>{say.inWords}</span>
               </button>
-              <div className="view-controls" role="group" aria-label="Camera view">
-                <button type="button" title="Full café" aria-pressed={!focused} onClick={() => setZoomToRobot(false)}>
+              <div className="view-controls" role="group" aria-label={say.camera}>
+                <button
+                  type="button"
+                  title={say.fullCafe}
+                  aria-pressed={!focused}
+                  onClick={() => setZoomToRobot(false)}
+                >
                   <Store size={16} aria-hidden="true" />
-                  Full café
+                  {say.fullCafe}
                 </button>
                 <RobotOptions
                   level={index + 1}
                   selected={focused ? role : undefined}
-                  labels={ROBOT_AREA_LABELS}
+                  labels={say.areas}
                   onSelect={(robot) => {
                     setRole(robot);
                     setZoomToRobot(true);
@@ -534,10 +528,10 @@ export function Workspace({
                 when={
                   running && !paused
                     ? rounds > 1
-                      ? `Round ${round} of ${rounds}`
+                      ? say.round(round, rounds)
                       : benching
-                        ? 'Running the bench'
-                        : 'Playing'
+                        ? say.benching
+                        : say.playing
                     : pausedAt
                 }
               />
@@ -577,7 +571,7 @@ export function Workspace({
                 variant="aside"
                 lines={reaction}
                 instant={reduced}
-                doneLabel={scene === 'success' ? 'See the receipt' : 'Back to the code'}
+                doneLabel={scene === 'success' ? say.seeReceipt : say.backToCode}
                 onDone={closeReaction}
               />
             )}
@@ -654,7 +648,7 @@ export function Workspace({
             }}
           />
         </section>
-        <section className="editor-panel" aria-label={`${ROBOT_DISPLAY_NAMES[role]}’s routine`}>
+        <section className="editor-panel" aria-label={say.routine(ROBOT_DISPLAY_NAMES[role])}>
           <CodingPaneHeader
             shift={shift.title}
             objective={brief.objective}
@@ -713,7 +707,7 @@ export function Workspace({
                 setTips(false);
                 // The button goes with the tips: focus moves to the options that bring them back, and says so.
                 document.querySelector<HTMLElement>('.coding-tools [aria-label="Options"]')?.focus();
-                sayHistory('Tips hidden. Workspace options brings them back.');
+                sayHistory(say.tipsHidden);
               }}
             />
           )}
@@ -767,7 +761,7 @@ export function Workspace({
         <DialogueBox
           lines={intro}
           kicker={`${label} · ${shift.title}`}
-          doneLabel="Start the shift"
+          doneLabel={say.startShift}
           instant={reduced}
           onDone={() => setScene('')}
         />
