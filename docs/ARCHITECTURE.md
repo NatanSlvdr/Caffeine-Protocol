@@ -234,26 +234,28 @@ routine's tips. Of the shift's windows it covers Options and Restore, with
 the line-by-line comparison and the versions' names
 (`modals/optionsWords.ts`; `routineVersions` takes those names, English by
 default), Help with its hints and clues (`modals/helpWords.ts`; `clueFor`
-takes the clue's sentences) and the receipt (`modals/receiptWords.ts`).
-`CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
+takes the clue's sentences), the receipt (`modals/receiptWords.ts`) and the
+notebook with its lessons (`modals/notebookWords.ts`; `lessonText` takes the
+lesson file's words, and `parseNotebook` throws a `NotebookRefusal` keyed by
+why). `CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
 English. A window whose title is a shift's name marks it with `titleLang`.
 Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
 Settings and Options both. The rest of a shift (its other windows, the
 crew's scenes and reactions, the failure card, the editor's tools), the
 rail's windows (guestbook, shelf, drills and the rest), the story and the
 shift data are still in English, and so is the list of what bringing an old
-save up to date changed. Where English data sits on a French screen (a shift's
-name, its story and goal, a scene's logline), it carries
+save up to date changed. Where English data sits on a French screen (a
+shift's name, its story and goal, a scene's logline), it carries
 `lang={useUntranslated()}`, so a screen reader says it as English; on an
 English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
 the English-only windows still read. The save checks' refusals are keyed
 (`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
-is left out in French. The handbook names the French toolbar's buttons, and
-the English windows' as they still read there. The French toolbar reads
-longer, so its step buttons fold to their icons below 1360px rather than
-1180px. Programming words (blocks, values, the text editor's syntax) are
-never translated, so a routine and a shared notebook read the same in
+is left out in French. The handbook names the French buttons and windows,
+and the editor's tools as they still read in English. The French toolbar
+reads longer, so its step buttons fold to their icons below 1360px rather
+than 1180px. Programming words (blocks, values, the text editor's syntax)
+are never translated, so a routine and a shared notebook read the same in
 either language.
 
 ## Photo mode

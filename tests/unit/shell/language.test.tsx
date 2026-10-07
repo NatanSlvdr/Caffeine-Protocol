@@ -11,6 +11,8 @@ import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords'
 import { OPTIONS_WORDS } from '../../../src/features/workspace/modals/optionsWords';
 import { HELP_WORDS } from '../../../src/features/workspace/modals/helpWords';
 import { RECEIPT_WORDS } from '../../../src/features/workspace/modals/receiptWords';
+import { NOTEBOOK_WORDS } from '../../../src/features/workspace/modals/notebookWords';
+import { lessonText, NotebookRefusal, parseNotebook } from '../../../src/features/workspace/notebook';
 import { CHALLENGE_WORDS } from '../../../src/features/workspace/challenges';
 import { lessons, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
@@ -55,7 +57,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, a shift’s controls, options, help and receipt, these settings and the handbook/,
+      /French covers the front door, the order rail, a shift’s controls, options, help, receipt and notebook, these settings and the handbook/,
     );
   });
 
@@ -345,6 +347,30 @@ describe('the shift screen in French', () => {
     }
   });
 
+  it('keeps and brings back a notebook page in French', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    open();
+    fireEvent.click(screen.getByRole('button', { name: 'Carnet' }));
+    const notebook = within(screen.getByRole('dialog', { name: 'Carnet de routines' }));
+    expect(notebook.getByText(/^Pas encore de page\./)).toBeTruthy();
+    const name = notebook.getByRole('textbox', { name: 'Garder la routine de Query sous le nom' }) as HTMLInputElement;
+    expect(name.value).toBe('Query, service 04');
+    fireEvent.click(notebook.getByRole('button', { name: /^Garder la page/ }));
+    const status = () => document.querySelector('.notebook-status [role="status"]')!.textContent;
+    expect(status()).toBe(`Routine de Query gardée sous le nom «${NBSP}Query, service 04${NBSP}».`);
+    const kept = notebook.getByRole('radio', { name: /^Query, service 04/ }).closest('label')!;
+    expect(kept.querySelector('small')!.textContent).toMatch(/^Query · Service 04 · \d+ blocs?$/);
+    expect(notebook.getByRole('button', { name: 'Identique à celle de Query' })).toBeTruthy();
+    fireEvent.click(notebook.getByRole('button', { name: /^Écrire une leçon/ }));
+    expect(notebook.getByRole('heading', { name: 'Leçon · Query, service 04' })).toBeTruthy();
+    expect(notebook.getByRole('textbox', { name: 'Ce qu’elle montre' })).toBeTruthy();
+    expect(notebook.getByRole('button', { name: /^Exporter la leçon/ })).toBeTruthy();
+    fireEvent.click(notebook.getByRole('button', { name: /^Retour au carnet/ }));
+    fireEvent.click(notebook.getByRole('button', { name: 'Retirer la page' }));
+    expect(status()).toBe(`«${NBSP}Query, service 04${NBSP}» retirée.`);
+    expect(notebook.getByRole('button', { name: 'La remettre' })).toBeTruthy();
+  });
+
   it('leaves an English shift as it was', () => {
     open();
     expect(screen.getByRole('button', { name: /^Run service/ })).toBeTruthy();
@@ -374,6 +400,32 @@ describe('the words themselves', () => {
     expect(fr.holdsOrFresh('')).toBe('est un café tout neuf, sans aucun service servi');
   });
 
+  it('writes a lesson’s file in French, and says why a notebook file is refused', () => {
+    const lesson = lessonText(
+      {
+        name: 'Le café',
+        role: 'query',
+        shift: 3,
+        source: 'LISTEN\nTAKE UP',
+        notes: [{ block: 1, text: 'Prendre le bon.' }],
+      },
+      NOTEBOOK_WORDS.fr.file,
+    );
+    expect(lesson).toContain('Une leçon du carnet de routines de Caffeine Protocol');
+    expect(lesson).toContain(`La routine, avec sa note marquée${NBSP}:`);
+    expect(lesson).toContain('Pas à pas\n\n1. TAKE UP (ligne 2)\n   Prendre le bon.');
+    let refusal: unknown;
+    try {
+      parseNotebook('{"version": 4, "stars": {}}');
+    } catch (error) {
+      refusal = error;
+    }
+    expect(refusal).toBeInstanceOf(NotebookRefusal);
+    expect(NOTEBOOK_WORDS.fr.refused[(refusal as NotebookRefusal).why]).toBe(
+      `C’est un export de café${NBSP}: importez-le depuis les Réglages.`,
+    );
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
     const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause']);
@@ -389,6 +441,7 @@ describe('the words themselves', () => {
       HELP_WORDS,
       RECEIPT_WORDS,
       CHALLENGE_WORDS,
+      NOTEBOOK_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

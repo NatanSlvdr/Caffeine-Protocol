@@ -39,6 +39,7 @@ import { HelpModal } from './modals/HelpModal';
 import { OptionsModal } from './modals/OptionsModal';
 import { RestoreModal } from './modals/RestoreModal';
 import { NotebookModal } from './modals/NotebookModal';
+import { NOTEBOOK_WORDS } from './modals/notebookWords';
 import { BenchModal } from './modals/BenchModal';
 import { routineVersions, sameRoutine } from './versions';
 import { ReceiptModal, type Onward } from './modals/ReceiptModal';
@@ -107,6 +108,7 @@ export function Workspace({
   const { level, lesson, brief, intro, outro } = shift;
   const say = useWords(WORKSPACE_WORDS);
   const versionNames = useWords(OPTIONS_WORDS).versions;
+  const notebookWords = useWords(NOTEBOOK_WORDS);
   const label = shift.label ?? say.shift(pad2(index + 1));
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const observation = index + 1 < UNLOCKS.query;
@@ -855,12 +857,12 @@ export function Workspace({
           onUse={(page) => {
             change(page.source);
             setModal('');
-            sayHistory(`${ROBOT_DISPLAY_NAMES[role]}’s routine is now “${page.name}”. Undo brings yours back.`);
+            sayHistory(notebookWords.used(ROBOT_DISPLAY_NAMES[role], page.name));
           }}
           onAdd={(page) => {
             change(source.trimEnd() ? `${source.trimEnd()}\n${page.source}` : page.source);
             setModal('');
-            sayHistory(`Added “${page.name}” to the end of ${ROBOT_DISPLAY_NAMES[role]}’s routine. Undo takes it out.`);
+            sayHistory(notebookWords.addedToEnd(page.name, ROBOT_DISPLAY_NAMES[role]));
           }}
           onClose={() => setModal('')}
         />

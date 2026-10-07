@@ -3,6 +3,7 @@ import { unreadableLine, type RobotRole } from '@/domain';
 import { UNLOCKS } from '@/domain/unlocks';
 import { pad2 } from '@/shared/lib/format';
 import { SAVE_KEY } from '@/features/campaign/save/settings';
+import { NOTEBOOK_WORDS } from './modals/notebookWords';
 
 /** The player's routine notebook: named routines, or parts of one, kept to bring back on any shift. */
 export const NOTEBOOK_KEY = `${SAVE_KEY}.notebook`;
@@ -171,8 +172,15 @@ export function isNotebookFile(text: string): boolean {
   }
 }
 
+/** A file refused as a notebook, and why, so the notebook can say it in the reader's language. */
+export class NotebookRefusal extends Error {
+  constructor(readonly why: keyof typeof NOTEBOOK_WORDS.en.refused) {
+    super(NOTEBOOK_WORDS.en.refused[why]);
+  }
+}
+
 /**
- * The pages of an exported notebook. A file that isn't one throws, worded for the player; a damaged page is left out
+ * The pages of an exported notebook. A file that isn't one throws a refusal saying why; a damaged page is left out
  * and counted, so the rest still come in.
  */
 export function parseNotebook(text: string): { pages: NotebookPage[]; damaged: number } {
@@ -180,15 +188,11 @@ export function parseNotebook(text: string): { pages: NotebookPage[]; damaged: n
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error('It isn’t a routine notebook.');
+    throw new NotebookRefusal('notebook');
   }
   const file = data as { format?: unknown; pages?: unknown } | null;
   if (!file || file.format !== NOTEBOOK_FORMAT || !Array.isArray(file.pages))
-    throw new Error(
-      file && typeof file === 'object' && 'stars' in file
-        ? 'It’s a café export: import it from Settings.'
-        : 'It isn’t a routine notebook.',
-    );
+    throw new NotebookRefusal(file && typeof file === 'object' && 'stars' in file ? 'cafe' : 'notebook');
   const pages = file.pages.map(readPage);
   const kept = pages.filter((page): page is NotebookPage => !!page);
   return { pages: kept, damaged: pages.length - kept.length };
@@ -236,7 +240,7 @@ function wrap(text: string, indent: string, width = 76): string {
  * blocks numbered beside them, then a walkthrough of the notes in the routine's order. Nothing in it runs; the
  * routine is there to be typed into the text editor, and the lesson says from which shift it can be.
  */
-export function lessonText(page: NotebookPage): string {
+export function lessonText(page: NotebookPage, say = NOTEBOOK_WORDS.en.file): string {
   const { about, notes = [] } = cleanLesson(page);
   const robot = ROBOT_DISPLAY_NAMES[page.role];
   const from = readableFrom(page);
@@ -253,31 +257,21 @@ export function lessonText(page: NotebookPage): string {
     });
   const walkthrough = notes.map((note, i) => {
     const { line, text } = lines[note.block];
-    return `${i + 1}. ${text.trim()} (line ${line + 1})\n   ${wrap(note.text, '   ')}`;
+    return `${i + 1}. ${text.trim()} (${say.line(line + 1)})\n   ${wrap(note.text, '   ')}`;
   });
   return [
     page.name,
-    'A lesson from the Caffeine Protocol routine notebook',
+    say.from,
     '',
-    wrap(
-      `${robot}’s routine, kept on Shift ${pad2(page.shift)}. ${
-        from ? `${robot} can read it from Shift ${pad2(from)} on.` : `${robot} can’t read it on any shift.`
-      }`,
-      '',
-    ),
+    wrap(say.kept(robot, pad2(page.shift), from ? pad2(from) : undefined), ''),
     ...(about ? ['', wrap(about, '')] : []),
     '',
-    notes.length
-      ? `The routine, with ${notes.length === 1 ? 'its note' : `its ${notes.length} notes`} marked:`
-      : 'The routine:',
+    say.routine(notes.length),
     '',
     ...routine,
-    ...(notes.length ? ['', 'Walkthrough', '', walkthrough.join('\n\n')] : []),
+    ...(notes.length ? ['', say.walkthrough, '', walkthrough.join('\n\n')] : []),
     '',
-    wrap(
-      `${from ? `To try it, type the routine into the café’s text editor on Shift ${pad2(from)} or later. ` : ''}The lesson is plain text: nothing in it runs.`,
-      '',
-    ),
+    wrap(say.tryIt(from ? pad2(from) : undefined), ''),
     '',
   ].join('\n');
 }

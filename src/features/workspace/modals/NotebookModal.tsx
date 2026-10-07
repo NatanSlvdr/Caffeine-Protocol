@@ -8,6 +8,7 @@ import { Button } from '@/shared/ui/Button';
 import { download, saveFileName } from '@/shared/lib/download';
 import { RUN_MODIFIER, pad2 } from '@/shared/lib/format';
 import { useAnnouncement } from '@/hooks/useAnnouncement';
+import { useUntranslated, useWords } from '@/shared/language';
 import { sameRoutine } from '../versions';
 import {
   MAX_PAGES,
@@ -24,10 +25,12 @@ import {
   readNotebook,
   removePage,
   writeNotebook,
+  NotebookRefusal,
   type NotebookPage,
 } from '../notebook';
 import { RoutineDiff } from './RoutineDiff';
 import { LessonEditor } from './LessonEditor';
+import { NOTEBOOK_WORDS } from './notebookWords';
 
 export interface NotebookModalProps {
   /** The open robot, whose routine is kept and whose routine a page goes into. */
@@ -43,12 +46,9 @@ export interface NotebookModalProps {
   onClose: () => void;
 }
 
-const count = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`;
-/** A page's lesson in a few words, beside its blocks. */
-const lessonWords = (page: NotebookPage) => {
-  const notes = (page.notes ?? []).filter((note) => note.text.trim()).length;
-  return notes ? `lesson, ${count(notes, 'note')}` : 'lesson';
-};
+/** How many notes a page's lesson has, or nothing when it has no lesson. */
+const lessonNotes = (page: NotebookPage) =>
+  hasLesson(page) ? (page.notes ?? []).filter((note) => note.text.trim()).length : undefined;
 
 /**
  * The routine notebook: the open robot's routine kept under a name, and kept pages brought back on any shift, in
@@ -57,8 +57,10 @@ const lessonWords = (page: NotebookPage) => {
  * and travels as a file.
  */
 export function NotebookModal({ role, shift, current, running, onUse, onAdd, onClose }: NotebookModalProps) {
+  const words = useWords(NOTEBOOK_WORDS);
+  const english = useUntranslated();
   const robot = ROBOT_DISPLAY_NAMES[role];
-  const suggested = `${robot}, Shift ${pad2(shift)}`;
+  const suggested = words.suggested(robot, pad2(shift));
   const [pages, setPages] = useState(readNotebook);
   const [kept, setKept] = useState(true);
   const [chosen, setChosen] = useState(() => pages[0]?.name);
@@ -101,11 +103,11 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
   const replacing = findPage(pages, name);
   const twin = pages.find((p) => p.role === role && sameRoutine(p.source, current));
   const keepNote = !blocks
-    ? `${robot}’s routine is empty: there’s nothing to keep yet.`
+    ? words.nothingToKeep(robot)
     : !replacing && pages.length >= MAX_PAGES
-      ? `The notebook is full at ${MAX_PAGES} pages: remove one to make room.`
+      ? words.full(MAX_PAGES)
       : twin && (!replacing || twin !== replacing)
-        ? `Already kept as “${twin.name}”.`
+        ? words.already(twin.name)
         : '';
   const keep = (e: FormEvent) => {
     e.preventDefault();
@@ -121,14 +123,8 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
     setName(freeName(next, suggested));
     say(
       !replacing
-        ? `Kept ${robot}’s routine as “${named}”.`
-        : `Replaced “${replacing.name}” with ${robot}’s routine.${
-            !lesson
-              ? ''
-              : lost > 0
-                ? ` Its lesson stays, but for ${lost === 1 ? 'a note on a block' : `${lost} notes on blocks`} no longer there.`
-                : ' Its lesson stays.'
-          }`,
+        ? words.kept(robot, named)
+        : words.replaced(replacing.name, robot, !lesson ? 'none' : lost > 0 ? lost : 'whole'),
     );
   };
   const remove = (gone: NotebookPage) => {
@@ -137,12 +133,12 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
     commit(next);
     setRemoved({ page: gone, at });
     setChosen(next[Math.min(at, next.length - 1)]?.name);
-    say(`Removed “${gone.name}”.`);
+    say(words.removed(gone.name));
   };
   const putBack = ({ page: back, at }: { page: NotebookPage; at: number }) => {
     commit([...pages.slice(0, at), back, ...pages.slice(at)]);
     setChosen(back.name);
-    say(`“${back.name}” is back in the notebook.`);
+    say(words.back(back.name));
   };
 
   const lessonPage = writing === undefined ? undefined : findPage(pages, writing);
@@ -150,8 +146,8 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
     return (
       <Modal
         className="settings-window confirm-slip restore-slip notebook-slip"
-        kicker="Kept in this browser"
-        title="Routine notebook"
+        kicker={words.kicker}
+        title={words.title}
         onClose={onClose}
       >
         <LessonEditor
@@ -163,7 +159,7 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
         />
         {!kept && (
           <p role="alert" className="error-text">
-            This browser isn’t keeping the notebook, so it lasts until the café closes. Export it to keep it.
+            {words.notKept}
           </p>
         )}
       </Modal>
@@ -171,16 +167,16 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
 
   const misfit = page && unfit(page);
   const same = !!page && sameRoutine(page.source, current);
-  const blocked = running ? `Stop the service to change ${robot}’s routine.` : '';
+  const blocked = running ? words.blocked(robot) : '';
   return (
     <Modal
       className="settings-window confirm-slip restore-slip notebook-slip"
-      kicker="Kept in this browser"
-      title="Routine notebook"
+      kicker={words.kicker}
+      title={words.title}
       onClose={onClose}
     >
       <form className="notebook-keep" onSubmit={keep}>
-        <label htmlFor="notebook-name">Keep {robot}’s routine as</label>
+        <label htmlFor="notebook-name">{words.keepAs(robot)}</label>
         <div>
           <input
             id="notebook-name"
@@ -199,19 +195,17 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
             className="settings-chip"
             disabled={!name.trim() || !blocks || (!replacing && pages.length >= MAX_PAGES)}
           >
-            <BookmarkPlus size={15} aria-hidden="true" /> {replacing ? 'Replace page' : 'Keep page'}
+            <BookmarkPlus size={15} aria-hidden="true" /> {replacing ? words.replace : words.keep}
           </button>
         </div>
         {keepNote && <small id="notebook-keep-note">{keepNote}</small>}
       </form>
 
       {pages.length === 0 ? (
-        <p className="notebook-empty">
-          No pages yet. Keep a routine that works, or a part worth reusing, and bring it back on any shift.
-        </p>
+        <p className="notebook-empty">{words.empty}</p>
       ) : (
         <fieldset className="restore-versions notebook-pages">
-          <legend className="sr-only">Notebook pages</legend>
+          <legend className="sr-only">{words.pages}</legend>
           {pages.map((p) => {
             const problem = unfit(p);
             return (
@@ -225,10 +219,13 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
                 <span>
                   <strong>{p.name}</strong>
                   <small>
-                    {ROBOT_DISPLAY_NAMES[p.role]} · Shift {pad2(p.shift)} · {count(pageBlocks(p.source), 'block')}
-                    {hasLesson(p) && ` · ${lessonWords(p)}`}
+                    {words.page(ROBOT_DISPLAY_NAMES[p.role], pad2(p.shift), pageBlocks(p.source), lessonNotes(p))}
                   </small>
-                  {problem && <small className="notebook-unfit">{problem.message}</small>}
+                  {problem && (
+                    <small className="notebook-unfit" lang={english}>
+                      {problem.message}
+                    </small>
+                  )}
                 </span>
               </label>
             );
@@ -240,7 +237,7 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
         <p role="status">{said}</p>
         {removed && (
           <button ref={putBackButton} className="settings-chip notebook-put-back" onClick={() => putBack(removed)}>
-            Put it back
+            {words.putBack}
           </button>
         )}
       </div>
@@ -248,17 +245,14 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
       {page && (
         <>
           {!same && <RoutineDiff robot={robot} current={current} next={page.source} brings="in" />}
-          <p>
-            Use puts the page in place of {robot}’s routine; Add to the end puts it after the last line. Undo (
-            {RUN_MODIFIER} Z) brings yours back.
-          </p>
+          <p>{words.how(robot, RUN_MODIFIER)}</p>
           {blocked && <p id="notebook-blocked">{blocked}</p>}
           <div className="modal-buttons notebook-actions">
             <Button variant="outline-danger" className="settings-chip" onClick={() => remove(page)}>
-              Remove page
+              {words.remove}
             </Button>
             <button ref={lessonButton} className="settings-chip" onClick={() => setWriting(page.name)}>
-              <PencilLine size={15} aria-hidden="true" /> {hasLesson(page) ? 'Edit the lesson' : 'Write a lesson'}
+              <PencilLine size={15} aria-hidden="true" /> {hasLesson(page) ? words.editLesson : words.writeLesson}
             </button>
             <button
               className="settings-chip"
@@ -266,7 +260,7 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
               aria-describedby={blocked ? 'notebook-blocked' : undefined}
               onClick={() => onAdd(page)}
             >
-              Add to the end
+              {words.addToEnd}
             </button>
             <Button
               variant="primary"
@@ -274,18 +268,15 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
               aria-describedby={blocked ? 'notebook-blocked' : undefined}
               onClick={() => onUse(page)}
             >
-              {same ? `Same as ${robot}’s now` : 'Use this page'}
+              {same ? words.same(robot) : words.use}
             </Button>
           </div>
         </>
       )}
 
       <section className="options-report notebook-carry" aria-labelledby="notebook-carry-title">
-        <h3 id="notebook-carry-title">Carry it to another browser</h3>
-        <p>
-          Export the notebook as a file to keep a copy, or to bring it to another computer. Importing one adds its pages
-          to these.
-        </p>
+        <h3 id="notebook-carry-title">{words.carry}</h3>
+        <p>{words.carryText}</p>
         <div className="settings-actions">
           <button
             className="settings-chip"
@@ -294,18 +285,18 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
               const file = saveFileName(new Date(), 'notebook');
               download(notebookFile(pages), file);
               setError('');
-              sayCarried(`Notebook exported as ${file}. Look for it with your downloads.`);
+              sayCarried(words.exported(file));
             }}
           >
-            <Download size={15} aria-hidden="true" /> Export notebook
+            <Download size={15} aria-hidden="true" /> {words.export}
           </button>
           <button className="settings-chip" onClick={() => input.current?.click()}>
-            <Upload size={15} aria-hidden="true" /> Import notebook
+            <Upload size={15} aria-hidden="true" /> {words.import}
           </button>
         </div>
         <input
           ref={input}
-          aria-label="Import notebook file"
+          aria-label={words.importFile}
           className="file-input"
           type="file"
           accept="application/json,.json"
@@ -314,26 +305,25 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
             e.target.value = '';
             if (!file) return;
             try {
-              if (file.size > 2_000_000) throw new Error('It is too large to be a routine notebook.');
+              if (file.size > 2_000_000) throw new NotebookRefusal('large');
               const read = parseNotebook(await file.text());
               const merged = mergePages(pages, read.pages);
               commit(merged.pages);
               if (merged.added) setChosen(merged.pages[pages.length].name);
               sayCarried(
                 [
-                  merged.added
-                    ? `Added ${count(merged.added, 'page')} from ${file.name}.`
-                    : `Nothing new in ${file.name}.`,
-                  merged.already && `${count(merged.already, 'page')} already here.`,
-                  merged.full && `${count(merged.full, 'page')} left out: the notebook is full.`,
-                  read.damaged && `${count(read.damaged, 'damaged page')} couldn’t be read.`,
+                  merged.added ? words.added(merged.added, file.name) : words.nothingNew(file.name),
+                  merged.already && words.here(merged.already),
+                  merged.full && words.leftOut(merged.full),
+                  read.damaged && words.damaged(read.damaged),
                 ]
                   .filter(Boolean)
                   .join(' '),
               );
             } catch (err) {
               sayCarried('');
-              setError(`${file.name} wasn’t imported. ${(err as Error).message} Your notebook has been kept.`);
+              const why = err instanceof NotebookRefusal ? words.refused[err.why] : (err as Error).message;
+              setError(words.notImported(file.name, why));
             }
           }}
         />
@@ -347,7 +337,7 @@ export function NotebookModal({ role, shift, current, running, onUse, onAdd, onC
         )}
         {!kept && (
           <p role="alert" className="error-text">
-            This browser isn’t keeping the notebook, so it lasts until the café closes. Export it to keep it.
+            {words.notKept}
           </p>
         )}
       </section>

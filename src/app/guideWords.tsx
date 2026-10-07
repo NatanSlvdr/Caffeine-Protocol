@@ -6,9 +6,8 @@ type Job = { job: string; ticket: string };
 type Robot = 'Query' | 'Brew' | 'Porter';
 
 /**
- * The handbook's words. A shift's toolbar and options read in French, but the editor's tools and the notebook are
- * still in English, so the French names those as they read there (**Tidy up**, **Write a lesson**); the keys are the
- * French keyboard's.
+ * The handbook's words. A shift's toolbar and most of its windows read in French, but the editor's tools are still in
+ * English, so the French names those as they read there (**Tidy up**); the keys are the French keyboard's.
  */
 export const GUIDE_WORDS = words(
   {
@@ -162,7 +161,7 @@ export const GUIDE_WORDS = words(
       <>
         Une routine à garder&#8239;? Le <strong>Carnet</strong>, à côté de l’Aide, garde celle du robot ouvert sous un
         nom, pour la ressortir à n’importe quel service, le sien ou un suivant. Une page signale quand elle utilise des
-        blocs que le service n’a pas encore, ou ceux d’un autre robot. Avec <strong>Write a lesson</strong>, dites sur
+        blocs que le service n’a pas encore, ou ceux d’un autre robot. Avec <strong>Écrire une leçon</strong>, dites sur
         une page ce qu’elle montre et annotez les blocs qui le méritent, puis exportez-la en fichier texte pour la
         partager. Le carnet reste dans ce navigateur, commun à tous ses cafés&#8239;; exportez-le pour l’emporter
         ailleurs.
