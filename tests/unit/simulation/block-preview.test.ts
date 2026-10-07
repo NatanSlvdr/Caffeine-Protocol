@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { lessons, levels } from '../../../src/data';
 import { referencePrograms } from '../../../src/data/extension';
-import { blockVisits, previewKind, reachedName, standingName, type RobotPrograms } from '../../../src/domain';
+import { blockVisits, previewKind, reachedName, standingPlace, type RobotPrograms } from '../../../src/domain';
 import { dryRound, visitWords } from '../../../src/features/workspace/blockPreview';
 
 /** Shift 3, with Query's routine as given. */
@@ -79,9 +79,8 @@ describe('where a block goes in the café', () => {
     const [reach] = blockVisits(run.execution![0], 'query', lineOf(source, 'DEPOSIT DOWN'));
     expect(reach.target).toEqual([-4, 6]);
     expect(reachedName(reach.target!)).toBeUndefined();
-    expect(visitWords(reach, 'DEPOSIT DOWN', 'query', 3)).toMatch(
-      /^Query reaches down, but nothing is there\. The run stops here: .+\.$/,
-    );
+    expect(visitWords(reach, 'DEPOSIT DOWN', 'query', 3)).toBe('Query reaches down, but nothing is there.');
+    expect(reach.error).toBeTruthy();
     expect(blockVisits(run.execution![0], 'query', lineOf(source, 'MOVE LEFT 1'))).toEqual([]);
     const blocked = lessons[2].solution.replace('MOVE RIGHT 1', 'MOVE LEFT 3');
     const [stuck] = blockVisits(dryRound(levels[2], 3, query(blocked)).execution![0], 'query', 4);
@@ -89,10 +88,10 @@ describe('where a block goes in the café', () => {
   });
 
   it('names stations by where each robot stands at them', () => {
-    expect(standingName([-1, 5], 'prep')).toBe('storage');
-    expect(standingName([0, 5], 'prep')).toBeUndefined();
-    expect(standingName([6, 3], 'floor')).toBe('the pickup counter');
-    expect(standingName([-6, 0], 'floor')).toBe('table 9');
+    expect(standingPlace([-1, 5], 'prep')).toBe('storage');
+    expect(standingPlace([0, 5], 'prep')).toBeUndefined();
+    expect(standingPlace([6, 3], 'floor')).toBe('pickup');
+    expect(standingPlace([-6, 0], 'floor')).toEqual({ table: 9 });
     expect(reachedName([-6, -1])).toBe('table 9');
     expect(reachedName([5, 4])).toBe('the lids');
   });

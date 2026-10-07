@@ -75,43 +75,80 @@ export function blockVisits(execution: SeedExecution, role: RobotRole, line: num
   return [...visits.values()];
 }
 
-/** The station names a tile can go by, for the words beside a preview. */
-const STATION_NAMES: Record<string, string> = {
-  orders: 'the order handoff',
+/** A place a preview names: a station by what it is, or a table by its number. */
+export type Place =
+  | 'paper'
+  | 'register'
+  | 'handoff'
+  | 'storage'
+  | 'machine'
+  | 'sink'
+  | 'sugar'
+  | 'lids'
+  | 'pickup'
+  | 'shelf'
+  | { table: number };
+
+/** The place each station's tile is, for the words beside a preview. */
+const STATION_PLACES: Record<string, Place> = {
+  orders: 'handoff',
   ingredients: 'storage',
-  grinder: 'the coffee machine',
-  brewer: 'the coffee machine',
-  water: 'the sink',
+  grinder: 'machine',
+  brewer: 'machine',
+  water: 'sink',
+  sugar: 'sugar',
+  lids: 'lids',
+  pickup: 'pickup',
+  returns: 'sink',
+  togo: 'shelf',
+};
+
+const PLACE_NAMES: Record<Exclude<Place, { table: number }>, string> = {
+  paper: 'the paper',
+  register: 'the register',
+  handoff: 'the order handoff',
+  storage: 'storage',
+  machine: 'the coffee machine',
+  sink: 'the sink',
   sugar: 'the sugar',
   lids: 'the lids',
   pickup: 'the pickup counter',
-  returns: 'the sink',
-  togo: 'the to-go shelf',
+  shelf: 'the to-go shelf',
 };
+
+/** A place in English: "the coffee machine", "table 3". */
+export const placeName = (place: Place): string =>
+  typeof place === 'object' ? `table ${place.table}` : PLACE_NAMES[place];
 
 /** Query's paper is on the counter a tile above where it starts. */
 const PAPER: Point = [STATIONS.orders.query[0], STATIONS.orders.query[1] - 1];
 
-/** What is on a counter tile or table a robot reaches into: "the coffee machine", "table 3"; nothing if it is bare. */
-export function reachedName(target: Point): string | undefined {
-  if (samePoint(target, PAPER)) return 'the paper';
+/** What is on a counter tile or table a robot reaches into: the coffee machine, table 3; nothing if it is bare. */
+export function reachedPlace(target: Point): Place | undefined {
+  if (samePoint(target, PAPER)) return 'paper';
   const table = TABLE_LAYOUT.findIndex((t) => samePoint(target, [t.x, t.z]));
-  if (table >= 0) return `table ${table + 1}`;
+  if (table >= 0) return { table: table + 1 };
   const station = Object.entries(STATIONS).find(([, s]) => samePoint(target, s.cell));
-  return station && STATION_NAMES[station[0]];
+  return station && STATION_PLACES[station[0]];
 }
 
-/** The station a robot stands at on a tile, as it would be named: "the sink", "table 2"; nothing between stations. */
-export function standingName(tile: Point, role: RobotRole): string | undefined {
+/** What a robot reaches into, named in English: "the coffee machine", "table 3". */
+export function reachedName(target: Point): string | undefined {
+  const place = reachedPlace(target);
+  return place && placeName(place);
+}
+
+/** The station a robot stands at on a tile: the sink, table 2; nothing between stations. */
+export function standingPlace(tile: Point, role: RobotRole): Place | undefined {
   // Query listens at the register, and steps along to the handoff to put tickets down.
-  if (role === 'query') return samePoint(tile, STATIONS.orders.query) ? 'the register' : 'the order handoff';
+  if (role === 'query') return samePoint(tile, STATIONS.orders.query) ? 'register' : 'handoff';
   if (role === 'floor') {
     const table = TABLE_LAYOUT.findIndex((_, i) => samePoint(tile, tableFront(i)));
-    if (table >= 0) return `table ${table + 1}`;
+    if (table >= 0) return { table: table + 1 };
   }
   const station = Object.entries(STATIONS).find(([, s]) => {
     const spot = (s as Partial<Record<RobotRole, Point>>)[role];
     return spot && samePoint(tile, spot);
   });
-  return station && STATION_NAMES[station[0]];
+  return station && STATION_PLACES[station[0]];
 }

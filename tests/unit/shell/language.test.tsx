@@ -23,9 +23,15 @@ import { FAILURE_WORDS } from '../../../src/features/workspace/failureWords';
 import { FailureCard } from '../../../src/features/workspace/FailureCard';
 import { evidenceOf } from '../../../src/features/workspace/evidence';
 import { failureHint } from '../../../src/features/workspace/reactions';
+import { HANDOVER_WORDS } from '../../../src/features/workspace/handoverWords';
+import { HandoverCard } from '../../../src/features/workspace/HandoverCard';
+import { handoverFor } from '../../../src/features/workspace/handover';
+import { PREVIEW_WORDS } from '../../../src/features/workspace/previewWords';
+import { BlockPreviewNote } from '../../../src/features/workspace/BlockPreviewNote';
+import { dryRound, visitWords } from '../../../src/features/workspace/blockPreview';
 import { lessons, levels, titleFor } from '../../../src/data';
 import { narrativeFor } from '../../../src/data/campaign/narrative';
-import { UNLOCKS, createLiveRun, recordRun } from '../../../src/domain';
+import { UNLOCKS, blockVisits, createLiveRun, recordRun } from '../../../src/domain';
 import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, LanguageProvider, words } from '../../../src/shared/language';
 import { runCampaignLevel } from '../../helpers/run';
@@ -67,7 +73,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, a shift’s controls, windows and failure card, these settings and the handbook/,
+      /French covers the front door, the order rail, a shift’s controls, windows and notes, these settings and the handbook/,
     );
   });
 
@@ -570,9 +576,77 @@ describe('the words themselves', () => {
     );
   });
 
+  it('hands a helper’s job over in French, step by step', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <HandoverCard handover={handoverFor(UNLOCKS.prep)!} source={'LISTEN\nTAKE UP'} />
+      </LanguageProvider>,
+    );
+    const card = within(
+      screen.getByRole('complementary', { name: 'Prend le relais de Moka · 2 sur 7 dans la routine de Brew' }),
+    );
+    expect(card.getByRole('button', { name: 'Les étapes de Moka' }).title).toBe('Replier les étapes');
+    expect(document.querySelector('.handover-lead')!.textContent).toBe(
+      'Le travail de Moka revient désormais à Brew. Query remet les tickets, et Pip sert toujours la salle.',
+    );
+    expect(document.querySelectorAll('.handover-steps .sr-only')[2].textContent).toBe(
+      `Les moudre dans la machine à café, avec Use up${NBSP}: pas encore dans la routine de Brew.`,
+    );
+    expect(document.querySelector('.handover-status')!.textContent).toBe(
+      `Pas encore dans la routine de Brew${NBSP}: les moudre dans la machine à café, avec un bloc Use up.`,
+    );
+    // Every job has a French word for each of its steps.
+    for (const role of ['prep', 'floor'] as const)
+      expect(HANDOVER_WORDS.fr.jobs[role].steps).toHaveLength(HANDOVER_WORDS.en.jobs[role].steps.length);
+  });
+
+  it('says where a picked block goes in French, with why a run stopped kept as English', () => {
+    const source = lessons[2].solution;
+    const round = dryRound(levels[2], 3, { query: source, prep: '', floor: '' }).execution![0];
+    const said = (command: string) =>
+      blockVisits(
+        round,
+        'query',
+        source.split('\n').findIndex((l) => l.trim() === command),
+      ).map((v) => visitWords(v, command, 'query', 3, PREVIEW_WORDS.fr));
+    expect(said('TAKE UP')).toEqual(['Query tend le bras en haut, vers le papier, et prend une feuille.']);
+    expect(said('MOVE RIGHT 1')).toEqual([
+      'Query avance de 1 case vers la droite, de la caisse au passe de la cuisine.',
+    ]);
+    expect(said('DEPOSIT RIGHT')).toEqual([
+      'Query tend le bras à droite, vers le passe de la cuisine, et pose le ticket.',
+    ]);
+    expect(PREVIEW_WORDS.fr.place({ table: 3 }, 'to')).toBe('à la table 3');
+    expect(PREVIEW_WORDS.fr.tiles([0, 0], [-2, 1])).toBe('2 cases vers la gauche et 1 case vers le bas');
+
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(
+      <LanguageProvider>
+        <BlockPreviewNote
+          textMode={false}
+          note={{
+            title: 'Bloc 5 · deposit down',
+            scope: 'Dans la manche 1',
+            ways: [
+              { words: 'Query tend le bras en bas, mais il n’y a rien.', times: 2, stop: 'Nothing to put that on' },
+            ],
+            more: 2,
+          }}
+        />
+      </LanguageProvider>,
+    );
+    const note = screen.getByRole('region', { name: 'Le bloc choisi, dans le café' });
+    expect(note.querySelector('li')!.textContent).toBe(
+      `Query tend le bras en bas, mais il n’y a rien. L’essai s’arrête ici${NBSP}: Nothing to put that on. · 2 fois`,
+    );
+    expect(within(note).getByText('Nothing to put that on').getAttribute('lang')).toBe('en');
+    expect(within(note).getByText('Et 2 autres passages.')).toBeTruthy();
+  });
+
   it('leaves no French line in English', () => {
     // Names and words that read the same in both.
-    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination']);
+    const same = new Set(['Cafés', 'Options', 'Tables', 'Service', 'Photo', 'Pause', 'Table', 'Destination', 'Ticket']);
     const catalogs = [
       HOME_WORDS,
       SETTINGS_WORDS,
@@ -589,6 +663,8 @@ describe('the words themselves', () => {
       BENCH_WORDS,
       COMPARE_WORDS,
       FAILURE_WORDS,
+      HANDOVER_WORDS,
+      PREVIEW_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

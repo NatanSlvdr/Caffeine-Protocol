@@ -249,26 +249,32 @@ decisions and the hint by code (`failureHint` takes the hints, English by
 default, so Niko's line in the crew's scene still says it in English). Why
 the run stopped, what the guest said and the IFs Query tested stay English,
 marked so. The evidence keeps only a regular's name (`regularCalled`), so
-anyone else is numbered in the reader's language. `CHALLENGE_WORDS` is a
-catalog too; the generated shift docs read its English. A window whose title
-is a shift's name marks it with `titleLang`. Short repeats is worded once,
-as `SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The
-rest of a shift (the crew's scenes and reactions, the inspector and
-timeline, the editor's tools), the rail's windows (guestbook, shelf, drills
-and the rest), the story and the shift data are still in English, and so is
-the list of what bringing an old save up to date changed. Where English data
-sits on a French screen (a shift's name, its story and goal, a scene's
-logline), it carries `lang={useUntranslated()}`, so a screen reader says it
-as English; on an English page the attribute is left off. Act names and
-taglines for the tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps
-the English names the English-only windows still read. The save checks'
-refusals are keyed (`SAVE_REFUSALS`) so Settings can say them in French; a
-damaged file's field is left out in French. The handbook names the French
-buttons and windows, and the editor's tools as they still read in English.
-The French toolbar reads longer, so its step buttons fold to their icons
-below 1360px rather than 1180px. Programming words (blocks, values, the text
-editor's syntax) are never translated, so a routine and a shared notebook
-read the same in either language.
+anyone else is numbered in the reader's language. So do the handover card
+(`handoverWords.ts`: the jobs are written once in `HANDOVERS`, and the
+French follows them step by step) and the note beside a picked block's
+preview (`previewWords.ts`): the domain names the places a block reaches as
+`Place` keys (`reachedPlace`, `standingPlace`), so French can give each its
+article, and `visitWords` takes the words, with where a run stopped said
+apart, in English. `CHALLENGE_WORDS` is a catalog too; the generated shift
+docs read its English. A window whose title is a shift's name marks it with
+`titleLang`. Short repeats is worded once, as `SHORT_REPEATS` beside
+`SettingRow`, for Settings and Options both. The rest of a shift (the crew's
+scenes and reactions, the inspector and timeline, the editor's tools), the
+rail's windows (guestbook, shelf, drills and the rest), the story and the
+shift data are still in English, and so is the list of what bringing an old
+save up to date changed. Where English data sits on a French screen (a
+shift's name, its story and goal, a scene's logline), it carries
+`lang={useUntranslated()}`, so a screen reader says it as English; on an
+English page the attribute is left off. Act names and taglines for the
+tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
+the English-only windows still read. The save checks' refusals are keyed
+(`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
+is left out in French. The handbook names the French buttons and windows,
+and the editor's tools as they still read in English. The French toolbar
+reads longer, so its step buttons fold to their icons below 1360px rather
+than 1180px. Programming words (blocks, values, the text editor's syntax)
+are never translated, so a routine and a shared notebook read the same in
+either language.
 
 ## Photo mode
 
