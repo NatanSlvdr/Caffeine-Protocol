@@ -1,9 +1,10 @@
-import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, onTestFinished, vi } from 'vitest';
 import App from '../../../src/App';
 import { CAFE_WORDS } from '../../../src/app/cafeWords';
 import { GUIDE_WORDS } from '../../../src/app/guideWords';
 import { SETTINGS_WORDS } from '../../../src/app/settingsWords';
+import { SAVE_NOTICE_WORDS } from '../../../src/app/saveNoticeWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
 import { STORY_WORDS } from '../../../src/shell/storyWords';
@@ -368,6 +369,22 @@ describe('the dialogue box in French', () => {
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(onDone).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the save notice in French', () => {
+  it('says why the café isn’t being saved in French, over the screen and in Settings', async () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    localStorage.setItem(SAVE_KEY, '{broken');
+    render(<App />);
+    const notice = within(screen.getByRole('alert'));
+    expect(notice.getByText(/^La progression sauvegardée n’a pas pu être lue/).textContent).toMatch(
+      new RegExp(`intactes${NBSP}: exportez une copie de secours depuis les Réglages\\.$`),
+    );
+    fireEvent.click(notice.getByRole('button', { name: 'Ouvrir les réglages' }));
+    // Settings says it again under the save section, in the same words.
+    await waitFor(() => expect(screen.getAllByText(/^La progression sauvegardée n’a pas pu être lue/)).toHaveLength(2));
+    expect(SAVE_NOTICE_WORDS.fr.problems.blocked).toMatch(/^Ce navigateur ne laisse pas le café sauvegarder ici/);
   });
 });
 
@@ -1184,6 +1201,7 @@ describe('the words themselves', () => {
       BLOCK_HELP_WORDS,
       DIALOGUE_WORDS,
       STORY_WORDS,
+      SAVE_NOTICE_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

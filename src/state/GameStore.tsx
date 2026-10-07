@@ -33,6 +33,7 @@ import {
   type BackupReason,
   type CafeList,
   type SaveBackup,
+  type SaveProblem,
 } from '@/features/campaign/save/persistence';
 import type { ChallengeMeasure, Decor, DecorSpot, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
@@ -43,7 +44,8 @@ export type Update = Dispatch<SetStateAction<ProgressSave>>;
 
 interface GameStore {
   save: ProgressSave;
-  saveError: string;
+  /** Why the café isn't being saved, or nothing while it is. */
+  saveError: SaveProblem | '';
   recovery: boolean;
   /** Another tab or window saved this café since this one last did, so this one has stopped saving. */
   elsewhere: boolean;
@@ -101,9 +103,6 @@ interface GameStore {
 
 const GameContext = createContext<GameStore | null>(null);
 
-const STORAGE_BLOCKED =
-  'This browser isn’t letting the café save here, so progress made now won’t be kept. Export your café from Settings to keep it.';
-
 /** With site data blocked, even reading `localStorage` throws, so every use goes through here. */
 function siteStorage(): Storage | undefined {
   try {
@@ -119,7 +118,8 @@ export function GameProvider({ children }: { children: ReactNode }) {
     const storage = siteStorage();
     // Which café this tab plays is settled first, and every read and save after this goes to its keys.
     const cafes = settleCafe(storage);
-    if (!storage) return { save: newSave(), error: STORAGE_BLOCKED, recovery: false, backup: null, updated: [], cafes };
+    if (!storage)
+      return { save: newSave(), error: 'blocked' as const, recovery: false, backup: null, updated: [], cafes };
     // A café from an older version is kept as it was before the first save rewrites it in the new one. That save
     // makes it current, so the player hears what changed on this visit only.
     const older = storedIsOlder(storage);
@@ -176,7 +176,7 @@ export function GameProvider({ children }: { children: ReactNode }) {
     if (!recovery && !elsewhere) {
       // Only a change of error re-renders: every keystroke saves, and a no-op update per save piles up during fast typing.
       const storage = siteStorage();
-      const error = storage ? writeSave(storage, save) : STORAGE_BLOCKED;
+      const error = storage ? writeSave(storage, save) : 'blocked';
       if (error !== saveError) setSaveError(error);
     }
     configureAudio(save.settings);

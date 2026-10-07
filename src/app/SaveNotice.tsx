@@ -3,6 +3,8 @@ import { Sparkles, TriangleAlert, X } from 'lucide-react';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { openSettings } from '@/shared/lib/navigation';
 import { useGame } from '@/state/GameStore';
+import { useUntranslated, useWords } from '@/shared/language';
+import { SAVE_NOTICE_WORDS } from './saveNoticeWords';
 
 /**
  * A save problem pinned over every screen, so progress never goes quietly unsaved; failing that, once, what updating
@@ -10,6 +12,8 @@ import { useGame } from '@/state/GameStore';
  */
 export function SaveNotice() {
   const { saveError, elsewhere, loadElsewhere, keepThisTab, updated, dismissUpdated } = useGame();
+  const say = useWords(SAVE_NOTICE_WORDS);
+  const english = useUntranslated();
   // Dismissing hides this message only: a different problem later shows again.
   const [dismissed, setDismissed] = useState('');
   // The Dismiss button goes with the notice, so focus carries on from the screen's title, not the top of the page.
@@ -32,15 +36,12 @@ export function SaveNotice() {
     return (
       <div className="save-notice" role="alert">
         <TriangleAlert size={18} aria-hidden="true" />
-        <p>
-          This café was just saved from another tab or window. This one has stopped saving, so neither overwrites the
-          other.
-        </p>
+        <p>{say.elsewhere}</p>
         <button className="save-notice-open" onClick={loadElsewhere}>
-          Load the newer progress
+          {say.loadNewer}
         </button>
         <button className="save-notice-keep" onClick={keepThisTab}>
-          Keep this tab’s progress
+          {say.keepThis}
         </button>
       </div>
     );
@@ -49,12 +50,12 @@ export function SaveNotice() {
       <div className="save-notice is-update" role="status">
         <Sparkles size={18} aria-hidden="true" />
         <p>
-          <strong>Your café was brought up to date.</strong> {updated.join(' ')}
+          <strong>{say.updated}</strong> <span lang={english}>{updated.join(' ')}</span>
         </p>
         <button
           className="save-notice-close"
-          aria-label="Dismiss"
-          title="Dismiss"
+          aria-label={say.dismiss}
+          title={say.dismiss}
           onClick={() => {
             read.current = true;
             dismissUpdated();
@@ -67,14 +68,14 @@ export function SaveNotice() {
   return (
     <div className="save-notice" role="alert">
       <TriangleAlert size={18} aria-hidden="true" />
-      <p>{saveError}</p>
+      <p>{say.problems[saveError]}</p>
       <button className="save-notice-open" aria-haspopup="dialog" onClick={openSettings}>
-        Open settings
+        {say.openSettings}
       </button>
       <button
         className="save-notice-close"
-        aria-label="Dismiss"
-        title="Dismiss"
+        aria-label={say.dismiss}
+        title={say.dismiss}
         onClick={() => setDismissed(saveError)}
       >
         <X size={16} aria-hidden="true" />

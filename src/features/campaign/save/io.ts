@@ -4,27 +4,33 @@ import { cafeKey } from './cafes';
 import { migrationChanges, parseSave } from './migration';
 import type { LessonCatalog } from './migration';
 
+/** Why the café isn't being saved, by key, so the save notice and Settings can say it in the reader's language. */
+export const SAVE_PROBLEMS = {
+  unreadable:
+    'Saved progress could not be read, so new progress isn’t being saved. The original data is untouched: export a recovery copy from Settings.',
+  unsaved: 'Progress could not be saved. Export your café from Settings to keep it.',
+  blocked:
+    'This browser isn’t letting the café save here, so progress made now won’t be kept. Export your café from Settings to keep it.',
+} as const;
+export type SaveProblem = keyof typeof SAVE_PROBLEMS;
+
 export function readSave(
   storage: Pick<Storage, 'getItem'>,
   lessons: LessonCatalog,
-): { save: ProgressSave; error: string } {
+): { save: ProgressSave; error: SaveProblem | '' } {
   try {
     const raw = storage.getItem(cafeKey());
     return { save: raw ? parseSave(raw, lessons) : newSave(), error: '' };
   } catch {
-    return {
-      save: newSave(),
-      error:
-        'Saved progress could not be read, so new progress isn’t being saved. The original data is untouched: export a recovery copy from Settings.',
-    };
+    return { save: newSave(), error: 'unreadable' };
   }
 }
-export function writeSave(storage: Pick<Storage, 'setItem'>, save: ProgressSave): string {
+export function writeSave(storage: Pick<Storage, 'setItem'>, save: ProgressSave): SaveProblem | '' {
   try {
     storage.setItem(cafeKey(), JSON.stringify(save));
     return '';
   } catch {
-    return 'Progress could not be saved. Export your café from Settings to keep it.';
+    return 'unsaved';
   }
 }
 

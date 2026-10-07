@@ -34,6 +34,7 @@ import { updateNow, useUpdateReady } from './offlineUpdate';
 import { CAFE_WORDS } from './cafeWords';
 import { CafesSection } from './CafesSection';
 import { SETTINGS_WORDS } from './settingsWords';
+import { SAVE_NOTICE_WORDS } from './saveNoticeWords';
 
 const PACES: DialoguePace[] = ['typed', 'quick', 'whole'];
 
@@ -42,6 +43,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const { save, recovery, saveError, elsewhere, importCafe, backup, restoreBackup, cafes, cafeId, addCafe } = useGame();
   const cafe = useCafeName();
   const say = useWords(SETTINGS_WORDS);
+  const problems = useWords(SAVE_NOTICE_WORDS).problems;
   const cafeWords = useWords(CAFE_WORDS);
   const [language, setLanguage] = useLanguage();
   // What a café holds, or that it's a fresh one.
@@ -274,7 +276,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
             </p>
             {(error || saveError) && (
               <p role="alert" className="error-text">
-                {error || saveError}
+                {error || (saveError && problems[saveError])}
               </p>
             )}
           </section>
