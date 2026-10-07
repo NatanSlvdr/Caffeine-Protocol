@@ -3,7 +3,7 @@ import type { RobotRole } from '@/domain';
 import { ROBOT_DISPLAY_NAMES } from '@/domain/robots';
 import { BookOpen, FlaskConical, NotebookPen, Redo2, SlidersHorizontal, Undo2 } from 'lucide-react';
 import { RUN_MODIFIER } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import { PANE_WORDS } from './paneWords';
 import { RobotOptions } from './RobotChoice';
 import type { RobotTabActivity } from './RobotChoice';
@@ -13,6 +13,7 @@ export function CodingPaneHeader({
   shift,
   objective,
   story,
+  briefLang,
   level,
   role,
   onRole,
@@ -29,6 +30,8 @@ export function CodingPaneHeader({
   role: RobotRole;
   onRole: (role: RobotRole) => void;
   story?: string;
+  /** The language of the title, story and goal when it isn't the page's: a special's, still English. */
+  briefLang?: string;
   onHelp?: () => void;
   /** The routine notebook, on a shift with a routine to keep or fill. */
   onNotebook?: () => void;
@@ -41,8 +44,6 @@ export function CodingPaneHeader({
   activity?: Partial<Record<RobotRole, RobotTabActivity>>;
 }) {
   const say = useWords(PANE_WORDS);
-  // The shift's title, story and goal are still in English.
-  const english = useUntranslated();
   // Undoing the last step greys Undo out under the pointer or keyboard focus; focus moves across to Redo, and back.
   const undoButton = useRef<HTMLButtonElement>(null),
     redoButton = useRef<HTMLButtonElement>(null),
@@ -63,7 +64,7 @@ export function CodingPaneHeader({
     <section className="coding-pane">
       <header className="coding-pane-heading">
         <div className="coding-title-row">
-          <h2 data-screen-title tabIndex={-1} lang={english}>
+          <h2 data-screen-title tabIndex={-1} lang={briefLang}>
             {shift}
           </h2>
           <div className="coding-tools">
@@ -128,13 +129,13 @@ export function CodingPaneHeader({
           </div>
         </div>
         {story && (
-          <p className="shift-story" lang={english}>
+          <p className="shift-story" lang={briefLang}>
             {story}
           </p>
         )}
         <p className="shift-objective">
           <span>{say.goal}</span>
-          <span lang={english}>{objective}</span>
+          <span lang={briefLang}>{objective}</span>
         </p>
       </header>
       <div className="robot-tabs" role="tablist" aria-label={say.robots}>

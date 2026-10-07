@@ -1,7 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles, Wrench } from 'lucide-react';
 import { DialogueBox } from '@/components';
-import { levels, titleFor } from '@/data';
+import { levels } from '@/data';
 import { cutscenes, sceneBefore, sceneOpen, sceneSeen, waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import { guestbookNotes } from '@/data/campaign/guestbook';
 import { drills } from '@/data/drills';
@@ -11,14 +11,13 @@ import { memories, memoryOpen } from '@/data/memories';
 import { repairOpen, repairs, type Repair } from '@/data/repairs';
 import { longDay } from '@/data/longDay';
 import { specials } from '@/data/specials';
-import { narrativeFor } from '@/data/campaign/narrative';
 import { startDay } from '@/features/campaign/save/endurance';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { Button } from '@/shared/ui/Button';
 import { useUntranslated, useWords } from '@/shared/language';
 import { go, openGuide } from '@/shared/lib/navigation';
 import { pad2, starRow } from '@/shared/lib/format';
-import { useCafeName, useGame, useProgress } from '@/state/GameStore';
+import { useCafeName, useGame, useNarrative, useProgress } from '@/state/GameStore';
 import { actIndexFor, acts } from './rail/acts';
 import { Ticket, type ActState } from './rail/Ticket';
 import { RAIL_WORDS } from './rail/railWords';
@@ -34,8 +33,6 @@ import { ShellBar } from './ShellBar';
 
 /** How long "Order up!" stays on the specials board before the shift opens. */
 const ORDER_UP_MS = 650;
-
-const titles = levels.map((_, index) => titleFor(index));
 
 /** Every line of the rail in order: each scene just above the shift it opens, the closing scene last. */
 type Entry = { shift: number } | { scene: Cutscene };
@@ -57,6 +54,8 @@ export function CampaignPage() {
   const shop = useCafeName();
   const say = useWords(RAIL_WORDS);
   const english = useUntranslated();
+  const narrative = useNarrative();
+  const titles = useMemo(() => narrative.map((row) => row.title), [narrative]);
   const reducedMotion = useReducedMotion(save.settings.reduced_motion);
   const rail = useRef<HTMLDivElement>(null);
   const orderTimer = useRef<number | undefined>(undefined);
@@ -121,7 +120,7 @@ export function CampaignPage() {
   const selected = save.selected;
   const current = actIndexFor(scene ? Math.min(scene.before, levels.length - 1) : selected);
   const level = levels[selected];
-  const shift = narrativeFor(selected);
+  const shift = narrative[selected];
   const observation = !level.programming_enabled;
   const upNext = !isComplete(selected) && selected === save.unlocked;
   const opens = (entry: Entry) =>
@@ -390,6 +389,7 @@ export function CampaignPage() {
         <DialogueBox
           lines={closingUp.scene}
           kicker={closingUp.title}
+          kickerLang={english}
           kickerLabel={say.repairs.title}
           doneLabel={say.backToRail}
           instant={reducedMotion}
@@ -460,7 +460,7 @@ export function CampaignPage() {
                   </span>
                 )}
               </p>
-              <h2 lang={english}>{titleFor(selected)}</h2>
+              <h2>{shift.title}</h2>
               <svg className="board-swash" viewBox="0 0 200 12" aria-hidden="true">
                 <path d="M2 8 C 30 2, 50 12, 80 6 S 130 2, 160 7 S 190 9, 198 4" />
               </svg>
@@ -499,11 +499,9 @@ export function CampaignPage() {
                   </>
                 )}
               </dl>
-              <p className="board-story" lang={english}>
-                {shift.story}
-              </p>
+              <p className="board-story">{shift.story}</p>
               <p className="board-note">
-                <strong>{say.chefsNote}</strong> <span lang={english}>{shift.hint}</span>
+                <strong>{say.chefsNote}</strong> {shift.hint}
               </p>
               <svg className="board-doodle" viewBox="0 0 120 100" aria-hidden="true">
                 <path className="board-steam" d="M44 32c-6-8 6-14 0-24M58 32c-6-8 6-14 0-24M72 32c-6-8 6-14 0-24" />

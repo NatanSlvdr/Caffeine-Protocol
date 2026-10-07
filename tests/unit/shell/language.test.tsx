@@ -72,7 +72,6 @@ import type { Active, Over } from '@dnd-kit/core';
 import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
 import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
-import { narrativeFor } from '../../../src/data/campaign/narrative';
 import {
   STATIONS,
   UNLOCKS,
@@ -130,7 +129,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers the front door, the order rail, a shift’s controls, windows and notes, these settings and the handbook/,
+      /French covers every screen and window, and each shift’s name and brief/,
     );
   });
 
@@ -204,7 +203,7 @@ describe('reading the café in French', () => {
 describe('the order rail in French', () => {
   const served = () => seedLocalStorage(makeSave({ unlocked: 3, selected: 3, stars: { 0: 0, 1: 3, 2: 2 } }));
 
-  it('chalks up the shift in French, and keeps its English name and story said as English', () => {
+  it('chalks up the shift in French, its name and story with it', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     window.location.hash = '/campaign';
     served();
@@ -215,8 +214,10 @@ describe('the order rail in French', () => {
     const board = within(screen.getByRole('complementary', { name: 'Service choisi' }));
     expect(document.querySelector('.board-no')!.textContent).toBe(`N°${NBSP}04`);
     expect(board.getByText('À suivre')).toBeTruthy();
-    expect(board.getByRole('heading', { name: titleFor(3) }).lang).toBe('en');
-    expect(board.getByText(narrativeFor(3).story).lang).toBe('en');
+    expect(board.getByRole('heading', { name: `Café ou thé${NARROW}?` }).hasAttribute('lang')).toBe(false);
+    expect(document.querySelector('.board-story')!.textContent).toMatch(/^Le thé arrive à la carte/);
+    expect(document.querySelector('.board-story')!.hasAttribute('lang')).toBe(false);
+    expect(document.querySelector('.board-note')!.textContent).toBe('Le mot du chef Guettez le mot Tea.');
     expect(board.getByRole('button', { name: 'Commencer le service' })).toBeTruthy();
     expect(board.getByText('Le mot du chef')).toBeTruthy();
   });
@@ -226,9 +227,11 @@ describe('the order rail in French', () => {
     window.location.hash = '/campaign';
     served();
     render(<App />);
-    expect(screen.getByRole('button', { name: `Service 2${NBSP}: ${titleFor(1)}, 3 étoiles sur 3` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: `Service 4${NBSP}: ${titleFor(3)}, à suivre` })).toBeTruthy();
-    expect(screen.getByRole('button', { name: `Service 5${NBSP}: ${titleFor(4)}, verrouillé` })).toBeTruthy();
+    expect(
+      screen.getByRole('button', { name: `Service 2${NBSP}: Hello, World, un café, 3 étoiles sur 3` }),
+    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Service 4${NBSP}: Café ou thé${NARROW}?, à suivre` })).toBeTruthy();
+    expect(screen.getByRole('button', { name: `Service 5${NBSP}: Avec ou sans sucre, verrouillé` })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Acte II, verrouillé tant que l’acte I n’est pas servi' })).toBeTruthy();
     expect(screen.getByRole('button', { name: /^Acte I · Query, 2 sur \d+ servis, 5 étoiles sur \d+$/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Comment jouer' })).toBeTruthy();
@@ -484,13 +487,13 @@ describe('the rail’s windows in French', () => {
     expect(shelf.getByRole('radio', { name: /^Le port/ })).toBeTruthy();
   });
 
-  it('reads the guestbook in French, with the regulars’ notes and the shift names kept as English', () => {
+  it('reads the guestbook in French, with the regulars’ notes kept as English', () => {
     campaign(6);
     fireEvent.click(screen.getByRole('button', { name: /^Livre d’or, 3 mots/ }));
     const book = within(screen.getByRole('dialog', { name: 'Laissé près de la caisse.' }));
     const notes = book.getAllByRole('listitem');
-    expect(notes[0].querySelector('small')!.textContent).toBe(`Juno · Après le service 04, ${titleFor(3)}`);
-    expect(notes[0].querySelector('small [lang="en"]')!.textContent).toBe(titleFor(3));
+    expect(notes[0].querySelector('small')!.textContent).toBe(`Juno · Après le service 04, Café ou thé${NARROW}?`);
+    expect(notes[0].querySelector('small [lang]')).toBeNull();
     expect(notes[0].querySelector('blockquote')!.getAttribute('lang')).toBe('en');
     expect(book.getByText('Le reste du livre est encore vierge.')).toBeTruthy();
   });
@@ -565,6 +568,9 @@ describe('the rail’s windows in French', () => {
     const kicker = document.querySelector('.dialogue-kicker')!;
     expect(kicker.getAttribute('lang')).toBeNull();
     expect(kicker.querySelector('[lang="en"]')!.textContent).toBe(memory.title);
+    // A memory's own words are still the story's English, in the coding pane as in the kicker.
+    expect(screen.getByRole('heading', { level: 2, name: memory.title }).getAttribute('lang')).toBe('en');
+    expect(document.querySelector('.shift-objective')!.lastElementChild!.getAttribute('lang')).toBe('en');
   });
 });
 
@@ -602,7 +608,7 @@ describe('the shift screen in French', () => {
     fireEvent.click(screen.getByRole('button', { name: /^(Skip|Passer)$/ }));
   };
 
-  it('labels the bar, the toolbar and the coding pane in French, and keeps the shift’s own words said as English', () => {
+  it('labels the bar, the toolbar and the coding pane in French, the shift’s own words with them', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     open();
     expect(screen.getByRole('button', { name: 'Campagne Service 04' })).toBeTruthy();
@@ -613,9 +619,11 @@ describe('the shift screen in French', () => {
     expect(toolbar.getByRole('button', { name: 'Mettre en pause' })).toBeTruthy();
     expect(toolbar.getByRole('slider', { name: 'Vitesse de lecture' })).toBeTruthy();
     expect(document.querySelector('.playback-speed small')!.textContent).toMatch(/^1 bloc · \d+,\d\d s$/);
-    expect(screen.getByRole('heading', { level: 2, name: titleFor(3) }).lang).toBe('en');
-    expect(document.querySelector('.shift-objective')!.firstElementChild!.textContent).toBe('Objectif');
-    expect(document.querySelector('.shift-objective')!.lastElementChild!.getAttribute('lang')).toBe('en');
+    expect(screen.getByRole('heading', { level: 2, name: `Café ou thé${NARROW}?` }).hasAttribute('lang')).toBe(false);
+    const objective = document.querySelector('.shift-objective')!;
+    expect(objective.firstElementChild!.textContent).toBe('Objectif');
+    expect(objective.lastElementChild!.textContent).toMatch(/^Les clients commandent maintenant du café ou du thé/);
+    expect(objective.lastElementChild!.hasAttribute('lang')).toBe(false);
     for (const name of ['Annuler', 'Rétablir', 'Aide', 'Carnet', 'Banc d’essai', 'Options'])
       expect(screen.getByRole('button', { name })).toBeTruthy();
     expect(screen.getByRole('tablist', { name: 'Routines des robots' })).toBeTruthy();
@@ -738,14 +746,18 @@ describe('the shift screen in French', () => {
     expect(within(tips).getByRole('button', { name: WORKSPACE_WORDS.fr.tips.hide })).toBeTruthy();
   });
 
-  it('opens the field notes in French, with the shift’s own words said as English', () => {
+  it('opens the field notes in French, the shift’s lesson and brief with them', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     open();
     fireEvent.click(screen.getByRole('button', { name: 'Aide' }));
-    const notes = screen.getByRole('dialog', { name: titleFor(3) });
+    const notes = screen.getByRole('dialog', { name: `Café ou thé${NARROW}?` });
     expect(notes.querySelector('.modal-kicker')!.textContent).toBe('Service 04 · Notes de terrain');
-    expect(notes.querySelector('h2')!.lang).toBe('en');
-    expect(notes.querySelector('.lesson-note')!.getAttribute('lang')).toBe('en');
+    expect(notes.querySelector('h2')!.hasAttribute('lang')).toBe(false);
+    const lesson = notes.querySelector('.lesson-note')!;
+    expect(lesson.textContent).toBe(
+      'Les conditions portent sur ce qu’a dit le client. Dans la boucle, testez-le avec If Tea IN Orders, puis Write Tea ou Write Coffee.',
+    );
+    expect(lesson.hasAttribute('lang')).toBe(false);
     const help = within(notes);
     expect(help.getByRole('button', { name: /Revoir l’introduction/ })).toBeTruthy();
     expect(help.getByText('Deux étoiles')).toBeTruthy();
@@ -789,8 +801,8 @@ describe('the shift screen in French', () => {
       expect(slip.getByRole('img', { name: '3 étoiles sur 3' })).toBeTruthy();
       for (const total of ['Clients servis', 'Blocs utilisés', 'Pas exécutés'])
         expect(slip.getByText(total)).toBeTruthy();
-      expect(receipt.querySelector('.receipt-thanks')!.textContent).toBe(`Merci. À suivre${NBSP}: ${titleFor(2)}`);
-      expect(receipt.querySelector('.receipt-thanks strong')!.getAttribute('lang')).toBe('en');
+      expect(receipt.querySelector('.receipt-thanks')!.textContent).toBe(`Merci. À suivre${NBSP}: Un latte sans fin`);
+      expect(receipt.querySelector('.receipt-thanks strong')!.hasAttribute('lang')).toBe(false);
       expect(slip.getByRole('button', { name: 'Rester sur ce service' })).toBeTruthy();
       expect(slip.getByRole('button', { name: /^Service suivant/ })).toBeTruthy();
     } finally {

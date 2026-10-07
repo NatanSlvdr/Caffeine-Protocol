@@ -187,7 +187,7 @@ export function ReceiptModal({
           <span lang={english}>{thanks}</span>
         ) : nextShift ? (
           <>
-            {say.nextUp} <strong lang={english}>{nextShift}</strong>
+            {say.nextUp} <strong>{nextShift}</strong>
           </>
         ) : (
           say.lastOrder

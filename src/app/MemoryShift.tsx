@@ -8,7 +8,7 @@ import { completeLevel, keepMemory, projectMemory } from '@/features/campaign/sa
 import { useGame } from '@/state/GameStore';
 import { useMusicMood } from '@/hooks/useMusicMood';
 import { go } from '@/shared/lib/navigation';
-import { useWords } from '@/shared/language';
+import { useUntranslated, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /**
@@ -33,13 +33,14 @@ export function MemoryShift({ memory }: { memory: Memory }) {
     [memory, slot],
   );
   const say = useWords(SCREEN_WORDS);
+  const english = useUntranslated();
   return (
     <Workspace
       index={slot}
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...memory, label: say.memory, memory: true }}
+      shift={{ ...memory, label: say.memory, memory: true, lang: english }}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>
         keep((s) => ({

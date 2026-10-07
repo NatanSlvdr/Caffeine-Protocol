@@ -1,6 +1,6 @@
 import { words } from '@/shared/language';
 
-/** The front door's words. Shift titles and objectives are the story's, and stay in English for now. */
+/** The front door's words. The shift's title and goal come with the rest of the shift's brief. */
 export const HOME_WORDS = words(
   {
     kicker: (cafe: string) => `${cafe} · A cozy coding adventure`,

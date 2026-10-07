@@ -8,14 +8,13 @@ import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
-import { narrativeFor } from '@/data/campaign/narrative';
 import { drills } from '@/data/drills';
 import { memoryById, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
 import { longDay } from '@/data/longDay';
 import { waveOpen } from '@/features/campaign/save/endurance';
 import { sceneById, sceneOpen, waitingScene } from '@/data/campaign/cutscenes';
-import { GameProvider, useGame, useShift } from '@/state/GameStore';
+import { GameProvider, useGame, useNarrative, useShift } from '@/state/GameStore';
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
@@ -84,6 +83,7 @@ function Shell() {
                   ? 'ending'
                   : 'home';
   const shift = useShift(index);
+  const narrative = useNarrative();
   const tab = useWords(SCREEN_WORDS).tab;
   // The tab names the screen, so browser history and screen readers can tell the pages apart.
   const title = {
@@ -127,7 +127,7 @@ function Shell() {
                 lessons={lessons}
                 shift={shift}
                 drills={drills}
-                nextShift={index < CAMPAIGN_LENGTH - 1 ? narrativeFor(index + 1).title : undefined}
+                nextShift={index < CAMPAIGN_LENGTH - 1 ? narrative[index + 1].title : undefined}
                 onNext={() => {
                   if (index === CAMPAIGN_LENGTH - 1) go('/ending');
                   else {

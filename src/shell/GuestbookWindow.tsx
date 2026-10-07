@@ -1,10 +1,9 @@
 import { Modal } from '@/components';
-import { titleFor } from '@/data';
 import { cast } from '@/data/campaign/cast';
 import { guestbook, type GuestbookNote } from '@/data/campaign/guestbook';
 import { pad2 } from '@/shared/lib/format';
 import { useUntranslated, useWords } from '@/shared/language';
-import { useCafeName } from '@/state/GameStore';
+import { useCafeName, useNarrative } from '@/state/GameStore';
 import { KEPT_WORDS } from './keptWords';
 
 /** The guestbook by the till: what the regulars wrote after the shifts they were part of, oldest first. */
@@ -21,6 +20,7 @@ export function GuestbookWindow({
   const cafe = useCafeName();
   const say = useWords(KEPT_WORDS).guestbook;
   const english = useUntranslated();
+  const narrative = useNarrative();
   return (
     <Modal
       className="settings-window guestbook-window"
@@ -44,7 +44,7 @@ export function GuestbookWindow({
                   <small>
                     {name === note.sign ? '' : `${name} · `}
                     {say.after(pad2(note.shift))}
-                    <span lang={english}>{titleFor(note.shift - 1)}</span>
+                    {narrative[note.shift - 1].title}
                   </small>
                 </figcaption>
               </figure>

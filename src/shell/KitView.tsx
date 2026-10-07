@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, CircleCheck, CircleX, Undo2 } from 'lucide-react';
 import { BlockLines, spokenLines } from '@/components';
-import { titleFor } from '@/data';
 import { drillLines, tryDrill } from '@/data/drills';
 import { kitLines, type Kit } from '@/data/kits';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';
 import { useUntranslated, useWords } from '@/shared/language';
+import { useNarrative } from '@/state/GameStore';
 import { DRILL_WORDS } from './drillWords';
 
 /** How many lines of the routine show on each side of the gap. */
@@ -27,6 +27,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
   useEffect(() => question.current?.focus(), []);
   const say = useWords(DRILL_WORDS);
   const english = useUntranslated();
+  const narrative = useNarrative();
 
   const robot = ROBOT_DISPLAY_NAMES[kit.robot];
   const worked = drillLines(kit);
@@ -79,7 +80,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
       <figure className="drill-routine">
         <figcaption>
           {say.routine(robot, kit.shift)}
-          <span lang={english}>{titleFor(kit.shift - 1)}</span>
+          {narrative[kit.shift - 1].title}
         </figcaption>
         {worked.before.length > above.length && <span className="drill-more" aria-hidden="true" />}
         <BlockLines lines={above} base={base} />

@@ -7,7 +7,7 @@ import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepEndurance, projectEndurance, servedWave } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
-import { useWords } from '@/shared/language';
+import { useUntranslated, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /** Every wave plays as the shift after the campaign's last, like a special, so the day opens on its routines. */
@@ -30,13 +30,19 @@ export function LongDayShift({ number }: { number: number }) {
   );
   const catalog = useMemo(() => [...lessons, wave.lesson], [wave]);
   const say = useWords(SCREEN_WORDS);
+  const english = useUntranslated();
   return (
     <Workspace
       index={SLOT}
       save={played}
       update={keep}
       lessons={catalog}
-      shift={{ ...wave, label: say.wave(wave.number, longDay.waves.length), thanks: waveThanks(wave.number) }}
+      shift={{
+        ...wave,
+        label: say.wave(wave.number, longDay.waves.length),
+        thanks: waveThanks(wave.number),
+        lang: english,
+      }}
       drills={drills}
       onward={last ? undefined : { next: say.nextWave, stop: say.stop, onStop: () => go('/campaign') }}
       onNext={() => go(last ? '/campaign' : `/${longDay.id}/${wave.number + 1}`)}

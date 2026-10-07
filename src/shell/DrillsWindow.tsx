@@ -1,14 +1,13 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, ArrowRight, Check, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, Modal, spokenLines } from '@/components';
-import { titleFor } from '@/data';
 import { drillLines, tryDrill, type Drill } from '@/data/drills';
 import { drillShift, flights, type Flight } from '@/data/flights';
 import type { Kit } from '@/data/kits';
 import type { Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';
 import { useUntranslated, useWords } from '@/shared/language';
-import { useCafeName } from '@/state/GameStore';
+import { useCafeName, useNarrative } from '@/state/GameStore';
 import { KitView } from './KitView';
 import { PredictionView } from './PredictionView';
 import { acts } from './rail/acts';
@@ -59,6 +58,7 @@ export function DrillsWindow({
   const say = useWords(DRILL_WORDS);
   const actWords = useWords(RAIL_WORDS).acts;
   const english = useUntranslated();
+  const narrative = useNarrative();
   const [entry, setEntry] = useState<Entry>();
   // A flight being played: its open drills, one after another.
   const [flying, setFlying] = useState<{ flight: Flight; list: Entry[] }>();
@@ -153,8 +153,8 @@ export function DrillsWindow({
                             )}
                           </strong>
                           <small>
-                            {say.kinds[each.kind]} · {say.shift(shift)} ·{' '}
-                            <span lang={english}>{titleFor(shift - 1)}</span> · {ROBOT_DISPLAY_NAMES[robot]}
+                            {say.kinds[each.kind]} · {say.shift(shift)} · {narrative[shift - 1].title} ·{' '}
+                            {ROBOT_DISPLAY_NAMES[robot]}
                             {fresh.includes(id) && <span className="drills-new"> · {say.fresh}</span>}
                           </small>
                         </button>
@@ -304,6 +304,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
   const robot = ROBOT_DISPLAY_NAMES[drill.robot];
   const say = useWords(DRILL_WORDS);
   const english = useUntranslated();
+  const narrative = useNarrative();
   return (
     <div className="drill">
       <button className="drill-back" onClick={onBack}>
@@ -315,7 +316,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
       <figure className="drill-routine">
         <figcaption>
           {say.routine(robot, drill.shift)}
-          <span lang={english}>{titleFor(drill.shift - 1)}</span>
+          {narrative[drill.shift - 1].title}
         </figcaption>
         {worked.before.length > above.length && <span className="drill-more" aria-hidden="true" />}
         <BlockLines lines={above} base={base} />

@@ -1,8 +1,8 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import type { Dispatch, ReactNode, SetStateAction } from 'react';
-import { isRated, lessons, levels, titleFor, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
-import { narrativeFor } from '@/data/campaign/narrative';
-import type { ShiftNarrative } from '@/data/campaign/narrative';
+import { isRated, lessons, levels, CAMPAIGN_LENGTH, MAX_STARS } from '@/data';
+import { campaignNarrative, narrativeFor, type ShiftNarrative } from '@/data/campaign/narrative';
+import { campaignNarrativeFr } from '@/data/campaign/narrative.fr';
 import { shiftIntro, shiftOutro } from '@/data/campaign/dialogue';
 import { waitingScene, type Cutscene } from '@/data/campaign/cutscenes';
 import {
@@ -38,6 +38,7 @@ import {
 import type { ChallengeMeasure, Decor, DecorSpot, DialogueLine, ProgressSave, RobotPrograms, Settings } from '@/domain';
 import { configureAudio, startAudio } from '@/audio';
 import { go, reloadPage } from '@/shared/lib/navigation';
+import { useLanguage, words, useWords } from '@/shared/language';
 import { useHashRoute } from '@/app/useHashRoute';
 
 export type Update = Dispatch<SetStateAction<ProgressSave>>;
@@ -311,7 +312,18 @@ export function useGame(): GameStore {
   return store;
 }
 
-/** Everything a shift screen needs: level, lesson, brief, intro and payoff scenes, and title. */
+const NARRATIVE = words(
+  campaignNarrative,
+  campaignNarrative.map((row, index) => ({ ...row, ...campaignNarrativeFr[index] })),
+);
+
+/** Every shift's title and brief, in the reader's language. */
+export const useNarrative = (): readonly ShiftNarrative[] => useWords(NARRATIVE);
+
+/**
+ * Everything a shift screen needs: level, lesson, brief, intro and payoff scenes, and title. The title, the brief and
+ * the lesson note are in the reader's language; the scenes are still English.
+ */
 export function useShift(index: number): {
   level: (typeof levels)[number];
   lesson: (typeof lessons)[number];
@@ -320,13 +332,19 @@ export function useShift(index: number): {
   outro: DialogueLine[];
   title: string;
 } {
+  const [language] = useLanguage();
+  const brief = NARRATIVE[language][index] ?? narrativeFor(index);
+  const lesson = useMemo(
+    () => (language === 'en' ? lessons[index] : { ...lessons[index], note: brief.lessonNote }),
+    [language, index, brief],
+  );
   return {
     level: levels[index],
-    lesson: lessons[index],
-    brief: narrativeFor(index),
+    lesson,
+    brief,
     intro: shiftIntro(index),
     outro: shiftOutro(index),
-    title: titleFor(index),
+    title: brief.title,
   };
 }
 

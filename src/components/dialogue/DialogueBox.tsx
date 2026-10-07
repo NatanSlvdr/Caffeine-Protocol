@@ -37,8 +37,10 @@ export interface DialogueBoxProps {
   onDone: () => void;
   /** `scene` dims the whole screen like a visual novel; `aside` sits over the café and leaves the code free. */
   variant?: 'scene' | 'aside';
-  /** Small caption above the box, e.g. the shift name: the story's, so marked English on a French page. */
+  /** Small caption above the box, e.g. the shift name. */
   kicker?: string;
+  /** The kicker's language when it isn't the page's: a scene's title, still English on a French page. */
+  kickerLang?: string;
   /** What comes before the kicker, in the reader's language: “Shift 04”. */
   kickerLabel?: string;
   /** Label on the last line's button; Continue, in the reader's language, if none. */
@@ -62,6 +64,7 @@ export function DialogueBox({
   onDone,
   variant = 'scene',
   kicker,
+  kickerLang,
   kickerLabel,
   doneLabel,
   instant = false,
@@ -225,7 +228,7 @@ export function DialogueBox({
           {kicker && scene && (
             <p className="dialogue-kicker">
               {kickerLabel && `${kickerLabel} · `}
-              <span lang={english}>{kicker}</span>
+              <span lang={kickerLang}>{kicker}</span>
             </p>
           )}
           {label && (

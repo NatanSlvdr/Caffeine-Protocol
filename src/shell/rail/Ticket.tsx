@@ -166,9 +166,7 @@ export function Ticket({
                 title={titles[shift]}
               >
                 <span className="shift-no">{pad2(shift + 1)}</span>
-                <span className="shift-name" lang={english}>
-                  {titles[shift]}
-                </span>
+                <span className="shift-name">{titles[shift]}</span>
                 <span className="shift-leader" aria-hidden="true" />
                 <span className="shift-mark" aria-hidden="true">
                   {locked ? (

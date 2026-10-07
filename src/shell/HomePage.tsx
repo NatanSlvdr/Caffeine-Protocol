@@ -1,11 +1,10 @@
 import { ArrowRight, BookOpen, CircleHelp, Clapperboard, Settings2, Store } from 'lucide-react';
-import { isRated, titleFor } from '@/data';
-import { narrativeFor } from '@/data/campaign/narrative';
+import { isRated } from '@/data';
 import { Button } from '@/shared/ui/Button';
 import { Tally } from '@/shared/ui/Tally';
 import { pad2 } from '@/shared/lib/format';
 import { go, openGuide, openSettings } from '@/shared/lib/navigation';
-import { useCafeName, useGame, useProgress } from '@/state/GameStore';
+import { useCafeName, useGame, useNarrative, useProgress } from '@/state/GameStore';
 import { useWords } from '@/shared/language';
 import { HomeCafePreview } from './HomeCafePreview';
 import { resumePoint, type ResumePoint } from './resume';
@@ -26,6 +25,7 @@ export function HomePage() {
   const { save, launch, cafes, cafeId } = useGame();
   const say = useWords(HOME_WORDS);
   const progress = useProgress();
+  const narrative = useNarrative();
   // With more than one café in the browser, the front door says which one this is, and opens the list of them.
   const playing = cafes.cafes.length > 1 ? cafes.cafes.find((entry) => entry.id === cafeId)?.name : undefined;
   const cafe = useCafeName();
@@ -51,9 +51,9 @@ export function HomePage() {
             <section className="front-resume" aria-labelledby="front-resume-title">
               <p className="front-resume-kicker">{say.resume}</p>
               <h2 id="front-resume-title">
-                {say.shift(number)} · {titleFor(resume.index)}
+                {say.shift(number)} · {narrative[resume.index].title}
               </h2>
-              <p>{narrativeFor(resume.index).objective}</p>
+              <p>{narrative[resume.index].objective}</p>
               <p id="front-resume-standing" className="front-resume-standing">
                 {standing(resume, say)}
               </p>

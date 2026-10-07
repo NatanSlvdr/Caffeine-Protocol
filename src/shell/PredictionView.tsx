@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, spokenLines } from '@/components';
-import { titleFor } from '@/data';
 import { momentOf, type Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
 import { CARGO_WORDS } from '@/components/cargoWords';
 import { useUntranslated, useWords } from '@/shared/language';
+import { useNarrative } from '@/state/GameStore';
 import { DRILL_WORDS } from './drillWords';
 
 const letter = (i: number) => String.fromCharCode(65 + i);
@@ -29,6 +29,7 @@ export function PredictionView({
   const say = useWords(DRILL_WORDS);
   const { held: heldLabel, paper: paperLabel, place: placeLabel } = useWords(CARGO_WORDS);
   const english = useUntranslated();
+  const narrative = useNarrative();
   const [picked, setPicked] = useState<number>();
   const question = useRef<HTMLParagraphElement>(null);
   const routine = useRef<HTMLDivElement>(null);
@@ -105,7 +106,7 @@ export function PredictionView({
       <figure className="drill-routine">
         <figcaption>
           {say.routine(robot, prediction.shift)}
-          <span lang={english}>{titleFor(prediction.shift - 1)}</span>
+          {narrative[prediction.shift - 1].title}
         </figcaption>
         <div className="prediction-routine" ref={routine}>
           <BlockLines lines={lines} />

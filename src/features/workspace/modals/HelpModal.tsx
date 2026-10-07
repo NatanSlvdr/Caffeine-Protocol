@@ -11,7 +11,7 @@ import {
   type RobotRole,
 } from '@/domain';
 import { RUN_MODIFIER } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import type { ShiftBrief } from '../Workspace';
 import type { RunEvidence } from '../evidence';
 import { clueFor, HINT_TIERS, type Clue, type WorkspaceDrill } from '../hints';
@@ -24,6 +24,8 @@ export interface HelpModalProps {
   title: string;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
+  /** The language of the title, lesson note and brief when it isn't the page's: a special's, still English. */
+  briefLang?: string;
   level: LevelDefinition;
   role: RobotRole;
   /** The open robot's routine as it stands, and as it was when the shift opened. */
@@ -58,6 +60,7 @@ export function HelpModal({
   title,
   lesson,
   brief,
+  briefLang,
   level,
   role,
   source,
@@ -77,7 +80,6 @@ export function HelpModal({
 }: HelpModalProps) {
   const say = useWords(HELP_WORDS);
   const challengeWords = useWords(CHALLENGE_WORDS);
-  const english = useUntranslated();
   const example = lesson.robotSolution?.[role] ?? lesson.solution;
   const robot = ROBOT_DISPLAY_NAMES[role];
   // The example replaces the routine wholesale, so the player's own edits get a second look first, and a reminder
@@ -109,13 +111,13 @@ export function HelpModal({
       className="settings-window confirm-slip help-slip"
       kicker={say.kicker(label)}
       title={title}
-      titleLang={english}
+      titleLang={briefLang}
       onClose={onClose}
     >
-      <div className="lesson-note" lang={english}>
+      <div className="lesson-note" lang={briefLang}>
         {lesson.note}
       </div>
-      <p lang={english}>{brief.story}</p>
+      <p lang={briefLang}>{brief.story}</p>
       <button
         className="settings-chip help-replay-intro"
         disabled={running}
@@ -131,7 +133,7 @@ export function HelpModal({
         </p>
       )}
       <p>
-        <strong>{say.goal}</strong> <span lang={english}>{brief.objective}</span>
+        <strong>{say.goal}</strong> <span lang={briefLang}>{brief.objective}</span>
       </p>
       {!observation && (
         <>
@@ -172,7 +174,7 @@ export function HelpModal({
             <ol className="help-hints" aria-label={say.hints}>
               <li>
                 <span className="help-hint-label">{say.tiers[0]}</span>
-                <p lang={english}>{brief.concept}</p>
+                <p lang={briefLang}>{brief.concept}</p>
               </li>
               {clue && (
                 <li>
