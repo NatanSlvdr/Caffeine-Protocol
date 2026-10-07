@@ -6,6 +6,7 @@ import { GUIDE_WORDS } from '../../../src/app/guideWords';
 import { SETTINGS_WORDS } from '../../../src/app/settingsWords';
 import { HOME_WORDS } from '../../../src/shell/homeWords';
 import { RAIL_WORDS } from '../../../src/shell/rail/railWords';
+import { STORY_WORDS } from '../../../src/shell/storyWords';
 import { PANE_WORDS } from '../../../src/components/paneWords';
 import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords';
 import { OPTIONS_WORDS } from '../../../src/features/workspace/modals/optionsWords';
@@ -367,6 +368,31 @@ describe('the dialogue box in French', () => {
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(onDone).toHaveBeenCalledOnce();
+  });
+});
+
+describe('the story pages in French', () => {
+  it('prints the closing receipt in French, with the café’s own last words kept as English', () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, i === 4 ? 2 : 3]));
+    seedLocalStorage(makeSave({ unlocked: 20, complete: true, stars }));
+    window.location.hash = '#/ending';
+    render(<App />);
+    expect(screen.getByRole('navigation', { name: 'Fermeture' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Passer' }));
+    expect([...document.querySelectorAll('.story-milestone dt')].map((term) => term.textContent)).toEqual([
+      'Acte I · Query a pris les commandes, étoiles',
+      'Acte II · Brew a appris toutes les recettes, étoiles',
+      'Acte III · Porter a appris la salle, étoiles',
+      'Acte IV · Toute l’équipe a tenu la journée, étoiles',
+    ]);
+    // Shift 5 is Query's: Act I's line carries its missing star.
+    expect(document.querySelector('.story-milestone dd .sr-only')!.textContent).toBe('20 sur 21');
+    expect(screen.getByText('Services trois étoiles')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Closing time.' }).getAttribute('lang')).toBe('en');
+    expect(screen.getByText(/^Lou’s card hangs/).getAttribute('lang')).toBe('en');
+    expect(screen.getByRole('button', { name: 'Retourner chercher les étoiles manquantes' })).toBeTruthy();
+    expect(screen.getByText('Merci d’avoir passé un moment dans notre café')).toBeTruthy();
   });
 });
 
@@ -1157,6 +1183,7 @@ describe('the words themselves', () => {
       EDITOR_WORDS,
       BLOCK_HELP_WORDS,
       DIALOGUE_WORDS,
+      STORY_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

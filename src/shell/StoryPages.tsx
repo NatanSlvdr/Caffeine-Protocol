@@ -10,9 +10,11 @@ import { go } from '@/shared/lib/navigation';
 import { useGame, useProgress } from '@/state/GameStore';
 import { useMusicMood } from '@/hooks/useMusicMood';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useUntranslated, useWords } from '@/shared/language';
 import { ShellBar } from './ShellBar';
 import { acts } from './rail/acts';
 import { restoredShift } from './homePreview';
+import { STORY_WORDS } from './storyWords';
 
 /** The café in the evening light, as far as it's restored, running quietly behind the page. */
 function StoryScene() {
@@ -37,6 +39,7 @@ function StoryScene() {
 /** A story scene between shifts. Finishing or skipping it goes back to the rail, on the shift it leads to. */
 export function ScenePage({ scene }: { scene: CutsceneData }) {
   const { save, finishScene, choose } = useGame();
+  const say = useWords(STORY_WORDS);
   const reduced = useReducedMotion(save.settings.reduced_motion);
   const done = () => {
     finishScene(scene);
@@ -46,7 +49,7 @@ export function ScenePage({ scene }: { scene: CutsceneData }) {
     <main className="story-page scene-page">
       <Cutscene
         scene={scene}
-        doneLabel="To the counter"
+        doneLabel={say.toCounter}
         reduced={reduced}
         choices={save.choices}
         onChoose={choose}
@@ -59,25 +62,15 @@ export function ScenePage({ scene }: { scene: CutsceneData }) {
 const closing = cutscenes[cutscenes.length - 1];
 /** The shifts the player writes code for: the ones that can earn three stars. */
 const rated = Array.from({ length: CAMPAIGN_LENGTH }, (_, index) => index).filter(isRated);
-/** What each act gave the café, printed as a line on the closing receipt. The prologue was served by hand. */
-const MILESTONES: Record<string, string> = {
-  'Act I': 'Query took the orders',
-  'Act II': 'Brew learned every recipe',
-  'Act III': 'Porter learned the room',
-  'Act IV': 'The whole crew ran the day',
-};
-const milestones = acts
-  .filter((act) => MILESTONES[act.kicker])
-  .map((act) => ({
-    act: act.kicker,
-    line: MILESTONES[act.kicker],
-    shifts: rated.filter((index) => index >= act.from && index < act.to),
-  }));
+/** The rated shifts of each act after the prologue, which was served by hand: one line each on the closing receipt. */
+const actShifts = acts.slice(1).map((act) => rated.filter((index) => index >= act.from && index < act.to));
 
 /** Closing screen after the final shift: the crew's last scene, then the day's receipt. */
 export function EndingPage() {
   const progress = useProgress();
   const { save, select, choose } = useGame();
+  const say = useWords(STORY_WORDS);
+  const english = useUntranslated();
   const reduced = useReducedMotion(save.settings.reduced_motion);
   // Closing time: the café heard from the next room.
   useMusicMood('after-hours');
@@ -93,12 +86,12 @@ export function EndingPage() {
   const starsIn = (shifts: number[]) => shifts.reduce((sum, index) => sum + (save.stars[index] ?? 0), 0);
   return (
     <main className="story-page ending-page">
-      <ShellBar label="Closing time" back="Campaign" onBack={() => go('/campaign')} />
+      <ShellBar label={say.bar} back={say.back} onBack={() => go('/campaign')} />
       <StoryScene />
       {talking ? (
         <Cutscene
           scene={closing}
-          doneLabel="Read the receipt"
+          doneLabel={say.readReceipt}
           reduced={reduced}
           choices={save.choices}
           onChoose={choose}
@@ -107,11 +100,13 @@ export function EndingPage() {
       ) : (
         <article className="story-note">
           <span className="story-tape" aria-hidden="true" />
-          <p className="story-kicker">Café Niko · Under new management</p>
-          <h1 tabIndex={-1} ref={heading}>
+          <p className="story-kicker" lang={english}>
+            Café Niko · Under new management
+          </p>
+          <h1 tabIndex={-1} ref={heading} lang={english}>
             Closing time.
           </h1>
-          <p className="story-narration">
+          <p className="story-narration" lang={english}>
             Lou’s card hangs on the wall by the register. Niko sits down with a warm coffee: the café runs itself now,
             and the name over the door is his.{' '}
             {missing === undefined
@@ -120,25 +115,25 @@ export function EndingPage() {
           </p>
           <dl className="story-receipt">
             {/* The café's day, act by act: what each robot came to do, and the stars it was done for. */}
-            {milestones.map(({ act, line, shifts }) => (
+            {say.milestones.map(({ act, line }, i) => (
               <div key={act} className="story-milestone">
                 <dt>
                   {act} · {line}
-                  <span className="sr-only">, stars</span>
+                  <span className="sr-only">{say.stars}</span>
                 </dt>
                 <dd>
-                  <Tally n={starsIn(shifts)} of={shifts.length * 3} unit="★" />
+                  <Tally n={starsIn(actShifts[i])} of={actShifts[i].length * 3} unit="★" />
                 </dd>
               </div>
             ))}
             <div className="story-total">
-              <dt>Shifts served</dt>
+              <dt>{say.served}</dt>
               <dd>
                 <Tally n={progress.done} of={CAMPAIGN_LENGTH} />
               </dd>
             </div>
             <div>
-              <dt>Stars earned</dt>
+              <dt>{say.earned}</dt>
               <dd>
                 <Tally n={progress.stars} of={progress.max} unit="★" />
               </dd>
@@ -146,7 +141,7 @@ export function EndingPage() {
             {/* A count of none would only say what's missing: a one-star café is still a served one. */}
             {perfect > 0 && (
               <div>
-                <dt>Three-star shifts</dt>
+                <dt>{say.perfect}</dt>
                 <dd>
                   <Tally n={perfect} of={rated.length} />
                 </dd>
@@ -155,7 +150,7 @@ export function EndingPage() {
           </dl>
           <div className="story-actions">
             <Button variant="primary" className="story-start" onClick={() => go('/')}>
-              Back to the café <ArrowRight size={18} aria-hidden="true" />
+              {say.home} <ArrowRight size={18} aria-hidden="true" />
             </Button>
             <button
               className="story-link"
@@ -164,12 +159,12 @@ export function EndingPage() {
                 go('/campaign');
               }}
             >
-              {missing !== undefined ? 'Go back for the missing stars' : 'Keep tinkering'}
+              {missing !== undefined ? say.missing : say.tinker}
             </button>
           </div>
           <footer className="story-foot story-thanks">
             <span className="story-barcode" aria-hidden="true" />
-            <span>Thank you for spending a little time at our café</span>
+            <span>{say.thanks}</span>
           </footer>
         </article>
       )}
