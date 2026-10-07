@@ -46,6 +46,12 @@ import { RobotHolding } from '../../../src/components/RobotHolding';
 import { OrderQueueBubble } from '../../../src/components/OrderQueueBubble';
 import { CustomerSpeech } from '../../../src/components/CustomerSpeech';
 import { createRoot } from 'react-dom/client';
+import { Editor } from '../../../src/components/Editor';
+import { EDITOR_WORDS } from '../../../src/components/editor/editorWords';
+import { BLOCK_HELP_WORDS } from '../../../src/components/editor/blockHelpWords';
+import { blockHelp, spokenHelp } from '../../../src/components/editor/blockHelp';
+import { dragAnnouncements, dragInstructions } from '../../../src/components/editor/dragAnnouncements';
+import type { Active, Over } from '@dnd-kit/core';
 import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
 import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
@@ -67,6 +73,7 @@ import { SAVE_KEY } from '../../../src/features/campaign/save/persistence';
 import { LANGUAGE_KEY, LanguageProvider, LanguageRelay, useWords, words } from '../../../src/shared/language';
 import { finishLiveRun, runCampaignLevel } from '../../helpers/run';
 import { makeSave, seedLocalStorage } from '../../helpers/saves';
+import { Harness, currentSource, staticEditorProps } from '../../helpers/editorHarness';
 
 vi.mock('../../../src/shell/HomeCafePreview', () => ({ HomeCafePreview: () => <div /> }));
 vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div /> }));
@@ -216,6 +223,100 @@ describe('the order rail in French', () => {
     render(<App />);
     const board = within(screen.getByRole('complementary', { name: 'Selected shift' }));
     expect(board.getByRole('heading', { name: titleFor(3) }).hasAttribute('lang')).toBe(false);
+  });
+});
+
+describe('the code editor in French', () => {
+  const said = () => document.querySelector('.editor-body ~ [role="status"]')!.textContent;
+  const block = (line: number) => document.querySelector<HTMLElement>(`.block[data-line="${line}"]`)!;
+  const french = (editor: React.ReactNode) => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    render(<LanguageProvider>{editor}</LanguageProvider>);
+  };
+
+  it('edits a routine in French, with the blocks’ own words kept as they are', () => {
+    french(<Harness initial={'LISTEN\nIF tea IN CUSTOMER SPEECH\nTAKE UP\nEND\nDEPOSIT RIGHT'} />);
+    const library = within(screen.getByRole('region', { name: 'Blocs de code disponibles' }));
+    const listen = library.getByRole('button', { name: 'Insérer wait for orders' });
+    expect(listen.getAttribute('aria-description')).toMatch(/^Attend le client suivant et écoute sa commande\./);
+    expect(screen.getByRole('group', { name: 'Zone de code' })).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Bloc 2, valeur' })).toBeTruthy();
+    expect(block(1).getAttribute('aria-label')).toBe('Glisser le bloc 2 (if tea in orders) et son groupe');
+
+    fireEvent.click(block(4));
+    expect(said()).toBe(
+      'Les nouveaux blocs vont après le bloc 4 (deposit right). Choisissez-le de nouveau, ou appuyez sur Échap, pour ajouter à la fin.',
+    );
+    const toolbar = within(screen.getByRole('group', { name: 'Bloc 4' }));
+    fireEvent.click(toolbar.getByRole('button', { name: 'Copier' }));
+    expect(said()).toBe('Bloc 4 (deposit right) copié. La copie est le bloc 5.');
+    fireEvent.click(within(screen.getByRole('group', { name: 'Bloc 5' })).getByRole('button', { name: 'Descendre' }));
+    expect(said()).toBe('Le bloc 5 est déjà en bas de la routine.');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Replier le bloc 2' }));
+    expect(said()).toBe('Bloc 2 (if tea in orders) replié, avec 1 bloc à l’intérieur.');
+    expect(block(1).getAttribute('aria-label')).toBe(
+      'Glisser le bloc 2 (if tea in orders) et son groupe, replié avec 1 bloc à l’intérieur',
+    );
+    fireEvent.click(listen);
+    expect(currentSource()).toMatch(/DEPOSIT RIGHT\nLISTEN$/);
+    expect(said()).toBe('Bloc 6 (wait for orders) ajouté après le bloc 5 (deposit right).');
+    // The check before Run points in French, at what the compiler says in English.
+    expect(document.querySelector('.routine-check strong')!.textContent).toBe(`Bloc 6${NBSP}: `);
+    fireEvent.click(screen.getByRole('button', { name: 'Afficher' }));
+    expect(document.activeElement).toBe(block(6));
+  });
+
+  it('reads the routine as text in French', () => {
+    french(<Editor role="query" {...staticEditorProps('TAKE UP', { textMode: true, level: 21 })} />);
+    const text = screen.getByRole('textbox', { name: 'Texte de la routine' });
+    expect(text.getAttribute('aria-description')).toBe(
+      `La ligne 1 est à corriger avant de lancer${NBSP}: Start with Wait for Orders, or a jump destination. ` +
+        'Tab indente, Maj+Tab désindente, Maj+Alt+F range la mise en page, Échap quitte l’éditeur.',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Ranger' }));
+    expect(said()).toBe('La routine est déjà rangée.');
+    cleanup();
+    french(<Editor role="query" {...staticEditorProps('', { textMode: true })} />);
+    expect(screen.getByRole('textbox').getAttribute('placeholder')).toBe(
+      'Un bloc par ligne, comme LISTEN ou MOVE RIGHT 1',
+    );
+  });
+
+  it('says what each block does, and where a dragged block goes, in French', () => {
+    const fr = BLOCK_HELP_WORDS.fr;
+    expect(blockHelp('TAKE UP', 'prep', UNLOCKS.toGo, fr).text).toBe(
+      `Prend au poste dans cette direction${NBSP}: des grains ou des feuilles à la réserve, de l’eau à l’évier, ` +
+        'un morceau de sucre au sucrier, un couvercle à la pile de couvercles.',
+    );
+    expect(blockHelp('LISTEN', 'floor', UNLOCKS.closing, fr).text).toMatch(
+      new RegExp(
+        `^Wait for Orders prend la prochaine boisson prête${NARROW}; Wait for Dirty cups .* il entend Closed à la place\\.$`,
+      ),
+    );
+    expect(spokenHelp(blockHelp('MOVE RIGHT 1', 'query', 2, fr), fr)).toMatch(
+      new RegExp(`passage\\. Par exemple${NBSP}: Move right 1\\.$`),
+    );
+
+    const rows = [
+      { line: 0, command: 'LISTEN', end: 0 },
+      { line: 1, command: 'IF tea IN CUSTOMER SPEECH', end: 5 },
+      { line: 2, command: 'TICKET', end: 2 },
+      { line: 3, command: 'ELSE', end: 4 },
+      { line: 4, command: 'TAKE UP', end: 4 },
+    ];
+    const active = (id: string) => ({ id }) as Active;
+    const over = (id: string) => ({ id }) as Over;
+    const say = dragAnnouncements(rows, () => false, EDITOR_WORDS.fr.drag);
+    expect(say.onDragStart({ active: active('4') })).toBe('Vous tenez le bloc 5 (take up).');
+    expect(say.onDragOver!({ active: active('0'), over: over('gap:2') })).toBe(
+      `Le bloc 1 (wait for orders)${NBSP}: avant le bloc 3 (take), dans le bloc 2 (if tea in orders).`,
+    );
+    expect(say.onDragEnd({ active: active('library:LISTEN'), over: null })).toBe(
+      'Un nouveau bloc wait for orders n’était au-dessus d’aucun emplacement. Rien n’a été ajouté.',
+    );
+    expect(say.onDragCancel!({ active: active('2'), over: null })).toBe('Annulé. Le bloc 3 (take) reste où il était.');
+    expect(dragInstructions(EDITOR_WORDS.fr.drag).draggable).toMatch(/^Appuyez sur Espace pour soulever ce bloc/);
   });
 });
 
@@ -992,6 +1093,8 @@ describe('the words themselves', () => {
       ROUTE_WORDS,
       SUMMARY_WORDS,
       SCENE_WORDS,
+      EDITOR_WORDS,
+      BLOCK_HELP_WORDS,
     ];
     for (const catalog of catalogs) {
       const english = new Map(lines(catalog.en));

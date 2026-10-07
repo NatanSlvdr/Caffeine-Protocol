@@ -2,6 +2,8 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { createPortal } from 'react-dom';
 import { DIRECTIONS, directionLabel, normalizeDirection, type Direction } from '@/domain';
+import { useWords } from '@/shared/language';
+import { EDITOR_WORDS } from '../editor/editorWords';
 import { ModelThumbnail } from '../thumbnails/ModelThumbnail';
 import { escapeMenu, isRunShortcut, keepKeysInBlock } from './blockKeys';
 import { useFloatingMenu } from './useFloatingMenu';
@@ -34,6 +36,7 @@ export function DirectionSelect({
   const selected = normalizeDirection(value);
   const [phase, setPhase] = useState<'closed' | 'open' | 'closing'>('closed');
   const [focused, setFocused] = useState(Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT')));
+  const { chooseDirection } = useWords(EDITOR_WORDS);
   const open = phase === 'open',
     expanded = phase !== 'closed';
   const trigger = useRef<HTMLButtonElement>(null),
@@ -129,7 +132,7 @@ export function DirectionSelect({
         aria-expanded={open}
         aria-controls={id}
         aria-haspopup="listbox"
-        title={selected ? directionLabel(selected) : 'Choose direction'}
+        title={selected ? directionLabel(selected) : chooseDirection}
         disabled={disabled}
         onClick={() => {
           setFocused(Math.max(0, DIRECTIONS.indexOf(selected ?? 'RIGHT')));
@@ -162,7 +165,7 @@ export function DirectionSelect({
         <span className="direction-mini-grid" aria-hidden="true">
           {cells(false)}
         </span>
-        <span className="sr-only">{selected ? directionLabel(selected) : 'Choose direction'}</span>
+        <span className="sr-only">{selected ? directionLabel(selected) : chooseDirection}</span>
       </button>
       {expanded &&
         createPortal(

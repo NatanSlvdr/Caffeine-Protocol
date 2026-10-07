@@ -6,8 +6,8 @@ type Job = { job: string; ticket: string };
 type Robot = 'Query' | 'Brew' | 'Porter';
 
 /**
- * The handbook's words. A shift's toolbar and most of its windows read in French, but the editor's tools are still in
- * English, so the French names those as they read there (**Tidy up**); the keys are the French keyboard's.
+ * The handbook's words. The French names the buttons and windows as they read in French (**Ranger**), and the keys
+ * as the French keyboard has them.
  */
 export const GUIDE_WORDS = words(
   {
@@ -147,7 +147,7 @@ export const GUIDE_WORDS = words(
         Vous préférez taper&#8239;? Activez l’<strong>Éditeur de texte</strong> dans les Options d’un service&nbsp;: la
         même routine, un bloc par ligne, numérotée sur le côté. Quand le curseur est dans un If, un For ou une Function,
         un trait doré dans la marge le relie à son End. Sous le texte, une ligne dit ce que fait le bloc de la ligne du
-        curseur, et <strong>Tidy up</strong> (<kbd>Maj + Alt + F</kbd>) range la routine par niveaux.
+        curseur, et <strong>Ranger</strong> (<kbd>Maj + Alt + F</kbd>) range la routine par niveaux.
       </>
     ),
     undo: (modifier) => (

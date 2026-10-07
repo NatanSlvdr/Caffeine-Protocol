@@ -1,14 +1,17 @@
 import { createContext, useContext } from 'react';
 import { blockFields, parseStore, type VisualBlock } from '@/domain';
+import { useWords } from '@/shared/language';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+import { EDITOR_WORDS } from './editorWords';
 
 export const DragPreview = createContext<{ blocks: VisualBlock[]; options: string[] }>({ blocks: [], options: [] });
 
 /** The landing preview uses the same rows and nested spacing as the committed program. */
 export function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
   const { options } = useContext(DragPreview);
+  const say = useWords(EDITOR_WORDS);
   return blocks.map((block) => (
     <div key={block.line} className={block.children ? 'code-scope ' + category(block.command) : 'code-statement'}>
       <div className="code-row">
@@ -27,7 +30,7 @@ export function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
                   <strong className="block-verb">{blockFields(block.command).verb}</strong>
                 </>
               )}
-              <Operands command={block.command} options={options} disabled label="Preview" onChange={() => {}} />
+              <Operands command={block.command} options={options} disabled label={say.preview} onChange={() => {}} />
             </>
           )}
         </div>
@@ -37,7 +40,7 @@ export function ProjectedBlocks({ blocks }: { blocks: VisualBlock[] }) {
           {block.children.length ? (
             <ProjectedBlocks blocks={block.children} />
           ) : (
-            <div className="empty-scope">Drop a block here</div>
+            <div className="empty-scope">{say.dropHere}</div>
           )}
         </div>
       )}

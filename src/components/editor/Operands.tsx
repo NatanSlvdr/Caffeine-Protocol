@@ -33,6 +33,8 @@ import { BlockSelect, DirectionSelect } from '../BlockSelect';
 import { isRunShortcut, keepKeysInBlock } from '../selects/blockKeys';
 import { BlockIcon } from '../BlockIcon';
 import { conditionLabels, conditionOption, operandOption } from './blockMeta';
+import { EDITOR_WORDS, type EditorWords } from './editorWords';
+import { useWords } from '@/shared/language';
 
 /**
  * A block's whole-number field. A number in range applies as it's typed; anything else, like the empty field
@@ -99,6 +101,7 @@ export function membershipOperands(
   onChange: (value: string) => void,
   library: boolean,
   inLoop: boolean,
+  say: EditorWords = EDITOR_WORDS.en,
 ) {
   const expression = parseConditionExpression(command);
   if (!expression) return null;
@@ -116,26 +119,25 @@ export function membershipOperands(
   return (
     <span className="if-condition-rows">
       {expression.conditions.map((condition, index) => {
-        const rowLabel = label + (index ? ` condition ${index + 1}` : '');
         const connector = expression.connectors[index] ?? '';
         return (
           <span className="if-comparison-operands" key={index}>
             <BlockSelect
-              label={rowLabel + ' value'}
+              label={say.field(label, 'value', index)}
               value={library ? '' : condition.left}
               disabled={disabled}
               onChange={(value) => update(index, 'left', value)}
               options={values.map(conditionOption)}
             />
             <BlockSelect
-              label={rowLabel + ' operator'}
+              label={say.field(label, 'operator', index)}
               value={library ? '' : condition.operator}
               disabled={disabled}
               onChange={(value) => update(index, 'operator', value)}
               options={QUERY_CONDITION_OPERATORS.map(conditionOption)}
             />
             <BlockSelect
-              label={rowLabel + ' source'}
+              label={say.field(label, 'source', index)}
               value={library ? '' : condition.right}
               disabled={disabled}
               onChange={(value) => update(index, 'right', value)}
@@ -144,17 +146,17 @@ export function membershipOperands(
             {!library && (
               <span
                 className={connector ? 'condition-connector' : 'condition-connector optional-connector'}
-                title={connector ? undefined : 'Optional: add another condition'}
+                title={connector ? undefined : say.moreTitle}
               >
                 {/* The title only reaches a pointer, so the unset menu names what it's for in its own label. */}
                 <BlockSelect
-                  label={rowLabel + (connector ? ' connector' : ' add another condition')}
+                  label={say.field(label, connector ? 'connector' : 'more', index)}
                   value={connector}
                   disabled={disabled}
                   options={[
                     connector
-                      ? { value: '', label: 'Remove following condition' }
-                      : { value: '', label: '+', spoken: 'No other condition' },
+                      ? { value: '', label: say.removeFollowing }
+                      : { value: '', label: '+', spoken: say.noOther },
                     ...CONDITION_CONNECTORS.map(conditionOption),
                   ]}
                   onChange={(value) => {
@@ -186,6 +188,7 @@ export function comparisonOperands(
   label: string,
   onChange: (key: string, value: string) => void,
   mask: (key: string, value: string) => string,
+  say: EditorWords = EDITOR_WORDS.en,
 ) {
   const membership = options.includes('LISTEN') ? parseQueryComparison(command) : undefined;
   const condition = membership ?? parseWorkerComparison(command);
@@ -214,21 +217,21 @@ export function comparisonOperands(
   return (
     <span className="if-comparison-operands">
       <BlockSelect
-        label={label + ' value'}
+        label={say.field(label, 'value')}
         value={mask('value', condition.left)}
         disabled={disabled}
         onChange={(value) => onChange('value', next(value, condition.operator, condition.right))}
         options={values.map(conditionOption)}
       />
       <BlockSelect
-        label={label + ' operator'}
+        label={say.field(label, 'operator')}
         value={mask('operator', condition.operator)}
         disabled={disabled}
         onChange={(operator) => onChange('operator', next(condition.left, operator, condition.right))}
         options={operators.map(conditionOption)}
       />
       <BlockSelect
-        label={label + ' source'}
+        label={say.field(label, 'source')}
         value={mask('source', condition.right)}
         disabled={disabled}
         onChange={(right) => onChange('source', next(condition.left, condition.operator, right))}
@@ -257,6 +260,7 @@ export function Operands({
   inLoop?: boolean;
   storeLabel?: React.ReactNode;
 }) {
+  const say = useWords(EDITOR_WORDS);
   const mask = (_key: string, value: string) => (library ? '' : value);
   const select = (_key: string, value: string) => {
     if (!library) onChange(value);
@@ -279,7 +283,7 @@ export function Operands({
             </span>
           )}
           <BlockSelect
-            label={label + ' variable'}
+            label={say.field(label, 'variable')}
             value={stored.variable}
             disabled={disabled}
             options={VARIABLES.map(conditionOption)}
@@ -289,7 +293,7 @@ export function Operands({
         <span className="assignment-equals">=</span>
         <span className="assignment-tile">
           <BlockSelect
-            label={label + ' source'}
+            label={say.field(label, 'source')}
             value={stored.value}
             disabled={disabled}
             options={sources.map((value) => ({
@@ -315,7 +319,7 @@ export function Operands({
       <>
         {mark ? null : item === 'sugar' ? (
           <BlockSelect
-            label={label + ' quantity'}
+            label={say.field(label, 'quantity')}
             value={mask('quantity', quantity)}
             disabled={disabled}
             options={[
@@ -329,7 +333,7 @@ export function Operands({
           />
         ) : (
           <CountInput
-            label={label + ' quantity'}
+            label={say.field(label, 'quantity')}
             max={MAX_ITEM_QUANTITY}
             value={library ? '' : quantity}
             disabled={disabled}
@@ -337,7 +341,7 @@ export function Operands({
           />
         )}
         <BlockSelect
-          label={label + ' value'}
+          label={say.field(label, 'value')}
           value={library ? '' : mark ? command : item === 'sugar' ? 'WRITE 1 sugar' : `ITEM ${item}`}
           disabled={disabled}
           options={options
@@ -370,7 +374,7 @@ export function Operands({
     const variable = parseMoveTo(command) ?? 'var1';
     return (
       <BlockSelect
-        label={label + ' variable'}
+        label={say.field(label, 'variable')}
         value={mask('variable', variable)}
         disabled={disabled}
         onChange={(value) => select('variable', `MOVE ${value}`)}
@@ -390,7 +394,7 @@ export function Operands({
     return (
       <>
         <DirectionSelect
-          label={label + ' direction'}
+          label={say.field(label, 'direction')}
           value={mask('direction', direction)}
           disabled={disabled}
           onChange={(v) => select('direction', nextCommand(v))}
@@ -398,7 +402,7 @@ export function Operands({
         {fields.family === 'MOVE' && (
           <>
             <CountInput
-              label={label + ' tiles'}
+              label={say.field(label, 'tiles')}
               max={MAX_MOVE_COUNT}
               value={mask('count', count)}
               disabled={disabled}
@@ -415,7 +419,7 @@ export function Operands({
     return (
       <>
         <BlockSelect
-          label={label + ' variable'}
+          label={say.field(label, 'variable')}
           value={mask('variable', times)}
           disabled={disabled}
           onChange={(variable) => select('variable', `FOR ${variable} TIMES`)}
@@ -430,7 +434,7 @@ export function Operands({
     return (
       <>
         <BlockSelect
-          label={label + ' variable'}
+          label={say.field(label, 'variable')}
           value={mask('variable', loop.variable)}
           disabled={disabled}
           onChange={(variable) => select('variable', `FOR ${variable} IN ${loop.selector}`)}
@@ -438,7 +442,7 @@ export function Operands({
         />
         <span className="block-verb block-suffix">in</span>
         <BlockSelect
-          label={label + ' selector'}
+          label={say.field(label, 'selector')}
           value={mask('selector', loop.selector)}
           disabled={disabled}
           onChange={(selector) => select('selector', `FOR ${loop.variable} IN ${selector}`)}
@@ -450,9 +454,18 @@ export function Operands({
   if (fields.family === 'IF') {
     const membership =
       options.includes('LISTEN') &&
-      membershipOperands(command, options, disabled, label, (value) => select('condition', value), library, inLoop);
+      membershipOperands(
+        command,
+        options,
+        disabled,
+        label,
+        (value) => select('condition', value),
+        library,
+        inLoop,
+        say,
+      );
     if (membership) return membership;
-    const comparison = comparisonOperands(command, options, disabled, label, select, mask);
+    const comparison = comparisonOperands(command, options, disabled, label, select, mask, say);
     if (comparison) return comparison;
   }
   if (!fields.value || ['JUMP', 'POSITION'].includes(fields.family)) return null;
@@ -461,7 +474,7 @@ export function Operands({
   return (
     <>
       <BlockSelect
-        label={label + (fields.family === 'IF' ? ' condition' : ' value')}
+        label={say.field(label, fields.family === 'IF' ? 'condition' : 'value')}
         value={mask('value', command)}
         disabled={disabled}
         onChange={(value) => select('value', value)}

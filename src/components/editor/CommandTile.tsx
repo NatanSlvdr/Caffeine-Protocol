@@ -1,8 +1,10 @@
 import { useDraggable } from '@dnd-kit/core';
-import { blockFields, spokenBlock } from '@/domain';
+import { blockFields } from '@/domain';
+import { useWords } from '@/shared/language';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+import { EDITOR_WORDS } from './editorWords';
 import { useLifting } from './lifting';
 
 export function CommandTile({
@@ -23,6 +25,7 @@ export function CommandTile({
   onChange: (command: string) => void;
 }) {
   const command = initial;
+  const say = useWords(EDITOR_WORDS);
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: 'library:' + initial,
     data: { command },
@@ -35,7 +38,7 @@ export function CommandTile({
       type="button"
       className={fields.family === 'STORE' ? 'store-label' : undefined}
       disabled={disabled}
-      aria-label={'Insert ' + spokenBlock(command)}
+      aria-label={say.insert(command)}
       aria-description={help}
       onClick={() => onChange(command)}
       {...attributes}
@@ -61,7 +64,7 @@ export function CommandTile({
         command={command}
         options={options}
         disabled={disabled}
-        label={'Library ' + fields.verb}
+        label={say.libraryBlock(fields.verb)}
         onChange={() => {}}
         storeLabel={insertButton}
       />

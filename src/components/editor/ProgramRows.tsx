@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { canPauseAt, type VisualBlock } from '@/domain';
+import { useWords } from '@/shared/language';
 import { category } from './blockMeta';
+import { EDITOR_WORDS } from './editorWords';
 import { Insertion } from './Insertion';
 import { Row, type GoTo } from './Row';
 
@@ -69,6 +71,7 @@ export function ProgramRows({
   // Else slots open a frame after the pickup. Opened in the same render, they push the blocks below
   // an If down before the drag measures the picked block, and the floating copy trails the pointer.
   const [elseSlots, setElseSlots] = useState(false);
+  const { dropHere } = useWords(EDITOR_WORDS);
   useEffect(() => {
     if (!dragged) return setElseSlots(false);
     const frame = requestAnimationFrame(() => setElseSlots(true));
@@ -117,7 +120,7 @@ export function ProgramRows({
               <Insertion
                 at={block.line + 1}
                 disabled={disabled}
-                hint={block.children.length ? '' : 'Drop a block here'}
+                hint={block.children.length ? '' : dropHere}
                 next={nextAt === block.line + 1}
               />
               {renderBlocks(block.children, depth + 1)}

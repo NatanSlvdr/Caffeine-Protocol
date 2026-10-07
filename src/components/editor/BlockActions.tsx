@@ -1,6 +1,8 @@
 import { ArrowDown, ArrowUp, Copy, Trash2 } from 'lucide-react';
 import type { VisualBlock } from '@/domain';
+import { useWords } from '@/shared/language';
 import { canMove, copyBlocker } from './blockEdits';
+import { EDITOR_WORDS } from './editorWords';
 
 export type BlockAction = 'copy' | 'up' | 'down' | 'remove';
 
@@ -22,14 +24,15 @@ export function BlockActions({
 }) {
   // An else row is only the head of its branch: it can be taken out with it, but not copied or moved alone.
   const branch = block.command === 'ELSE';
+  const say = useWords(EDITOR_WORDS).actions;
   const buttons: { action: BlockAction; label: string; icon: typeof Copy; off: boolean }[] = [
-    { action: 'copy', label: 'Copy', icon: Copy, off: !!copyBlocker(source, block) },
-    { action: 'up', label: 'Move up', icon: ArrowUp, off: !canMove(source, block.line, 'up') },
-    { action: 'down', label: 'Move down', icon: ArrowDown, off: !canMove(source, block.line, 'down') },
-    { action: 'remove', label: 'Remove', icon: Trash2, off: false },
+    { action: 'copy', label: say.copy, icon: Copy, off: !!copyBlocker(source, block) },
+    { action: 'up', label: say.up, icon: ArrowUp, off: !canMove(source, block.line, 'up') },
+    { action: 'down', label: say.down, icon: ArrowDown, off: !canMove(source, block.line, 'down') },
+    { action: 'remove', label: say.remove, icon: Trash2, off: false },
   ];
   return (
-    <div className="block-actions" role="group" aria-label={`Block ${ordinal}`}>
+    <div className="block-actions" role="group" aria-label={say.block(ordinal)}>
       {buttons
         .filter(({ action }) => !branch || action === 'remove')
         .map(({ action, label, icon: Icon, off }) => (

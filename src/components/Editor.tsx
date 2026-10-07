@@ -6,12 +6,10 @@ import {
   compileRobot,
   robotCommands,
   blockPrototypes,
-  count,
   indentSource,
   isOpening,
   placeBlock,
   removeVisualBlock,
-  spokenBlock,
   tabSource,
   DRAG_SCROLL_EDGE,
   DRAG_SCROLL_SPEED,
@@ -43,6 +41,9 @@ import { ExecutionCursor } from './ExecutionCursor';
 import { ROUTINE_PANEL, routineTab } from './RobotChoice';
 import { ROBOT_DISPLAY_NAMES, ROBOT_UNLOCK_LEVELS } from '@/domain/robots';
 import { pad2 } from '@/shared/lib/format';
+import { useWords } from '@/shared/language';
+import { EDITOR_WORDS } from './editor/editorWords';
+import { BLOCK_HELP_WORDS } from './editor/blockHelpWords';
 import { TriangleAlert, WandSparkles } from 'lucide-react';
 
 const NO_MARKS: ReadonlySet<number> = new Set();
@@ -185,7 +186,7 @@ export function Editor({
   // (Shift+Alt+F, as in code editors), the caret stays on its line, at the same place in the line's words.
   const tidy = (caret?: number) => {
     const tidied = indentSource(source);
-    if (tidied === source) return say('The routine is already laid out.');
+    if (tidied === source) return say(editor.said.laidOut);
     if (caret !== undefined) {
       const line = source.slice(0, caret).split('\n').length - 1,
         before = source.split('\n'),
@@ -195,7 +196,7 @@ export function Editor({
       tabCursor.current = start + Math.min(after[line].length, /^\s*/.exec(after[line])![0].length + words);
     }
     change(tidied);
-    say('Laid the routine out by depth.');
+    say(editor.said.tidied);
   };
   const onTextKey = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'F9' && onMark && !e.altKey && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
@@ -217,16 +218,16 @@ export function Editor({
   };
   // A block added from the library or removed from the keyboard says so, since neither is otherwise heard.
   const [said, say] = useAnnouncement();
+  const editor = useWords(EDITOR_WORDS);
+  const helpWords = useWords(BLOCK_HELP_WORDS);
   /** Mark a block to pause the service at, or take its mark off, and say which. */
   const mark = (line: number) => {
     if (!onMark) return;
-    const name = textMode ? `line ${line + 1}` : `block ${blockOrdinal(source, line)}`;
-    if (!canPauseAt(source, line)) return say(`Nothing starts on ${name} for the service to pause at.`);
+    const n = textMode ? line + 1 : blockOrdinal(source, line);
+    if (!canPauseAt(source, line)) return say(editor.said.noPause(textMode, n));
     onMark(line);
     say(
-      marks.has(line)
-        ? `Took the mark off ${name}.`
-        : `Marked ${name}: the service pauses as ${ROBOT_DISPLAY_NAMES[role]} starts it.`,
+      marks.has(line) ? editor.said.unmarked(textMode, n) : editor.said.marked(textMode, n, ROBOT_DISPLAY_NAMES[role]),
     );
   };
   // A routine block tapped, or picked with Enter, is where library blocks go next instead of the end. It holds only
@@ -240,7 +241,7 @@ export function Editor({
   // What the block on the caret's line does, the library's own help, while the text has focus.
   const caretCommand = caretLine === null ? '' : (lines[caretLine] ?? '').trim();
   const lineHelp =
-    textMode && caretCommand && !caretCommand.startsWith('#') ? blockHelp(caretCommand, role, level) : null;
+    textMode && caretCommand && !caretCommand.startsWith('#') ? blockHelp(caretCommand, role, level, helpWords) : null;
   // Groups folded shut, so a long routine reads at a glance. Folds follow their lines through edits and are this
   // robot's own; a group holding the running block or the failure shows it, folded or not.
   const [folds, setFolds] = useState({ role, source, lines: new Set<number>() as ReadonlySet<number> });
@@ -258,20 +259,18 @@ export function Editor({
     const closing = !lines.delete(block.line);
     if (closing) lines.add(block.line);
     setFolds({ role, source, lines });
-    const name = `block ${ordinalOf(block.line)} (${spokenBlock(block.command)})`;
-    say(closing ? `Folded ${name}, with ${count(inside(block), 'block')} inside.` : `Unfolded ${name}.`);
+    const n = ordinalOf(block.line);
+    say(closing ? editor.said.folded(n, block.command, inside(block)) : editor.said.unfolded(n, block.command));
     // A pick out of sight would take new blocks where they can't be seen.
     if (closing && picked && picked.line > block.line && picked.line <= block.end) setPick(null);
   };
   const choose = (block: VisualBlock) => {
     if (block.line === picked?.line) {
       setPick(null);
-      say('New blocks go at the end of the routine again.');
+      say(editor.said.atEnd);
     } else {
       setPick({ line: block.line, source });
-      say(
-        `New blocks go ${spotWords(block, ordinalOf(block.line))}. Pick it again, or press Escape, to add at the end.`,
-      );
+      say(editor.said.picked(spotWords(block, ordinalOf(block.line), editor.spot)));
     }
   };
   // A library block goes after the picked block, or on the end of the routine; focus stays in the library, ready to
@@ -285,7 +284,11 @@ export function Editor({
     const shift = next.split('\n').length - before - (isOpening(command) ? 2 : 1);
     const ordinal = rows.filter((r) => r.line < at).length + 1 + shift;
     say(
-      `Added block ${ordinal} (${spokenBlock(command)}) ${picked ? spotWords(picked, ordinalOf(picked.line) + shift) : 'at the end of the routine'}.`,
+      editor.said.added(
+        ordinal,
+        command,
+        picked ? spotWords(picked, ordinalOf(picked.line) + shift, editor.spot) : null,
+      ),
     );
     if (picked) setPick({ line: at + shift, source: next });
     change(next);
@@ -295,7 +298,7 @@ export function Editor({
   const [removed, setRemoved] = useState<{ line: number } | null>(null);
   const remove = (block: VisualBlock) => {
     const ordinal = rows.findIndex((r) => r.line === block.line) + 1;
-    say(`Removed block ${ordinal} (${spokenBlock(block.command)})${block.end > block.line ? ' and its group' : ''}.`);
+    say(editor.said.removed(ordinal, block.command, block.end > block.line));
     setRemoved({ line: block.line });
     blockChange(removeVisualBlock(source, block.line));
   };
@@ -321,20 +324,23 @@ export function Editor({
     const want = { JUMP: 'POSITION ', CALL: 'FUNCTION ' }[verb];
     const target = want && rows.find((r) => r.command === want + name.join(' '));
     if (!target) return;
-    const where = `block ${ordinalOf(target.line)} (${spokenBlock(target.command)})`;
     return {
-      label: verb === 'JUMP' ? `Go to where the jump lands, ${where}` : `Go to ${where}`,
-      title: verb === 'JUMP' ? 'Go to where it lands' : 'Go to the function',
-      onGo: () => reveal(target.line, where),
+      label: editor.goTo.label(verb === 'JUMP', ordinalOf(target.line), target.command),
+      title: editor.goTo.title(verb === 'JUMP'),
+      onGo: () => reveal(target),
     };
   };
   // Focus a block, opening any folded group it is in first, and say which opened.
-  const reveal = (line: number, where: string) => {
+  const reveal = ({ line, command }: VisualBlock) => {
     const hiding = rows.filter((r) => folded.has(r.line) && r.line < line && line <= r.end);
     if (hiding.length) {
       setFolds({ role, source, lines: new Set([...folded].filter((at) => !hiding.some((r) => r.line === at))) });
       say(
-        `Unfolded ${hiding.map((r) => `block ${ordinalOf(r.line)} (${spokenBlock(r.command)})`).join(' and ')} to show ${where}.`,
+        editor.said.revealed(
+          hiding.map((r) => [ordinalOf(r.line), r.command]),
+          ordinalOf(line),
+          command,
+        ),
       );
     }
     setGoal({ line });
@@ -359,7 +365,11 @@ export function Editor({
       : null;
   const problemAt =
     problem &&
-    (textMode ? `Line ${problem.line + 1}` : ordinalOf(problem.line) ? `Block ${ordinalOf(problem.line)}` : '');
+    (textMode
+      ? editor.problemAt(true, problem.line + 1)
+      : ordinalOf(problem.line)
+        ? editor.problemAt(false, ordinalOf(problem.line))
+        : '');
   const showProblem = () => {
     if (!problem) return;
     if (textMode) {
@@ -371,7 +381,7 @@ export function Editor({
       return;
     }
     const block = rows.find((r) => r.line === problem.line);
-    if (block) reveal(block.line, `block ${ordinalOf(block.line)} (${spokenBlock(block.command)})`);
+    if (block) reveal(block);
   };
   // The picked block's buttons copy, move or remove it whole. A copy or a move stays picked, and focus goes back to
   // the button pressed, so a block can be walked up a routine one press at a time.
@@ -384,18 +394,19 @@ export function Editor({
   const act = (block: VisualBlock, action: BlockAction) => {
     if (action === 'remove') return remove(block);
     const ordinal = ordinalOf(block.line);
-    const name = `block ${ordinal} (${spokenBlock(block.command)})${block.children ? ' and its group' : ''}`;
+    const grouped = !!block.children;
     let edited;
     if (action === 'copy') {
       const blocker = copyBlocker(source, block);
-      if (blocker) return say(`Block ${ordinal} can’t be copied: ${blocker}.`);
+      if (blocker) return say(editor.said.cantCopy(ordinal, blocker));
       edited = copyBlock(source, block);
-      say(`Copied ${name}. The copy is block ${blockOrdinal(edited.source, edited.line)}.`);
+      say(editor.said.copied(ordinal, block.command, grouped, blockOrdinal(edited.source, edited.line)));
     } else {
       edited = moveBlock(source, block, action);
-      if (!edited)
-        return say(`Block ${ordinal} is already at the ${action === 'up' ? 'top' : 'bottom'} of the routine.`);
-      say(`Moved ${name} ${action}. It is block ${blockOrdinal(edited.source, edited.line)} now.`);
+      if (!edited) return say(editor.said.edge(ordinal, action === 'up'));
+      say(
+        editor.said.moved(ordinal, block.command, grouped, action === 'up', blockOrdinal(edited.source, edited.line)),
+      );
     }
     setPick(edited);
     setPressed({ action });
@@ -403,7 +414,7 @@ export function Editor({
   };
   // The library block pointed at or focused, explained in a line over the top of the code.
   const [explained, explain] = useState<string | null>(null);
-  const help = explained && !dragged ? blockHelp(explained, role, level) : null;
+  const help = explained && !dragged ? blockHelp(explained, role, level, helpWords) : null;
   const previewBlocks = previewProgramBlocks(rows, draggedLine, dragged);
   return (
     <DndContext
@@ -417,8 +428,8 @@ export function Editor({
       }}
       collisionDetection={collisionDetection}
       accessibility={{
-        announcements: dragAnnouncements(rows, () => droppedOutside({ codeArea, pointer })),
-        screenReaderInstructions: dragInstructions,
+        announcements: dragAnnouncements(rows, () => droppedOutside({ codeArea, pointer }), editor.drag),
+        screenReaderInstructions: dragInstructions(editor.drag),
       }}
       onDragPending={({ id, constraint }) => setLifting('delay' in constraint ? String(id) : null)}
       onDragAbort={() => setLifting(null)}
@@ -431,7 +442,7 @@ export function Editor({
     >
       <Lifting.Provider value={lifting}>
         <DragPreview.Provider value={{ blocks: previewBlocks, options }}>
-          <section className="palette compact-palette" aria-label="Available code blocks">
+          <section className="palette compact-palette" aria-label={editor.library}>
             <div className="command-library">
               {blockPrototypes(options).map((c) => (
                 <CommandTile
@@ -439,7 +450,7 @@ export function Editor({
                   initial={c}
                   options={options}
                   disabled={disabled}
-                  help={spokenHelp(blockHelp(c, role, level))}
+                  help={spokenHelp(blockHelp(c, role, level, helpWords), helpWords)}
                   onExplain={explain}
                   onChange={insert}
                 />
@@ -449,7 +460,11 @@ export function Editor({
             {help && (
               <p className="library-help" aria-hidden="true">
                 <strong>{help.name}</strong> {help.text}
-                {help.example && <span className="library-help-example">For example: {help.example}</span>}
+                {help.example && (
+                  <span className="library-help-example">
+                    {helpWords.forExample} {help.example}
+                  </span>
+                )}
               </p>
             )}
           </section>
@@ -464,17 +479,16 @@ export function Editor({
               // Only from a block or the pane itself: Escape in a value's menu just closes the menu.
               if (e.key !== 'Escape' || !picked || !(e.target as Element).matches('.block, .editor-body')) return;
               setPick(null);
-              say('New blocks go at the end of the routine again.');
+              say(editor.said.atEnd);
             }}
             {...(tabbed
               ? { role: 'tabpanel', id: ROUTINE_PANEL, 'aria-labelledby': routineTab(role) }
-              : { role: 'group', 'aria-label': 'Code zone' })}
+              : { role: 'group', 'aria-label': editor.codeZone })}
           >
             {observation ? (
               // Without this the watch-only shift's code zone is a blank pane with nothing to say why.
               <p className="observation-note">
-                No routine to write today: the crew serves this shift by hand. {ROBOT_DISPLAY_NAMES[role]} joins on
-                Shift {pad2(ROBOT_UNLOCK_LEVELS[role])}.
+                {editor.observation(ROBOT_DISPLAY_NAMES[role], pad2(ROBOT_UNLOCK_LEVELS[role]))}
               </p>
             ) : textMode ? (
               <div className="code-text">
@@ -511,14 +525,14 @@ export function Editor({
                   autoCorrect="off"
                   autoComplete="off"
                   ref={textInput}
-                  aria-label="Routine text"
+                  aria-label={editor.text.label}
                   // The text view's own empty-routine hint: it says what goes here.
-                  placeholder="One block per line, like LISTEN or MOVE RIGHT 1"
+                  placeholder={editor.text.placeholder}
                   aria-description={
-                    (failureLine >= 0 ? `The service stopped on line ${failureLine + 1}. ` : '') +
-                    (problem ? `Line ${problem.line + 1} needs a fix before Run: ${problem.message} ` : '') +
-                    (onMark ? 'F9 marks the line for the service to pause at. ' : '') +
-                    'Tab indents, Shift+Tab outdents, Shift+Alt+F tidies the layout, Escape leaves the editor.'
+                    (failureLine >= 0 ? editor.text.stoppedOn(failureLine + 1) : '') +
+                    (problem ? editor.text.needsFix(problem.line + 1, problem.message) : '') +
+                    (onMark ? editor.text.marks : '') +
+                    editor.text.keys
                   }
                   onKeyDown={onTextKey}
                   // The gutter, where the numbers are, marks a line to pause at, as a block's number does.
@@ -554,11 +568,7 @@ export function Editor({
                   stepSeconds={stepSeconds}
                 />
                 {/* An empty routine names both ways in, as the Guide does: a tablet player may never think to drag. */}
-                <Insertion
-                  at={0}
-                  disabled={disabled}
-                  hint={rows.length ? '' : 'Tap or click a block in the library, or drag one here'}
-                />
+                <Insertion at={0} disabled={disabled} hint={rows.length ? '' : editor.emptyHint} />
                 <ProgramRows
                   tree={tree}
                   rows={rows}
@@ -609,7 +619,7 @@ export function Editor({
               {!disabled && (
                 <button type="button" onClick={() => tidy()} aria-keyshortcuts="Shift+Alt+F" title="Shift+Alt+F">
                   <WandSparkles size={13} aria-hidden="true" />
-                  Tidy up
+                  {editor.tidy}
                 </button>
               )}
             </div>
@@ -618,12 +628,12 @@ export function Editor({
             <div className="routine-check">
               <TriangleAlert size={14} aria-hidden="true" />
               <p>
-                {problemAt && <strong>{problemAt}: </strong>}
+                {problemAt && <strong>{problemAt}</strong>}
                 {problem.message}
               </p>
               {(textMode || ordinalOf(problem.line) > 0) && (
                 <button type="button" onClick={showProblem}>
-                  Show
+                  {editor.show}
                 </button>
               )}
             </div>

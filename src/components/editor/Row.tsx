@@ -1,10 +1,12 @@
 import { useEffect, useRef } from 'react';
 import { useDraggable } from '@dnd-kit/core';
 import { ChevronDown, ChevronRight, Crosshair } from 'lucide-react';
-import { blockFields, count, parseStore, spokenBlock, type VisualBlock } from '@/domain';
+import { blockFields, parseStore, type VisualBlock } from '@/domain';
+import { useWords } from '@/shared/language';
 import { BlockIcon } from '../BlockIcon';
 import { Operands } from './Operands';
 import { category } from './blockMeta';
+import { EDITOR_WORDS } from './editorWords';
 import { useLifting } from './lifting';
 
 /** A button on a jump or a call that goes to its landing spot or its function. */
@@ -67,6 +69,7 @@ export function Row({
   const { line: id, command } = block;
   const { attributes, listeners, setNodeRef } = useDraggable({ id: String(id), data: { at: id }, disabled: locked });
   const lifting = useLifting(String(id));
+  const say = useWords(EDITOR_WORDS);
   const rowRef = useRef<HTMLDivElement | null>(null),
     target = command.startsWith('POSITION ');
   useEffect(() => {
@@ -82,8 +85,8 @@ export function Row({
           className={'line-number' + (marked ? ' marked' : '')}
           style={{ left: -(depth * 42 + 35) }}
           aria-pressed={marked}
-          aria-label={`Pause at block ${ordinal}`}
-          title={marked ? 'The service pauses here. Click to take the mark off.' : 'Pause the service here'}
+          aria-label={say.row.pauseAt(ordinal)}
+          title={marked ? say.row.pauses : say.row.pause}
           onClick={onMark}
         >
           {String(ordinal).padStart(2, '0')}
@@ -128,14 +131,12 @@ export function Row({
         }
         // The failure's red is drawn only, so the name says it too, once the crew's dialogue has gone.
         aria-label={
-          (target
-            ? `Drag ${spokenBlock(command)}`
-            : `Drag block ${ordinal} (${spokenBlock(command)})${block.end > block.line ? ' and its group' : ''}`) +
-          (failure ? ', where the service stopped' : '') +
-          (flagged && !failure ? ', which needs a fix before Run' : '') +
-          (marked ? ', marked to pause at' : '') +
-          (fold?.folded ? `, folded with ${count(fold.inside, 'block')} inside` : '') +
-          (picked ? ', where new blocks go' : '')
+          (target ? say.row.dragTarget(command) : say.row.drag(ordinal, command, block.end > block.line)) +
+          (failure ? say.row.failed : '') +
+          (flagged && !failure ? say.row.flagged : '') +
+          (marked ? say.row.marked : '') +
+          (fold?.folded ? say.row.folded(fold.inside) : '') +
+          (picked ? say.row.picked : '')
         }
         aria-disabled={locked}
         tabIndex={locked ? -1 : 0}
@@ -154,7 +155,7 @@ export function Row({
         data-depth={depth}
         data-jump={command.startsWith('JUMP ') ? command.slice(5) : undefined}
         data-target={target ? command.slice(9) : undefined}
-        title={target ? 'The jump lands here. Drag to move it.' : undefined}
+        title={target ? say.row.target : undefined}
       >
         {!target && (
           <>
@@ -168,7 +169,7 @@ export function Row({
               command={command}
               options={options}
               disabled={locked}
-              label={'Block ' + ordinal}
+              label={say.actions.block(ordinal)}
               inLoop={inLoop}
               onChange={onChange}
             />
@@ -177,7 +178,7 @@ export function Row({
         {target && (
           <>
             <BlockIcon command={command} />
-            <span className="sr-only">Jump destination</span>
+            <span className="sr-only">{say.row.destination}</span>
           </>
         )}
         {goTo && (
@@ -190,8 +191,8 @@ export function Row({
             type="button"
             className="block-fold"
             aria-expanded={!fold.folded}
-            aria-label={`${fold.folded ? 'Unfold' : 'Fold'} block ${ordinal}`}
-            title={fold.folded ? `Show the ${count(fold.inside, 'block')} inside` : 'Fold this group'}
+            aria-label={say.row.fold(fold.folded, ordinal)}
+            title={say.row.foldTitle(fold.folded, fold.inside)}
             onClick={fold.onToggle}
           >
             {fold.folded ? <ChevronRight size={13} aria-hidden="true" /> : <ChevronDown size={13} aria-hidden="true" />}

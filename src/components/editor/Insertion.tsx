@@ -1,7 +1,9 @@
 import { useDroppable } from '@dnd-kit/core';
 import { useContext } from 'react';
+import { useWords } from '@/shared/language';
 import { BlockIcon } from '../BlockIcon';
 import { DragPreview, ProjectedBlocks } from './ProjectedBlocks';
+import { EDITOR_WORDS } from './editorWords';
 
 export function Insertion({
   at,
@@ -23,6 +25,7 @@ export function Insertion({
     disabled,
   });
   const { blocks } = useContext(DragPreview);
+  const say = useWords(EDITOR_WORDS);
   const isElse = hint === 'Else';
   const preview = isOver && !!blocks.length;
   // The anchor is the droppable: its top edge is exactly where a dropped block's top lands.
@@ -56,12 +59,12 @@ export function Insertion({
                   <ProjectedBlocks blocks={blocks[0]?.command === 'ELSE' ? (blocks[0].children ?? []) : blocks} />
                 </div>
               ) : (
-                <div className="empty-scope">Drop a block here</div>
+                <div className="empty-scope">{say.dropHere}</div>
               )}
             </div>
           </>
         ) : (
-          !preview && (next && hint ? 'The next block goes here' : hint)
+          !preview && (next && hint ? say.nextHere : hint)
         )}
       </div>
       {!isElse && preview && (

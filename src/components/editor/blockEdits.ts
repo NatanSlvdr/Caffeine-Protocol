@@ -1,4 +1,5 @@
 import { indentSource, placeBlock, visualProgram, type VisualBlock } from '@/domain';
+import type { CopyBlocker } from './editorWords';
 
 /** A routine after a block was copied or moved, and the line the block, or its copy, now starts on. */
 export interface Edited {
@@ -70,15 +71,13 @@ export function moveBlock(source: string, block: VisualBlock, way: 'up' | 'down'
  * Why a block can't be copied, or '' if it can. A jump lands in one place and a function has one name, so a copy of
  * either would make a routine that no longer runs.
  */
-export function copyBlocker(source: string, block: VisualBlock): string {
+export function copyBlocker(source: string, block: VisualBlock): CopyBlocker {
   const content = source
     .split('\n')
     .slice(block.line, block.end + 1)
     .map((l) => l.trim());
-  if (content.some((c) => c.startsWith('FUNCTION ')))
-    return 'a function needs a name of its own, so add a new one from the library instead';
-  if (content.some((c) => c.startsWith('POSITION ')))
-    return 'a jump lands in only one place, so add a new jump from the library instead';
+  if (content.some((c) => c.startsWith('FUNCTION '))) return 'function';
+  if (content.some((c) => c.startsWith('POSITION '))) return 'position';
   return '';
 }
 
