@@ -246,7 +246,8 @@ export type VariableValue = number | readonly [number, number];
  * What a robot is waiting for when its block can't go ahead yet: a guest at the register, a ticket, a drink at pickup,
  * a used cup to clear, a used cup to wash when every clean one is out, or the guest to sit down before serving.
  */
-export type WaitReason = 'guest' | 'ticket' | 'drink' | 'used-cup' | 'cup-to-wash' | 'seated';
+export type WaitReason =
+  'guest' | 'ticket' | 'drink' | 'used-cup' | 'cup-to-wash' | 'seated' | 'dishwasher' | 'cups-washing';
 /**
  * Where a robot is in its innermost For loop: the loop's line, the lap it is on of how many, and for Query the item
  * that lap is on.
@@ -304,6 +305,8 @@ export interface ExecutionEvent {
   waiting?: WaitReason;
   /** The robot's innermost For loop once the block is done, if it is in one. */
   loop?: LoopPosition;
+  /** On the Use at the sink that started the dishwasher: the cups it took, and when its wash is done. */
+  washing?: { until: number; cups: number };
 }
 export interface SeedExecution {
   seed_id: string;
@@ -336,6 +339,12 @@ export interface ServiceConfig {
    * then comes pre-ground, and Use at the machine can't grind it. Missing on a shift with no visit.
    */
   grinderOut?: { from: number; to: number };
+  /**
+   * The sink has a dishwasher that shares the coffee machine's socket: Use at the sink starts a wash of its used cups
+   * that runs this many seconds by itself, and the coffee machine can't run until it's done. Missing on a shift where
+   * Brew washes by hand.
+   */
+  dishwasher?: number;
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;

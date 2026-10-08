@@ -133,6 +133,32 @@ export const specialsFr: Readonly<Record<string, SpecialFr>> = {
       '*bip bip* Moulin revenu ! Il manquait à Brew !',
     ],
   },
+  dishwasher: {
+    title: 'Une seule prise',
+    hint: 'Laver quand il reste du chemin.',
+    thanks: 'Merci. Le groupe a lancé une collecte pour un électricien.',
+    note: 'Le club de lecture de Rosa a offert un lave-vaisselle au café, et il partage la prise de la machine à café. Quatre tasses dans le café : Use up à l’évier lance un lavage des tasses utilisées qui y attendent, et il tourne 20 secondes tout seul pendant que Brew continue. Servez-vous de la machine à café avant la fin et les plombs sautent. Brew lance le lavage juste après l’infusion, quand il lui reste le sucre, le couvercle et le comptoir de retrait.',
+    brief: {
+      story:
+        'Le club de lecture de Rosa s’est cotisé pour un lave-vaisselle, pour remercier le café de ses jeudis. Il y a une seule prise derrière le comptoir, et la machine à café était là la première.',
+      objective:
+        'Servez chaque client et débarrassez chaque table, avec quatre tasses dans le café. Un lavage dure 20 secondes, et la machine à café ne tourne jamais en même temps.',
+      concept:
+        'L’endroit où se trouve un bloc, c’est le moment où il se passe. Le même Use up à l’évier, déplacé là où Brew a du chemin à faire, donne au lavage le temps qu’il lui faut.',
+    },
+    intro: [
+      'Vendredi matin. Une camionnette de livraison, un très grand carton, et Rosa qui tient la porte.',
+      'De la part du club de lecture, pour tous les jeudis. Il lave les tasses tout seul !',
+      '[USE UP|Use up] à l’évier lance un lavage des tasses qui y attendent. Il tourne 20 secondes tout seul, et Brew continue.',
+      'Mais il n’y a qu’une prise derrière le comptoir, et la machine à café est dessus. Les deux à la fois et les plombs sautent.',
+      'Mettez le service en pause et ouvrez Brew : il indique qui a la prise.',
+      '*BIP ?* Laver, marcher, puis infuser. Est très électrique matinée.',
+    ],
+    outro: [
+      'Toutes les tasses propres, et la lumière est restée allumée. Je dirai au groupe que c’était de l’argent bien dépensé.',
+      '*BIP BIP !* Plombs : intacts ! Brew : intact aussi !',
+    ],
+  },
   'tea-table': {
     title: 'La table à thé',
     hint: 'Pas un café de la matinée : de quoi Brew a-t-il encore besoin ?',

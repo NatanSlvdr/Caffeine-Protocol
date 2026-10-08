@@ -141,8 +141,11 @@ function handAction(role: 'prep' | 'floor', position: Point, command: string): H
   return table ? { verb: 'SERVE', table } : at(STATIONS.returns.cell) ? { verb: 'RETURN CUPS' } : undefined;
 }
 const sugarCount = (n: number) => `${n} sugar cube${n === 1 ? '' : 's'}`;
-/** Seconds into the service on a clock, like 1:05. */
-const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+/** A moment of the service on its clock, to the second it's in: 1:30. */
+const clock = (seconds: number) => {
+  const whole = Math.floor(seconds + 1e-6);
+  return `${Math.floor(whole / 60)}:${String(whole % 60).padStart(2, '0')}`;
+};
 const configFor = (level: LevelDefinition) =>
   level.service ?? { prepCapacity: 1, floorCapacity: 1, clearing: true, objective: 'serve' as const };
 export interface LiveService {
@@ -601,6 +604,8 @@ export function* streamService(
   /** Clean cups on the shelf, and used ones in the sink waiting for Brew to wash them. */
   let cleanCups = config.cups || Infinity,
     sinkCups = 0;
+  /** The dishwasher's wash while it runs, with the power it shares with the coffee machine: its cups, and when it's done. */
+  let wash: { from: number; until: number; cups: number } | undefined;
   const markWaiting = (w: Worker, line: number, command: string, waiting: WaitReason) => {
     if (!live) return;
     const previous = log.at(-1);
@@ -669,7 +674,14 @@ export function* streamService(
       }
     }
     // With every clean cup in use, washing waits at the sink for the next used one.
-    if (config.cups && !cleanCups && !sinkCups && !w.move && handAction(w.role, w.position, c)?.verb === 'WASH') {
+    if (
+      config.cups &&
+      !cleanCups &&
+      !sinkCups &&
+      !wash &&
+      !w.move &&
+      handAction(w.role, w.position, c)?.verb === 'WASH'
+    ) {
       markWaiting(w, line, c, 'cup-to-wash');
       return false;
     }
@@ -932,7 +944,8 @@ export function* streamService(
     // The coffee machine picks its step from the cup Brew hands it.
     const a = hand.verb === 'USE' && cargo ? (machineStep(cargo) ?? 'USE') : hand.verb;
     let apply: () => void = () => {},
-      seconds = 1;
+      seconds = 1,
+      extra: Partial<ExecutionEvent> = {};
     if (c === 'LISTEN' && w.role === 'prep') {
       if (!station(w, STATIONS.orders.prep, 'the order handoff')) return false;
       if (w.inventory.length >= capacity(w)) {
@@ -1076,6 +1089,15 @@ export function* streamService(
         if (jobs.filter((j) => j.event === cupJob.event).every((j) => j.status === 'cleared'))
           tableOwners.delete(cupJob.table);
       };
+    } else if (a === 'WASH' && config.dishwasher && wash) {
+      // A wash takes the dishwasher until it's done: more used cups wait for the next one.
+      markWaiting(w, line, c, 'dishwasher');
+      return false;
+    } else if (a === 'WASH' && config.dishwasher && sinkCups) {
+      // Brew loads the sink's cups and starts the wash, which runs on by itself with the socket's power.
+      wash = { from: now, until: now + config.dishwasher, cups: sinkCups };
+      sinkCups = 0;
+      extra = { washing: { until: wash.until, cups: wash.cups } };
     } else if (a === 'WASH') {
       // Washing clears the whole sink; with clean cups left and an empty sink it's a quick look.
       seconds = sinkCups ? 2 : 1;
@@ -1202,8 +1224,22 @@ export function* streamService(
           fail(w, 'recipe-order', recipeStepError(recipeCommand, cup));
           return false;
         }
+        // The coffee machine and the dishwasher share one socket: both at once and the fuse goes.
+        if (hand.verb === 'USE' && wash) {
+          fail(
+            w,
+            'fuse-tripped',
+            `The fuse went: Brew started the coffee machine at ${clock(now)}, while the dishwasher had the power, washing ${wash.cups === 1 ? 'a cup' : `${wash.cups} cups`} from ${clock(wash.from)} to ${clock(wash.until)}. Start the wash where Brew has ${config.dishwasher} seconds of other work before it uses the machine again.`,
+          );
+          return false;
+        }
         // Café cups are counted; take-away drinks go in paper cups.
         const cafeCup = a === 'TAKE' && !cupJob.toGo && !!config.cups;
+        // The cups in the dishwasher come out clean when its wash is done.
+        if (cafeCup && !cleanCups && wash) {
+          markWaiting(w, line, c, 'cups-washing');
+          return false;
+        }
         if (cafeCup && !cleanCups) {
           fail(
             w,
@@ -1240,7 +1276,7 @@ export function* streamService(
         w.maxLoad = Math.max(w.maxLoad, w.inventory.length);
         w.pc++;
       },
-      a === c ? {} : { action: a },
+      a === c ? extra : { action: a, ...extra },
     );
     return true;
   };
@@ -1389,6 +1425,10 @@ export function* streamService(
       };
     }
     for (const job of jobs) if (job.status === 'served' && job.dirtyAt <= now) job.status = 'dirty';
+    if (wash && wash.until <= now) {
+      cleanCups += wash.cups;
+      wash = undefined;
+    }
     const apart = config.together === undefined ? undefined : apartTable(config.together);
     if (apart) {
       fail(workers[1], 'table-apart', apart.reason, { event: apart.event });
@@ -1478,6 +1518,7 @@ export function* streamService(
       ...jobs.filter((j) => j.status === 'served' && j.dirtyAt > now).map((j) => j.dirtyAt),
       ...(config.together === undefined ? [] : togetherDeadlines(config.together)),
       ...(config.fresh === undefined ? [] : warmDrinks(config.fresh).map((drink) => drink.deadline)),
+      ...(wash ? [wash.until] : []),
     ].filter((t) => Number.isFinite(t) && t > now);
     if (!future.length) {
       // Porter waiting for a used cup while drinks wait at pickup: no guest has a drink to leave one, so the robot to

@@ -14,6 +14,7 @@ import type {
   RobotPrograms,
   RobotRole,
   RunResult,
+  ServiceConfig,
   VariableValue,
   sampleReplay,
 } from '@/domain';
@@ -49,6 +50,11 @@ export interface RobotState {
    * the coldest first. Missing on any other shift.
    */
   warm?: string[];
+  /**
+   * On a shift where the dishwasher shares the coffee machine's socket, for Brew: who has the power. "Dishwasher · 1
+   * cup · 12 s left", "Coffee machine" or "Free". Missing on any other shift.
+   */
+  socket?: string;
 }
 
 const TOKEN_WORDS: Record<string, string> = { togo: 'to go' };
@@ -123,9 +129,24 @@ const warmWords = (drink: ReturnType<typeof warmDrinks>[number], say: PauseWords
     say.left(Math.max(0, Math.ceil(drink.left))),
   ].join(' · ');
 
+/** Grinding, brewing and steeping: what the coffee machine runs on its share of the socket. */
+const MACHINE_STEPS = new Set(['GRIND', 'BREW', 'STEEP']);
+
+/** Who has the socket the coffee machine shares with the dishwasher at a moment of Brew's events. */
+function socketWords(events: readonly ExecutionEvent[], local: number, say: PauseWords) {
+  const brew = events.filter((e) => e.actor === 'prep' && e.start <= local && !e.error);
+  const wash = brew.findLast((e) => e.washing && local < e.washing.until)?.washing;
+  if (wash)
+    return [say.socket.washing(wash.cups), say.ticket.left(Math.max(1, Math.ceil(wash.until - local)))].join(' · ');
+  return brew.some((e) => e.action && MACHINE_STEPS.has(e.action) && local < e.end)
+    ? say.socket.machine
+    : say.socket.free;
+}
+
 /**
  * The open robot at the sampled moment; nothing when the robot isn't in the café. On a shift where a drink goes cold
- * `fresh` seconds after reaching pickup, Porter's state lists the drinks keeping warm.
+ * after reaching pickup, Porter's state lists the drinks keeping warm; on one where the dishwasher shares the coffee
+ * machine's socket, Brew's says who has the power.
  */
 export function inspectRobot(
   result: RunResult,
@@ -133,7 +154,7 @@ export function inspectRobot(
   role: RobotRole,
   source: string,
   textMode: boolean,
-  fresh?: number,
+  service?: Pick<ServiceConfig, 'fresh' | 'dishwasher'>,
   say: PauseWords = PAUSE_WORDS.en,
   cargo = CARGO_WORDS.en,
 ): RobotState | undefined {
@@ -167,11 +188,13 @@ export function inspectRobot(
         ? say.inspector.item(loop.pass, loop.passes, heardWords(loop.item))
         : say.inspector.lap(loop.pass, loop.passes)) + ` · ${lower(placeOf(source, loop.line, textMode, say))}`,
     ...(role === 'floor' &&
-      fresh !== undefined && {
-        warm: warmDrinks(sampled.seed?.events ?? [], result.tickets, sampled.local, fresh).map((drink) =>
+      service?.fresh !== undefined && {
+        warm: warmDrinks(sampled.seed?.events ?? [], result.tickets, sampled.local, service.fresh).map((drink) =>
           warmWords(drink, say.ticket),
         ),
       }),
+    ...(role === 'prep' &&
+      service?.dishwasher !== undefined && { socket: socketWords(sampled.seed?.events ?? [], sampled.local, say) }),
   };
 }
 

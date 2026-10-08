@@ -37,6 +37,11 @@ export interface ShiftRules {
   soldOut?: boolean;
   /** The grinder is out for its service for a while: Brew takes pre-ground coffee straight to the sink. */
   preground?: boolean;
+  /**
+   * A dishwasher on the coffee machine's socket washes the cups: Brew starts its wash on the way from the machine to
+   * the sugar, the longest way round before the machine runs again. Only with cups.
+   */
+  dishwasher?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {
@@ -45,10 +50,12 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
   // Take up reaches the station above Brew: storage, then the sink's water, then sugar and lids; Use up runs the
   // coffee machine, and at the sink washes the used cups.
   const sweetened = level >= UNLOCKS.prepSugar;
+  // Where the drink's way to pickup starts: the coffee machine, or the sink if Brew started the dishwasher there.
+  const afterBrew = rules.dishwasher ? at.water.prep : at.brewer.prep;
   const sugar = sweetened
-    ? [...move(at.brewer.prep, at.sugar.prep), 'STORE var1 FROM sugar', 'FOR var1 TIMES', 'TAKE UP', 'END']
+    ? [...move(afterBrew, at.sugar.prep), 'STORE var1 FROM sugar', 'FOR var1 TIMES', 'TAKE UP', 'END']
     : [];
-  const afterSugar = sweetened ? at.sugar.prep : at.brewer.prep;
+  const afterSugar = sweetened ? at.sugar.prep : afterBrew;
   const lid = rules.toGo
     ? [
         ...move(afterSugar, at.lids.prep),
@@ -80,10 +87,13 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
     'TAKE UP',
     ...move(at.water.prep, at.brewer.prep),
     'USE UP',
+    // The dishwasher shares the coffee machine's socket: Brew starts its wash with the longest way to go before the
+    // machine runs again, on the brewed drink's way to its sugar.
+    ...(rules.dishwasher ? [...move(at.brewer.prep, at.water.prep), 'USE UP', ...move(at.water.prep, afterBrew)] : []),
     ...sugar,
     ...lid,
     'DEPOSIT UP',
-    ...(rules.cups
+    ...(rules.cups && !rules.dishwasher
       ? [...move(at.pickup.prep, at.water.prep), 'USE UP', ...move(at.water.prep, STARTS.prep)]
       : move(at.pickup.prep, STARTS.prep)),
   ];

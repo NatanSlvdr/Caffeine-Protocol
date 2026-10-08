@@ -237,6 +237,25 @@ it. Shift 21's routines grind pre-ground coffee and fail; that one AND serves
 every star. `tests/unit/simulation/grinder.test.ts` serves the reference and
 the way in, and turns away Shift 21's routines and a Brew that never grinds.
 
+Rosa's dishwasher (One Socket) is the one special where two machines share
+something. The reading group's dishwasher is plugged into the coffee machine's
+socket, with four cups in the café. Brew's Use up at the sink, with used cups
+waiting there, starts a wash of all of them that runs 20 seconds by itself
+(`WASH_SECONDS`, the service's `dishwasher`), and the wash start goes in Brew's
+record. Using the coffee machine (grinding, brewing or steeping) before it is
+done trips the fuse as `fuse-tripped`, which names the wash that had the power,
+its cups and its times. Brew waits rather than fails where waiting is right: a
+second wash waits for the first, and a cup taken from the shelf waits for the
+clean ones still inside. Paused, Brew's inspector says who has the **Socket**:
+the dishwasher, with its cups and seconds left, the coffee machine, or neither.
+Twelve guests come five seconds apart, two coffees in three. Shift 21's Brew
+washes after setting a drink down at pickup, and is back at the machine with
+the next drink mid-wash; moving that one Use up to just after the brew, with
+the sugar, the lid and pickup still ahead, serves every star.
+`tests/unit/simulation/dishwasher.test.ts` serves the reference and the way in,
+headless and live, and turns away Shift 21's routines and a Brew that never
+washes.
+
 A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
 cards side by side on the specials board before any is served, each a special
 of its own with its own save entry and stars: what is on the board, who comes

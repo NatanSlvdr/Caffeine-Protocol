@@ -98,6 +98,7 @@ export const ServiceConfigSchema = v.strictObject({
       v.check(({ from, to }) => from < to, 'the grinder comes back after it goes out'),
     ),
   ),
+  dishwasher: v.optional(PositiveInt),
 });
 
 /** An optional challenge: what's weighed, and the most it may come to. */

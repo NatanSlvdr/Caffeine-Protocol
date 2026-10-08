@@ -99,6 +99,8 @@ export type FailureCode =
   | 'already-brewed'
   /** Brew took pre-ground coffee to the grinder while it was out for its service. */
   | 'grinder-serviced'
+  /** Brew started the coffee machine while the dishwasher, on the same socket, was mid-wash. */
+  | 'fuse-tripped'
   /** Sugar, a lid, or pickup before the drink was brewed. */
   | 'not-brewed'
   /** More sugar than the ticket asks for. */

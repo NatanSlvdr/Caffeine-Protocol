@@ -30,6 +30,8 @@ export const PAUSE_WORDS = words(
       'used-cup': 'Waiting for a used cup',
       'cup-to-wash': 'Waiting for a used cup to wash',
       seated: 'Waiting for the guest to sit down',
+      dishwasher: 'Waiting for the dishwasher to finish its wash',
+      'cups-washing': 'Waiting for the clean cups in the dishwasher',
     } as Record<WaitReason, string>,
     stopped: 'Stopped for the night',
     doors: 'Waiting for the doors to open',
@@ -57,6 +59,7 @@ export const PAUSE_WORDS = words(
       ticket: 'Ticket',
       holding: 'Holding',
       warm: 'Keeping warm',
+      socket: 'Socket',
       memory: 'Memory',
       loop: 'Loop',
       none: 'None',
@@ -82,6 +85,12 @@ export const PAUSE_WORDS = words(
       pickup: 'At pickup',
       left: (seconds: number) => `${seconds} s left`,
     },
+    /** Who has the power the coffee machine and the dishwasher share, as Brew's inspector says it. */
+    socket: {
+      washing: (cups: number) => `Dishwasher · ${count(cups, 'cup')}`,
+      machine: 'Coffee machine',
+      free: 'Free',
+    },
   },
   {
     when: (rounds, round, local) =>
@@ -100,6 +109,8 @@ export const PAUSE_WORDS = words(
       'used-cup': 'Attend une tasse utilisée',
       'cup-to-wash': 'Attend une tasse à laver',
       seated: 'Attend que le client s’assoie',
+      dishwasher: 'Attend que le lave-vaisselle finisse son lavage',
+      'cups-washing': 'Attend les tasses propres du lave-vaisselle',
     },
     stopped: 'À l’arrêt pour la nuit',
     doors: 'Attend l’ouverture des portes',
@@ -123,6 +134,7 @@ export const PAUSE_WORDS = words(
       ticket: 'Ticket',
       holding: 'Porte',
       warm: 'Au chaud',
+      socket: 'Prise',
       memory: 'Mémoire',
       loop: 'Boucle',
       none: 'Aucun',
@@ -144,6 +156,11 @@ export const PAUSE_WORDS = words(
       tray: 'Sur le plateau',
       pickup: 'Au comptoir de retrait',
       left: (seconds) => `${seconds} s ${seconds < 2 ? 'restante' : 'restantes'}`,
+    },
+    socket: {
+      washing: (cups) => `Lave-vaisselle · ${countFr(cups, 'tasse')}`,
+      machine: 'Machine à café',
+      free: 'Libre',
     },
   },
 );

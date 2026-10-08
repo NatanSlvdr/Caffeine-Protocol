@@ -126,16 +126,7 @@ export function useLiveRun({ index, level, save, lessons, onDraft, onComplete, o
   // The open robot, while the service is paused on it, or at an earlier moment of a run that slipped.
   const inspected =
     ((running && paused) || (failed && viewing)) && result && sampled
-      ? inspectRobot(
-          result,
-          sampled,
-          role,
-          source,
-          save.settings.text_editor,
-          level.service?.fresh,
-          pauseWords,
-          cargoWords,
-        )
+      ? inspectRobot(result, sampled, role, source, save.settings.text_editor, level.service, pauseWords, cargoWords)
       : undefined;
   const firstInstructionLine = source.split('\n').findIndex((line) => line.trim() && !line.trim().startsWith('#'));
   const waitingLine = source.split('\n').findIndex((line) => /^(LISTEN|WAIT )/.test(line.trim()));

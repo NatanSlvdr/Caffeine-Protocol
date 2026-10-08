@@ -155,6 +155,8 @@ export const FAILURE_WORDS = words(
       'already-brewed': 'A brewed drink is finished with the machine. Give it its sugar, or Deposit it up at pickup.',
       'grinder-serviced':
         'The grinder’s out for its service, so the coffee comes pre-ground. Check If Pre-ground IN Orders, and take it straight up to the sink.',
+      'fuse-tripped':
+        'The coffee machine and the dishwasher share one socket. Start the wash where Brew has a long way to go before it next uses the machine.',
       'not-brewed': 'Finish the recipe before adding sugar, putting a lid on, or sending the drink out.',
       'too-much-sugar': 'Brew adds exactly the sugar on the ticket: count it out, and stop there.',
       'sugar-count': 'Brew adds exactly the sugar on the ticket: count it out, and stop there.',
@@ -327,6 +329,8 @@ export const FAILURE_WORDS = words(
         'Une boisson infusée en a fini avec la machine. Donnez-lui son sucre, ou faites un Deposit au comptoir de retrait.',
       'grinder-serviced':
         'Le moulin est en révision, alors le café arrive déjà moulu. Vérifiez If Pre-ground IN Orders, et portez-le directement à l’évier.',
+      'fuse-tripped':
+        'La machine à café et le lave-vaisselle partagent une seule prise. Lancez le lavage là où Brew a du chemin à faire avant de se resservir de la machine.',
       'not-brewed': 'Terminez la recette avant d’ajouter du sucre, de mettre un couvercle ou d’envoyer la boisson.',
       'too-much-sugar': 'Brew ajoute exactement le sucre du ticket : comptez-le, et arrêtez-vous là.',
       'sugar-count': 'Brew ajoute exactement le sucre du ticket : comptez-le, et arrêtez-vous là.',

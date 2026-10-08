@@ -117,14 +117,14 @@ describe('the drinks keeping warm, in Porter’s inspector', () => {
     const result = run(shift21);
     const seed = result.execution!.find((s) => s.seed_id === result.first_failure!.seed_id)!;
     const sampled = sampleReplay(result, seed.start + result.first_failure!.event_time!);
-    const state = inspectRobot(result, sampled, 'floor', shift21.floor, false, FRESH_SECONDS)!;
+    const state = inspectRobot(result, sampled, 'floor', shift21.floor, false, { fresh: FRESH_SECONDS })!;
     expect(state.warm?.[0]).toMatch(/^(Coffee|Tea) · Table \d · On the tray · 0 s left$/);
   });
 
   it('is left out for Brew, and on a shift where drinks keep', () => {
     const result = run(shift21);
     const sampled = sampleReplay(result, 30);
-    expect(inspectRobot(result, sampled, 'prep', shift21.prep, false, FRESH_SECONDS)?.warm).toBeUndefined();
+    expect(inspectRobot(result, sampled, 'prep', shift21.prep, false, { fresh: FRESH_SECONDS })?.warm).toBeUndefined();
     expect(inspectRobot(result, sampled, 'floor', shift21.floor, false)?.warm).toBeUndefined();
   });
 });

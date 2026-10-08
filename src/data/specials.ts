@@ -402,6 +402,73 @@ function engineersVisit(): Special {
   };
 }
 
+/** How long the dishwasher's wash runs, in seconds, on the socket it shares with the coffee machine. */
+export const WASH_SECONDS = 20;
+
+/**
+ * Rosa's reading group's dishwasher, on the coffee machine's socket: guests in a row, two coffees to every tea and sugar
+ * cycling, four cups in the café, and a wash of the sink's cups that runs by itself. Shift 21's Brew washes after
+ * setting a drink down at pickup, and is back at the coffee machine before the wash is done, so the fuse goes.
+ */
+function oneSocket(): Special {
+  const rules: ShiftRules = { cups: true, dishwasher: true };
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-dishwasher`,
+    title: 'One Socket',
+    summary: 'Rosa’s reading group has given the café a dishwasher, and it shares the coffee machine’s socket.',
+    rules,
+    service: { cups: 4, dishwasher: WASH_SECONDS },
+    rounds: [0, 1, 2].map((round) =>
+      arriving(12, 5, (n) => ({
+        orders: [{ drink: (n + round) % 3 ? 'coffee' : 'tea', sugar: (n + 2 * round) % 3 }],
+      })),
+    ),
+    // Fair to the way most players in: Shift 21's routines, once Brew starts the wash on its way from the coffee
+    // machine to the sugar. Two blocks above theirs, and a tenth more instructions, as for the reading group.
+    targets: { blocks: 110, instructions: 2856 },
+  });
+  return {
+    id: 'dishwasher',
+    title: level.title,
+    by: 'rosa',
+    hint: 'Wash with a long way to go.',
+    thanks: 'Thank you. The group has started a collection for an electrician.',
+    level,
+    lesson: {
+      note: `Rosa’s reading group has given the café a dishwasher, and it shares the coffee machine’s socket. Four cups in the café: Use up at the sink starts a wash of the used ones there, and it runs ${WASH_SECONDS} seconds by itself while Brew gets on. Use the coffee machine before it’s done and the fuse goes. Brew starts the wash right after it brews, with the sugar, the lid and pickup still ahead of it.`,
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: {
+      story:
+        'Rosa’s reading group clubbed together for a dishwasher, to thank the café for its Thursdays. There’s one socket behind the counter, and the coffee machine was there first.',
+      objective: `Serve every guest and clear every table, with four cups in the café. A wash takes ${WASH_SECONDS} seconds, and the coffee machine never runs while it does.`,
+      concept:
+        'Where a block sits is when it happens. The same Use up at the sink, moved to where Brew has a long way to go, gives the wash the time it needs.',
+    },
+    intro: [
+      line('', 'Friday morning. A delivery van, a very large box, and Rosa holding the door.'),
+      line('rosa:happy', 'From the reading group, for all the Thursdays. It washes the cups by itself!'),
+      line(
+        'niko',
+        `[USE UP|Use up] at the sink starts a wash of the cups waiting there. It runs ${WASH_SECONDS} seconds on its own, and Brew gets on.`,
+      ),
+      line(
+        'niko:worried',
+        'But there’s one socket behind the counter, and the coffee machine is on it. Both at once and the fuse goes.',
+      ),
+      line('niko', 'Pause the service and open Brew: it shows who has the socket.'),
+      line('brew', '*BEEP?* Wash, walk, then brew. Is very electrical morning.'),
+    ],
+    outro: [
+      line('rosa:happy', 'Every cup clean, and the lights stayed on. I’ll tell the group it was money well spent.'),
+      line('brew', '*BEEP BEEP!* Fuse: fine! Brew: also fine!'),
+    ],
+  };
+}
+
 /** A menu's own words, for its place on the specials board: it shows once, with its cards behind it. */
 export interface Menu {
   id: string;
@@ -643,6 +710,7 @@ export const specials: readonly Special[] = [
   knittingCircle(),
   lastOfTheTea(),
   engineersVisit(),
+  oneSocket(),
   ...saturdayMenu,
 ];
 
