@@ -27,7 +27,7 @@ export interface DialogueLine {
   choice?: DialogueChoice;
   /** Said only when an earlier choice was answered this way. */
   recalls?: { choice: string; option: string };
-  /** The line's language when it isn't the scene's: a special's own payoff, still English, before a French verdict. */
+  /** The line's language when it isn't the scene's: a wave's own payoff, still English, before a French verdict. */
   lang?: string;
 }
 

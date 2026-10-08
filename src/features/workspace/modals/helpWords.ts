@@ -9,8 +9,8 @@ interface Target {
 
 /**
  * The words of a shift's field notes: the targets, the hints asked for one at a time, the clue's sentences and the
- * worked example's warning. The lesson, story, goal and idea are the shift's own, still in English. Block names are
- * programming words, so a clue quotes them as they read in the routine.
+ * worked example's warning. The lesson, story, goal and idea are the shift's own, in the reader's language. Block
+ * names are programming words, so a clue quotes them as they read in the routine.
  */
 export const HELP_WORDS = words(
   {

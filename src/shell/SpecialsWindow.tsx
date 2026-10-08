@@ -3,11 +3,11 @@ import { ArrowLeft, NotebookPen, Play, RotateCcw, Sun } from 'lucide-react';
 import { Modal } from '@/shared/ui/Modal';
 import { cast } from '@/data/campaign/cast';
 import { longDay } from '@/data/longDay';
-import { menuById, type Menu, type Special } from '@/data/specials';
+import { menuById, menuIn, specialIn, type Menu, type Special } from '@/data/specials';
 import type { ProgressSave } from '@/domain';
 import { Button } from '@/shared/ui/Button';
 import { starRow } from '@/shared/lib/format';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useUntranslated, useWords, type Language } from '@/shared/language';
 import { useCafeName } from '@/state/GameStore';
 import { SPECIALS_WORDS } from './specialsWords';
 
@@ -15,11 +15,12 @@ import { SPECIALS_WORDS } from './specialsWords';
 type Entry = { special: Special } | { menu: Menu; cards: Special[] };
 
 /** The board's entries in the specials' own order, each menu once, where its first card would be. */
-function entriesOf(specials: readonly Special[]): Entry[] {
+function entriesOf(specials: readonly Special[], language: Language): Entry[] {
   const entries: Entry[] = [];
   for (const special of specials) {
     const id = special.card?.menu;
-    const menu = id === undefined ? undefined : menuById(id);
+    const kept = id === undefined ? undefined : menuById(id);
+    const menu = kept && menuIn(kept, language);
     if (!menu) entries.push({ special });
     else if (!entries.some((entry) => 'menu' in entry && entry.menu.id === id))
       entries.push({ menu, cards: specials.filter((each) => each.card?.menu === id) });
@@ -50,8 +51,12 @@ export function SpecialsWindow({
 }) {
   const cafe = useCafeName();
   const say = useWords(SPECIALS_WORDS);
-  const english = useUntranslated();
-  const entries = entriesOf(specials);
+  const [language] = useLanguage();
+  // Every special and menu in the reader's language: serving one goes by its id.
+  const entries = entriesOf(
+    specials.map((special) => specialIn(special, language)),
+    language,
+  );
   const [planning, setPlanning] = useState<string>();
   // Back from a menu, its own button takes focus again.
   const [left, setLeft] = useState<string>();
@@ -62,7 +67,6 @@ export function SpecialsWindow({
       className="settings-window specials-window"
       kicker={say.kicker(cafe)}
       title={open && 'menu' in open ? open.menu.title : say.title}
-      titleLang={open ? english : undefined}
       onClose={onClose}
       wide
     >
@@ -90,15 +94,13 @@ export function SpecialsWindow({
                 return (
                   <li key={special.id} className={arrived ? 'new' : undefined}>
                     <div>
-                      <h3 lang={english}>{special.title}</h3>
+                      <h3>{special.title}</h3>
                       <small>
                         {arrived ? say.fresh : ''}
                         {say.askedBy(cast[special.by].name)}
                       </small>
-                      <p lang={english}>{special.brief.story}</p>
-                      <p className="specials-hint" lang={english}>
-                        {special.hint}
-                      </p>
+                      <p>{special.brief.story}</p>
+                      <p className="specials-hint">{special.hint}</p>
                     </div>
                     <div className="specials-serve">
                       <Stars stars={stars} />
@@ -121,15 +123,13 @@ export function SpecialsWindow({
               return (
                 <li key={menu.id} className={arrived ? 'new' : undefined}>
                   <div>
-                    <h3 lang={english}>{menu.title}</h3>
+                    <h3>{menu.title}</h3>
                     <small>
                       {arrived ? say.fresh : ''}
                       {say.askedBy(cast[menu.by].name)}
                     </small>
-                    <p lang={english}>{menu.story}</p>
-                    <p className="specials-hint" lang={english}>
-                      {menu.hint}
-                    </p>
+                    <p>{menu.story}</p>
+                    <p className="specials-hint">{menu.hint}</p>
                   </div>
                   <div className="specials-serve">
                     <span className="specials-menus">{say.menus(served, cards.length)}</span>
@@ -248,14 +248,13 @@ function MenuPlan({
   onBack: () => void;
 }) {
   const say = useWords(SPECIALS_WORDS);
-  const english = useUntranslated();
   return (
     <div className="menu-plan">
       <button className="drill-back" onClick={onBack} data-autofocus>
         <ArrowLeft size={15} aria-hidden="true" /> {say.menu.back}
       </button>
       <p className="specials-intro">
-        <span lang={english}>{menu.story}</span> {say.menu.each}
+        {menu.story} {say.menu.each}
       </p>
       <ul className="menu-cards">
         {cards.map((special) => {
@@ -265,20 +264,18 @@ function MenuPlan({
           if (!card) return null;
           return (
             <li key={special.id}>
-              <h3 lang={english}>{special.title}</h3>
+              <h3>{special.title}</h3>
               <dl>
                 <dt>{say.menu.board}</dt>
-                <dd lang={english}>{card.recipes}</dd>
+                <dd>{card.recipes}</dd>
                 <dt>{say.menu.who}</dt>
-                <dd lang={english}>{card.demand}</dd>
+                <dd>{card.demand}</dd>
                 <dt>{say.menu.rule}</dt>
-                <dd lang={english}>{card.constraint}</dd>
+                <dd>{card.constraint}</dd>
                 <dt>{say.menu.targets}</dt>
                 <dd>{say.menu.target(level.block_target, level.instruction_target)}</dd>
               </dl>
-              <p className="specials-hint" lang={english}>
-                {special.hint}
-              </p>
+              <p className="specials-hint">{special.hint}</p>
               <div className="menu-card-foot">
                 <Stars stars={stars} />
                 <Button

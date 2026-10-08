@@ -18,7 +18,7 @@ interface Playing {
 
 /**
  * The shift screen's words: the bar over the café, the playback toolbar and its pause menu. The shift's title, story
- * and goal are still in English.
+ * and goal are its own, in the reader's language.
  */
 export const WORKSPACE_WORDS = words(
   {

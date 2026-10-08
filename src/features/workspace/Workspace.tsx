@@ -88,8 +88,8 @@ export interface WorkspaceShift {
   /** A memory from Lou's café, before Niko's time: the café is drawn in the faded colours of an old photo. */
   memory?: boolean;
   /**
-   * The language of the title, brief and lesson note when it isn't the page's: a special's, a memory's and the Long
-   * Day's are still English on a French page.
+   * The language of the title, brief and lesson note when it isn't the page's: a wave of the Long Day's are still
+   * English on a French page.
    */
   lang?: string;
 }
@@ -127,7 +127,7 @@ export function Workspace({
   const say = useWords(WORKSPACE_WORDS);
   const reactionSay = useWords(REACTION_WORDS);
   const failureHints = useWords(FAILURE_WORDS).hints;
-  // A special's or a memory's payoff is still English, so it says so line by line before the crew's verdict.
+  // A wave's payoff is still English, so it says so line by line before the crew's verdict.
   const payoff = useMemo(
     () => (shift.lang ? outro.map((said) => ({ ...said, lang: shift.lang })) : outro),
     [outro, shift.lang],

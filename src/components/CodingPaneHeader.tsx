@@ -30,7 +30,7 @@ export function CodingPaneHeader({
   role: RobotRole;
   onRole: (role: RobotRole) => void;
   story?: string;
-  /** The language of the title, story and goal when it isn't the page's: a special's, still English. */
+  /** The language of the title, story and goal when it isn't the page's: a wave's, still English. */
   briefLang?: string;
   onHelp?: () => void;
   /** The routine notebook, on a shift with a routine to keep or fill. */

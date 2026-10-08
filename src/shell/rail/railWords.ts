@@ -12,7 +12,7 @@ type LineState = 'locked' | 'next' | 'served' | undefined;
 
 /**
  * The order rail's words: the bar over it, the tickets and the specials board. Shift names, their stories and the
- * scenes' are still in English, so the rail marks them `lang="en"` on a French page.
+ * scenes' come from the data, in the reader's language.
  */
 export const RAIL_WORDS = words(
   {

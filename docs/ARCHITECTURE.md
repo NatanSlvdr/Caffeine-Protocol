@@ -328,37 +328,41 @@ sensor's two readings and each action's label by id, the cases and the
 closing scene line for line; `repairIn` lays them over a bench, keeping its
 board, wiring and cases' answers, and the bay and the scene that closes a
 panel read it). The words Query hears stay a guest's English, quoted the
-French way (*entend « tea »*). What the regulars ask for and a card's rule
-stay the story's English, marked so, with a menu's name as the window's
-title through `titleLang`. So do the tab's title and what a shift past the
-campaign is called in its bar (*Souvenir*, *Vague 2 sur 6*, *Vague
-suivante*; `app/screenWords.ts`), and the notices that stand in for the 3D
-café (`shared/ui/stageWords.ts`, with `NoGraphics` shared by `SceneBoundary`
-and `SceneCanvas`). `DialogueBox` takes a `kickerLabel` in the reader's
-language before the kicker, and a `lang` for a scene still English, its
-kicker with it: a special's. A `DialogueLine` can carry its own `lang`, for
-a line still English in a French scene. The shifts' titles and briefs read
-in French too (`data/campaign/narrative.fr.ts`, row for row with
-`campaignNarrative`, its lesson notes naming the same blocks in their own
-words): `useNarrative` gives every shift's in the reader's language and
-`useShift` the open one's, lesson note included, so the rail, the board, the
-front door, Help, the coding pane, the receipt and the windows that cite a
-shift say its French name. A special's and a Long Day wave's are still
-English, so `WorkspaceShift` takes a `lang` that the pane, Help and the
-intro carry. The shifts' scenes read in French too
-(`data/campaign/dialogue.fr.ts`, keyed like the English and line for line
-with it: the same speakers, the same blocks, as many sounds): `shiftIntro`
-and `shiftOutro` take a language, and `useShift` gives the open shift's, set
-with French typography. So do the crew's words once a service ends
-(`features/workspace/reactionWords.ts`, which `successLines` and
+French way (*entend « tea »*). So do the specials themselves
+(`data/specials.fr.ts`, by id: a special's name, hint, thanks, brief and
+lesson note, a card's board, guests and rule, and its scenes line for line,
+with `menusFr` holding a menu's name, story and hint and the lines its cards
+open on): `specialIn` and `menuIn` lay them over the data, keeping each
+level, routines, rules and save key, so the board, a menu laid out card by
+card, the tab and `SpecialShift` say them in the reader's language. So do
+the tab's title and what a shift past the campaign is called in its bar
+(*Souvenir*, *Vague 2 sur 6*, *Vague suivante*; `app/screenWords.ts`), and
+the notices that stand in for the 3D café (`shared/ui/stageWords.ts`, with
+`NoGraphics` shared by `SceneBoundary` and `SceneCanvas`). `DialogueBox`
+takes a `kickerLabel` in the reader's language before the kicker, and a
+`lang` for a scene still English, its kicker with it: a Long Day wave's. A
+`DialogueLine` can carry its own `lang`, for a line still English in a
+French scene. The shifts' titles and briefs read in French too
+(`data/campaign/narrative.fr.ts`, row for row with `campaignNarrative`, its
+lesson notes naming the same blocks in their own words): `useNarrative`
+gives every shift's in the reader's language and `useShift` the open one's,
+lesson note included, so the rail, the board, the front door, Help, the
+coding pane, the receipt and the windows that cite a shift say its French
+name. A Long Day wave's are still English, so `WorkspaceShift` takes a
+`lang` that the pane, Help and the intro carry. The shifts' scenes read in
+French too (`data/campaign/dialogue.fr.ts`, keyed like the English and line
+for line with it: the same speakers, the same blocks, as many sounds):
+`shiftIntro` and `shiftOutro` take a language, and `useShift` gives the open
+shift's, set with French typography. So do the crew's words once a service
+ends (`features/workspace/reactionWords.ts`, which `successLines` and
 `failureLines` take, English by default): the robots' cheers and new bests
 and Niko's verdict on the stars, and on a failure the guest's or the robot's
 reaction, by code, and Niko's nudge. In French Niko gives only the hint,
 since why the run stopped is the simulation's English, which the card under
 the routine shows marked so. What a guest said is quoted in a French line
 between ⟪ and ⟫, which `DialogueBox` marks English on screen and aloud. A
-special's payoff is still English, so `Workspace` marks it line by line
-before the French verdict. So do the scenes between acts
+wave's payoff is still English, so `Workspace` marks it line by line before
+the French verdict. So do the scenes between acts
 (`data/campaign/cutscenes.fr.ts`, keyed by scene id, panel for panel and
 line for line with the English, recalled lines included, and each answer's
 button and lines by option id): `sceneIn` lays the French over a scene,
@@ -366,17 +370,17 @@ keeping its speakers, choices and stills, and the cutscene, the rail's
 ticket, the board, the front door and the tab read it, so the answers a café
 saved are the same in either language. French typography is
 `shared/typography.ts` (`typeset`), which the catalogs' `words` and the
-data's French (`sceneIn`, `memoryIn`, `noteText`) both use, with `repairIn`
-and `toldIn`, so data can set its French without importing React.
-`CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
+data's French (`sceneIn`, `memoryIn`, `noteText`) both use, with `repairIn`,
+`specialIn` and `toldIn`, so data can set its French without importing
+React. `CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
 English. A window whose title is still English marks it with `titleLang`.
 Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
-Settings and Options both. The levels' own data and the specials' stories
-are still in English, and so is the list of what bringing an old save up to
-date changed, marked so under the notice's French heading. Where English
-data sits on a French screen (a special's name, its story and goal), it
-carries `lang={useUntranslated()}`, so a screen reader says it as English;
-on an English page the attribute is left off. Act names and taglines for the
+Settings and Options both. The levels' own data and the Long Day's waves are
+still in English, and so is the list of what bringing an old save up to date
+changed, marked so under the notice's French heading. Where English data
+sits on a French screen (a wave's name, its story and goal), it carries
+`lang={useUntranslated()}`, so a screen reader says it as English; on an
+English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
 the English-only windows still read. The save checks' refusals are keyed
 (`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field

@@ -70,7 +70,7 @@ import { BLOCK_HELP_WORDS } from '../../../src/components/editor/blockHelpWords'
 import { blockHelp, spokenHelp } from '../../../src/components/editor/blockHelp';
 import { dragAnnouncements, dragInstructions } from '../../../src/components/editor/dragAnnouncements';
 import type { Active, Over } from '@dnd-kit/core';
-import { FRESH_SECONDS, specialById } from '../../../src/data/specials';
+import { FRESH_SECONDS, specialById, specialIn } from '../../../src/data/specials';
 import { referencePrograms } from '../../../src/data/extension';
 import { lessons, levels, titleFor } from '../../../src/data';
 import {
@@ -130,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories, the repair bay and the drills/,
+      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories, the repair bay, the drills and the specials/,
     );
   });
 
@@ -582,7 +582,7 @@ describe('the rail’s windows in French', () => {
     expect(board.getByRole('button', { name: 'Jouer Premier jour' }).textContent).toBe('Jouer');
   });
 
-  it('puts the specials up in French, with what the regulars asked for kept as English', () => {
+  it('puts the specials up in French, each special’s and menu’s own words with them', () => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     window.location.hash = '/campaign';
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
@@ -590,24 +590,56 @@ describe('the rail’s windows in French', () => {
     render(<App />);
     fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
     const board = within(screen.getByRole('dialog', { name: 'Demandées par les habitués.' }));
-    expect(board.getByRole('heading', { name: 'The Saturday Market' }).getAttribute('lang')).toBe('en');
+    expect(board.getByRole('heading', { name: 'Tous reliés' }).hasAttribute('lang')).toBe(false);
+    expect(board.getByText('Un plateau, un seul voyage.')).toBeTruthy();
+    expect(board.getByRole('heading', { name: 'Le marché du samedi' }).hasAttribute('lang')).toBe(false);
     expect(board.getAllByText('Une demande de Mr. Albert').length).toBeGreaterThan(0);
     expect([...document.querySelectorAll('.specials-menus')].map((tally) => tally.textContent)).toEqual([
       `Menus servis${NBSP}: 0 sur 3`,
       '6 vagues',
     ]);
     expect(board.getAllByRole('img', { name: 'Pas encore servi' }).length).toBeGreaterThan(0);
+    expect(board.getByRole('button', { name: 'Servir Tous reliés' })).toBeTruthy();
     expect(board.getByRole('button', { name: 'Commencer la journée, The Long Day' })).toBeTruthy();
-    fireEvent.click(board.getByRole('button', { name: 'Composer le menu, The Saturday Market' }));
-    const tea = specialById('tea-table')!;
-    const plan = within(screen.getByRole('dialog', { name: 'The Saturday Market' }));
+    fireEvent.click(board.getByRole('button', { name: 'Composer le menu, Le marché du samedi' }));
+    const tea = specialIn(specialById('tea-table')!, 'fr');
+    const plan = within(screen.getByRole('dialog', { name: 'Le marché du samedi' }));
     expect(plan.getByRole('button', { name: 'Toutes les commandes spéciales' })).toBeTruthy();
-    expect(plan.getByText(tea.card!.constraint).getAttribute('lang')).toBe('en');
+    expect([...document.querySelectorAll('.menu-plan dd')].map((said) => said.textContent)).toContain(
+      `Quatre tasses dans tout le café${NBSP}: elles sont lavées à leur retour.`,
+    );
+    expect(tea.card!.recipes).toBe('Du thé uniquement, avec jusqu’à deux sucres comptés.');
+    expect(document.querySelector('.menu-plan [lang]')).toBeNull();
     expect(plan.getAllByText('La règle')).toHaveLength(3);
     expect(
       plan.getByText(`${tea.level.block_target} blocs ou moins · ${tea.level.instruction_target} pas ou moins`),
     ).toBeTruthy();
-    expect(plan.getByRole('button', { name: 'Servir ce menu, The Tea Table' })).toBeTruthy();
+    expect(plan.getByRole('button', { name: 'Servir ce menu, La table à thé' })).toBeTruthy();
+  });
+
+  it('names the tab and serves a menu card in French', async () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
+    seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Composer le menu, Le marché du samedi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Servir ce menu, Le guichet du marché' }));
+    await waitFor(() =>
+      expect(document.title).toBe(`Commande spéciale${NBSP}: Le guichet du marché · Caffeine Protocol`),
+    );
+    // The card opens on the menu's own lines, then its own, all told in French.
+    expect(screen.getByRole('dialog', { name: 'Carte du menu · Le guichet du marché' })).toBeTruthy();
+    expect(document.querySelector('.dialogue-kicker [lang]')).toBeNull();
+    expect(document.querySelector('.dialogue-box [lang]')).toBeNull();
+    expect(screen.getAllByText('Samedi matin. Les étals se montent le long de la rue.').length).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 2, name: 'Le guichet du marché' }).hasAttribute('lang')).toBe(false);
+    const objective = document.querySelector('.shift-objective')!.lastElementChild!;
+    expect(objective.hasAttribute('lang')).toBe(false);
+    expect(objective.textContent).toBe(
+      `Servez chaque client et débarrassez chaque table. Aux dernières commandes, chaque robot s’arrête.`,
+    );
   });
 
   it('opens the repair bay and wires a robot in French', () => {

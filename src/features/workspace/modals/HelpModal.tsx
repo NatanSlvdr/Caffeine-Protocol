@@ -24,7 +24,7 @@ export interface HelpModalProps {
   title: string;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
-  /** The language of the title, lesson note and brief when it isn't the page's: a special's, still English. */
+  /** The language of the title, lesson note and brief when it isn't the page's: a wave's, still English. */
   briefLang?: string;
   level: LevelDefinition;
   role: RobotRole;

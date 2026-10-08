@@ -8,8 +8,11 @@ import type { ShiftRules } from '@/domain/defaultPrograms';
 import { countProgramBlocks } from '@/domain/scoring';
 import { shiftNumber, UNLOCKS } from '@/domain/unlocks';
 import { TABLE_LAYOUT } from '@/domain/layout/geometry';
+import type { Language } from '@/shared/language';
+import { typeset } from '@/shared/typography';
 import { extensionLevels, queryReference, referencePrograms } from './extension';
 import { validateLessonData, validateLevelData } from './campaign/validate';
+import { menusFr, specialsFr, type SpecialFr } from './specials.fr';
 
 /**
  * The specials: optional shifts past the campaign, each asked for by a regular, with one new rule and its own save.
@@ -490,6 +493,60 @@ const menus: readonly Menu[] = [SATURDAY];
 export const menuById = (id: string): Menu | undefined => menus.find((menu) => menu.id === id);
 
 export const specialById = (id: string): Special | undefined => specials.find((special) => special.id === id);
+
+/** Lines told again in other words: who speaks, and in what mood, stays; a line not yet told keeps its English. */
+const retold = (lines: readonly DialogueLine[], said: readonly string[]): DialogueLine[] =>
+  lines.map((each, index) => ({ ...each, text: said[index] === undefined ? each.text : typeset(said[index]) }));
+
+/** Every one of a record's words, set with French typography. */
+const typesetAll = <T extends Record<string, string>>(words: T): T =>
+  Object.fromEntries(Object.entries(words).map(([key, text]) => [key, typeset(text)])) as T;
+
+/** A special told in French: the same level, routines, rules and save key, in other words. */
+function inFrench(special: Special, fr: SpecialFr): Special {
+  const card = special.card && fr.card;
+  // A card opens on its menu's lines, then its own, as in English.
+  const opening = special.card ? (menusFr[special.card.menu]?.opening ?? []) : [];
+  return {
+    ...special,
+    title: typeset(fr.title),
+    hint: typeset(fr.hint),
+    thanks: typeset(fr.thanks),
+    card: special.card && card ? { ...special.card, ...typesetAll(card) } : special.card,
+    lesson: {
+      ...special.lesson,
+      note: typeset(fr.note ?? (card ? `${card.recipes} ${card.demand} ${card.constraint}` : special.lesson.note)),
+    },
+    brief: typesetAll(fr.brief),
+    intro: retold(special.intro, [...opening, ...fr.intro]),
+    outro: retold(special.outro, fr.outro),
+  };
+}
+
+const french = new Map(
+  specials.map((special) => {
+    const fr = specialsFr[special.id];
+    return [special.id, fr ? inFrench(special, fr) : special];
+  }),
+);
+
+/** A special in the reader's language: the very same one in English. */
+export const specialIn = (special: Special, language: Language): Special =>
+  language === 'fr' ? (french.get(special.id) ?? special) : special;
+
+const frenchMenus = new Map(
+  menus.map((menu) => {
+    const fr = menusFr[menu.id];
+    return [
+      menu.id,
+      fr ? { ...menu, title: typeset(fr.title), story: typeset(fr.story), hint: typeset(fr.hint) } : menu,
+    ];
+  }),
+);
+
+/** A menu in the reader's language: the very same one in English. */
+export const menuIn = (menu: Menu, language: Language): Menu =>
+  language === 'fr' ? (frenchMenus.get(menu.id) ?? menu) : menu;
 
 /** Every special satisfies the shared level and lesson invariants before play or build. */
 for (const special of specials) {

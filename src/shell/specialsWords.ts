@@ -3,7 +3,8 @@ import { countFr, words } from '@/shared/language';
 
 /**
  * The specials board's words: its frame, a special's and a menu's card, a menu laid out card by card, and the Long
- * Day. What the regulars ask for, a card's rule and a special's story are the story's, and stay English.
+ * Day. What the regulars ask for, a card's rule and a special's story are the special's own, told in the reader's
+ * language; the Long Day's are still English.
  */
 export const SPECIALS_WORDS = words(
   {
