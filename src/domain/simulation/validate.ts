@@ -39,6 +39,15 @@ export function validate(customer: Customer, actual: CustomerExecution): Failure
     return actual.tickets.length
       ? { code: 'guessed-drink', reason: 'Nobody could clear the order up, so Query shouldn’t guess a drink.' }
       : undefined;
+  // A drink booked for later is written down when its guest comes back for it, and not before.
+  if (customer.heard_orders.some((order) => order.tokens.includes('later')))
+    return actual.tickets.length
+      ? {
+          code: 'booked-for-later',
+          reason:
+            'This drink was booked for later: Query wrote it down now, and it would be cold by the time they’re back.',
+        }
+      : undefined;
   if (!actual.tickets.length)
     return {
       code: 'no-ticket',
@@ -86,6 +95,7 @@ const SLIP_SOURCES: Partial<Record<FailureCode, (command: string) => boolean>> =
   'help-needed': writesItem,
   'guessed-drink': writesItem,
   'sold-out': writesItem,
+  'booked-for-later': writesItem,
   'help-unneeded': (command) => command === 'HELP',
   'ticket-count': isHandOver,
   'no-ticket': isHandOver,

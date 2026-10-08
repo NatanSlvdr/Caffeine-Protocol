@@ -34,7 +34,7 @@ function openBoard(endurance?: EnduranceProgress) {
   localStorage.setItem(KEY, JSON.stringify({ ...finished, ...(endurance && { endurance }) }));
   window.location.hash = '#/campaign';
   render(<App />);
-  fireEvent.click(screen.getByRole('button', { name: /^Specials, 9 specials/ }));
+  fireEvent.click(screen.getByRole('button', { name: /^Specials, 10 specials/ }));
   const board = screen.getByRole('dialog');
   const entry = within(board).getByRole('heading', { name: longDay.title }).closest('li')!;
   return within(entry as HTMLElement);

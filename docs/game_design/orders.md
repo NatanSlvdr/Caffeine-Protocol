@@ -43,6 +43,7 @@ Query's part of the campaign, by shift (see [docs/campaign/](../campaign/README.
 - The Together special, after the campaign: a table that orders for itself adds the `together` token, written on each of its tickets.
 - The Last of the Tea special: a tea asked for once the tin is empty is heard with the `soldout` token. HELP asks what the guest would like instead; the clarification names the other drink, or no drink at all, in which case the guest rightly gets no ticket.
 - The Engineer's Visit special: coffee taken up while the grinder is out comes pre-ground, and Brew (not Query) hears the `preground` token while it holds it. Nothing about the order or the ticket changes.
+- The Keep One for Me special: a guest who books a drink for later adds the `later` token to a drink to go. Nothing is written down for the booking; the guest comes back a few guests on and asks for the same drink again, and that order is written. Taking paper for a booking fails as booked for later.
 
 ## Ticket data and validation
 

@@ -256,6 +256,22 @@ the sugar, the lid and pickup still ahead, serves every star.
 headless and live, and turns away Shift 21's routines and a Brew that never
 washes.
 
+Juno's office upstairs (Keep One for Me) is the one special where the right
+work is none, for now. Two guests a round order a drink to go on the way up to
+a meeting, heard with the `later` token (Query only, unlocked at 22), and come
+back for it a few guests on, as a guest of their own who asks for the same
+drink again, with the same face (`bookingsOf` in `src/domain/regulars.ts`
+pairs them, so a regular's booking and return are one regular). The booking
+expects nothing: taking paper for it fails as `booked-for-later` ("made now,
+it's cold by the time they're back"), and a ticket for it is turned away
+offline the same way. The order rail marks the booking For later. Shift 21's
+Query writes the booking down at once and fails; `IF later IN CUSTOMER SPEECH`
+with a `JUMP listen` before the mumble check serves every star, and the drink
+is written once, when its guest is back. The test bench offers a guest who
+books for later, with nothing on their ticket. `tests/unit/simulation/later.test.ts`
+serves the reference and the way in, headless and live, and turns away Shift
+21's routines and a Query that lets the booking go only after taking paper.
+
 A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
 cards side by side on the specials board before any is served, each a special
 of its own with its own save entry and stars: what is on the board, who comes

@@ -1991,7 +1991,8 @@ html[data-motion='reduced'] .execution-line-highlight {
   opacity: 1;
   background: #ffffff22;
 }
-/* Take-away, rush and together orders carry a small tag on the paper, the cup and the customer's bubble. */
+/* Take-away, rush and together orders carry a small tag on the paper, the cup and the customer's bubble; a heard order
+   says too when it's sold out or booked for later. */
 .order-mark {
   padding: 1px 4px;
   border-radius: 999px;
@@ -2014,6 +2015,9 @@ html[data-motion='reduced'] .execution-line-highlight {
 .order-mark.sold-out {
   background: var(--ink);
   color: var(--cream);
+}
+.order-mark.later {
+  background: #b6d8ee;
 }
 
 /* One draggable assignment, with two inset tiles and an unboxed equals sign. */

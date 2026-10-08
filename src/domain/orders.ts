@@ -10,11 +10,13 @@ export interface IconOrder {
   together?: boolean;
   /** Heard only: the guest asked for a drink that has run out. */
   soldOut?: boolean;
+  /** Heard only: the guest booked the drink for later, and is back for it then. */
+  later?: boolean;
 }
 
 /** What tells one kind of drink in an order from another: two orders with the same key are grouped. */
 export const orderKey = (order: IconOrder) =>
-  `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}:${!!order.together}:${!!order.soldOut}`;
+  `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}:${!!order.together}:${!!order.soldOut}:${!!order.later}`;
 
 /** Group identical drinks without merging different sugar preferences. */
 export function groupOrders(orders: IconOrder[]): (IconOrder & { quantity: number })[] {
@@ -48,5 +50,6 @@ export function heardToIconOrders(heard: HeardOrder[]): IconOrder[] {
     rush: order.tokens.includes('rush'),
     together: order.tokens.includes('together'),
     soldOut: order.tokens.includes('soldout'),
+    later: order.tokens.includes('later'),
   }));
 }

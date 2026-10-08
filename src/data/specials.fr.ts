@@ -159,6 +159,33 @@ export const specialsFr: Readonly<Record<string, SpecialFr>> = {
       '*BIP BIP !* Plombs : intacts ! Brew : intact aussi !',
     ],
   },
+  later: {
+    title: 'Gardez-m’en un',
+    hint: 'L’écrire à son retour.',
+    thanks: 'Merci. Le bureau trouve ses réunions presque supportables, maintenant.',
+    note: 'Le bureau du dessus réserve ses boissons en montant en réunion, et les récupère en redescendant. Query entend For later avec une boisson réservée : If For later IN Orders, il n’écrit rien et fait un Jump vers Wait for Orders. Quand le client revient, il la redemande, et elle est notée à ce moment-là, donc préparée bien chaude.',
+    brief: {
+      story:
+        'Les collègues de Juno, au bureau du dessus, enchaînent les réunions toute la matinée. Ils aimeraient commander en montant et récupérer en redescendant, et un café qui attend la fin d’une réunion refroidit.',
+      objective:
+        'Servez chaque client et débarrassez chaque table. Une boisson réservée pour plus tard est notée quand son client revient la chercher, et pas avant.',
+      concept:
+        'Une routine peut choisir de ne rien faire, exprès. Un Jump vers Wait for Orders saute le reste pour ce client, et le travail se fait au bon moment.',
+    },
+    intro: [
+      'Jeudi matin. Juno arrive avec son ordinateur, et deux collègues du bureau du dessus.',
+      'Le bureau a découvert votre café. Ils ont des réunions toute la matinée, l’une après l’autre.',
+      'Ils aimeraient commander en montant, et récupérer en redescendant. Mais un café qui attend la fin d’une réunion refroidit.',
+      'Alors une boisson réservée pour plus tard n’est préparée qu’à leur retour. Query l’entend avec la commande : [IF later IN CUSTOMER SPEECH|If For later IN Orders].',
+      'Query n’écrit rien : un [JUMP listen|Jump] le ramène droit à Wait for Orders. À leur retour, ils la redemandent, et elle est préparée bien chaude.',
+      'Et une seule fois, s’il vous plaît. Personne là-haut n’a besoin de deux cafés.',
+      '*bip* Plus tard veut dire plus tard. Compris.',
+    ],
+    outro: [
+      'Toutes les tasses chaudes en redescendant. Ils demandent s’ils peuvent réserver la table près de la fenêtre, la prochaine fois.',
+      '*bip bip* Réservé. Gardé. Récupéré.',
+    ],
+  },
   'tea-table': {
     title: 'La table à thé',
     hint: 'Pas un café de la matinée : de quoi Brew a-t-il encore besoin ?',

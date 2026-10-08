@@ -42,6 +42,8 @@ export interface ShiftRules {
    * the sugar, the longest way round before the machine runs again. Only with cups.
    */
   dishwasher?: boolean;
+  /** A drink booked for later: Query writes nothing for it, and jumps back to wait for the guest's return. */
+  later?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {

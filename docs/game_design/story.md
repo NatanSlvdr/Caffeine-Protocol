@@ -273,9 +273,21 @@ electrical morning." The outro is Rosa pleased (the lights stayed on) and
 Brew's "Fuse: fine! Brew: also fine!" Moka and Pip stay out, as in every
 optional scene.
 
+### Keep one for me
+
+Juno asks the sixth special. It is Thursday, and she comes in with her laptop
+and two colleagues from the office upstairs, who have found out about the
+coffee and have meetings all morning. They'd like to order on the way up and
+collect on the way down, but a coffee that sits through a meeting goes cold.
+Niko shows Query how to hear a drink booked for later and write nothing down
+until its guest is back; Juno, worried, asks for it only the once. Query
+answers "Later means later. Understood." The outro is Juno pleased (every cup
+hot on the way down, and the office wants the window table next) and Query's
+"Booked. Kept. Collected." Moka and Pip stay out, as in every optional scene.
+
 ### The Saturday menu
 
-Mr. Albert asks the sixth special as well: the street market is back on Saturdays, and
+Mr. Albert asks the seventh special as well: the street market is back on Saturdays, and
 Lou always chalked one menu for it, all morning. Every card opens on the same
 three lines (stalls going up outside, Albert remembering Lou's board) before
 Niko says what the card means for the crew and the robot it asks most of
@@ -286,7 +298,7 @@ every scene that can be played long after they have left.
 
 ### The Long Day
 
-Juno asks for the seventh special. It is exam week, the library is shut for
+Juno asks for the eighth special. It is exam week, the library is shut for
 repairs, and she has told everyone, so her whole year revises at the café in
 waves, between exams: the first ones in at eight before the shutters are up,
 the ones running back to the exam hall at ten, a lunch with the spare cups gone

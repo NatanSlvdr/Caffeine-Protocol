@@ -90,6 +90,8 @@ export type FailureCode =
   | 'guessed-drink'
   /** Query wrote down a drink that’s sold out, instead of asking what the guest would have. */
   | 'sold-out'
+  /** Query wrote down a drink booked for later, which would be cold by the time its guest is back for it. */
+  | 'booked-for-later'
   /** Query stopped after one guest. */
   | 'stopped-listening'
   // Brew's kitchen.

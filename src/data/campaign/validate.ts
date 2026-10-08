@@ -30,6 +30,7 @@ const TOKENS = new Set([
   'ambiguous',
   'closed',
   'coffee',
+  'later',
   'negation',
   'number',
   'rush',
@@ -118,6 +119,8 @@ function collectHeardOrderErrors(order: unknown, context: string): string[] {
   }
   if (tokens.includes('soldout') && !tokens.includes('coffee') && !tokens.includes('tea'))
     errors.push(`${context}: 'soldout' goes with the drink that has run out`);
+  if (tokens.includes('later') && !tokens.includes('coffee') && !tokens.includes('tea'))
+    errors.push(`${context}: 'later' goes with the drink booked for later`);
   return errors;
 }
 
@@ -161,7 +164,7 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
   clarificationHeard.forEach((order, orderIndex) => {
     errors.push(...collectHeardOrderErrors(order, `${context}.clarification_heard_orders[${orderIndex}]`));
     const tokens = (isRecord(order) ? (order as HeardOrderLike).tokens : undefined) as string[] | undefined;
-    if (Array.isArray(tokens) && (tokens.includes('ambiguous') || tokens.includes('soldout')))
+    if (Array.isArray(tokens) && ['ambiguous', 'soldout', 'later'].some((token) => tokens.includes(token)))
       errors.push(`${context}.clarification_heard_orders[${orderIndex}]: clarification must be concrete`);
   });
 
@@ -173,7 +176,8 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
         ((order as HeardOrderLike).tokens as string[]).includes(token),
     );
   const isAmbiguous = heardWith('ambiguous'),
-    isSoldOut = heardWith('soldout');
+    isSoldOut = heardWith('soldout'),
+    booksAhead = heardWith('later');
   const expected = (customer.expected ?? {}) as TicketLike & { tickets?: unknown[] };
   // A guest whose drink has run out is asked what they'd have instead: the other drink, or nothing and no ticket.
   const goesWithout = isSoldOut && clarificationHeard.length === 0;
@@ -186,6 +190,13 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
     if (expected.tickets !== undefined) errors.push(`${context}: sold-out customers never carry grouped tickets`);
     if (goesWithout && expected.item !== undefined)
       errors.push(`${context}: a customer who goes without expects no drink`);
+  } else if (booksAhead) {
+    // A guest who books a drink for later gets no ticket now: it is written when they come back for it.
+    if (heard.length !== 1) errors.push(`${context}: a drink is booked for later alone`);
+    if (customer.clarification !== undefined || clarificationHeard.length > 0)
+      errors.push(`${context}: a drink booked for later needs no clarification`);
+    if (expected.item !== undefined || expected.tickets !== undefined || expected.ask_help !== undefined)
+      errors.push(`${context}: a drink booked for later expects no ticket yet`);
   } else if (isAmbiguous) {
     if (typeof customer.clarification !== 'string' || customer.clarification.trim().length === 0)
       errors.push(`${context}: ambiguous customers require a non-empty clarification`);
@@ -205,7 +216,8 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
 
   const hasItem = expected.item !== undefined;
   const hasTickets = expected.tickets !== undefined;
-  if (hasItem === hasTickets && !goesWithout) errors.push(`${context}: expected needs exactly one of item or tickets`);
+  if (hasItem === hasTickets && !goesWithout && !booksAhead)
+    errors.push(`${context}: expected needs exactly one of item or tickets`);
   if (hasItem && expected.item !== 'coffee' && expected.item !== 'tea')
     errors.push(`${context}: expected item must be coffee or tea`);
   if (hasItem && heard.length !== 1) errors.push(`${context}: single orders pair with exactly one heard order`);

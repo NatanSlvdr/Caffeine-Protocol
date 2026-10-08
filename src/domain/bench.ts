@@ -40,6 +40,11 @@ export interface BenchGuest {
    * Only a guest asking for one drink can.
    */
   soldOut?: BenchSoldOut;
+  /**
+   * They book the drink for later, and are back for it then as a guest of their own: nothing is written down until
+   * they are. Only a guest asking for one drink, and in no rush, can.
+   */
+  later?: boolean;
   /** Seconds after the guest before; the first guest comes in as the café opens, so theirs is 0. */
   after: number;
 }
@@ -57,6 +62,8 @@ export interface BenchKit {
   together: boolean;
   /** Whether a drink runs out, and guests are asked what they'll have instead. */
   soldOut: boolean;
+  /** Whether a guest books a drink for later. */
+  later: boolean;
   /** How far apart the shift's guests come in, at the closest. */
   gap: number;
   /** What a ticket says about each way of asking for sugar, copied from a guest of the shift who asked that way. */
@@ -82,6 +89,7 @@ function sugarOf(order: HeardOrder): BenchSugar {
 }
 
 const isSoldOut = (customer: Customer) => customer.heard_orders.some((order) => order.tokens.includes('soldout'));
+const booksLater = (customer: Customer) => customer.heard_orders.some((order) => order.tokens.includes('later'));
 
 /** A customer's orders as heard, each with the ticket it should come out as. */
 function ordersOf(customer: Customer): { heard: HeardOrder; ticket: ExpectedTicket }[] {
@@ -99,6 +107,8 @@ export function benchKit(level: LevelDefinition): BenchKit {
   const orders = customers.flatMap(ordersOf);
   const tickets: BenchKit['tickets'] = {};
   for (const { heard, ticket } of orders) {
+    // A drink booked for later has no ticket yet to copy.
+    if (heard.tokens.includes('later')) continue;
     const key = sugarKey(sugarOf(heard));
     tickets[key] ??= { with_sugar: ticket.with_sugar, sugar_count: ticket.sugar_count };
   }
@@ -117,6 +127,7 @@ export function benchKit(level: LevelDefinition): BenchKit {
     rush: orders.some(({ heard }) => heard.tokens.includes('rush')),
     together: orders.some(({ heard }) => heard.tokens.includes('together')),
     soldOut: customers.some(isSoldOut),
+    later: customers.some(booksLater),
     gap: gaps.length ? Math.max(1, Math.min(...gaps)) : 8,
     tickets,
   };
@@ -139,6 +150,7 @@ export function benchGuests(customers: readonly Customer[]): BenchGuest[] {
       ? { soldOut: customer.clarification_heard_orders?.length ? ('switch' as const) : ('leave' as const) }
       : customer.expected.ask_help && { mumbles: true }),
     ...(ordersOf(customer).some(({ heard }) => heard.tokens.includes('together')) && { together: true }),
+    ...(booksLater(customer) && { later: true }),
     after: i === 0 ? customer.arrival : customer.arrival - guests[i - 1].arrival,
   }));
 }
@@ -172,6 +184,12 @@ export function benchProblems(kit: BenchKit, guests: readonly BenchGuest[]): str
     if (guest.soldOut && guest.orders.length > 1)
       problems.push(`${who} asks for a drink that’s run out, so asks for one.`);
     if (guest.soldOut && guest.mumbles) problems.push(`${who} mumbles, so nobody knows yet what they’ll ask for.`);
+    if (guest.later && !kit.later) problems.push(`${who} books a drink for later, and nobody does on this shift.`);
+    if (guest.later && guest.orders.length > 1) problems.push(`${who} books a drink for later, so asks for one.`);
+    if (guest.later && guest.mumbles) problems.push(`${who} mumbles, so nobody knows yet what they’d book.`);
+    if (guest.later && guest.soldOut) problems.push(`${who} books a drink for later, so nothing’s run out yet.`);
+    if (guest.later && guest.orders.some((order) => order.rush))
+      problems.push(`${who} books a drink for later, so isn’t in a rush.`);
     if (guest.soldOut === 'switch' && kit.drinks.length < 2)
       problems.push(`${who} would have the other drink, and this shift only has one.`);
     for (const order of guest.orders) {
@@ -210,6 +228,10 @@ export function benchSays(orders: readonly BenchOrder[], together = false): stri
   const hurry = orders.length === 1 && orders[0].rush ? '. I’m in a rush!' : '';
   return said[0].toUpperCase() + said.slice(1) + hurry;
 }
+
+/** What a guest who books a drink for later says: they'll be back for it. */
+export const bookingSays = (order: BenchOrder): string =>
+  `Could you keep me a ${benchPhrase(order)}? I’ll be back for it.`;
 
 /** What one order should come out as, the way the shift's guests who asked like that get it. */
 export function benchTicket(kit: BenchKit, order: BenchOrder, together = false): ExpectedTicket {
@@ -279,6 +301,17 @@ export function benchSeed(kit: BenchKit, guests: readonly BenchGuest[]): Validat
         clarification_heard_orders: switches ? [heardOf(instead)] : [],
         ...(switches && { clarification_intent: intentOf(ticket) }),
         expected: switches ? { ...ticket, ask_help: true } : { ask_help: true },
+      };
+    }
+    if (guest.later) {
+      const [order] = guest.orders;
+      return {
+        ...base,
+        phrase: bookingSays(order),
+        heard_orders: [{ ...heard[0], tokens: [...heard[0].tokens, 'later'] }],
+        intent: intentOf(tickets[0]),
+        // Nothing yet: the drink is written down when they're back for it.
+        expected: {},
       };
     }
     if (guest.mumbles)

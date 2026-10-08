@@ -14,6 +14,7 @@ export const QUERY_CONDITION_VALUES = [
   'closed',
   'together',
   'soldout',
+  'later',
 ] as const;
 export const QUERY_CONDITION_SOURCES = ['CUSTOMER SPEECH', 'item'] as const;
 export interface QueryComparisonCondition {

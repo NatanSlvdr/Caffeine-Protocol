@@ -53,6 +53,11 @@ export const UNLOCKS = {
    * Orders to take it straight to the sink.
    */
   preground: 22,
+  /**
+   * A drink booked for later: Query hears For later with the order, and writes nothing until the guest is back for
+   * it, so it's made fresh when they are.
+   */
+  later: 22,
 } as const;
 
 /**

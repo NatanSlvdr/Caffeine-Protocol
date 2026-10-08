@@ -1,6 +1,6 @@
 import type { Customer, LevelDefinition, RobotPrograms, ServiceConfig, ValidationSeed } from '@/domain/types';
 import { benchKit, benchSeed, type BenchGuest } from '@/domain/bench';
-import type { Regular } from '@/domain/regulars';
+import { bookingsOf, type Regular } from '@/domain/regulars';
 import type { DialogueLine } from '@/domain/dialogue';
 import { line } from '@/domain/dialogue';
 import { floorSource, preparationSource } from '@/domain/defaultPrograms';
@@ -469,6 +469,95 @@ function oneSocket(): Special {
   };
 }
 
+/** Which guests book their drink for later in each of Juno's rounds, by the guest they're back as. */
+export const BOOKED = new Map([
+  [8, 1],
+  [11, 4],
+]);
+
+/**
+ * Juno's office upstairs: guests in a row, drinks alternating and sugar cycling, and two who book a coffee or a tea to
+ * go on their way up to a meeting, back for it on their way down. Shift 21's Query writes the booked drink down at
+ * once, so it's made while its guest is still upstairs.
+ */
+function officeUpstairs(): Special {
+  const rules: ShiftRules = { toGo: true, later: true };
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-later`,
+    title: 'Keep One for Me',
+    summary: 'The office upstairs books its drinks on the way to a meeting, and collects them on the way back.',
+    rules,
+    service: {},
+    rounds: [0, 1, 2].map((round) => {
+      const order = (n: number) => ({
+        drink: (n + round) % 2 ? ('tea' as const) : ('coffee' as const),
+        sugar: (n + 2 * round) % 3,
+      });
+      const booker = [...BOOKED.values()];
+      return arriving(12, 5, (n) => {
+        if (booker.includes(n)) return { orders: [{ ...order(n), toGo: true }], later: true };
+        const booked = BOOKED.get(n);
+        return { orders: [booked === undefined ? order(n) : { ...order(booked), toGo: true }] };
+      });
+    }),
+    // Fair to the way most players in: Shift 21's routines, once Query lets a drink booked for later go before it asks
+    // or writes anything. Two blocks above theirs, and a tenth more instructions, as for the reading group.
+    targets: { blocks: 113, instructions: 2320 },
+  });
+  // A guest back for a drink they booked says so, then asks for it again.
+  for (const seed of level.seeds) {
+    const bookings = bookingsOf(seed.customers);
+    seed.customers = seed.customers.map((guest) =>
+      bookings.has(guest.customer_id) ? { ...guest, phrase: `I’m back for it! ${guest.phrase}` } : guest,
+    );
+  }
+  return {
+    id: 'later',
+    title: level.title,
+    by: 'juno',
+    hint: 'Write it when they’re back.',
+    thanks: 'Thank you. The office says its meetings are almost bearable now.',
+    level,
+    lesson: {
+      note: 'The office upstairs books its drinks on the way to a meeting, and collects them on the way back. Query hears For later with a drink booked: If For later IN Orders, it writes nothing down and Jumps back to Wait for Orders. When the guest is back, they ask for it again, and it’s written down then, so it’s made fresh.',
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: {
+      story:
+        'Juno’s colleagues in the office upstairs have meetings all morning. They’d like to order on the way up and collect on the way down, and a coffee kept waiting through a meeting goes cold.',
+      objective:
+        'Serve every guest and clear every table. A drink booked for later is written down when its guest is back for it, and not before.',
+      concept:
+        'A routine can choose to do nothing, on purpose. A Jump back to Wait for Orders skips the rest for this guest, and the work happens when it should.',
+    },
+    intro: [
+      line('', 'Thursday morning. Juno comes in with her laptop, and two colleagues from the office upstairs.'),
+      line('juno:happy', 'The office has found out about your coffee. They have meetings all morning, back to back.'),
+      line(
+        'juno',
+        'They’d like to order on the way up, and collect on the way down. But a coffee that sits through a meeting goes cold.',
+      ),
+      line(
+        'niko',
+        'Then a drink booked for later isn’t made until they’re back. Query hears it with the order: [IF later IN CUSTOMER SPEECH|If For later IN Orders].',
+      ),
+      line(
+        'niko',
+        'Query writes nothing down: a [JUMP listen|Jump] takes it straight back to Wait for Orders. When they’re back, they ask for it again, and it’s made fresh.',
+      ),
+      line('juno:worried', 'And only the once, please. Nobody upstairs needs two coffees.'),
+      line('query', '*bip* Later means later. Understood.'),
+    ],
+    outro: [
+      line('juno:happy', 'Every cup hot on the way down. They’ve asked if they can book the window table next.'),
+      line('query', '*bip bip* Booked. Kept. Collected.'),
+    ],
+  };
+}
+
 /** A menu's own words, for its place on the specials board: it shows once, with its cards behind it. */
 export interface Menu {
   id: string;
@@ -532,8 +621,14 @@ export function benchShift(spec: {
   rounds: BenchGuest[][];
   targets: { blocks: number; instructions: number };
 }): { level: LevelDefinition; solution: RobotPrograms } {
-  // Shift 21 has no table that orders together, and no drink runs out; a shift whose rules bring one has them.
-  const kit = { ...finaleKit(), together: !!spec.rules.together, soldOut: !!spec.rules.soldOut };
+  // Shift 21 has no table that orders together, no drink runs out and nobody books one for later; a shift whose rules
+  // bring one has them.
+  const kit = {
+    ...finaleKit(),
+    together: !!spec.rules.together,
+    soldOut: !!spec.rules.soldOut,
+    later: !!spec.rules.later,
+  };
   const solution: RobotPrograms = {
     query: queryReference(spec.rules),
     prep: preparationSource(TOOLKIT, 1, spec.rules),
@@ -711,6 +806,7 @@ export const specials: readonly Special[] = [
   lastOfTheTea(),
   engineersVisit(),
   oneSocket(),
+  officeUpstairs(),
   ...saturdayMenu,
 ];
 

@@ -15,6 +15,7 @@ import {
   STAFF_ENTRY,
   TABLE_LAYOUT,
   sampleReplay,
+  roundBookings,
   roundRegulars,
   orderWhereabouts,
   robotUnlocked,
@@ -134,6 +135,8 @@ export function World({
   const whereabouts = state && followed ? orderWhereabouts(state, followed) : undefined;
   const actors = state?.actors ?? fallbackActors(level);
   const regulars = result && state?.seed ? roundRegulars(result, state.seed.seed_id) : undefined;
+  // A guest back for a drink they booked is the guest who booked it.
+  const bookings = result && state?.seed ? roundBookings(result, state.seed.seed_id) : undefined;
   const gateOpen = isGateOpen(state);
   const bubbleShown = (id: string, actor: ActorSnapshot) =>
     serviceView &&
@@ -315,7 +318,7 @@ export function World({
               )}
               <Character
                 at={c.position}
-                look={{ human: customerLook(c.id, regulars?.get(c.id)) }}
+                look={{ human: customerLook(bookings?.get(c.id) ?? c.id, regulars?.get(c.id)) }}
                 sit={c.sit}
                 walking={moving && c.walking}
                 animate={moving}

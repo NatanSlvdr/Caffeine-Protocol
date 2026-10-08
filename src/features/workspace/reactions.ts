@@ -52,6 +52,7 @@ const reactsFirst: Record<FailureCode, 'guest' | 'robot'> = {
   'help-unneeded': 'guest',
   'guessed-drink': 'guest',
   'sold-out': 'guest',
+  'booked-for-later': 'guest',
   'stopped-listening': 'guest',
   'recipe-order': 'robot',
   'already-brewed': 'robot',

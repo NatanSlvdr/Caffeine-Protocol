@@ -67,6 +67,9 @@ export const BENCH_WORDS = words(
       leave: 'Sold out: goes without',
       nothing: 'nothing',
     },
+    /** A guest who books their drink for later, and gets nothing written down until they're back for it. */
+    later: 'Books it for later',
+    untilBack: ', until they’re back for it',
     /** What a guest says, around their quoted words: “Says “Tea”” or, mumbling first, the usual then the order. */
     says: ['Says “', '”'] as [string, string],
     mumbled: ['Mumbles “', '”, then says “', '” once asked'] as [string, string, string],
@@ -145,6 +148,8 @@ export const BENCH_WORDS = words(
       leave: 'Épuisée : repart sans rien',
       nothing: 'rien',
     },
+    later: 'La réserve pour plus tard',
+    untilBack: ', avant son retour',
     says: ['Dit « ', ' »'],
     mumbled: ['Marmonne « ', ' », puis dit « ', ' » une fois interrogé'],
     shouldGet: 'Doit recevoir',

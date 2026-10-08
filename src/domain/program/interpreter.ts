@@ -64,6 +64,8 @@ export function* streamCustomerEvent(
   const ambiguous = () => orders.some((order) => order.tokens.includes('ambiguous'));
   // A drink run out is asked about as an unclear order is: Help hears what the guest will have instead.
   const soldOut = () => orders.some((order) => order.tokens.includes('soldout'));
+  // A drink booked for later is written down when its guest is back for it, so it's made fresh then.
+  const later = () => orders.some((order) => order.tokens.includes('later'));
   // Checkout is automatic once the complete paper order is deposited.
   const finish = () => {
     // A written ticket still in Query's hand never reached the kitchen: that's the slip, not the count.
@@ -271,6 +273,11 @@ export function* streamCustomerEvent(
           if (ambiguous()) return fail('unclear-order', 'This order is unclear. Use Help before taking paper.');
           if (soldOut())
             return fail('sold-out', 'What they asked for is sold out: use Help to ask what they’d like instead.');
+          if (later())
+            return fail(
+              'booked-for-later',
+              'This drink is booked for later: made now, it’s cold by the time they’re back. Write nothing down until they come for it.',
+            );
           if (!bindings.item) return fail('guessed-drink', 'There’s no order to write down.');
           if (ticket) return fail('paper-in-hand', 'Deposit the current paper before taking another.');
           if (customer.expected.closing) return failWith(CLOSING_TICKET);

@@ -5,6 +5,7 @@ export const TokenSchema = v.picklist([
   'ambiguous',
   'closed',
   'coffee',
+  'later',
   'negation',
   'number',
   'rush',

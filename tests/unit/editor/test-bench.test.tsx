@@ -8,6 +8,7 @@ import { lessons, levels } from '../../../src/data';
 import { benchGuests } from '../../../src/domain';
 import { BenchModal } from '../../../src/features/workspace/modals/BenchModal';
 import { referenceProgramsFor } from '../../helpers/run';
+import { specialById } from '../../../src/data/specials';
 
 vi.mock('../../../src/components/Cafe', () => ({ Cafe: () => <div data-testid="cafe" /> }));
 vi.mock('../../../src/audio', () => ({ configureAudio: vi.fn(), startAudio: vi.fn() }));
@@ -213,6 +214,36 @@ describe('the test bench on the last shift', () => {
           customer_id: 'B1',
           phrase: 'The usual, please.',
           expected: expect.objectContaining({ ask_help: true }),
+        }),
+      ],
+      [],
+    );
+  });
+});
+
+describe('the test bench on Keep One for Me', () => {
+  it('books a guest’s drink for later: one drink, no rush, and nothing written until they’re back', () => {
+    const { level } = specialById('later')!;
+    localStorage.setItem(
+      benchKey(),
+      JSON.stringify({ [level.id]: [{ orders: [{ drink: 'tea', sugar: 1, toGo: true }], after: 0 }] }),
+    );
+    const onRun = vi.fn();
+    render(<BenchModal level={level} running={false} onRun={onRun} onClose={() => {}} />);
+    const guest = () => guests()[0];
+    const says = () => guest().querySelector('.bench-says')!.textContent;
+    expect(says()).toBe('Says “Tea, 1 sugar, to go” · Should get tea · 1 sugar · to go');
+    fireEvent.click(within(guest()).getByRole('checkbox', { name: 'Books it for later' }));
+    expect(says()).toBe(
+      'Says “Could you keep me a tea, 1 sugar, to go? I’ll be back for it.” · Should get nothing, until they’re back for it',
+    );
+    fireEvent.click(runBench());
+    expect(onRun).toHaveBeenCalledWith(
+      [
+        expect.objectContaining({
+          customer_id: 'B1',
+          expected: {},
+          heard_orders: [expect.objectContaining({ tokens: expect.arrayContaining(['later']) })],
         }),
       ],
       [],

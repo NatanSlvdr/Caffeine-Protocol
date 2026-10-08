@@ -149,6 +149,8 @@ export const FAILURE_WORDS = words(
       'guessed-drink': 'If nobody can clarify, don’t take a sheet at all.',
       'sold-out':
         'We’re out of what they asked for. Check If Sold out IN Orders, and ask me with Help: I’ll find out what they’d have instead.',
+      'booked-for-later':
+        'A drink booked for later is made when its guest is back. Check If For later IN Orders, and Jump back to Wait for Orders without writing it down.',
       'stopped-listening':
         'The café doesn’t close after one guest: loop back to Wait for Orders so Query hears the next one.',
       'recipe-order': 'The recipe goes one step at a time, in order: do the next step before moving on.',
@@ -321,6 +323,8 @@ export const FAILURE_WORDS = words(
       'guessed-drink': 'Si personne ne peut éclaircir la commande, ne prenez pas de feuille du tout.',
       'sold-out':
         'Il n’en reste plus. Vérifiez If Sold out IN Orders, et demandez-moi avec Help : je saurai ce qu’ils prendront à la place.',
+      'booked-for-later':
+        'Une boisson gardée pour plus tard se prépare au retour du client. Vérifiez If For later IN Orders, et faites un Jump vers Wait for Orders sans rien écrire.',
       'stopped-listening':
         'Le café ne ferme pas après un seul client : revenez à Wait for Orders pour que Query entende le suivant.',
       'recipe-order':

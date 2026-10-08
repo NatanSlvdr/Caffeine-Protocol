@@ -18,18 +18,23 @@ export function SugarBadge({ sugar }: { sugar: number }) {
   );
 }
 
-/** The take-away, rush and together marks on an order, as small tags, and whether what was asked for is sold out. */
+/**
+ * The take-away, rush and together marks on an order, as small tags, whether what was asked for is sold out, and whether
+ * it's booked for later.
+ */
 export function OrderMarks({
   toGo,
   rush,
   together,
   soldOut,
+  later,
   lid,
 }: {
   toGo?: boolean;
   rush?: boolean;
   together?: boolean;
   soldOut?: boolean;
+  later?: boolean;
   lid?: boolean;
 }) {
   const say = useWords(SCENE_WORDS).marks;
@@ -39,6 +44,7 @@ export function OrderMarks({
       {rush && <span className="order-mark rush">{say.rush}</span>}
       {together && <span className="order-mark together">{say.together}</span>}
       {soldOut && <span className="order-mark sold-out">{say.soldOut}</span>}
+      {later && <span className="order-mark later">{say.later}</span>}
     </>
   );
 }
@@ -61,7 +67,13 @@ export function OrderIcons({ orders, label }: { orders: IconOrder[]; label: stri
             )}
             {order.quantity > 1 && <span>×{order.quantity}</span>}
             {!!order.sugar && <SugarBadge sugar={order.sugar} />}
-            <OrderMarks toGo={order.toGo} rush={order.rush} together={order.together} soldOut={order.soldOut} />
+            <OrderMarks
+              toGo={order.toGo}
+              rush={order.rush}
+              together={order.together}
+              soldOut={order.soldOut}
+              later={order.later}
+            />
           </li>
         );
       })}

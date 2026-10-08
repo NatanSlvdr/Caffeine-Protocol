@@ -48,7 +48,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     const board = screen.getByRole('dialog');
     const card = within(board).getByRole('heading', { name: special.title }).closest('li')!;
     expect(within(card).getByText(/Asked for by Rosa/)).toBeTruthy();
@@ -66,7 +66,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     const board = screen.getByRole('dialog');
     const card = within(board).getByRole('heading', { name: 'The Last of the Tea' }).closest('li')!;
     expect(within(card).getByText(/Asked for by Juno/)).toBeTruthy();
@@ -77,7 +77,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     const board = screen.getByRole('dialog');
     const titles = within(board)
       .getAllByRole('heading')
@@ -92,7 +92,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     const board = screen.getByRole('dialog');
     const titles = within(board)
       .getAllByRole('heading')
@@ -103,11 +103,26 @@ describe('the specials', () => {
     expect(within(card).getByText('Wash with a long way to go.')).toBeTruthy();
   });
 
+  it('puts Juno’s office upstairs on the board, after the dishwasher', () => {
+    localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
+    window.location.hash = '#/campaign';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
+    const board = screen.getByRole('dialog');
+    const titles = within(board)
+      .getAllByRole('heading')
+      .map((heading) => heading.textContent);
+    expect(titles.indexOf('Keep One for Me')).toBe(titles.indexOf('One Socket') + 1);
+    const card = within(board).getByRole('heading', { name: 'Keep One for Me' }).closest('li')!;
+    expect(within(card).getByText(/Asked for by Juno/)).toBeTruthy();
+    expect(within(card).getByText('Write it when they’re back.')).toBeTruthy();
+  });
+
   it('shows a served special’s own stars on the board', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify({ ...finished, specials: { together: { stars: 2 } } }));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     expect(screen.getByRole('img', { name: '2 of 3 stars' })).toBeTruthy();
     expect(screen.getByRole('button', { name: `Serve again ${special.title}` })).toBeTruthy();
   });
@@ -139,7 +154,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     const board = screen.getByRole('dialog');
     const market = within(board).getByRole('heading', { name: 'The Saturday Market' }).closest('li')!;
     expect(within(market).getByText(/Asked for by Mr\. Albert/)).toBeTruthy();
@@ -181,7 +196,7 @@ describe('the specials', () => {
     );
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 9 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 10 specials' }));
     expect(screen.getByText('1 of 3 menus served')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /^Plan the menu/ }));
     const menu = screen.getByRole('dialog');

@@ -10,6 +10,7 @@ import {
   benchSays,
   benchSeed,
   benchTicket,
+  bookingSays,
   freshGuest,
   insteadOf,
   ROBOT_DISPLAY_NAMES,
@@ -234,15 +235,16 @@ function GuestRow({
   const fits = benchProblems(kit, [{ ...guest, after: 0 }]).length === 0;
   const together = !!guest.together && guest.orders.length > 1;
   // A guest whose drink has run out gets the other one, or nothing, once Query asks.
-  const tickets = !fits
-    ? []
-    : guest.soldOut
-      ? guest.soldOut === 'switch'
-        ? [benchTicket(kit, insteadOf(guest.orders[0]))]
-        : []
-      : guest.orders.map((order) => benchTicket(kit, order, together));
+  const tickets =
+    !fits || guest.later
+      ? []
+      : guest.soldOut
+        ? guest.soldOut === 'switch'
+          ? [benchTicket(kit, insteadOf(guest.orders[0]))]
+          : []
+        : guest.orders.map((order) => benchTicket(kit, order, together));
   const asks = guest.mumbles || !!guest.soldOut;
-  const says = benchSays(guest.orders, together);
+  const says = guest.later ? bookingSays(guest.orders[0]) : benchSays(guest.orders, together);
   return (
     <li className="bench-guest">
       <div className="bench-guest-head">
@@ -315,7 +317,7 @@ function GuestRow({
                 {words.toGo}
               </label>
             )}
-            {kit.rush && (
+            {kit.rush && !guest.later && (
               <label className="bench-mark">
                 <input
                   type="checkbox"
@@ -338,9 +340,9 @@ function GuestRow({
           </div>
         );
       })}
-      {(kit.most > 1 || kit.mumble || kit.together || kit.soldOut) && (
+      {(kit.most > 1 || kit.mumble || kit.together || kit.soldOut || kit.later) && (
         <div className="bench-guest-more">
-          {kit.most > 1 && !asks && guest.orders.length < kit.most && (
+          {kit.most > 1 && !asks && !guest.later && guest.orders.length < kit.most && (
             <button
               type="button"
               className="bench-link"
@@ -364,7 +366,7 @@ function GuestRow({
               {words.together}
             </label>
           )}
-          {kit.mumble && !guest.soldOut && (
+          {kit.mumble && !guest.soldOut && !guest.later && (
             <label className="bench-mark">
               <input
                 type="checkbox"
@@ -381,7 +383,7 @@ function GuestRow({
               {words.mumbles}
             </label>
           )}
-          {kit.soldOut && !guest.mumbles && (
+          {kit.soldOut && !guest.mumbles && !guest.later && (
             <select
               aria-label={words.soldOut.label(n)}
               value={guest.soldOut ?? ''}
@@ -399,6 +401,26 @@ function GuestRow({
               <option value="switch">{words.soldOut.switch}</option>
               <option value="leave">{words.soldOut.leave}</option>
             </select>
+          )}
+          {kit.later && !guest.mumbles && !guest.soldOut && (
+            <label className="bench-mark">
+              <input
+                type="checkbox"
+                checked={!!guest.later}
+                onChange={(e) =>
+                  onChange({
+                    ...guest,
+                    later: e.target.checked || undefined,
+                    // A guest who books for later books one drink, and isn't in a rush for it.
+                    ...(e.target.checked && {
+                      orders: guest.orders.slice(0, 1).map((order) => ({ ...order, rush: undefined })),
+                      together: undefined,
+                    }),
+                  })
+                }
+              />
+              {words.later}
+            </label>
           )}
         </div>
       )}
@@ -418,7 +440,7 @@ function GuestRow({
             {words.says[1]}
           </>
         )}
-        {fits && (tickets.length > 0 || guest.soldOut) && (
+        {fits && (tickets.length > 0 || guest.soldOut || guest.later) && (
           <>
             {' '}
             · {words.shouldGet}{' '}
@@ -428,6 +450,7 @@ function GuestRow({
                 : words.soldOut.nothing}
             </strong>
             {asks && words.onceHelped(ROBOT_DISPLAY_NAMES.query)}
+            {guest.later && words.untilBack}
           </>
         )}
       </p>

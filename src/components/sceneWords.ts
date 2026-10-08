@@ -49,20 +49,21 @@ export const SCENE_WORDS = words(
     station: (place: Place) => capital(placeName(place).replace(/^the /, '')),
     action: (name: string, action: string, station?: string) => `${name}: ${action}${station ? ` at ${station}` : ''}`,
     /** The marks on an order or a cup. */
-    marks: { toGo: 'To go', lid: 'Lid', rush: 'Rush', together: 'Together', soldOut: 'Sold out' },
+    marks: { toGo: 'To go', lid: 'Lid', rush: 'Rush', together: 'Together', soldOut: 'Sold out', later: 'For later' },
     queue: 'Kitchen order queue',
     orders: 'Orders',
     waiting: 'Waiting orders',
     noneWaiting: 'None waiting',
     heard: 'Heard orders',
     /** One kind of drink in an order, as its icon reads out: "coffee ×2 + 1 sugar, to go". */
-    order: ({ item, quantity, sugar, toGo, rush, together, soldOut }: IconOrder & { quantity: number }) =>
+    order: ({ item, quantity, sugar, toGo, rush, together, soldOut, later }: IconOrder & { quantity: number }) =>
       (item ? `${item} ×${quantity}` : `Unclear order${quantity > 1 ? ` ×${quantity}` : ''}`) +
       (sugar ? ` + ${sugar} sugar` : '') +
       (toGo ? ', to go' : '') +
       (rush ? ', in a rush' : '') +
       (together ? ', together' : '') +
-      (soldOut ? ', sold out' : ''),
+      (soldOut ? ', sold out' : '') +
+      (later ? ', for later' : ''),
   },
   {
     scene: 'Le café : cuisine, comptoir des commandes et salle',
@@ -84,18 +85,26 @@ export const SCENE_WORDS = words(
     thinking: 'Réfléchit',
     station: (place) => (typeof place === 'object' ? `Table ${place.table}` : FR_STATIONS[place]),
     action: (name, action, station) => `${name} : ${action}${station ? `, ${station}` : ''}`,
-    marks: { toGo: 'À emporter', lid: 'Couvercle', rush: 'Pressé', together: 'Ensemble', soldOut: 'Épuisé' },
+    marks: {
+      toGo: 'À emporter',
+      lid: 'Couvercle',
+      rush: 'Pressé',
+      together: 'Ensemble',
+      soldOut: 'Épuisé',
+      later: 'Pour plus tard',
+    },
     queue: 'File des commandes de la cuisine',
     orders: 'Commandes',
     waiting: 'Commandes en attente',
     noneWaiting: 'Aucune en attente',
     heard: 'Commandes entendues',
-    order: ({ item, quantity, sugar, toGo, rush, together, soldOut }) =>
+    order: ({ item, quantity, sugar, toGo, rush, together, soldOut, later }) =>
       (item ? `${FR_DRINKS[item] ?? item} ×${quantity}` : `Commande floue${quantity > 1 ? ` ×${quantity}` : ''}`) +
       (sugar ? ` + ${countFr(sugar, 'sucre')}` : '') +
       (toGo ? ', à emporter' : '') +
       (rush ? ', pressé' : '') +
       (together ? ', ensemble' : '') +
-      (soldOut ? ', épuisé' : ''),
+      (soldOut ? ', épuisé' : '') +
+      (later ? ', pour plus tard' : ''),
   },
 );
