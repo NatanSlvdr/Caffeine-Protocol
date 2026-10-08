@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Award, BookOpen, CircleHelp, Clapperboard, Dumbbell, History, Play, Sparkles, Wrench } from 'lucide-react';
-import { DialogueBox } from '@/components';
+import { DialogueBox } from '@/components/dialogue/DialogueBox';
 import { levels } from '@/data';
 import {
   cutscenes,

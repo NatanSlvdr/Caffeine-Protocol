@@ -27,6 +27,16 @@ By 2026-10-06 the features added since had brought the startup to 538 KiB, two s
 | **Startup**        |          | **478 KiB** |
 | `Workspace-*.js`   | 185 KiB  | 64 KiB      |
 
+By 2026-10-08 the French story had brought the startup to the 540 KiB budget. The front door's windows had been importing their modal, dialogue box and block lines through the `@/components` barrel, which also exports the editor, and that kept the editor and its drag-and-drop library in startup though only the shift's screen uses them. They now import each component from its own module, and the editor loads with the shift's screen. From the build of the specials in French:
+
+| File               | Size     | Gzipped     |
+| ------------------ | -------- | ----------- |
+| `index-*.js` (app) | 589 KiB  | 194 KiB     |
+| `cafe-3d-*.js`     | 1046 KiB | 291 KiB     |
+| `index-*.css`      | 164 KiB  | 31 KiB      |
+| **Startup**        |          | **516 KiB** |
+| `Workspace-*.js`   | 296 KiB  | 103 KiB     |
+
 The 3D chunk is preloaded because the front door already shows the café. The rest of the build loads as it's needed: 77 WebP stills and portraits (10.0 MiB) as their scenes open, and the music (2.2 MiB WAV) once the player starts it. That is why the music is one loop voiced for each place (an old record in a memory, the café through the wall in the repair bay and at closing time) rather than several arrangements: another recording of the same length would take 2.2 MiB more, beyond what the 16 MiB budget leaves. The offline worker stores the whole build, 14.1 MiB, in the background on the first visit, so a first visit on a slow connection pays for it once.
 
 ### Simulating a service
@@ -55,8 +65,8 @@ Running 100 more services on top of those, the heap stays where it was, and drop
 
 | What                                | Budget                 | Measured            | Held by                                                  |
 | ----------------------------------- | ---------------------- | ------------------- | -------------------------------------------------------- |
-| Startup scripts and styles, gzipped | 540 KiB                | 486 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
-| The whole build                     | 16 MiB                 | 14.1 MiB            | `tools/size-check.mjs`                                   |
+| Startup scripts and styles, gzipped | 540 KiB                | 516 KiB             | `tools/size-check.mjs`, the last step of `npm run build` |
+| The whole build                     | 16 MiB                 | 14.5 MiB            | `tools/size-check.mjs`                                   |
 | One service, any shift, worst case  | 250 ms                 | 39 ms               | `tests/unit/simulation/service-time.test.ts`             |
 | Runs a shift keeps                  | 12, the newest in full | 6.5 MiB on shift 21 | `keepRecord`; `compare-runs.test.ts`                     |
 

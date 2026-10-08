@@ -1,5 +1,5 @@
 import { Download } from 'lucide-react';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { Button } from '@/shared/ui/Button';
 import { count } from '@/domain';
 import { download, saveFileName } from '@/shared/lib/download';

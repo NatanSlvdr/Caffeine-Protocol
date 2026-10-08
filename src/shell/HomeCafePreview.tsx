@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Cafe } from '@/components';
+import { Cafe } from '@/components/Cafe';
 import { STREET_APPROACH_SECONDS, decorOf } from '@/domain';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { useGame } from '@/state/GameStore';

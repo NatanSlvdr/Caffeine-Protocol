@@ -1,5 +1,5 @@
 import { Bot, Map, Puzzle, Star } from 'lucide-react';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { UNLOCKS } from '@/domain';
 import { CAMPAIGN_LENGTH } from '@/data';
 import { pad2, RUN_MODIFIER } from '@/shared/lib/format';

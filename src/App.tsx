@@ -18,7 +18,7 @@ import { GameProvider, useGame, useNarrative, useShift } from '@/state/GameStore
 import { go, onOpenGuide, onOpenSettings } from '@/shared/lib/navigation';
 import { pad2 } from '@/shared/lib/format';
 import { reclaimFocus } from '@/shared/lib/focus';
-import { DialoguePaceContext } from '@/components';
+import { DialoguePaceContext } from '@/components/dialogue/pace';
 import { LanguageProvider, useLanguage, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from '@/app/screenWords';
 

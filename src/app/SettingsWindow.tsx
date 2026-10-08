@@ -12,7 +12,7 @@ import {
   Volume2,
 } from 'lucide-react';
 import { lessons } from '@/data';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { Button } from '@/shared/ui/Button';
 import { SettingRow } from '@/shared/ui/SettingRow';
 import { LANGUAGES, useLanguage, useWords, type Language } from '@/shared/language';

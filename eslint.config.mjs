@@ -238,15 +238,30 @@ export default tseslint.config(
     },
   },
   {
-    files: ['src/App.tsx'],
+    // The front door loads before any shift: the barrel would bring the editor and its drag-and-drop with it.
+    files: ['src/App.tsx', 'src/app/**', 'src/shell/**'],
     rules: {
       'no-restricted-imports': [
         'error',
         {
+          paths: [
+            {
+              name: '@/components',
+              message: 'Import the component from its own module: the barrel keeps the editor in the startup bundle.',
+            },
+          ],
           patterns: [
             {
+              group: ['../domain', '../domain/*', './domain', './domain/*'],
+              message: 'Import from @/domain (barrel) instead of relative domain paths.',
+            },
+            {
+              group: ['../data', '../data/*', './data', './data/*'],
+              message: 'Import from @/data instead of relative data paths.',
+            },
+            {
               group: ['./components', './components/*'],
-              message: 'Import from @/components (barrel) instead of relative component paths.',
+              message: 'Import from @/components/<module> instead of relative component paths.',
             },
           ],
         },

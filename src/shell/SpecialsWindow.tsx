@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, NotebookPen, Play, RotateCcw, Sun } from 'lucide-react';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { cast } from '@/data/campaign/cast';
 import { longDay } from '@/data/longDay';
 import { menuById, type Menu, type Special } from '@/data/specials';

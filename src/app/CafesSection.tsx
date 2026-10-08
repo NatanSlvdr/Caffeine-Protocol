@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { Download, Plus, Store } from 'lucide-react';
 import { lessons } from '@/data';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { Button } from '@/shared/ui/Button';
 import { download, saveFileName } from '@/shared/lib/download';
 import {

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, ArrowRight, Check, CircleCheck, CircleX } from 'lucide-react';
-import { BlockLines, Modal, spokenLines } from '@/components';
+import { BlockLines, spokenLines } from '@/components/BlockLines';
+import { Modal } from '@/shared/ui/Modal';
 import { drillIn, drillLines, tryDrill, type Drill } from '@/data/drills';
 import { drillShift, flightIn, flights, type Flight } from '@/data/flights';
 import { kitIn, type Kit } from '@/data/kits';

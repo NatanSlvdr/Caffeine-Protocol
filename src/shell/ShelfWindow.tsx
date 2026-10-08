@@ -9,7 +9,8 @@ import {
   Timer,
   type LucideIcon,
 } from 'lucide-react';
-import { CushionSwatch, Modal, PrintSwatch } from '@/components';
+import { CushionSwatch, PrintSwatch } from '@/components/cafe/DecorSwatches';
+import { Modal } from '@/shared/ui/Modal';
 import { useCafeName, useGame } from '@/state/GameStore';
 import { DECOR_OPTIONS, LOUS_DECOR, decorOf, type Decor, type DecorSpot, type ProgressSave } from '@/domain';
 import { useWords } from '@/shared/language';

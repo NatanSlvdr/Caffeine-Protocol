@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowLeft, CircleCheck, CircleX } from 'lucide-react';
-import { BlockLines, spokenLines } from '@/components';
+import { BlockLines, spokenLines } from '@/components/BlockLines';
 import { momentOf, type Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES, variableLabels } from '@/domain';
 import { CARGO_WORDS } from '@/components/cargoWords';

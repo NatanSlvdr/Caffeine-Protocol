@@ -1,4 +1,4 @@
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { cast } from '@/data/campaign/cast';
 import { guestbook, noteText, type GuestbookNote } from '@/data/campaign/guestbook';
 import { pad2 } from '@/shared/lib/format';

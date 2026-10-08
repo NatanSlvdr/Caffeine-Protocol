@@ -1,5 +1,5 @@
 import { Play } from 'lucide-react';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { memoryIn, type Memory } from '@/data/memories';
 import type { ProgressSave } from '@/domain';
 import { shiftNumber } from '@/domain/unlocks';

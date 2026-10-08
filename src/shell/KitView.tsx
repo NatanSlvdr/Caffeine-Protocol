@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, CircleCheck, CircleX, Undo2 } from 'lucide-react';
-import { BlockLines, spokenLines } from '@/components';
+import { BlockLines, spokenLines } from '@/components/BlockLines';
 import { drillLines, tryDrill } from '@/data/drills';
 import { kitLines, type Kit } from '@/data/kits';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';

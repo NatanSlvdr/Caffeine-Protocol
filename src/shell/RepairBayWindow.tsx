@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { ArrowLeft, CircleCheck, CircleX, RotateCcw, Wrench } from 'lucide-react';
-import { Modal } from '@/components';
+import { Modal } from '@/shared/ui/Modal';
 import { repairIn, type Repair } from '@/data/repairs';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';
 import { exampleHolds, firedActions, TERMINALS, type Terminal, type Wiring } from '@/domain/repair';
