@@ -5,6 +5,8 @@ import { UNLOCKS } from '@/domain/unlocks';
 import type { ExecutionEvent, RobotPrograms, RobotRole } from '@/domain/types';
 import { lessons, levels } from './index';
 import { referencePrograms } from './extension';
+import { predictionsFr } from './drills.fr';
+import { toldIn } from './told';
 
 /**
  * A moment paused in a served shift: one guest, one robot, the block it has just run. The player calls which block
@@ -132,6 +134,9 @@ export const predictions: readonly Prediction[] = [
     why: 'This guest is staying, so the to-go check fails and Brew walks past the lids without taking one.',
   },
 ];
+
+/** A moment in the reader's language: its title and why; the guest, the lines and the answer are the same. */
+export const predictionIn = toldIn(predictions, predictionsFr);
 
 /** The shift's worked example, every robot's routine of it. */
 const worked = (shift: number): RobotPrograms =>

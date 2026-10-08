@@ -5,8 +5,8 @@ const done = (n: number) => (n > 1 ? 'faits' : 'fait');
 
 /**
  * The drills window's words: the list by act and by flight, a flight's progress, and the frame around each drill. A
- * drill's own title, question and idea, a flight's, a kit's rule and why the café turned a pick away are the shifts'
- * words and stay English; so do the blocks, as everywhere.
+ * drill's own title, question and idea, a flight's and a kit's rule are the drill's, told in data/drills.fr.ts; why the
+ * café turned a pick away is the simulation's, and stays English, as the blocks do everywhere.
  */
 export const DRILL_WORDS = words(
   {

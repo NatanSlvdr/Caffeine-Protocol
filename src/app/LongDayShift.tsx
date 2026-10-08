@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
-import { drills } from '@/data/drills';
+import { drillsIn } from '@/data/drills';
 import { longDay, waveThanks } from '@/data/longDay';
 import type { ProgressSave } from '@/domain';
 import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepEndurance, projectEndurance, servedWave } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useUntranslated, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /** Every wave plays as the shift after the campaign's last, like a special, so the day opens on its routines. */
@@ -31,6 +31,7 @@ export function LongDayShift({ number }: { number: number }) {
   const catalog = useMemo(() => [...lessons, wave.lesson], [wave]);
   const say = useWords(SCREEN_WORDS);
   const english = useUntranslated();
+  const [language] = useLanguage();
   return (
     <Workspace
       index={SLOT}
@@ -43,7 +44,7 @@ export function LongDayShift({ number }: { number: number }) {
         thanks: waveThanks(wave.number),
         lang: english,
       }}
-      drills={drills}
+      drills={drillsIn(language)}
       onward={last ? undefined : { next: say.nextWave, stop: say.stop, onStop: () => go('/campaign') }}
       onNext={() => go(last ? '/campaign' : `/${longDay.id}/${wave.number + 1}`)}
       onComplete={(stars, querySource, programs, met) => {

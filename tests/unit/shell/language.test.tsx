@@ -18,8 +18,8 @@ import { REPAIR_WORDS } from '../../../src/shell/repairWords';
 import { SHELF_WORDS } from '../../../src/shell/shelfWords';
 import { KEPT_WORDS } from '../../../src/shell/keptWords';
 import { acts } from '../../../src/shell/rail/acts';
-import { predictions } from '../../../src/data/predictions';
-import { kits } from '../../../src/data/kits';
+import { predictionIn, predictions } from '../../../src/data/predictions';
+import { kitIn, kits } from '../../../src/data/kits';
 import { PANE_WORDS } from '../../../src/components/paneWords';
 import { WORKSPACE_WORDS } from '../../../src/features/workspace/workspaceWords';
 import { OPTIONS_WORDS } from '../../../src/features/workspace/modals/optionsWords';
@@ -130,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories and the repair bay/,
+      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories, the repair bay and the drills/,
     );
   });
 
@@ -439,8 +439,14 @@ describe('the dialogue box in French', () => {
 });
 
 describe('the drills in French', () => {
-  const moment = predictions.find((each) => each.id === 'tea-or-coffee')!;
-  const kit = kits.find((each) => each.id === 'two-ifs')!;
+  const moment = predictionIn(
+    predictions.find((each) => each.id === 'tea-or-coffee')!,
+    'fr',
+  );
+  const kit = kitIn(
+    kits.find((each) => each.id === 'two-ifs')!,
+    'fr',
+  );
   const drills = (served: number) => {
     localStorage.setItem(LANGUAGE_KEY, 'fr');
     window.location.hash = '/campaign';
@@ -451,7 +457,7 @@ describe('the drills in French', () => {
     return screen.getByRole('dialog', { name: 'Exercices.' });
   };
 
-  it('lists the drills in French, with their own names kept as English', () => {
+  it('lists the drills and flights in French', () => {
     const list = within(drills(moment.shift));
     expect(list.getByRole('region', { name: 'Séries, par idée' })).toBeTruthy();
     expect(list.getByRole('region', { name: 'Acte I, Query' })).toBeTruthy();
@@ -459,11 +465,16 @@ describe('the drills in French', () => {
     expect(pick.querySelector('small')!.textContent).toMatch(
       new RegExp(`^Ce qui s’exécute ensuite · Service ${moment.shift} · `),
     );
-    expect(pick.querySelector('strong [lang="en"]')!.textContent).toBe(moment.title);
+    expect(moment.title).toBe('De quel côté du If');
+    expect(pick.querySelector('strong')!.textContent).toBe(moment.title);
+    expect(list.getByRole('button', { name: /^Où va un bloc/ }).textContent).toMatch(
+      /Les mêmes blocs dans un autre ordre font une autre routine\./,
+    );
+    expect(document.querySelector('.drills-window [lang]')).toBeNull();
     expect(document.querySelector('.drills-waiting')!.textContent).toMatch(/^0 fait sur \d+ exercices\./);
   });
 
-  it('calls the next block in French, with the blocks and why kept as they are', () => {
+  it('calls the next block in French, with the blocks kept as they are', () => {
     drills(moment.shift);
     fireEvent.click(screen.getByRole('button', { name: new RegExp(`^${moment.title}`) }));
     const view = within(screen.getByRole('dialog', { name: moment.title }));
@@ -490,7 +501,10 @@ describe('the drills in French', () => {
     expect(document.querySelector('.kit-rule')!.textContent).toBe(
       `Le kit 6 blocs, chacun utilisé une fois · ${kit.rule}`,
     );
-    expect(document.querySelector('.kit-rule em')!.getAttribute('lang')).toBe('en');
+    expect(kit.rule).toBe('Sans Else');
+    expect(document.activeElement!.textContent).toMatch(
+      /^Les clients demandent du thé ou du café, et ce kit n’a pas de Else\./,
+    );
     fireEvent.click(within(view.getByRole('list', { name: 'Le kit' })).getAllByRole('button')[2]);
     expect(document.querySelector('.kit [aria-live]')!.textContent).toBe('If Tea in Orders posé, 1 sur 6.');
     expect(view.getByRole('button', { name: 'Reprendre le dernier bloc' })).toBeTruthy();

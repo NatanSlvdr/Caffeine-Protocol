@@ -300,9 +300,15 @@ Settings say why the café isn't being saved in the reader's language. Of the
 rail's windows, the drills read in French (`shell/drillWords.ts`): the list
 by act and by flight, a flight's progress, and the frame around a gap, a
 moment to call and a kit, with what a robot holds from `cargoWords` and
-`spokenLines` joining blocks in the reader's language. A drill's title,
-question and idea, a flight's, a kit's rule and why the café turned a pick
-away stay English, marked so. Block names, what a guest said and what Query
+`spokenLines` joining blocks in the reader's language. So do the drills
+themselves (`data/drills.fr.ts`, by id: a gap's title, question and idea, a
+moment's title and why, a kit's title, question, rule and idea, and a
+flight's title and idea), laid over the data by `drillIn`, `predictionIn`,
+`kitIn` and `flightIn`, which `toldIn` (`data/told.ts`) builds once per item
+from a catalog by id, so the gaps, choices, moments, tiles and flights'
+drills are the same in either language; `drillsIn` gives Help the gap drills
+to name one from. Why the café turned a pick away is the simulation's, and
+stays English, marked so. Block names, what a guest said and what Query
 heard stay as they are. So do the shelf (`shell/shelfWords.ts`: each
 keepsake's name, goal and story and each look's, by id, with the English
 taken from `keepsakes` and `DECOR_OPTIONS`, and a wrapped keepsake naming
@@ -360,17 +366,17 @@ keeping its speakers, choices and stills, and the cutscene, the rail's
 ticket, the board, the front door and the tab read it, so the answers a café
 saved are the same in either language. French typography is
 `shared/typography.ts` (`typeset`), which the catalogs' `words` and the
-data's French (`sceneIn`, `memoryIn`, `noteText`) both use, with `repairIn`,
-so data can set its French without importing React. `CHALLENGE_WORDS` is a
-catalog too; the generated shift docs read its English. A window whose title
-is still English marks it with `titleLang`. Short repeats is worded once, as
-`SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The
-levels' own data and the stories of the specials and drills are still in
-English, and so is the list of what bringing an old save up to date changed,
-marked so under the notice's French heading. Where English data sits on a
-French screen (a special's name, its story and goal), it carries
-`lang={useUntranslated()}`, so a screen reader says it as English; on an
-English page the attribute is left off. Act names and taglines for the
+data's French (`sceneIn`, `memoryIn`, `noteText`) both use, with `repairIn`
+and `toldIn`, so data can set its French without importing React.
+`CHALLENGE_WORDS` is a catalog too; the generated shift docs read its
+English. A window whose title is still English marks it with `titleLang`.
+Short repeats is worded once, as `SHORT_REPEATS` beside `SettingRow`, for
+Settings and Options both. The levels' own data and the specials' stories
+are still in English, and so is the list of what bringing an old save up to
+date changed, marked so under the notice's French heading. Where English
+data sits on a French screen (a special's name, its story and goal), it
+carries `lang={useUntranslated()}`, so a screen reader says it as English;
+on an English page the attribute is left off. Act names and taglines for the
 tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
 the English-only windows still read. The save checks' refusals are keyed
 (`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field

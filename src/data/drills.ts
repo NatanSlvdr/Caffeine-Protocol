@@ -4,8 +4,11 @@ import { runLevel } from '@/domain/simulation';
 import { UNLOCKS } from '@/domain/unlocks';
 import type { FailureCode } from '@/domain/failures';
 import type { RobotPrograms, RobotRole, RunResult } from '@/domain/types';
+import type { Language } from '@/shared/language';
 import { lessons, levels } from './index';
 import { referencePrograms } from './extension';
+import { drillsFr } from './drills.fr';
+import { toldIn } from './told';
 
 /**
  * A short drill on one idea a shift teaches, kept apart from the campaign: a gap in a shift's worked example, and a
@@ -180,6 +183,14 @@ export const drills: readonly Drill[] = [
     misses: ['open-after-closing'],
   },
 ];
+
+/** A drill in the reader's language: its title, question and idea; the gap, its choices and what it misses are the same. */
+export const drillIn = toldIn(drills, drillsFr);
+
+const french = drills.map((drill) => drillIn(drill, 'fr'));
+
+/** Every gap drill in the reader's language, the same list each time, for Help to name one. */
+export const drillsIn = (language: Language): readonly Drill[] => (language === 'fr' ? french : drills);
 
 /** The shift's worked example, every robot's routine of it. */
 const worked = (shift: number): RobotPrograms =>

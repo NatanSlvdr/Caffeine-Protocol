@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
-import { drills } from '@/data/drills';
+import { drillsIn } from '@/data/drills';
 import type { Special } from '@/data/specials';
 import type { ProgressSave } from '@/domain';
 import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepSpecial, projectSpecial } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useUntranslated, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /** The special plays as the shift after the campaign's last, so it opens on the routines that shift was served with. */
@@ -30,6 +30,7 @@ export function SpecialShift({ special }: { special: Special }) {
   const catalog = useMemo(() => [...lessons, special.lesson], [special]);
   const say = useWords(SCREEN_WORDS);
   const english = useUntranslated();
+  const [language] = useLanguage();
   return (
     <Workspace
       index={SLOT}
@@ -37,7 +38,7 @@ export function SpecialShift({ special }: { special: Special }) {
       update={keep}
       lessons={catalog}
       shift={{ ...special, label: special.card ? say.menuCard : say.special, lang: english }}
-      drills={drills}
+      drills={drillsIn(language)}
       onNext={() => go('/campaign')}
       onComplete={(stars, querySource, programs, met) =>
         keep((s) => ({

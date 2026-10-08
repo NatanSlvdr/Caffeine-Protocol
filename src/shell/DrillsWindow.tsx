@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { ArrowLeft, ArrowRight, Check, CircleCheck, CircleX } from 'lucide-react';
 import { BlockLines, Modal, spokenLines } from '@/components';
-import { drillLines, tryDrill, type Drill } from '@/data/drills';
-import { drillShift, flights, type Flight } from '@/data/flights';
-import type { Kit } from '@/data/kits';
-import type { Prediction } from '@/data/predictions';
+import { drillIn, drillLines, tryDrill, type Drill } from '@/data/drills';
+import { drillShift, flightIn, flights, type Flight } from '@/data/flights';
+import { kitIn, type Kit } from '@/data/kits';
+import { predictionIn, type Prediction } from '@/data/predictions';
 import { ROBOT_DISPLAY_NAMES } from '@/domain';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useUntranslated, useWords } from '@/shared/language';
 import { useCafeName, useNarrative } from '@/state/GameStore';
 import { KitView } from './KitView';
 import { PredictionView } from './PredictionView';
@@ -57,7 +57,7 @@ export function DrillsWindow({
   const cafe = useCafeName();
   const say = useWords(DRILL_WORDS);
   const actWords = useWords(RAIL_WORDS).acts;
-  const english = useUntranslated();
+  const [language] = useLanguage();
   const narrative = useNarrative();
   const [entry, setEntry] = useState<Entry>();
   // A flight being played: its open drills, one after another.
@@ -66,9 +66,9 @@ export function DrillsWindow({
   // flight's.
   const [left, setLeft] = useState<string>();
   const entries: Entry[] = [
-    ...drills.map((item) => ({ kind: 'gap' as const, item })),
-    ...predictions.map((item) => ({ kind: 'next' as const, item })),
-    ...kits.map((item) => ({ kind: 'kit' as const, item })),
+    ...drills.map((item) => ({ kind: 'gap' as const, item: drillIn(item, language) })),
+    ...predictions.map((item) => ({ kind: 'next' as const, item: predictionIn(item, language) })),
+    ...kits.map((item) => ({ kind: 'kit' as const, item: kitIn(item, language) })),
   ].sort((a, b) => a.item.shift - b.item.shift);
   const back = () => {
     setLeft(flying?.flight.id ?? entry?.item.id);
@@ -90,7 +90,6 @@ export function DrillsWindow({
       className="settings-window drills-window"
       kicker={say.kicker(cafe)}
       title={entry ? entry.item.title : say.title}
-      titleLang={entry ? english : undefined}
       onClose={onClose}
       wide
     >
@@ -144,7 +143,7 @@ export function DrillsWindow({
                           onClick={() => setEntry(each)}
                         >
                           <strong>
-                            <span lang={english}>{title}</span>
+                            {title}
                             {done.includes(id) && (
                               <span className="drills-done">
                                 <Check size={14} strokeWidth={3} aria-hidden="true" />
@@ -187,14 +186,15 @@ function FlightList({
   left?: string;
   onFly: (flight: Flight, list: Entry[]) => void;
 }) {
-  const rows = flights.map((flight) => {
+  const [language] = useLanguage();
+  const rows = flights.map((kept) => {
+    const flight = flightIn(kept, language);
     const list = flight.items.flatMap((id) => entries.filter((each) => each.item.id === id));
     const shut = flight.items.filter((id) => !list.some((each) => each.item.id === id));
     return { flight, list, shut, opens: Math.min(...shut.map(drillShift)) };
   });
   const first = rows.find((row) => row.list.length)?.flight;
   const say = useWords(DRILL_WORDS);
-  const english = useUntranslated();
   return (
     <section className="drills-act drills-flights" aria-label={say.flights.label}>
       <h3>{say.flights.head}</h3>
@@ -212,7 +212,7 @@ function FlightList({
                 onClick={() => list.length && onFly(flight, list)}
               >
                 <strong>
-                  <span lang={english}>{flight.title}</span>
+                  {flight.title}
                   {all && (
                     <span className="drills-done">
                       <Check size={14} strokeWidth={3} aria-hidden="true" />
@@ -220,9 +220,7 @@ function FlightList({
                     </span>
                   )}
                 </strong>
-                <span className="drills-flight-idea" lang={english}>
-                  {flight.idea}
-                </span>
+                <span className="drills-flight-idea">{flight.idea}</span>
                 <small>
                   {list.length
                     ? say.flights.progress(ticks, flight.items.length)
@@ -254,11 +252,10 @@ function FlightStep({
 }) {
   const last = step === list.length - 1;
   const say = useWords(DRILL_WORDS).step;
-  const english = useUntranslated();
   return (
     <nav className="flight-step" aria-label={say.label(flight.title, step + 1, list.length)}>
       <span className="flight-step-name">
-        <span lang={english}>{flight.title}</span> · {say.count(step + 1, list.length)}
+        {flight.title} · {say.count(step + 1, list.length)}
       </span>
       <ol className="flight-step-marks" aria-hidden="true">
         {list.map((each, i) => (
@@ -273,7 +270,7 @@ function FlightStep({
           say.end
         ) : (
           <span>
-            {say.next} <span lang={english}>{list[step + 1].item.title}</span>
+            {say.next} {list[step + 1].item.title}
           </span>
         )}
         <ArrowRight size={15} aria-hidden="true" />
@@ -310,7 +307,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
       <button className="drill-back" onClick={onBack}>
         <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="drill-question" tabIndex={-1} ref={question} lang={english}>
+      <p className="drill-question" tabIndex={-1} ref={question}>
         {drill.question}
       </p>
       <figure className="drill-routine">
@@ -353,7 +350,7 @@ function DrillView({ drill, onBack, onDone }: { drill: Drill; onBack: () => void
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>{say.served}</strong> <span lang={english}>{drill.idea}</span>
+              <strong>{say.served}</strong> {drill.idea}
             </p>
           </>
         ) : verdict ? (

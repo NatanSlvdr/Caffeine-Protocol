@@ -8,7 +8,7 @@ import { SettingsWindow } from '@/app/SettingsWindow';
 import { HomePage } from '@/shell/HomePage';
 import { CampaignPage } from '@/shell/CampaignPage';
 import { EndingPage, ScenePage } from '@/shell/StoryPages';
-import { drills } from '@/data/drills';
+import { drillsIn } from '@/data/drills';
 import { memoryById, memoryIn, memoryOpen } from '@/data/memories';
 import { specialById } from '@/data/specials';
 import { longDay } from '@/data/longDay';
@@ -127,7 +127,7 @@ function Shell() {
                 update={update}
                 lessons={lessons}
                 shift={shift}
-                drills={drills}
+                drills={drillsIn(language)}
                 nextShift={index < CAMPAIGN_LENGTH - 1 ? narrative[index + 1].title : undefined}
                 onNext={() => {
                   if (index === CAMPAIGN_LENGTH - 1) go('/ending');

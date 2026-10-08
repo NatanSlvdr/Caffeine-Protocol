@@ -1,6 +1,8 @@
 import { indentSource } from '@/domain/scope';
 import type { RobotRole } from '@/domain/types';
 import { drillRoutine, type DrillLine } from './drills';
+import { kitsFr } from './drills.fr';
+import { toldIn } from './told';
 
 /**
  * A limited kit: a gap in a shift's worked example, and a handful of blocks to fill it with that leave out the one the
@@ -120,6 +122,9 @@ export const kits: readonly Kit[] = [
     idea: 'A Jump at the end of the If’s block goes back to the top for the next order, so the blocks after it are skipped.',
   },
 ];
+
+/** A kit in the reader's language: its title, question, rule and idea; the tiles and the answer are the same. */
+export const kitIn = toldIn(kits, kitsFr);
 
 /**
  * The blocks built so far as they sit in the gap, nested by the routine around them. End shows here, unlike in the

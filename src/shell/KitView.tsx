@@ -71,11 +71,11 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
       <button className="drill-back" onClick={onBack}>
         <ArrowLeft size={15} aria-hidden="true" /> {say.back}
       </button>
-      <p className="drill-question" tabIndex={-1} ref={question} lang={english}>
+      <p className="drill-question" tabIndex={-1} ref={question}>
         {kit.question}
       </p>
       <p className="kit-rule">
-        <strong>{say.kit.name}</strong> {say.kit.each(kit.tiles.length)} · <em lang={english}>{kit.rule}</em>
+        <strong>{say.kit.name}</strong> {say.kit.each(kit.tiles.length)} · <em>{kit.rule}</em>
       </p>
       <figure className="drill-routine">
         <figcaption>
@@ -130,7 +130,7 @@ export function KitView({ kit, onBack, onDone }: { kit: Kit; onBack: () => void;
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>{say.served}</strong> <span lang={english}>{kit.idea}</span>
+              <strong>{say.served}</strong> {kit.idea}
             </p>
           </>
         ) : verdict ? (

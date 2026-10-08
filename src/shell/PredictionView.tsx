@@ -138,7 +138,7 @@ export function PredictionView({
           <>
             <CircleCheck size={18} aria-hidden="true" />
             <p>
-              <strong>{say.next.calledIt}</strong> <span lang={english}>{prediction.why}</span>
+              <strong>{say.next.calledIt}</strong> {prediction.why}
             </p>
           </>
         ) : revealed ? (
@@ -146,8 +146,7 @@ export function PredictionView({
             <CircleX size={18} aria-hidden="true" />
             <p>
               <strong>{say.next.notThisTime}</strong>{' '}
-              {say.next.ran(robot, lettered.get(next)!, spokenLines([lineAt(next)]))}{' '}
-              <span lang={english}>{prediction.why}</span>
+              {say.next.ran(robot, lettered.get(next)!, spokenLines([lineAt(next)]))} {prediction.why}
             </p>
           </>
         ) : null}

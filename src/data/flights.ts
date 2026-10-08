@@ -1,6 +1,8 @@
 import { drills } from './drills';
 import { kits } from './kits';
 import { predictions } from './predictions';
+import { flightsFr } from './drills.fr';
+import { toldIn } from './told';
 
 /**
  * A flight: a few drills on one idea, played one after another, the way a café pours a flight of small cups. Drills of
@@ -61,6 +63,9 @@ export const flights: readonly Flight[] = [
     items: ['two-ifs', 'last-word', 'grinder-if', 'no-call', 'jump-past'],
   },
 ];
+
+/** A flight in the reader's language: its title and idea; its drills are the same. */
+export const flightIn = toldIn(flights, flightsFr);
 
 const shifts = new Map([...drills, ...predictions, ...kits].map((each) => [each.id, each.shift]));
 
