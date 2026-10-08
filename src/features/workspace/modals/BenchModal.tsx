@@ -11,11 +11,13 @@ import {
   benchSeed,
   benchTicket,
   freshGuest,
+  insteadOf,
   ROBOT_DISPLAY_NAMES,
   type BenchEase,
   type BenchGuest,
   type BenchKit,
   type BenchOrder,
+  type BenchSoldOut,
   type Customer,
   type ExpectedTicket,
   type LevelDefinition,
@@ -231,7 +233,15 @@ function GuestRow({
   // What the guest should get, once they ask for nothing the shift hasn't taught; when they come in is checked apart.
   const fits = benchProblems(kit, [{ ...guest, after: 0 }]).length === 0;
   const together = !!guest.together && guest.orders.length > 1;
-  const tickets = fits ? guest.orders.map((order) => benchTicket(kit, order, together)) : [];
+  // A guest whose drink has run out gets the other one, or nothing, once Query asks.
+  const tickets = !fits
+    ? []
+    : guest.soldOut
+      ? guest.soldOut === 'switch'
+        ? [benchTicket(kit, insteadOf(guest.orders[0]))]
+        : []
+      : guest.orders.map((order) => benchTicket(kit, order, together));
+  const asks = guest.mumbles || !!guest.soldOut;
   const says = benchSays(guest.orders, together);
   return (
     <li className="bench-guest">
@@ -328,9 +338,9 @@ function GuestRow({
           </div>
         );
       })}
-      {(kit.most > 1 || kit.mumble || kit.together) && (
+      {(kit.most > 1 || kit.mumble || kit.together || kit.soldOut) && (
         <div className="bench-guest-more">
-          {kit.most > 1 && !guest.mumbles && guest.orders.length < kit.most && (
+          {kit.most > 1 && !asks && guest.orders.length < kit.most && (
             <button
               type="button"
               className="bench-link"
@@ -354,7 +364,7 @@ function GuestRow({
               {words.together}
             </label>
           )}
-          {kit.mumble && (
+          {kit.mumble && !guest.soldOut && (
             <label className="bench-mark">
               <input
                 type="checkbox"
@@ -370,6 +380,25 @@ function GuestRow({
               />
               {words.mumbles}
             </label>
+          )}
+          {kit.soldOut && !guest.mumbles && (
+            <select
+              aria-label={words.soldOut.label(n)}
+              value={guest.soldOut ?? ''}
+              onChange={(e) => {
+                const soldOut = (e.target.value || undefined) as BenchSoldOut | undefined;
+                // A guest whose drink has run out asked for one drink, and orders it alone.
+                onChange({
+                  ...guest,
+                  soldOut,
+                  ...(soldOut && { orders: guest.orders.slice(0, 1), together: undefined }),
+                });
+              }}
+            >
+              <option value="">{words.soldOut.in}</option>
+              <option value="switch">{words.soldOut.switch}</option>
+              <option value="leave">{words.soldOut.leave}</option>
+            </select>
           )}
         </div>
       )}
@@ -389,12 +418,16 @@ function GuestRow({
             {words.says[1]}
           </>
         )}
-        {tickets.length > 0 && (
+        {fits && (tickets.length > 0 || guest.soldOut) && (
           <>
             {' '}
             · {words.shouldGet}{' '}
-            <strong>{tickets.map((ticket) => ticketWords(ticket, words.ticket)).join(` ${words.ticket.and} `)}</strong>
-            {guest.mumbles && words.onceHelped(ROBOT_DISPLAY_NAMES.query)}
+            <strong>
+              {tickets.length
+                ? tickets.map((ticket) => ticketWords(ticket, words.ticket)).join(` ${words.ticket.and} `)
+                : words.soldOut.nothing}
+            </strong>
+            {asks && words.onceHelped(ROBOT_DISPLAY_NAMES.query)}
           </>
         )}
       </p>

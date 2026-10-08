@@ -27,7 +27,7 @@ const rulesFor = (config: ExtensionShiftConfig): ShiftRules => ({
 
 /**
  * Query reference for extension shifts: the Act I finale, plus the marks and the stop an Act IV rule
- * needs. Marks go on each sheet just before it's handed over.
+ * needs. Marks go on each sheet just before it's handed over, and a sold-out order is asked about as a mumble is.
  */
 export function queryReference(rules: ShiftRules): string {
   const marks = (['togo', 'rush', 'together'] as const).filter(
@@ -43,6 +43,11 @@ export function queryReference(rules: ShiftRules): string {
       ].join('\n'),
     );
   if (rules.closing) source = source.replace('LISTEN\n', 'LISTEN\nIF closed IN CUSTOMER SPEECH\n  STOP\nEND\n');
+  if (rules.soldOut)
+    source = source.replace(
+      'IF ambiguous IN CUSTOMER SPEECH\n',
+      'IF ambiguous IN CUSTOMER SPEECH OR soldout IN CUSTOMER SPEECH\n',
+    );
   return source;
 }
 

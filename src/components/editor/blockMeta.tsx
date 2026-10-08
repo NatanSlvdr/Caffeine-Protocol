@@ -26,6 +26,7 @@ export const conditionLabels: Record<string, string> = {
   togo: 'To go',
   rush: 'Rush',
   together: 'Together',
+  soldout: 'Sold out',
   closed: 'Closed',
   item: 'item',
   'CUSTOMER SPEECH': 'Orders',

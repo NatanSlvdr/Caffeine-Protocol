@@ -33,6 +33,7 @@ const TOKENS = new Set([
   'negation',
   'number',
   'rush',
+  'soldout',
   'sugar',
   'tea',
   'together',
@@ -115,6 +116,8 @@ function collectHeardOrderErrors(order: unknown, context: string): string[] {
     if (tokens.length !== 1) errors.push(`${context}: 'ambiguous' must be the only token`);
     if (raw.number !== undefined) errors.push(`${context}: 'ambiguous' orders carry no number`);
   }
+  if (tokens.includes('soldout') && !tokens.includes('coffee') && !tokens.includes('tea'))
+    errors.push(`${context}: 'soldout' goes with the drink that has run out`);
   return errors;
 }
 
@@ -158,18 +161,32 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
   clarificationHeard.forEach((order, orderIndex) => {
     errors.push(...collectHeardOrderErrors(order, `${context}.clarification_heard_orders[${orderIndex}]`));
     const tokens = (isRecord(order) ? (order as HeardOrderLike).tokens : undefined) as string[] | undefined;
-    if (Array.isArray(tokens) && tokens.includes('ambiguous'))
+    if (Array.isArray(tokens) && (tokens.includes('ambiguous') || tokens.includes('soldout')))
       errors.push(`${context}.clarification_heard_orders[${orderIndex}]: clarification must be concrete`);
   });
 
-  const isAmbiguous = heard.some(
-    (order) =>
-      isRecord(order) &&
-      Array.isArray((order as HeardOrderLike).tokens) &&
-      ((order as HeardOrderLike).tokens as string[]).includes('ambiguous'),
-  );
+  const heardWith = (token: string) =>
+    heard.some(
+      (order) =>
+        isRecord(order) &&
+        Array.isArray((order as HeardOrderLike).tokens) &&
+        ((order as HeardOrderLike).tokens as string[]).includes(token),
+    );
+  const isAmbiguous = heardWith('ambiguous'),
+    isSoldOut = heardWith('soldout');
   const expected = (customer.expected ?? {}) as TicketLike & { tickets?: unknown[] };
-  if (isAmbiguous) {
+  // A guest whose drink has run out is asked what they'd have instead: the other drink, or nothing and no ticket.
+  const goesWithout = isSoldOut && clarificationHeard.length === 0;
+  if (isSoldOut) {
+    if (heard.length !== 1) errors.push(`${context}: a sold-out drink is asked for alone`);
+    if (typeof customer.clarification !== 'string' || customer.clarification.trim().length === 0)
+      errors.push(`${context}: sold-out customers require a non-empty clarification`);
+    if (clarificationHeard.length > 1) errors.push(`${context}: sold-out customers have one drink instead, or none`);
+    if (expected.ask_help !== true) errors.push(`${context}: sold-out customers require expected.ask_help`);
+    if (expected.tickets !== undefined) errors.push(`${context}: sold-out customers never carry grouped tickets`);
+    if (goesWithout && expected.item !== undefined)
+      errors.push(`${context}: a customer who goes without expects no drink`);
+  } else if (isAmbiguous) {
     if (typeof customer.clarification !== 'string' || customer.clarification.trim().length === 0)
       errors.push(`${context}: ambiguous customers require a non-empty clarification`);
     if (clarificationHeard.length === 0)
@@ -188,7 +205,7 @@ function collectCustomerErrors(customer: Customer, index: number, seedId: string
 
   const hasItem = expected.item !== undefined;
   const hasTickets = expected.tickets !== undefined;
-  if (hasItem === hasTickets) errors.push(`${context}: expected needs exactly one of item or tickets`);
+  if (hasItem === hasTickets && !goesWithout) errors.push(`${context}: expected needs exactly one of item or tickets`);
   if (hasItem && expected.item !== 'coffee' && expected.item !== 'tea')
     errors.push(`${context}: expected item must be coffee or tea`);
   if (hasItem && heard.length !== 1) errors.push(`${context}: single orders pair with exactly one heard order`);

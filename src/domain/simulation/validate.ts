@@ -24,10 +24,15 @@ export function validate(customer: Customer, actual: CustomerExecution): Failure
         ? undefined
         : { code: 'open-after-closing', reason: 'It’s closing time: Stop Query instead of waiting for more guests.' };
   if (expected.ask_help && !actual.asked_help)
-    return {
-      code: 'help-needed',
-      reason: 'This order was too unclear to write down: Query had to ask for help first.',
-    };
+    return customer.heard_orders.some((order) => order.tokens.includes('soldout'))
+      ? {
+          code: 'sold-out',
+          reason: 'What they asked for is sold out: Query had to ask what they’d like instead.',
+        }
+      : {
+          code: 'help-needed',
+          reason: 'This order was too unclear to write down: Query had to ask for help first.',
+        };
   if (!expected.ask_help && actual.asked_help)
     return { code: 'help-unneeded', reason: 'Query asked for help on an order it could read just fine.' };
   if (expected.ask_help && !tickets.length)
@@ -80,6 +85,7 @@ const SLIP_SOURCES: Partial<Record<FailureCode, (command: string) => boolean>> =
   'ticket-item': writesItem,
   'help-needed': writesItem,
   'guessed-drink': writesItem,
+  'sold-out': writesItem,
   'help-unneeded': (command) => command === 'HELP',
   'ticket-count': isHandOver,
   'no-ticket': isHandOver,

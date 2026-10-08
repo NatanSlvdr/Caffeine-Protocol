@@ -33,6 +33,8 @@ export interface ShiftRules {
    * when the last cup is cleared.
    */
   fresh?: boolean;
+  /** A drink runs out: Query asks with Help what a guest who asked for it will have instead. */
+  soldOut?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {

@@ -59,6 +59,14 @@ export const BENCH_WORDS = words(
     another: 'Another drink',
     together: 'Orders together',
     mumbles: 'Mumbles first',
+    /** Whether what a guest asks for has run out, and what they have instead. */
+    soldOut: {
+      label: (guest: number) => `Guest ${guest}: is their drink in?`,
+      in: 'Their drink is in',
+      switch: 'Sold out: has the other',
+      leave: 'Sold out: goes without',
+      nothing: 'nothing',
+    },
     /** What a guest says, around their quoted words: “Says “Tea”” or, mumbling first, the usual then the order. */
     says: ['Says “', '”'] as [string, string],
     mumbled: ['Mumbles “', '”, then says “', '” once asked'] as [string, string, string],
@@ -130,6 +138,13 @@ export const BENCH_WORDS = words(
     another: 'Une autre boisson',
     together: 'Commande le tout ensemble',
     mumbles: 'Marmonne d’abord',
+    soldOut: {
+      label: (guest) => `Client ${guest} : reste-t-il sa boisson ?`,
+      in: 'Il reste sa boisson',
+      switch: 'Épuisée : prend l’autre',
+      leave: 'Épuisée : repart sans rien',
+      nothing: 'rien',
+    },
     says: ['Dit « ', ' »'],
     mumbled: ['Marmonne « ', ' », puis dit « ', ' » une fois interrogé'],
     shouldGet: 'Doit recevoir',

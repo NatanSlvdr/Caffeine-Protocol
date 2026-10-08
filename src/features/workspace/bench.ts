@@ -27,11 +27,17 @@ function readOrder(value: unknown): BenchOrder | undefined {
 
 function readGuest(value: unknown): BenchGuest | undefined {
   if (!value || typeof value !== 'object') return undefined;
-  const { orders, mumbles, after } = value as Record<string, unknown>;
+  const { orders, mumbles, together, soldOut, after } = value as Record<string, unknown>;
   if (!Array.isArray(orders) || typeof after !== 'number') return undefined;
   const read = orders.map(readOrder);
   if (!read.every(Boolean)) return undefined;
-  return { orders: read as BenchOrder[], ...(mumbles === true && { mumbles }), after };
+  return {
+    orders: read as BenchOrder[],
+    ...(mumbles === true && { mumbles }),
+    ...(together === true && { together }),
+    ...((soldOut === 'switch' || soldOut === 'leave') && { soldOut }),
+    after,
+  };
 }
 
 function readAll(): Record<string, unknown> {

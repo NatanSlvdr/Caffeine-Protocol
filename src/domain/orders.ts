@@ -8,13 +8,19 @@ export interface IconOrder {
   toGo?: boolean;
   rush?: boolean;
   together?: boolean;
+  /** Heard only: the guest asked for a drink that has run out. */
+  soldOut?: boolean;
 }
+
+/** What tells one kind of drink in an order from another: two orders with the same key are grouped. */
+export const orderKey = (order: IconOrder) =>
+  `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}:${!!order.together}:${!!order.soldOut}`;
 
 /** Group identical drinks without merging different sugar preferences. */
 export function groupOrders(orders: IconOrder[]): (IconOrder & { quantity: number })[] {
   const groups = new Map<string, IconOrder & { quantity: number }>();
   for (const order of orders) {
-    const key = `${order.item ?? 'ambiguous'}:${order.sugar ?? 0}:${!!order.toGo}:${!!order.rush}:${!!order.together}`;
+    const key = orderKey(order);
     const previous = groups.get(key);
     groups.set(key, { ...order, quantity: (previous?.quantity ?? 0) + (order.quantity ?? 1) });
   }
@@ -41,5 +47,6 @@ export function heardToIconOrders(heard: HeardOrder[]): IconOrder[] {
     toGo: order.tokens.includes('togo'),
     rush: order.tokens.includes('rush'),
     together: order.tokens.includes('together'),
+    soldOut: order.tokens.includes('soldout'),
   }));
 }

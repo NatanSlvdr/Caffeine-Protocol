@@ -88,6 +88,8 @@ export type FailureCode =
   | 'help-unneeded'
   /** Query wrote a drink nobody could clarify. */
   | 'guessed-drink'
+  /** Query wrote down a drink that’s sold out, instead of asking what the guest would have. */
+  | 'sold-out'
   /** Query stopped after one guest. */
   | 'stopped-listening'
   // Brew's kitchen.

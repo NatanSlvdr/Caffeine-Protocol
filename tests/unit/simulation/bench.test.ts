@@ -354,3 +354,64 @@ describe('a bench for a table that orders together', () => {
     });
   });
 });
+
+describe('a bench where a drink runs out', () => {
+  const special = specialById('sold-out')!;
+  const kit = benchKit(special.level);
+  const tea: BenchGuest = { orders: [{ drink: 'tea', sugar: 1 }], soldOut: 'switch', after: 0 };
+
+  /** A bench of the special's, served with its reference routines. */
+  function serveSoldOut(guests: BenchGuest[], programs: RobotPrograms = special.lesson.robotSolution) {
+    const bench = { ...special.level, seeds: [benchSeed(kit, guests)] };
+    return runLevel(bench, compileProgram(programs.query, shiftNumber(special.level.id)), programs);
+  }
+
+  it('is offered only where a drink runs out, apart from a guest who mumbles', () => {
+    expect(kit.soldOut).toBe(true);
+    expect(kit.mumble).toBe(true);
+    expect(benchKit(levels[20]).soldOut).toBe(false);
+    expect(benchProblems(benchKit(levels[20]), [tea])).toEqual([
+      'Guest 1 asks for a drink that’s run out, and none runs out on this shift.',
+    ]);
+    expect(benchProblems(kit, [{ ...tea, orders: [...tea.orders, { drink: 'coffee', sugar: 0 }] }])).toContain(
+      'Guest 1 asks for a drink that’s run out, so asks for one.',
+    );
+    expect(benchProblems(kit, [{ ...tea, mumbles: true }])).toEqual([
+      'Guest 1 mumbles, so nobody knows yet what they’ll ask for.',
+    ]);
+  });
+
+  it('hears the special’s own guests as the special does, and serves them', () => {
+    for (const seed of special.level.seeds) {
+      const guests = benchGuests(seed.customers);
+      expect(guests.filter((guest) => guest.soldOut).map((guest) => guest.soldOut)).toEqual(
+        expect.arrayContaining(['switch', 'leave']),
+      );
+      expect(guests.filter((guest) => guest.mumbles)).toHaveLength(1);
+      const bench = benchSeed(kit, guests).customers;
+      expect(bench.map((c) => c.heard_orders)).toEqual(seed.customers.map((c) => c.heard_orders));
+      expect(bench.map((c) => c.clarification)).toEqual(seed.customers.map((c) => c.clarification));
+      expect(bench.map((c) => c.expected)).toEqual(seed.customers.map((c) => c.expected));
+      expect(serveSoldOut(guests).passed).toBe(true);
+    }
+  });
+
+  it('asks for the drink that has run out, and expects the other one the same way, or nothing', () => {
+    const [switches, leaves] = benchSeed(kit, [tea, { ...tea, soldOut: 'leave', after: 5 }]).customers;
+    expect(switches).toMatchObject({
+      phrase: 'Tea, 1 sugar',
+      heard_orders: [{ tokens: ['tea', 'sugar', 'number', 'soldout'], number: 1 }],
+      clarification: 'Tea’s sold out. They’ll have coffee, 1 sugar.',
+      clarification_heard_orders: [{ tokens: ['coffee', 'sugar', 'number'], number: 1 }],
+      expected: { item: 'coffee', sugar_count: 1, ask_help: true },
+    });
+    expect(leaves).toMatchObject({
+      clarification: 'Tea’s sold out. They’ll come back for one tomorrow.',
+      clarification_heard_orders: [],
+      expected: { ask_help: true },
+    });
+    expect(serveSoldOut([tea, { ...tea, soldOut: 'leave', after: 5 }]).passed).toBe(true);
+    const shift21 = referenceProgramsFor(21);
+    expect(serveSoldOut([tea], shift21).first_failure?.code).toBe('sold-out');
+  });
+});

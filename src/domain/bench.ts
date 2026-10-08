@@ -26,12 +26,20 @@ export interface BenchOrder {
   rush?: boolean;
 }
 
+/** What a guest whose drink has run out has instead: the other drink, asked for the same way, or nothing. */
+export type BenchSoldOut = 'switch' | 'leave';
+
 /** A bench guest: what they ask for, whether they mumble it first, and how long after the guest before they come in. */
 export interface BenchGuest {
   orders: BenchOrder[];
   mumbles?: boolean;
   /** A table that orders together: its drinks come on one visit. Only a guest asking for two or more can. */
   together?: boolean;
+  /**
+   * What they asked for has run out: Niko finds out they'll have the other drink, the same way, or nothing after all.
+   * Only a guest asking for one drink can.
+   */
+  soldOut?: BenchSoldOut;
   /** Seconds after the guest before; the first guest comes in as the café opens, so theirs is 0. */
   after: number;
 }
@@ -47,6 +55,8 @@ export interface BenchKit {
   rush: boolean;
   /** Whether a table orders together. */
   together: boolean;
+  /** Whether a drink runs out, and guests are asked what they'll have instead. */
+  soldOut: boolean;
   /** How far apart the shift's guests come in, at the closest. */
   gap: number;
   /** What a ticket says about each way of asking for sugar, copied from a guest of the shift who asked that way. */
@@ -70,6 +80,8 @@ function sugarOf(order: HeardOrder): BenchSugar {
   if (order.tokens.includes('negation')) return 'without';
   return order.tokens.includes('sugar') ? 'with' : 'plain';
 }
+
+const isSoldOut = (customer: Customer) => customer.heard_orders.some((order) => order.tokens.includes('soldout'));
 
 /** A customer's orders as heard, each with the ticket it should come out as. */
 function ordersOf(customer: Customer): { heard: HeardOrder; ticket: ExpectedTicket }[] {
@@ -100,10 +112,11 @@ export function benchKit(level: LevelDefinition): BenchKit {
     drinks,
     sugars: [...new Set(orders.map(({ heard }) => sugarOf(heard)))].sort((a, b) => SUGAR_ORDER(a) - SUGAR_ORDER(b)),
     most: Math.max(1, ...customers.map((customer) => ordersOf(customer).length)),
-    mumble: customers.some((customer) => customer.expected.ask_help),
+    mumble: customers.some((customer) => customer.expected.ask_help && !isSoldOut(customer)),
     toGo: orders.some(({ heard }) => heard.tokens.includes('togo')),
     rush: orders.some(({ heard }) => heard.tokens.includes('rush')),
     together: orders.some(({ heard }) => heard.tokens.includes('together')),
+    soldOut: customers.some(isSoldOut),
     gap: gaps.length ? Math.max(1, Math.min(...gaps)) : 8,
     tickets,
   };
@@ -113,13 +126,18 @@ export function benchKit(level: LevelDefinition): BenchKit {
 export function benchGuests(customers: readonly Customer[]): BenchGuest[] {
   const guests = customers.filter((customer) => !customer.expected.closing);
   return guests.map((customer, i) => ({
-    orders: ordersOf(customer).map(({ heard }) => ({
-      drink: heard.tokens.includes('tea') ? 'tea' : 'coffee',
-      sugar: sugarOf(heard),
-      ...(heard.tokens.includes('togo') && { toGo: true }),
-      ...(heard.tokens.includes('rush') && { rush: true }),
-    })),
-    ...(customer.expected.ask_help && { mumbles: true }),
+    // A guest whose drink ran out asked for it all the same.
+    orders: (isSoldOut(customer) ? customer.heard_orders : ordersOf(customer).map(({ heard }) => heard)).map(
+      (heard) => ({
+        drink: heard.tokens.includes('tea') ? 'tea' : 'coffee',
+        sugar: sugarOf(heard),
+        ...(heard.tokens.includes('togo') && { toGo: true }),
+        ...(heard.tokens.includes('rush') && { rush: true }),
+      }),
+    ),
+    ...(isSoldOut(customer)
+      ? { soldOut: customer.clarification_heard_orders?.length ? ('switch' as const) : ('leave' as const) }
+      : customer.expected.ask_help && { mumbles: true }),
     ...(ordersOf(customer).some(({ heard }) => heard.tokens.includes('together')) && { together: true }),
     after: i === 0 ? customer.arrival : customer.arrival - guests[i - 1].arrival,
   }));
@@ -149,6 +167,13 @@ export function benchProblems(kit: BenchKit, guests: readonly BenchGuest[]): str
       problems.push(`${who} asks for ${guest.orders.length} drinks; guests on this shift ask for ${kit.most} at most.`);
     if (guest.mumbles && !kit.mumble) problems.push(`${who} mumbles, and nobody mumbles on this shift.`);
     if (guest.mumbles && guest.orders.length > 1) problems.push(`${who} mumbles, so asks for one drink.`);
+    if (guest.soldOut && !kit.soldOut)
+      problems.push(`${who} asks for a drink that’s run out, and none runs out on this shift.`);
+    if (guest.soldOut && guest.orders.length > 1)
+      problems.push(`${who} asks for a drink that’s run out, so asks for one.`);
+    if (guest.soldOut && guest.mumbles) problems.push(`${who} mumbles, so nobody knows yet what they’ll ask for.`);
+    if (guest.soldOut === 'switch' && kit.drinks.length < 2)
+      problems.push(`${who} would have the other drink, and this shift only has one.`);
     for (const order of guest.orders) {
       if (!kit.drinks.includes(order.drink)) problems.push(`${who} asks for ${order.drink}, not on this shift.`);
       if (!kit.sugars.includes(order.sugar)) problems.push(`${who} asks for sugar a way nobody on this shift does.`);
@@ -159,6 +184,12 @@ export function benchProblems(kit: BenchKit, guests: readonly BenchGuest[]): str
   });
   return problems;
 }
+
+/** What a guest whose drink has run out has instead: the other drink, asked for the same way. */
+export const insteadOf = (order: BenchOrder): BenchOrder => ({
+  ...order,
+  drink: order.drink === 'tea' ? 'coffee' : 'tea',
+});
 
 /** One order in words, the way the shift's own guests say theirs. */
 function benchPhrase(order: BenchOrder): string {
@@ -231,6 +262,25 @@ export function benchSeed(kit: BenchKit, guests: readonly BenchGuest[]): Validat
     const heard = guest.orders.map((order) => heardOf(order, together));
     const said = benchSays(guest.orders, together);
     const base = { customer_id: `B${i + 1}`, arrival };
+    if (guest.soldOut) {
+      const [order] = guest.orders;
+      const instead = insteadOf(order);
+      const ticket = benchTicket(kit, instead);
+      const sold = `${order.drink[0].toUpperCase()}${order.drink.slice(1)}’s sold out.`;
+      const switches = guest.soldOut === 'switch';
+      return {
+        ...base,
+        phrase: said,
+        heard_orders: [{ ...heard[0], tokens: [...heard[0].tokens, 'soldout'] }],
+        intent: intentOf(tickets[0]),
+        clarification: switches
+          ? `${sold} They’ll have ${benchPhrase(instead)}.`
+          : `${sold} They’ll come back for one tomorrow.`,
+        clarification_heard_orders: switches ? [heardOf(instead)] : [],
+        ...(switches && { clarification_intent: intentOf(ticket) }),
+        expected: switches ? { ...ticket, ask_help: true } : { ask_help: true },
+      };
+    }
     if (guest.mumbles)
       return {
         ...base,

@@ -2011,6 +2011,10 @@ html[data-motion='reduced'] .execution-line-highlight {
 .order-mark.together {
   background: var(--yellow);
 }
+.order-mark.sold-out {
+  background: var(--ink);
+  color: var(--cream);
+}
 
 /* One draggable assignment, with two inset tiles and an unboxed equals sign. */
 .editor-panel .code-row .block:has(.assignment-operands) {

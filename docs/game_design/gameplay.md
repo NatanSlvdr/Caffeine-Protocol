@@ -205,6 +205,22 @@ Query faster and leaves it out. `tests/unit/simulation/fresh.test.ts` serves
 the reference and the way in for every star, and turns away Shift 21's
 routines, a Porter that waits at the table, and one that batches two drinks.
 
+Juno's morning without a delivery (The Last of the Tea) is the one special
+where a drink runs out. The tin holds three cups' worth (`TEA_LEFT`), and every
+tea asked for after them is heard with the `soldout` token. Query can't write
+down a drink that isn't there: `IF soldout IN CUSTOMER SPEECH` then `HELP` asks
+what the guest would like instead, and the answer replaces what was heard, as
+with a mumble. Some have a coffee with the same sugar; some come back for one
+tomorrow and get no ticket at all, which is right. Twelve guests come five
+seconds apart, and one mumbles, so asking only about what's sold out guesses at
+that guest. Shift 21's routines write down the tea and fail as sold out; adding
+one OR to the condition that already asks about mumbles serves every star. A
+bench on the special asks of each tea or coffee whether it is in, or sold out
+with the guest having the other drink or going without, and works out the
+clarification and the ticket from that. `tests/unit/simulation/sold-out.test.ts`
+serves the reference and the way in, and turns away Shift 21's routines and a
+Query that asks only about what's sold out.
+
 A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
 cards side by side on the specials board before any is served, each a special
 of its own with its own save entry and stars: what is on the board, who comes

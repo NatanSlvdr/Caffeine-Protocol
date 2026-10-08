@@ -22,6 +22,7 @@ const tokenUnlocks: Record<string, number> = {
   rush: UNLOCKS.rush,
   closed: UNLOCKS.closing,
   together: UNLOCKS.together,
+  soldout: UNLOCKS.soldOut,
 };
 function comparisonUnlocked(command: string, level: number) {
   const expression = parseConditionExpression(command);

@@ -250,6 +250,84 @@ function knittingCircle(): Special {
   };
 }
 
+/** How many teas the tin has left at Juno's: every tea asked for after them is sold out. */
+export const TEA_LEFT = 3;
+
+/**
+ * Juno's morning without a delivery: guests in a row, drinks alternating and sugar cycling, one mumbling, and the tea
+ * running out after the tin's last cups. A guest who asks for tea after that has a coffee the same way, or goes
+ * without, in turn. Shift 21's Query asks only about orders nobody caught, so it writes down a tea that isn't there.
+ */
+function lastOfTheTea(): Special {
+  const rules: ShiftRules = { soldOut: true };
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-sold-out`,
+    title: 'The Last of the Tea',
+    summary:
+      'The tea runs out before the morning does, and every guest who asks for one is asked what they’d have instead.',
+    rules,
+    service: {},
+    rounds: [0, 1, 2].map((round) => {
+      let teas = 0,
+        sold = 0;
+      return arriving(12, 5, (n) => {
+        const order = { drink: (n + round) % 2 ? ('tea' as const) : ('coffee' as const), sugar: (n + 2 * round) % 3 };
+        if (order.drink === 'tea' && ++teas > TEA_LEFT)
+          return { orders: [order], soldOut: sold++ % 2 ? ('leave' as const) : ('switch' as const) };
+        return { orders: [order], ...(n === 2 && { mumbles: true }) };
+      });
+    }),
+    // Fair to the way most players in: Shift 21's routines, once Query asks about a sold-out drink as it does about an
+    // order nobody caught. Two blocks above theirs, and a tenth more instructions, as for the reading group.
+    targets: { blocks: 110, instructions: 2593 },
+  });
+  return {
+    id: 'sold-out',
+    title: level.title,
+    by: 'juno',
+    hint: 'Ask before you write.',
+    thanks: 'Thank you. The delivery comes tomorrow, I promise.',
+    level,
+    lesson: {
+      note: 'The tea runs out after the tin’s last three cups. Query hears Sold out with every tea asked for after that: If Sold out IN Customer speech, Help asks Niko what the guest will have instead, and Query writes that down. A coffee the same way, or nothing at all, and then no ticket.',
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: {
+      story:
+        'The tea delivery is stuck behind the market lorries until tomorrow, and Juno has counted three cups’ worth left in the tin.',
+      objective:
+        'Serve every guest and clear every table. A guest who asks for a drink that’s sold out is asked what they’d have instead, before anything is written down.',
+      concept:
+        'A routine asks when it can’t know. An order that can’t be made is as unclear as one nobody caught: the same Help, for another reason.',
+    },
+    intro: [
+      line('', 'Monday morning. The tea delivery is stuck behind the market lorries until tomorrow.'),
+      line('juno:worried', 'There’s three cups’ worth left in the tin. I checked twice.'),
+      line('juno', 'People will still ask for tea. Please don’t just hand them a coffee.'),
+      line(
+        'niko',
+        'Once the tin’s empty, Query hears it with the order: [IF soldout IN CUSTOMER SPEECH|If Sold out IN Orders].',
+      ),
+      line(
+        'niko',
+        'Then it asks me with [HELP|Help], as for an order nobody caught, and I find out what they’d like instead. A coffee the same way, or nothing at all.',
+      ),
+      line('niko:worried', 'Never a coffee nobody asked for, and never a tea we haven’t got.'),
+      line('query', '*bip* Ask first. Then write. Understood.'),
+    ],
+    outro: [
+      line(
+        'juno:happy',
+        'Everyone was asked, and nobody got a coffee they didn’t want. I had the last cup, by the way.',
+      ),
+      line('query', '*bip bip* Tin: empty. Guests: asked.'),
+    ],
+  };
+}
+
 /** A menu's own words, for its place on the specials board: it shows once, with its cards behind it. */
 export interface Menu {
   id: string;
@@ -313,8 +391,8 @@ export function benchShift(spec: {
   rounds: BenchGuest[][];
   targets: { blocks: number; instructions: number };
 }): { level: LevelDefinition; solution: RobotPrograms } {
-  // Shift 21 has no table that orders together; a shift whose rules bring one has them.
-  const kit = { ...finaleKit(), together: !!spec.rules.together };
+  // Shift 21 has no table that orders together, and no drink runs out; a shift whose rules bring one has them.
+  const kit = { ...finaleKit(), together: !!spec.rules.together, soldOut: !!spec.rules.soldOut };
   const solution: RobotPrograms = {
     query: queryReference(spec.rules),
     prep: preparationSource(TOOLKIT, 1, spec.rules),
@@ -486,7 +564,7 @@ const saturdayMenu: Special[] = [
   }),
 ];
 
-export const specials: readonly Special[] = [readingGroup(), knittingCircle(), ...saturdayMenu];
+export const specials: readonly Special[] = [readingGroup(), knittingCircle(), lastOfTheTea(), ...saturdayMenu];
 
 /** The menus chalked up for the specials board, each with its cards behind it. */
 const menus: readonly Menu[] = [SATURDAY];

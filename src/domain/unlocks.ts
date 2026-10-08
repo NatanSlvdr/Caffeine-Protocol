@@ -43,6 +43,11 @@ export const UNLOCKS = {
    * on one visit.
    */
   together: 22,
+  /**
+   * A drink run out for the day: Query hears Sold out with the order, and asks with Help what the guest would have
+   * instead. Every special has it, as every special has Together.
+   */
+  soldOut: 22,
 } as const;
 
 /**

@@ -41,6 +41,7 @@ Query's part of the campaign, by shift (see [docs/campaign/](../campaign/README.
 - Shifts 9–16: Query keeps the counter while Brew and Porter are programmed.
 - Shifts 17–21: drinks to go, customers in a rush and closing time add the `togo`, `rush` and `closed` tokens.
 - The Together special, after the campaign: a table that orders for itself adds the `together` token, written on each of its tickets.
+- The Last of the Tea special: a tea asked for once the tin is empty is heard with the `soldout` token. HELP asks what the guest would like instead; the clarification names the other drink, or no drink at all, in which case the guest rightly gets no ticket.
 
 ## Ticket data and validation
 
@@ -52,7 +53,7 @@ Query takes paper from the stack beside the register, writes only while holding 
 
 ## Ambiguity
 
-`IF ambiguous IN item` followed by `HELP` asks Niko for clarification before taking paper or entering the order loop. Campaign data supplies `clarification` and `clarification_heard_orders`; HELP replaces the entire heard collection and the implicit current item. The bubble reveals the clarification only after HELP completes. An unresolved request produces no tickets and allows the program to resume at the next customer. Taking paper for ambiguous speech fails.
+`IF ambiguous IN item` followed by `HELP` asks Niko for clarification before taking paper or entering the order loop. Campaign data supplies `clarification` and `clarification_heard_orders`; HELP replaces the entire heard collection and the implicit current item. The bubble reveals the clarification only after HELP completes. An unresolved request produces no tickets and allows the program to resume at the next customer. Taking paper for ambiguous speech fails. A sold-out order is asked about the same way (`IF soldout IN CUSTOMER SPEECH`), and taking paper for it fails as sold out.
 
 
 ## Current editor and quantity behavior

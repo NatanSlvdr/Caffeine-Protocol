@@ -566,10 +566,12 @@ describe('the rail’s windows in French', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
     seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 7 commandes' }));
     const board = within(screen.getByRole('dialog', { name: 'Demandées par les habitués.' }));
     expect(board.getByRole('heading', { name: 'Tous reliés' }).hasAttribute('lang')).toBe(false);
     expect(board.getByText('Un plateau, un seul voyage.')).toBeTruthy();
+    expect(board.getByRole('heading', { name: 'Le fond de la boîte' })).toBeTruthy();
+    expect(board.getByText('Demander avant d’écrire.')).toBeTruthy();
     expect(board.getByRole('heading', { name: 'Le marché du samedi' }).hasAttribute('lang')).toBe(false);
     expect(board.getAllByText('Une demande de Mr. Albert').length).toBeGreaterThan(0);
     expect([...document.querySelectorAll('.specials-menus')].map((tally) => tally.textContent)).toEqual([
@@ -601,7 +603,7 @@ describe('the rail’s windows in French', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
     seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 7 commandes' }));
     fireEvent.click(screen.getByRole('button', { name: 'Composer le menu, Le marché du samedi' }));
     fireEvent.click(screen.getByRole('button', { name: 'Servir ce menu, Le guichet du marché' }));
     await waitFor(() =>
@@ -626,7 +628,7 @@ describe('the rail’s windows in French', () => {
     const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
     seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 7 commandes' }));
     expect(screen.getByRole('heading', { name: 'La longue journée' }).hasAttribute('lang')).toBe(false);
     expect(document.querySelector('.specials-window [lang]')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Commencer la journée, La longue journée' }));

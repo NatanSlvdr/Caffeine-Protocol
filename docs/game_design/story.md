@@ -237,9 +237,21 @@ warm. Porter answers "Wait less. Understood." The outro is Dot pleased and
 Porter's new order of work: "Next cup first. Then the old one." Moka and Pip
 stay out, as in every optional scene.
 
+### The last of the tea
+
+Juno asks the third special. It is Monday, the tea delivery is stuck behind the
+market lorries until tomorrow, and the tin holds three cups' worth: after them,
+every tea asked for is sold out. Juno, worried, asks that nobody just be handed
+a coffee. Niko shows Query the word to listen for and Help, which asks, as for
+an order nobody caught, what the guest would like instead: a coffee the same
+way, or nothing at all. "Never a coffee nobody asked for, and never a tea we
+haven't got." Query answers "Ask first. Then write. Understood." The outro is
+Juno pleased (she had the last cup) and Query's count of the morning: "Tin:
+empty. Guests: asked." Moka and Pip stay out, as in every optional scene.
+
 ### The Saturday menu
 
-Mr. Albert asks the third special: the street market is back on Saturdays, and
+Mr. Albert asks the fourth special: the street market is back on Saturdays, and
 Lou always chalked one menu for it, all morning. Every card opens on the same
 three lines (stalls going up outside, Albert remembering Lou's board) before
 Niko says what the card means for the crew and the robot it asks most of
@@ -250,7 +262,7 @@ every scene that can be played long after they have left.
 
 ### The Long Day
 
-Juno asks for the fourth special. It is exam week, the library is shut for
+Juno asks for the fifth special as well. It is exam week, the library is shut for
 repairs, and she has told everyone, so her whole year revises at the café in
 waves, between exams: the first ones in at eight before the shutters are up,
 the ones running back to the exam hall at ten, a lunch with the spare cups gone

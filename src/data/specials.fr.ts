@@ -22,8 +22,9 @@ export interface MenuFr {
 
 /**
  * The specials in French, by id. Who speaks, and in what mood, comes from the English; a block in a line is the same
- * block, and block names stay English, Together among them. Rosa says “vous” to Niko; Dot calls everyone “mes
- * petits”. Written with plain spaces: the French is set with French typography as it is laid over the English.
+ * block, and block names stay English, Together and Sold out among them. Rosa and Juno say “vous” to Niko; Dot calls
+ * everyone “mes petits”. Written with plain spaces: the French is set with French typography as it is laid over the
+ * English.
  */
 export const specialsFr: Readonly<Record<string, SpecialFr>> = {
   together: {
@@ -77,6 +78,33 @@ export const specialsFr: Readonly<Record<string, SpecialFr>> = {
     outro: [
       'Chaudes, toutes autant qu’elles sont. La bibliothèque peut garder son thé tiède.',
       '*ding ding* La boisson suivante d’abord. Puis l’ancienne tasse.',
+    ],
+  },
+  'sold-out': {
+    title: 'Le fond de la boîte',
+    hint: 'Demander avant d’écrire.',
+    thanks: 'Merci. La livraison arrive demain, promis.',
+    note: 'Le thé s’épuise après les trois dernières tasses de la boîte. Query entend Sold out avec chaque thé demandé ensuite : If Sold out IN Customer speech, Help demande à Niko ce que le client prendra à la place, et Query l’écrit. Un café de la même façon, ou rien du tout, et alors pas de ticket.',
+    brief: {
+      story:
+        'La livraison de thé est coincée derrière les camions du marché jusqu’à demain, et Juno a compté de quoi faire trois tasses dans la boîte.',
+      objective:
+        'Servez chaque client et débarrassez chaque table. Un client qui demande une boisson épuisée est interrogé sur ce qu’il prendra à la place, avant que rien ne soit écrit.',
+      concept:
+        'Une routine demande quand elle ne peut pas savoir. Une commande impossible à préparer est aussi floue qu’une commande que personne n’a comprise : le même Help, pour une autre raison.',
+    },
+    intro: [
+      'Lundi matin. La livraison de thé est coincée derrière les camions du marché jusqu’à demain.',
+      'Il reste de quoi faire trois tasses dans la boîte. J’ai vérifié deux fois.',
+      'Les gens vont quand même demander du thé. S’il vous plaît, ne leur donnez pas juste un café.',
+      'Une fois la boîte vide, Query l’entend avec la commande : [IF soldout IN CUSTOMER SPEECH|If Sold out IN Orders].',
+      'Alors il me demande avec [HELP|Help], comme pour une commande que personne n’a comprise, et je découvre ce qu’ils veulent à la place. Un café de la même façon, ou rien du tout.',
+      'Jamais un café que personne n’a demandé, et jamais un thé qu’on n’a plus.',
+      '*bip* Demander d’abord. Écrire ensuite. Compris.',
+    ],
+    outro: [
+      'Tout le monde a été interrogé, et personne n’a eu un café dont il ne voulait pas. La dernière tasse, c’était pour moi, au fait.',
+      '*bip bip* Boîte : vide. Clients : interrogés.',
     ],
   },
   'tea-table': {
