@@ -3,7 +3,7 @@ import { Sparkles, TriangleAlert, X } from 'lucide-react';
 import { reclaimFocus } from '@/shared/lib/focus';
 import { openSettings } from '@/shared/lib/navigation';
 import { useGame } from '@/state/GameStore';
-import { useUntranslated, useWords } from '@/shared/language';
+import { useWords } from '@/shared/language';
 import { SAVE_NOTICE_WORDS } from './saveNoticeWords';
 
 /**
@@ -13,7 +13,6 @@ import { SAVE_NOTICE_WORDS } from './saveNoticeWords';
 export function SaveNotice() {
   const { saveError, elsewhere, loadElsewhere, keepThisTab, updated, dismissUpdated } = useGame();
   const say = useWords(SAVE_NOTICE_WORDS);
-  const english = useUntranslated();
   // Dismissing hides this message only: a different problem later shows again.
   const [dismissed, setDismissed] = useState('');
   // The Dismiss button goes with the notice, so focus carries on from the screen's title, not the top of the page.
@@ -50,7 +49,7 @@ export function SaveNotice() {
       <div className="save-notice is-update" role="status">
         <Sparkles size={18} aria-hidden="true" />
         <p>
-          <strong>{say.updated}</strong> <span lang={english}>{updated.join(' ')}</span>
+          <strong>{say.updated}</strong> {updated.map(say.change).join(' ')}
         </p>
         <button
           className="save-notice-close"

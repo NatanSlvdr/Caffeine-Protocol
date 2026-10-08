@@ -21,6 +21,7 @@ import {
   cafeKey,
   freeCafeName,
   migrationChanges,
+  type MigrationChange,
   parseSave,
   untouched,
   SAVE_REFUSALS,
@@ -50,7 +51,7 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
   const holds = (kept: ProgressSave) => cafeWords.holds(kept) || cafeWords.fresh;
   const updateReady = useUpdateReady();
   // A café waiting on the Replace slip: one chosen from a file, with what bringing it up to date changes, or the kept copy.
-  const [pending, setPending] = useState<{ save: ProgressSave; changes?: string[]; kept?: true } | null>(null),
+  const [pending, setPending] = useState<{ save: ProgressSave; changes?: MigrationChange[]; kept?: true } | null>(null),
     [error, setError] = useState(''),
     [status, setStatus] = useAnnouncement();
   const input = useRef<HTMLInputElement>(null);
@@ -350,14 +351,15 @@ export function SettingsWindow({ onClose, onNew }: { onClose: () => void; onNew:
 }
 
 /** What bringing an older café up to date changed in it, or nothing when it was already current. */
-function Changes({ changes = [], lead }: { changes?: string[]; lead: string }) {
+function Changes({ changes = [], lead }: { changes?: MigrationChange[]; lead: string }) {
+  const say = useWords(SAVE_NOTICE_WORDS);
   if (!changes.length) return null;
   return (
     <div className="settings-changes">
       <p>{lead}</p>
       <ul>
         {changes.map((change) => (
-          <li key={change}>{change}</li>
+          <li key={change.kind}>{say.change(change)}</li>
         ))}
       </ul>
     </div>

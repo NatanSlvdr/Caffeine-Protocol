@@ -2,7 +2,7 @@ import type { ProgressSave } from '@/domain/types';
 import { newSave, untouched } from './settings';
 import { cafeKey } from './cafes';
 import { migrationChanges, parseSave } from './migration';
-import type { LessonCatalog } from './migration';
+import type { LessonCatalog, MigrationChange } from './migration';
 
 /** Why the café isn't being saved, by key, so the save notice and Settings can say it in the reader's language. */
 export const SAVE_PROBLEMS = {
@@ -44,7 +44,7 @@ export interface SaveBackup {
   saved_at: string;
   save: ProgressSave;
   /** For a copy kept ahead of a save update, what the update changed: see migrationChanges. */
-  changes?: string[];
+  changes?: MigrationChange[];
 }
 
 /**

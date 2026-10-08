@@ -17,6 +17,7 @@ import {
   completeLevel,
   completeRepair,
   migrationChanges,
+  type MigrationChange,
   pickDecor,
   newSave,
   parseSave,
@@ -59,7 +60,7 @@ interface GameStore {
   /** Put the kept copy back, keeping the café it replaces in its place. */
   restoreBackup: () => void;
   /** What updating the stored café to this version just changed, until the player has read it; see migrationChanges. */
-  updated: string[];
+  updated: MigrationChange[];
   dismissUpdated: () => void;
   route: string;
   go: (path: string) => void;

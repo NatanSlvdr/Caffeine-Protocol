@@ -295,10 +295,13 @@ rows and the ways on (`shell/storyWords.ts`, with each act's milestone in
 the order of `acts`). So does the save notice over every screen
 (`app/saveNoticeWords.ts`): `readSave` and `writeSave` return a
 `SaveProblem` key (`SAVE_PROBLEMS` keeps the English), so the notice and
-Settings say why the café isn't being saved in the reader's language. Of the
-rail's windows, the drills read in French (`shell/drillWords.ts`): the list
-by act and by flight, a flight's progress, and the frame around a gap, a
-moment to call and a kit, with what a robot holds from `cargoWords` and
+Settings say why the café isn't being saved in the reader's language, and
+`migrationChanges` returns what bringing an older café up to date changed as
+`MigrationChange` data, which the notice and Settings say through the
+catalog's `change`, agreeing in French with how many shifts carried over. Of
+the rail's windows, the drills read in French (`shell/drillWords.ts`): the
+list by act and by flight, a flight's progress, and the frame around a gap,
+a moment to call and a kit, with what a robot holds from `cargoWords` and
 `spokenLines` joining blocks in the reader's language. So do the drills
 themselves (`data/drills.fr.ts`, by id: a gap's title, question and idea, a
 moment's title and why, a kit's title, question, rule and idea, and a
@@ -375,20 +378,18 @@ with `repairIn`, `specialIn`, `longDayIn` and `toldIn`, so data can set its
 French without importing React. `CHALLENGE_WORDS` is a catalog too; the
 generated shift docs read its English. Short repeats is worded once, as
 `SHORT_REPEATS` beside `SettingRow`, for Settings and Options both. The
-levels' own data is still in English, and so is the list of what bringing an
-old save up to date changed, marked so under the notice's French heading.
-Where English sits on a French screen (what a guest said, why a robot
-stopped), it carries `lang={useUntranslated()}`, so a screen reader says it
-as English; on an English page the attribute is left off. Act names and
-taglines for the tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps
-the English names the English-only windows still read. The save checks'
-refusals are keyed (`SAVE_REFUSALS`) so Settings can say them in French; a
-damaged file's field is left out in French. The handbook names the buttons
-and windows as they read in French. The French toolbar reads longer, so its
-step buttons fold to their icons below 1360px rather than 1180px.
-Programming words (blocks, values, the text editor's syntax) are never
-translated, so a routine and a shared notebook read the same in either
-language.
+levels' own data is still in English. Where English sits on a French screen
+(what a guest said, why a robot stopped), it carries
+`lang={useUntranslated()}`, so a screen reader says it as English; on an
+English page the attribute is left off. Act names and taglines for the
+tickets are in `shell/rail/railWords.ts`; `acts.ts` keeps the English names
+the English-only windows still read. The save checks' refusals are keyed
+(`SAVE_REFUSALS`) so Settings can say them in French; a damaged file's field
+is left out in French. The handbook names the buttons and windows as they
+read in French. The French toolbar reads longer, so its step buttons fold to
+their icons below 1360px rather than 1180px. Programming words (blocks,
+values, the text editor's syntax) are never translated, so a routine and a
+shared notebook read the same in either language.
 
 ## Photo mode
 
