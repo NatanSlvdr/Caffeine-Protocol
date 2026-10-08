@@ -48,7 +48,7 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 7 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
     const board = screen.getByRole('dialog');
     const card = within(board).getByRole('heading', { name: special.title }).closest('li')!;
     expect(within(card).getByText(/Asked for by Rosa/)).toBeTruthy();
@@ -66,18 +66,33 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 7 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
     const board = screen.getByRole('dialog');
     const card = within(board).getByRole('heading', { name: 'The Last of the Tea' }).closest('li')!;
     expect(within(card).getByText(/Asked for by Juno/)).toBeTruthy();
     expect(within(card).getByText('Ask before you write.')).toBeTruthy();
   });
 
+  it('puts Mr. Albert’s morning with the grinder out on the board, after the tea', () => {
+    localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
+    window.location.hash = '#/campaign';
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
+    const board = screen.getByRole('dialog');
+    const titles = within(board)
+      .getAllByRole('heading')
+      .map((heading) => heading.textContent);
+    expect(titles.indexOf('The Engineer’s Visit')).toBe(titles.indexOf('The Last of the Tea') + 1);
+    const card = within(board).getByRole('heading', { name: 'The Engineer’s Visit' }).closest('li')!;
+    expect(within(card).getByText(/Asked for by Mr\. Albert/)).toBeTruthy();
+    expect(within(card).getByText('Check before you grind.')).toBeTruthy();
+  });
+
   it('shows a served special’s own stars on the board', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify({ ...finished, specials: { together: { stars: 2 } } }));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 7 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
     expect(screen.getByRole('img', { name: '2 of 3 stars' })).toBeTruthy();
     expect(screen.getByRole('button', { name: `Serve again ${special.title}` })).toBeTruthy();
   });
@@ -109,10 +124,10 @@ describe('the specials', () => {
     localStorage.setItem('caffeine-protocol.v1', JSON.stringify(finished));
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 7 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
     const board = screen.getByRole('dialog');
-    expect(within(board).getByRole('heading', { name: 'The Saturday Market' })).toBeTruthy();
-    expect(within(board).getByText(/Asked for by Mr\. Albert/)).toBeTruthy();
+    const market = within(board).getByRole('heading', { name: 'The Saturday Market' }).closest('li')!;
+    expect(within(market).getByText(/Asked for by Mr\. Albert/)).toBeTruthy();
     expect(within(board).getByText('0 of 3 menus served')).toBeTruthy();
     // The cards wait behind the menu: none of them is on the board itself.
     expect(within(board).queryByRole('heading', { name: 'The Tea Table' })).toBeNull();
@@ -151,7 +166,7 @@ describe('the specials', () => {
     );
     window.location.hash = '#/campaign';
     render(<App />);
-    fireEvent.click(screen.getByRole('button', { name: 'Specials, 7 specials' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Specials, 8 specials' }));
     expect(screen.getByText('1 of 3 menus served')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /^Plan the menu/ }));
     const menu = screen.getByRole('dialog');

@@ -139,20 +139,22 @@ export const FAILURE_WORDS = words(
       'ticket-rush-extra':
         'Rush jumps the queue, so it’s only for guests who say they’re in a hurry: check If Rush IN item first.',
       'ticket-together-missing':
-        'A table that orders together says so: If Together IN Customer speech, then Write Together on each of its tickets.',
+        'A table that orders together says so: If Together IN Orders, then Write Together on each of its tickets.',
       'ticket-together-extra':
-        'Together is only for a table ordering for more than one: check If Together IN Customer speech first.',
+        'Together is only for a table ordering for more than one: check If Together IN Orders first.',
       checkout: 'Head back to the register after the last ticket so the guest can pay.',
       'unclear-order': 'Guessing sends the wrong drink. Ask me with Help first, and I’ll find out what they meant.',
       'help-needed': 'When an order is unclear, ask me with Help before writing anything.',
       'help-unneeded': 'Only ask for Help when the order really is unclear.',
       'guessed-drink': 'If nobody can clarify, don’t take a sheet at all.',
       'sold-out':
-        'We’re out of what they asked for. Check If Sold out IN Customer speech, and ask me with Help: I’ll find out what they’d have instead.',
+        'We’re out of what they asked for. Check If Sold out IN Orders, and ask me with Help: I’ll find out what they’d have instead.',
       'stopped-listening':
         'The café doesn’t close after one guest: loop back to Wait for Orders so Query hears the next one.',
       'recipe-order': 'The recipe goes one step at a time, in order: do the next step before moving on.',
       'already-brewed': 'A brewed drink is finished with the machine. Give it its sugar, or Deposit it up at pickup.',
+      'grinder-serviced':
+        'The grinder’s out for its service, so the coffee comes pre-ground. Check If Pre-ground IN Orders, and take it straight up to the sink.',
       'not-brewed': 'Finish the recipe before adding sugar, putting a lid on, or sending the drink out.',
       'too-much-sugar': 'Brew adds exactly the sugar on the ticket: count it out, and stop there.',
       'sugar-count': 'Brew adds exactly the sugar on the ticket: count it out, and stop there.',
@@ -306,9 +308,9 @@ export const FAILURE_WORDS = words(
       'ticket-rush-extra':
         'Rush passe devant tout le monde : il est réservé aux clients qui se disent pressés. Vérifiez d’abord If Rush IN item.',
       'ticket-together-missing':
-        'Une table qui commande ensemble le dit : If Together IN Customer speech, puis Write Together sur chacun de ses tickets.',
+        'Une table qui commande ensemble le dit : If Together IN Orders, puis Write Together sur chacun de ses tickets.',
       'ticket-together-extra':
-        'Together est réservé à une table qui commande pour plusieurs : vérifiez d’abord If Together IN Customer speech.',
+        'Together est réservé à une table qui commande pour plusieurs : vérifiez d’abord If Together IN Orders.',
       checkout: 'Revenez à la caisse après le dernier ticket, pour que le client puisse payer.',
       'unclear-order':
         'Deviner envoie la mauvaise boisson. Demandez-moi d’abord avec Help, et je trouverai ce que la commande voulait dire.',
@@ -316,13 +318,15 @@ export const FAILURE_WORDS = words(
       'help-unneeded': 'Ne demandez Help que si la commande n’est vraiment pas claire.',
       'guessed-drink': 'Si personne ne peut éclaircir la commande, ne prenez pas de feuille du tout.',
       'sold-out':
-        'Il n’en reste plus. Vérifiez If Sold out IN Customer speech, et demandez-moi avec Help : je saurai ce qu’ils prendront à la place.',
+        'Il n’en reste plus. Vérifiez If Sold out IN Orders, et demandez-moi avec Help : je saurai ce qu’ils prendront à la place.',
       'stopped-listening':
         'Le café ne ferme pas après un seul client : revenez à Wait for Orders pour que Query entende le suivant.',
       'recipe-order':
         'La recette se suit une étape à la fois, dans l’ordre : faites l’étape suivante avant de passer à autre chose.',
       'already-brewed':
         'Une boisson infusée en a fini avec la machine. Donnez-lui son sucre, ou faites un Deposit au comptoir de retrait.',
+      'grinder-serviced':
+        'Le moulin est en révision, alors le café arrive déjà moulu. Vérifiez If Pre-ground IN Orders, et portez-le directement à l’évier.',
       'not-brewed': 'Terminez la recette avant d’ajouter du sucre, de mettre un couvercle ou d’envoyer la boisson.',
       'too-much-sugar': 'Brew ajoute exactement le sucre du ticket : comptez-le, et arrêtez-vous là.',
       'sugar-count': 'Brew ajoute exactement le sucre du ticket : comptez-le, et arrêtez-vous là.',

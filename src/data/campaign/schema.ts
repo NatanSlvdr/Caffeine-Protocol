@@ -92,6 +92,12 @@ export const ServiceConfigSchema = v.strictObject({
   closing: v.optional(v.boolean()),
   together: v.optional(PositiveInt),
   fresh: v.optional(PositiveInt),
+  grinderOut: v.optional(
+    v.pipe(
+      v.strictObject({ from: NonNegativeInt, to: PositiveInt }),
+      v.check(({ from, to }) => from < to, 'the grinder comes back after it goes out'),
+    ),
+  ),
 });
 
 /** An optional challenge: what's weighed, and the most it may come to. */

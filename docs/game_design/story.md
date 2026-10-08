@@ -249,9 +249,21 @@ haven't got." Query answers "Ask first. Then write. Understood." The outro is
 Juno pleased (she had the last cup) and Query's count of the morning: "Tin:
 empty. Guests: asked." Moka and Pip stay out, as in every optional scene.
 
+### The engineer's visit
+
+Mr. Albert asks the fourth special. It is Wednesday, and he comes in with
+Henri, who kept Lou's machines going for thirty years and heard the café's
+grinder from across the street. Henri needs it from 1:30 to 4:30; Niko,
+worried, has ground a tin that morning, so any coffee taken up meanwhile comes
+pre-ground. Niko shows Brew the word to check before it grinds, and the way
+straight to the sink, as for tea. Albert adds that Henri doesn't like to be
+rushed. Brew answers "Check, then grind! Is very careful morning." The outro is
+Albert pleased (Henri was impressed, though he won't say so) and Brew glad of
+its grinder back. Moka and Pip stay out, as in every optional scene.
+
 ### The Saturday menu
 
-Mr. Albert asks the fourth special: the street market is back on Saturdays, and
+Mr. Albert asks the fifth special as well: the street market is back on Saturdays, and
 Lou always chalked one menu for it, all morning. Every card opens on the same
 three lines (stalls going up outside, Albert remembering Lou's board) before
 Niko says what the card means for the crew and the robot it asks most of
@@ -262,7 +274,7 @@ every scene that can be played long after they have left.
 
 ### The Long Day
 
-Juno asks for the fifth special as well. It is exam week, the library is shut for
+Juno asks for the sixth special. It is exam week, the library is shut for
 repairs, and she has told everyone, so her whole year revises at the café in
 waves, between exams: the first ones in at eight before the shutters are up,
 the ones running back to the exam hall at ten, a lunch with the spare cups gone

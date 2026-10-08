@@ -97,6 +97,8 @@ export type FailureCode =
   | 'recipe-order'
   /** The machine was used on a drink that’s already brewed. */
   | 'already-brewed'
+  /** Brew took pre-ground coffee to the grinder while it was out for its service. */
+  | 'grinder-serviced'
   /** Sugar, a lid, or pickup before the drink was brewed. */
   | 'not-brewed'
   /** More sugar than the ticket asks for. */

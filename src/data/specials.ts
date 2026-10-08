@@ -289,7 +289,7 @@ function lastOfTheTea(): Special {
     thanks: 'Thank you. The delivery comes tomorrow, I promise.',
     level,
     lesson: {
-      note: 'The tea runs out after the tin’s last three cups. Query hears Sold out with every tea asked for after that: If Sold out IN Customer speech, Help asks Niko what the guest will have instead, and Query writes that down. A coffee the same way, or nothing at all, and then no ticket.',
+      note: 'The tea runs out after the tin’s last three cups. Query hears Sold out with every tea asked for after that: If Sold out IN Orders, Help asks Niko what the guest will have instead, and Query writes that down. A coffee the same way, or nothing at all, and then no ticket.',
       starter: referencePrograms(21).query,
       solution: solution.query,
       robotStarter: referencePrograms(21),
@@ -324,6 +324,80 @@ function lastOfTheTea(): Special {
         'Everyone was asked, and nobody got a coffee they didn’t want. I had the last cup, by the way.',
       ),
       line('query', '*bip bip* Tin: empty. Guests: asked.'),
+    ],
+  };
+}
+
+/** When Mr. Albert's friend has the grinder in pieces, in seconds of the service: coffee is pre-ground meanwhile. */
+export const GRINDER_OUT = { from: 90, to: 270 } as const;
+
+/**
+ * Mr. Albert's morning with the engineer: guests in a row, two coffees to every tea and sugar cycling, and the grinder
+ * out for its service for a while in the middle. Coffee taken up meanwhile comes pre-ground, and Shift 21's Brew takes
+ * it to the grinder all the same.
+ */
+function engineersVisit(): Special {
+  const rules: ShiftRules = { preground: true };
+  const { level, solution } = benchShift({
+    id: `L${TOOLKIT}-grinder`,
+    title: 'The Engineer’s Visit',
+    summary: 'The grinder is out for its service mid-morning, and the coffee comes pre-ground until it’s back.',
+    rules,
+    service: { grinderOut: GRINDER_OUT },
+    rounds: [0, 1, 2].map((round) =>
+      arriving(14, 4, (n) => ({
+        orders: [{ drink: (n + round) % 3 ? 'coffee' : 'tea', sugar: (n + 2 * round) % 3 }],
+      })),
+    ),
+    // Fair to the way most players in: Shift 21's routines, once Brew takes pre-ground coffee straight to the sink.
+    // Two blocks above theirs, and a tenth more instructions, as for the reading group.
+    targets: { blocks: 110, instructions: 3229 },
+  });
+  const at = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+  return {
+    id: 'grinder',
+    title: level.title,
+    by: 'albert',
+    hint: 'Check before you grind.',
+    thanks: 'Thank you. Henri says the grinder’s good for another twenty years. So am I, I told him.',
+    level,
+    lesson: {
+      note: `The grinder is out for its service from ${at(GRINDER_OUT.from)} to ${at(GRINDER_OUT.to)}. Coffee taken up from storage meanwhile comes pre-ground: Brew checks If Pre-ground IN Orders, and takes it straight up to the sink, as it does tea. Before and after, the grinder works as ever.`,
+      starter: referencePrograms(21).query,
+      solution: solution.query,
+      robotStarter: referencePrograms(21),
+      robotSolution: solution,
+    },
+    brief: {
+      story:
+        'Mr. Albert’s old friend Henri services coffee machines, and has heard the café’s grinder from across the street. He’s coming in mid-morning, whether the café is busy or not.',
+      objective: `Serve every guest and clear every table. The grinder is out for its service from ${at(GRINDER_OUT.from)} to ${at(GRINDER_OUT.to)}: coffee taken up from storage in between comes pre-ground.`,
+      concept:
+        'A routine that knows the timetable checks before it uses a machine. When the grinder is out, the coffee comes another way, and the routine takes that way.',
+    },
+    intro: [
+      line('', 'Wednesday morning. Mr. Albert comes in with a man carrying a toolbox.'),
+      line(
+        'albert:happy',
+        'This is Henri. He kept Lou’s machines going for thirty years. He heard your grinder from across the street.',
+      ),
+      line(
+        'niko:worried',
+        `He needs the grinder from ${at(GRINDER_OUT.from)} to ${at(GRINDER_OUT.to)}. I ground a tin this morning: any coffee taken up meanwhile comes pre-ground.`,
+      ),
+      line(
+        'niko',
+        'Brew checks [IF preground IN CUSTOMER SPEECH|If Pre-ground IN Orders], and takes that coffee straight to the sink, as it does tea.',
+      ),
+      line('albert', 'And before and after, it grinds as ever. Henri doesn’t like to be rushed.'),
+      line('brew', '*BEEP!* Check, then grind! Is very careful morning.'),
+    ],
+    outro: [
+      line(
+        'albert:happy',
+        'Not one cup late, and the grinder purrs again. Henri was impressed. He doesn’t say so, but he was.',
+      ),
+      line('brew', '*BEEP BEEP!* Grinder back! Brew missed it!'),
     ],
   };
 }
@@ -564,7 +638,13 @@ const saturdayMenu: Special[] = [
   }),
 ];
 
-export const specials: readonly Special[] = [readingGroup(), knittingCircle(), lastOfTheTea(), ...saturdayMenu];
+export const specials: readonly Special[] = [
+  readingGroup(),
+  knittingCircle(),
+  lastOfTheTea(),
+  engineersVisit(),
+  ...saturdayMenu,
+];
 
 /** The menus chalked up for the specials board, each with its cards behind it. */
 const menus: readonly Menu[] = [SATURDAY];

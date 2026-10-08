@@ -237,6 +237,8 @@ export interface Cargo {
   sugar: number;
   /** A take-away cup has its lid on. */
   lid?: boolean;
+  /** Coffee taken up while the grinder was out for its service: it comes ground already, and skips the grinder. */
+  preground?: boolean;
 }
 /** A number, or for Porter a place on the floor it stored with Store from here. */
 export type VariableValue = number | readonly [number, number];
@@ -329,6 +331,11 @@ export interface ServiceConfig {
    * Missing on a shift where drinks keep.
    */
   fresh?: number;
+  /**
+   * The grinder is out for its service from `from` to `to`, in seconds of the service: coffee taken up from storage
+   * then comes pre-ground, and Use at the machine can't grind it. Missing on a shift with no visit.
+   */
+  grinderOut?: { from: number; to: number };
 }
 export interface ProgressSave extends Omit<ProgressSaveV1, 'version'> {
   version: 4;

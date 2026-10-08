@@ -32,6 +32,8 @@ const ROBOT_CONDITION_UNLOCKS: Record<string, number> = {
 };
 const robotConditionValues = (level: number) =>
   Object.keys(ROBOT_CONDITION_UNLOCKS).filter((value) => level >= ROBOT_CONDITION_UNLOCKS[value]);
+/** What only Brew reads: only Brew takes coffee up from storage, so only Brew can find it pre-ground. */
+const prepConditionValues = (level: number) => (level >= UNLOCKS.preground ? ['preground'] : []);
 
 /**
  * Query's language, shared by every robot: wait for orders, move, take, deposit, branch, jump and repeat.
@@ -59,6 +61,7 @@ function prepCommands(level: number): string[] {
     ...sharedCommands('UP', 'UP', level),
     'USE UP',
     ...DIRECTIONS.filter((direction) => direction !== 'UP').map((direction) => `USE ${direction}`),
+    ...prepConditionValues(level).map((value) => `IF ${value} IN CUSTOMER SPEECH`),
     ...(level >= UNLOCKS.prepSugar ? ['STORE var1 FROM sugar', 'FOR var1 TIMES'] : []),
     ...(level >= UNLOCKS.functions ? ['FUNCTION recipe', 'CALL recipe', 'RETURN'] : []),
   ];
@@ -95,9 +98,11 @@ function memoryInstruction(command: string, role: Exclude<RobotRole, 'query'>, l
   return (role === 'floor' && !!parseMoveTo(command)) || (role === 'prep' && USE_RE.test(command));
 }
 /** Order conditions read like Query's, against the order a robot is working on. */
-const robotCondition = (command: string, level: number) =>
+const robotCondition = (command: string, role: Exclude<RobotRole, 'query'>, level: number) =>
   parseConditionExpression(command)?.conditions.every(
-    (condition) => condition.right === 'CUSTOMER SPEECH' && robotConditionValues(level).includes(condition.left),
+    (condition) =>
+      condition.right === 'CUSTOMER SPEECH' &&
+      [...robotConditionValues(level), ...(role === 'prep' ? prepConditionValues(level) : [])].includes(condition.left),
   ) ?? false;
 /** Commands are role-gated; numbered MOVE operands are edited separately in the block editor. */
 export function robotCommands(role: RobotRole, level: number): string[] {
@@ -112,7 +117,7 @@ function recognised(c: string, role: Exclude<RobotRole, 'query'>, level: number)
     TAKE_RE.test(c) ||
     DEPOSIT_RE.test(c) ||
     /^(POSITION|JUMP) [a-z][a-z0-9_]*$/.test(c) ||
-    robotCondition(c, level) ||
+    robotCondition(c, role, level) ||
     memoryInstruction(c, role, level) ||
     // Porter's older saves still route by table checks; new routines store the order's table instead.
     (role === 'floor' && /^IF TABLE ([1-9]|1[0-6])$/.test(c)) ||

@@ -48,6 +48,11 @@ export const UNLOCKS = {
    * instead. Every special has it, as every special has Together.
    */
   soldOut: 22,
+  /**
+   * The grinder out for its service: coffee taken up meanwhile comes pre-ground, and Brew checks If Pre-ground IN
+   * Orders to take it straight to the sink.
+   */
+  preground: 22,
 } as const;
 
 /**

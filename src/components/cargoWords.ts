@@ -13,7 +13,7 @@ function frCargo(cargo: Cargo): string {
     case 'beans':
       return 'Grains de café';
     case 'ground':
-      return 'Café moulu';
+      return cargo.preground ? 'Café moulu d’avance' : 'Café moulu';
     case 'leaves':
       return 'Feuilles de thé';
     case 'water':

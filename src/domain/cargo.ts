@@ -9,7 +9,7 @@ export function cargoLabel(cargo: Cargo): string {
     case 'beans':
       return 'Coffee beans';
     case 'ground':
-      return 'Ground coffee';
+      return cargo.preground ? 'Pre-ground coffee' : 'Ground coffee';
     case 'leaves':
       return 'Tea leaves';
     case 'water':

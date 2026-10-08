@@ -35,6 +35,8 @@ export interface ShiftRules {
   fresh?: boolean;
   /** A drink runs out: Query asks with Help what a guest who asked for it will have instead. */
   soldOut?: boolean;
+  /** The grinder is out for its service for a while: Brew takes pre-ground coffee straight to the sink. */
+  preground?: boolean;
 }
 const STOP_WHEN_CLOSED = (before: string[] = []) => ['IF closed IN CUSTOMER SPEECH', ...before, 'STOP', 'END'];
 export function preparationSource(level: number, batch = 1, rules: ShiftRules = {}) {
@@ -60,7 +62,16 @@ export function preparationSource(level: number, batch = 1, rules: ShiftRules = 
   // Until tea reaches the kitchen every ticket is a coffee, so there is nothing to branch on yet.
   const ingredients =
     level >= UNLOCKS.prepTea
-      ? ['IF coffee IN CUSTOMER SPEECH', ...grind, 'ELSE', ...move(at.ingredients.prep, at.water.prep), 'END']
+      ? [
+          // While the grinder is out for its service, coffee comes pre-ground and goes straight to the sink, as tea does.
+          rules.preground
+            ? 'IF coffee IN CUSTOMER SPEECH AND preground NOT IN CUSTOMER SPEECH'
+            : 'IF coffee IN CUSTOMER SPEECH',
+          ...grind,
+          'ELSE',
+          ...move(at.ingredients.prep, at.water.prep),
+          'END',
+        ]
       : grind;
   const recipe = [
     ...move(STARTS.prep, at.ingredients.prep),

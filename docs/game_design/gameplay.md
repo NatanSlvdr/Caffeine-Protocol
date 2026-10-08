@@ -221,6 +221,22 @@ clarification and the ticket from that. `tests/unit/simulation/sold-out.test.ts`
 serves the reference and the way in, and turns away Shift 21's routines and a
 Query that asks only about what's sold out.
 
+Mr. Albert's morning with the grinder out (The Engineer's Visit) is the one
+special where a machine goes away for a while. Henri services the grinder from
+1:30 to 4:30 (`GRINDER_OUT`, the service's `grinderOut`), and any coffee Brew
+takes up from storage in between comes pre-ground: Brew holds "Pre-ground
+coffee", and hears the `preground` token while it does. Grinding it fails as
+`grinder-serviced`, so Brew checks `IF coffee IN CUSTOMER SPEECH AND preground
+NOT IN CUSTOMER SPEECH` before the grinder, and takes pre-ground coffee
+straight up to the sink, as it does tea. The token belongs to the cup Brew
+holds, not the clock: beans taken up just before the visit are still ground,
+so no routine loses a race against the timetable. Only Brew hears it; Query
+and Porter never do. Fourteen guests come four seconds apart, two coffees in
+three, and every round has coffee taken up both during the visit and outside
+it. Shift 21's routines grind pre-ground coffee and fail; that one AND serves
+every star. `tests/unit/simulation/grinder.test.ts` serves the reference and
+the way in, and turns away Shift 21's routines and a Brew that never grinds.
+
 A special can also be a menu to plan. Mr. Albert's Saturday Market puts three
 cards side by side on the specials board before any is served, each a special
 of its own with its own save entry and stars: what is on the board, who comes

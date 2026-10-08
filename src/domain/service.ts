@@ -141,6 +141,8 @@ function handAction(role: 'prep' | 'floor', position: Point, command: string): H
   return table ? { verb: 'SERVE', table } : at(STATIONS.returns.cell) ? { verb: 'RETURN CUPS' } : undefined;
 }
 const sugarCount = (n: number) => `${n} sugar cube${n === 1 ? '' : 's'}`;
+/** Seconds into the service on a clock, like 1:05. */
+const clock = (seconds: number) => `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
 const configFor = (level: LevelDefinition) =>
   level.service ?? { prepCapacity: 1, floorCapacity: 1, clearing: true, objective: 'serve' as const };
 export interface LiveService {
@@ -493,6 +495,7 @@ export function* streamService(
         ...(job ? [job.item, ...(job.sugar > 0 ? ['sugar'] : []), ...(job.toGo ? ['togo'] : [])] : []),
         ...(job?.rush ? ['rush'] : []),
         ...(job?.together ? ['together'] : []),
+        ...(w.role === 'prep' && currentCargo(w)?.preground ? ['preground'] : []),
         ...(w.closed ? ['closed'] : []),
       ];
       return evaluateConditionExpression(expression, { 'CUSTOMER SPEECH': { tokens } });
@@ -1092,6 +1095,15 @@ export function* streamService(
         fail(w, 'no-job', 'Wait for an order ticket before preparing a drink.');
         return false;
       }
+      if (a === 'USE' && cup.preground && cup.stage === 'ground' && config.grinderOut) {
+        const { from, to } = config.grinderOut;
+        fail(
+          w,
+          'grinder-serviced',
+          `This coffee came pre-ground: the grinder is out for its service from ${clock(from)} to ${clock(to)}. Check If Pre-ground IN Orders, and take it straight up to the sink.`,
+        );
+        return false;
+      }
       if (a === 'USE') {
         fail(w, cup.stage === 'brewed' ? 'already-brewed' : 'recipe-order', machineStepError(cup));
         return false;
@@ -1201,8 +1213,16 @@ export function* streamService(
           return false;
         }
         seconds = rule.duration ?? 1;
+        // While the grinder is out for its service, storage hands over coffee ground already.
+        const preground =
+          a === 'TAKE' &&
+          cup.item === 'coffee' &&
+          !!config.grinderOut &&
+          config.grinderOut.from <= now &&
+          now < config.grinderOut.to;
         apply = () => {
-          cup.stage = rule.stage;
+          cup.stage = preground ? 'ground' : rule.stage;
+          if (preground) cup.preground = true;
           if (cafeCup) cleanCups--;
         };
       } else {

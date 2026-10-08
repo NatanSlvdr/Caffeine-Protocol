@@ -84,7 +84,7 @@ export const specialsFr: Readonly<Record<string, SpecialFr>> = {
     title: 'Le fond de la boîte',
     hint: 'Demander avant d’écrire.',
     thanks: 'Merci. La livraison arrive demain, promis.',
-    note: 'Le thé s’épuise après les trois dernières tasses de la boîte. Query entend Sold out avec chaque thé demandé ensuite : If Sold out IN Customer speech, Help demande à Niko ce que le client prendra à la place, et Query l’écrit. Un café de la même façon, ou rien du tout, et alors pas de ticket.',
+    note: 'Le thé s’épuise après les trois dernières tasses de la boîte. Query entend Sold out avec chaque thé demandé ensuite : If Sold out IN Orders, Help demande à Niko ce que le client prendra à la place, et Query l’écrit. Un café de la même façon, ou rien du tout, et alors pas de ticket.',
     brief: {
       story:
         'La livraison de thé est coincée derrière les camions du marché jusqu’à demain, et Juno a compté de quoi faire trois tasses dans la boîte.',
@@ -105,6 +105,32 @@ export const specialsFr: Readonly<Record<string, SpecialFr>> = {
     outro: [
       'Tout le monde a été interrogé, et personne n’a eu un café dont il ne voulait pas. La dernière tasse, c’était pour moi, au fait.',
       '*bip bip* Boîte : vide. Clients : interrogés.',
+    ],
+  },
+  grinder: {
+    title: 'La visite du réparateur',
+    hint: 'Vérifier avant de moudre.',
+    thanks: 'Merci. Henri dit que le moulin tiendra encore vingt ans. Moi aussi, je lui ai dit.',
+    note: 'Le moulin est en révision de 1:30 à 4:30. Le café monté de la réserve pendant ce temps arrive déjà moulu : Brew teste If Pre-ground IN Orders, et le porte directement à l’évier, comme le thé. Avant et après, le moulin marche comme toujours.',
+    brief: {
+      story:
+        'Henri, un vieil ami de M. Albert, entretient les machines à café, et il a entendu le moulin du café depuis l’autre côté de la rue. Il passe en milieu de matinée, qu’il y ait du monde ou non.',
+      objective:
+        'Servez chaque client et débarrassez chaque table. Le moulin est en révision de 1:30 à 4:30 : le café monté de la réserve entre-temps arrive déjà moulu.',
+      concept:
+        'Une routine qui connaît l’horaire vérifie avant d’utiliser une machine. Quand le moulin est absent, le café arrive autrement, et la routine prend ce chemin-là.',
+    },
+    intro: [
+      'Mercredi matin. M. Albert entre avec un homme qui porte une caisse à outils.',
+      'Voici Henri. Il a fait tourner les machines de Lou pendant trente ans. Il a entendu votre moulin depuis l’autre côté de la rue.',
+      'Il lui faut le moulin de 1:30 à 4:30. J’ai moulu une boîte ce matin : tout café monté pendant ce temps arrive déjà moulu.',
+      'Brew teste [IF preground IN CUSTOMER SPEECH|If Pre-ground IN Orders], et porte ce café directement à l’évier, comme le thé.',
+      'Et avant et après, il moud comme toujours. Henri n’aime pas qu’on le presse.',
+      '*bip* Vérifier, puis moudre ! Matinée très prudente.',
+    ],
+    outro: [
+      'Pas une tasse en retard, et le moulin ronronne de nouveau. Henri était impressionné. Il ne le dit pas, mais il l’était.',
+      '*bip bip* Moulin revenu ! Il manquait à Brew !',
     ],
   },
   'tea-table': {
