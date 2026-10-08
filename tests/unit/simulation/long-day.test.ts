@@ -68,9 +68,9 @@ describe('the Long Day', () => {
   });
 
   it('names the next wave on the receipt, and thanks the café after the last', () => {
-    expect(waveThanks(1)).toBe(
+    expect(waveThanks(1, 'en')).toBe(
       `Wave 1 of 6 served. Next, at ten o’clock: ${waves[1].adds.charAt(0).toLowerCase()}${waves[1].adds.slice(1)}`,
     );
-    expect(waveThanks(6)).toMatch(/^Thank you\./);
+    expect(waveThanks(6, 'en')).toMatch(/^Thank you\./);
   });
 });

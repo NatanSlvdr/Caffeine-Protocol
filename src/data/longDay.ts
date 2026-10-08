@@ -4,9 +4,13 @@ import { line, type DialogueLine } from '@/domain/dialogue';
 import type { LevelDefinition, RobotPrograms, ServiceConfig } from '@/domain/types';
 import type { Regular } from '@/domain/regulars';
 import { UNLOCKS } from '@/domain/unlocks';
+import type { Language } from '@/shared/language';
+import { typeset } from '@/shared/typography';
 import { referencePrograms } from './extension';
+import { longDayFr, type WaveFr } from './longDay.fr';
 import { benchShift, TOGETHER_SECONDS } from './specials';
 import { validateLessonData, validateLevelData } from './campaign/validate';
+import { retold } from './told';
 
 /**
  * The Long Day: an endurance service past the campaign. One café's routines, carried from wave to wave through a
@@ -323,11 +327,50 @@ export const longDay = {
   waves: SPECS.map(wave),
 };
 
-/** What the receipt says after a wave: what the next one brings, or the day's end. */
-export function waveThanks(number: number): string {
-  const next = longDay.waves[number];
+type LongDay = typeof longDay;
+
+/** A wave told in French: the same level, routines and rules, in other words. */
+function waveInFrench(wave: Wave, fr: WaveFr): Wave {
+  const adds = typeset(fr.adds);
+  return {
+    ...wave,
+    hour: typeset(fr.hour),
+    title: typeset(fr.title),
+    adds,
+    lesson: { ...wave.lesson, note: adds },
+    brief: {
+      story: typeset(fr.story),
+      objective: typeset(longDayFr.objective(lower(fr.adds), wave.number > 1)),
+      concept: typeset(fr.concept),
+    },
+    intro: retold(wave.intro, fr.intro),
+    outro: retold(wave.outro, fr.outro),
+  };
+}
+
+const longDayFrench: LongDay = {
+  ...longDay,
+  title: typeset(longDayFr.title),
+  story: typeset(longDayFr.story),
+  hint: typeset(longDayFr.hint),
+  waves: longDay.waves.map((wave, index) =>
+    longDayFr.waves[index] ? waveInFrench(wave, longDayFr.waves[index]) : wave,
+  ),
+};
+
+/** The Long Day in the reader's language: the very same day in English. Its save key and version never change. */
+export const longDayIn = (language: Language): LongDay => (language === 'fr' ? longDayFrench : longDay);
+
+/** What the receipt says after a wave, in the reader's language: what the next one brings, or the day's end. */
+export function waveThanks(number: number, language: Language): string {
+  const day = longDayIn(language);
+  const next = day.waves[number];
+  if (language === 'fr')
+    return typeset(
+      next ? longDayFr.next(number, day.waves.length, lower(next.hour), lower(next.adds)) : longDayFr.last,
+    );
   return next
-    ? `Wave ${number} of ${longDay.waves.length} served. Next, at ${lower(next.hour)}: ${lower(next.adds)}`
+    ? `Wave ${number} of ${day.waves.length} served. Next, at ${lower(next.hour)}: ${lower(next.adds)}`
     : 'Thank you. Same table tomorrow? Kidding. Mostly.';
 }
 

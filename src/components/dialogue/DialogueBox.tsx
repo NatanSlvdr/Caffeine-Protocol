@@ -43,11 +43,6 @@ export interface DialogueBoxProps {
   variant?: 'scene' | 'aside';
   /** Small caption above the box, e.g. the shift name. */
   kicker?: string;
-  /**
-   * The scene's language when it isn't the page's, for its kicker, its lines and its answers: a wave's scenes are
-   * still English on a French page. A line can say otherwise for itself.
-   */
-  lang?: string;
   /** What comes before the kicker, in the reader's language: “Shift 04”. */
   kickerLabel?: string;
   /** Label on the last line's button; Continue, in the reader's language, if none. */
@@ -71,7 +66,6 @@ export function DialogueBox({
   onDone,
   variant = 'scene',
   kicker,
-  lang,
   kickerLabel,
   doneLabel,
   instant = false,
@@ -215,7 +209,6 @@ export function DialogueBox({
   if (!current) return null;
   const speaker = current.who ? cast[current.who] : undefined;
   const label = speaker && speakerParts(speaker, say.customer);
-  const said = current.lang ?? lang;
   let left = shown;
   return (
     <div
@@ -236,7 +229,7 @@ export function DialogueBox({
           {kicker && scene && (
             <p className="dialogue-kicker">
               {kickerLabel && `${kickerLabel} · `}
-              <span lang={lang}>{kicker}</span>
+              {kicker}
             </p>
           )}
           {label && (
@@ -246,7 +239,7 @@ export function DialogueBox({
             </p>
           )}
           <p className="dialogue-text" aria-live="polite">
-            <span aria-hidden="true" lang={said}>
+            <span aria-hidden="true">
               {parts.map((part, i) => {
                 const typed = part.text.slice(0, Math.max(left, 0));
                 left -= part.text.length;
@@ -273,22 +266,20 @@ export function DialogueBox({
                 );
               })}
             </span>
-            {/* Who speaks is said in the reader's language; what they say, in the scene's. */}
+            {/* What a guest said keeps its English, marked as such. */}
             <span className="sr-only">
               {voiced && (
                 <>
                   {speaker && say.says(speakerLabel(speaker, say.customer))}
-                  <span lang={said}>
-                    {parts.map((part, i) =>
-                      part.kind === 'english' ? (
-                        <span key={i} lang={english}>
-                          {part.text}
-                        </span>
-                      ) : (
-                        part.text
-                      ),
-                    )}
-                  </span>
+                  {parts.map((part, i) =>
+                    part.kind === 'english' ? (
+                      <span key={i} lang={english}>
+                        {part.text}
+                      </span>
+                    ) : (
+                      part.text
+                    ),
+                  )}
                 </>
               )}
             </span>
@@ -313,7 +304,7 @@ export function DialogueBox({
                     }}
                   >
                     <kbd aria-hidden="true">{i + 1}</kbd>
-                    <span lang={lang}>{option.label}</span>
+                    <span>{option.label}</span>
                     {chosen && <small aria-hidden="true">{mark}</small>}
                   </button>
                 );

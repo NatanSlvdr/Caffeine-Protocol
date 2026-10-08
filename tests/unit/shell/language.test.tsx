@@ -130,7 +130,7 @@ describe('reading the café in French', () => {
     expect(within(choice).getByRole<HTMLInputElement>('radio', { name: 'English' }).checked).toBe(true);
     expect(within(choice).getByText('Français').closest('label')!.lang).toBe('fr');
     expect(document.getElementById(choice.getAttribute('aria-describedby')!)!.textContent).toMatch(
-      /French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories, the repair bay, the drills and the specials/,
+      /French covers every screen and window and the whole story: each shift, the scenes between acts, the guestbook, the memories, the repair bay, the drills, the specials and the Long Day\./,
     );
   });
 
@@ -351,7 +351,7 @@ describe('the code editor in French', () => {
 });
 
 describe('the dialogue box in French', () => {
-  it('drives an English scene in French, with who speaks named in French and what they say kept as English', () => {
+  it('drives a scene in French, with who speaks named in French and every line in the reader’s language', () => {
     vi.useFakeTimers();
     onTestFinished(() => void vi.useRealTimers());
     localStorage.setItem(LANGUAGE_KEY, 'fr');
@@ -359,19 +359,18 @@ describe('the dialogue box in French', () => {
     const choice = {
       id: 'greeting',
       options: [
-        { id: 'warm', label: 'Welcome back!', lines: [] },
-        { id: 'plain', label: 'Hello.', lines: [] },
+        { id: 'warm', label: 'Bon retour parmi nous.', lines: [] },
+        { id: 'plain', label: 'Bonjour.', lines: [] },
       ],
     };
     render(
       <LanguageProvider>
         <DialogueBox
           lines={[
-            { who: 'juno', text: 'Tea, no sugar.' },
-            { who: 'niko', text: 'Coming up.', choice },
+            { who: 'juno', text: 'Un thé, sans sucre.' },
+            { who: 'niko', text: 'Ça arrive.', choice },
           ]}
           choices={{ greeting: 'plain' }}
-          lang="en"
           onDone={onDone}
         />
       </LanguageProvider>,
@@ -379,44 +378,23 @@ describe('the dialogue box in French', () => {
     const dialog = screen.getByRole('dialog', { name: 'Dialogue' });
     expect(dialog.querySelector('.dialogue-name')!.textContent).toBe(`Client${NBSP}:Juno`);
     const spoken = dialog.querySelector('.dialogue-text .sr-only')!;
-    expect(spoken.textContent).toBe(`Juno, client${NBSP}: Tea, no sugar.`);
-    expect(spoken.querySelector('[lang="en"]')!.textContent).toBe('Tea, no sugar.');
-    expect(dialog.querySelector('.dialogue-text > [aria-hidden]')!.getAttribute('lang')).toBe('en');
+    expect(spoken.textContent).toBe(`Juno, client${NBSP}: Un thé, sans sucre.`);
+    expect(spoken.querySelector('[lang]')).toBeNull();
+    expect(dialog.querySelector('.dialogue-text > [aria-hidden]')!.hasAttribute('lang')).toBe(false);
     expect(screen.getByText('Réplique 1 sur 2')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Passer' }).getAttribute('title')).toBe(`Passer la suite · Échap`);
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
     act(() => void vi.advanceTimersByTime(5000));
     expect(screen.getByRole('button', { name: 'Retour' }).getAttribute('title')).toBe('La réplique précédente · ←');
-    // What Niko says stays the story's English; the mark on last time's answer is French.
+    // The mark on last time's answer is French, like the answers.
     const asked = within(screen.getByRole('group', { name: 'Ce que dit Niko' }));
-    expect(asked.getByRole('button', { name: 'Hello. (dit la dernière fois)' })).toBeTruthy();
-    expect(asked.getByText('Welcome back!').getAttribute('lang')).toBe('en');
-    fireEvent.click(asked.getByRole('button', { name: 'Welcome back!' }));
+    expect(asked.getByRole('button', { name: 'Bonjour. (dit la dernière fois)' })).toBeTruthy();
+    expect(screen.getByRole('group', { name: 'Ce que dit Niko' }).querySelector('[lang]')).toBeNull();
+    fireEvent.click(asked.getByRole('button', { name: 'Bon retour parmi nous.' }));
     act(() => void vi.advanceTimersByTime(5000));
     fireEvent.click(screen.getByRole('button', { name: 'Continuer' }));
     expect(onDone).toHaveBeenCalledOnce();
-  });
-
-  it('says a French scene unmarked, and marks only a line still in English', () => {
-    localStorage.setItem(LANGUAGE_KEY, 'fr');
-    render(
-      <LanguageProvider>
-        <DialogueBox
-          lines={[
-            { who: 'juno', text: 'Lovely tea.', lang: 'en' },
-            { who: 'niko', text: 'Trois étoiles.' },
-          ]}
-          instant
-          onDone={() => {}}
-        />
-      </LanguageProvider>,
-    );
-    const said = () => screen.getByRole('dialog').querySelector('.dialogue-text > [aria-hidden]')!;
-    expect(said().getAttribute('lang')).toBe('en');
-    fireEvent.click(screen.getByRole('button', { name: 'Suivant' }));
-    expect(said().textContent).toBe('Trois étoiles.');
-    expect(said().hasAttribute('lang')).toBe(false);
   });
 
   it('marks what a guest said as English inside a French line, on screen and aloud', () => {
@@ -600,7 +578,7 @@ describe('the rail’s windows in French', () => {
     ]);
     expect(board.getAllByRole('img', { name: 'Pas encore servi' }).length).toBeGreaterThan(0);
     expect(board.getByRole('button', { name: 'Servir Tous reliés' })).toBeTruthy();
-    expect(board.getByRole('button', { name: 'Commencer la journée, The Long Day' })).toBeTruthy();
+    expect(board.getByRole('button', { name: 'Commencer la journée, La longue journée' })).toBeTruthy();
     fireEvent.click(board.getByRole('button', { name: 'Composer le menu, Le marché du samedi' }));
     const tea = specialIn(specialById('tea-table')!, 'fr');
     const plan = within(screen.getByRole('dialog', { name: 'Le marché du samedi' }));
@@ -639,6 +617,33 @@ describe('the rail’s windows in French', () => {
     expect(objective.hasAttribute('lang')).toBe(false);
     expect(objective.textContent).toBe(
       `Servez chaque client et débarrassez chaque table. Aux dernières commandes, chaque robot s’arrête.`,
+    );
+  });
+
+  it('names the tab and serves a wave of the Long Day in French', async () => {
+    localStorage.setItem(LANGUAGE_KEY, 'fr');
+    window.location.hash = '/campaign';
+    const stars = Object.fromEntries(Array.from({ length: 21 }, (_, i) => [i, 3]));
+    seedLocalStorage(makeSave({ unlocked: 20, selected: 20, complete: true, stars }));
+    render(<App />);
+    fireEvent.click(screen.getByRole('button', { name: 'Commandes spéciales, 6 commandes' }));
+    expect(screen.getByRole('heading', { name: 'La longue journée' }).hasAttribute('lang')).toBe(false);
+    expect(document.querySelector('.specials-window [lang]')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Commencer la journée, La longue journée' }));
+    await waitFor(() => expect(document.title).toBe(`La longue journée${NBSP}: vague 1 · Caffeine Protocol`));
+    // The wave's scene, title and goal are all told in French, with nothing left marked English.
+    expect(screen.getByRole('dialog', { name: 'Vague 1 sur 6 · L’ouverture' })).toBeTruthy();
+    expect(document.querySelector('.dialogue-box [lang]')).toBeNull();
+    expect(
+      screen.getAllByText(
+        'Semaine d’examens. La bibliothèque est fermée pour travaux, et Juno l’a dit à tout le monde.',
+      ).length,
+    ).toBeGreaterThan(0);
+    expect(screen.getByRole('heading', { level: 2, name: 'L’ouverture' }).hasAttribute('lang')).toBe(false);
+    const objective = document.querySelector('.shift-objective')!.lastElementChild!;
+    expect(objective.hasAttribute('lang')).toBe(false);
+    expect(objective.textContent).toMatch(
+      /^Servez chaque client et débarrassez chaque table\. Nouveau dans cette vague/,
     );
   });
 

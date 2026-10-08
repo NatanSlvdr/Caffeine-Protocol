@@ -17,7 +17,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Music volume',
     language: 'Language',
     languageHint:
-      'Shared by every café in this browser. French covers every screen and window, each shift’s name, brief and scenes, the story between acts, the guestbook, the memories, the repair bay, the drills and the specials, so far; the Long Day’s waves are still in English.',
+      'Shared by every café in this browser. French covers every screen and window and the whole story: each shift, the scenes between acts, the guestbook, the memories, the repair bay, the drills, the specials and the Long Day. A guest’s words and the blocks stay English, as a routine reads them, and so does the simulation’s own reason a robot stopped.',
     display: 'Display & motion',
     reducedMotion: 'Reduced motion',
     reducedBySystem: 'On, because your device asks for less motion.',
@@ -94,7 +94,7 @@ export const SETTINGS_WORDS = words(
     musicVolume: 'Volume de la musique',
     language: 'Langue',
     languageHint:
-      'Commune à tous les cafés de ce navigateur. Pour l’instant, le français couvre chaque écran et chaque fenêtre, le nom, le descriptif et les scènes de chaque service, l’histoire entre les actes, le livre d’or, les souvenirs, l’atelier, les exercices et les commandes spéciales ; les vagues de la longue journée sont encore en anglais.',
+      'Commune à tous les cafés de ce navigateur. Le français couvre chaque écran, chaque fenêtre et toute l’histoire : chaque service, les scènes entre les actes, le livre d’or, les souvenirs, l’atelier, les exercices, les commandes spéciales et la longue journée. Les mots des clients et les blocs restent en anglais, tels que les routines les lisent, comme la raison qu’a la simulation d’arrêter un robot.',
     display: 'Affichage et mouvement',
     reducedMotion: 'Mouvement réduit',
     reducedBySystem: 'Activé, car votre appareil demande moins de mouvement.',

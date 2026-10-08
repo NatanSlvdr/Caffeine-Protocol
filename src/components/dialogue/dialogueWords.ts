@@ -1,8 +1,8 @@
 import { words } from '@/shared/language';
 
 /**
- * The words around the crew's dialogue: the box's buttons and what a screen reader hears of it. What the crew and the
- * guests say is the story's, still in English, and marked so.
+ * The words around the crew's dialogue: the box's buttons and what a screen reader hears of it. What the crew says
+ * is the story's, in the reader's language; what a guest said stays English, and is marked so.
  */
 export const DIALOGUE_WORDS = words(
   {

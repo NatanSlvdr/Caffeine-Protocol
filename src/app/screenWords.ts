@@ -2,8 +2,8 @@ import { words } from '@/shared/language';
 
 /**
  * The words that name a screen: the tab's title, so history and screen readers can tell the pages apart, and what a
- * shift past the campaign is called in its bar. The name inside is the shift's, scene's, memory's or special's in the
- * reader's language; a wave's is still English.
+ * shift past the campaign is called in its bar. The name inside is the shift's, scene's, memory's, special's or
+ * day's own, in the reader's language.
  */
 export const SCREEN_WORDS = words(
   {

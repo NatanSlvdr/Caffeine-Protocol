@@ -4,8 +4,8 @@ import type { WaitStage } from '../waits';
 
 /**
  * The words of a service's receipt: the stars and totals against the shift's targets, where the guests' time went,
- * the challenges, and the way on. A shift's name and a special's thanks are its own, in the reader's language; a
- * wave's are still English.
+ * the challenges, and the way on. A shift's name and a special's or a wave's thanks are its own, in the reader's
+ * language.
  */
 export const RECEIPT_WORDS = words(
   {

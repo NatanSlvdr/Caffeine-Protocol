@@ -2,12 +2,12 @@ import { useState } from 'react';
 import { ArrowLeft, NotebookPen, Play, RotateCcw, Sun } from 'lucide-react';
 import { Modal } from '@/shared/ui/Modal';
 import { cast } from '@/data/campaign/cast';
-import { longDay } from '@/data/longDay';
+import { longDay, longDayIn } from '@/data/longDay';
 import { menuById, menuIn, specialIn, type Menu, type Special } from '@/data/specials';
 import type { ProgressSave } from '@/domain';
 import { Button } from '@/shared/ui/Button';
 import { starRow } from '@/shared/lib/format';
-import { useLanguage, useUntranslated, useWords, type Language } from '@/shared/language';
+import { useLanguage, useWords, type Language } from '@/shared/language';
 import { useCafeName } from '@/state/GameStore';
 import { SPECIALS_WORDS } from './specialsWords';
 
@@ -167,28 +167,27 @@ function LongDay({
   arrived: boolean;
   onDay: (afresh: boolean) => void;
 }) {
+  const [language] = useLanguage();
+  const told = longDayIn(language);
   const day = save.endurance;
   const current = day?.version === longDay.version;
   const open = current && day.wave !== undefined ? day.wave : undefined;
   const best = current ? day.best : undefined;
   const waves = longDay.waves.length;
   const say = useWords(SPECIALS_WORDS);
-  const english = useUntranslated();
   return (
     <li className={arrived ? 'new' : undefined}>
       <div>
-        <h3 lang={english}>{longDay.title}</h3>
+        <h3>{told.title}</h3>
         <small>
           {arrived ? say.fresh : ''}
           {say.askedBy(cast[longDay.by].name)}
         </small>
-        <p lang={english}>{longDay.story}</p>
+        <p>{told.story}</p>
         {day && !current ? (
           <p className="specials-hint">{say.day.changed}</p>
         ) : (
-          <p className="specials-hint" lang={english}>
-            {longDay.hint}
-          </p>
+          <p className="specials-hint">{told.hint}</p>
         )}
       </div>
       <div className="specials-serve">
@@ -196,7 +195,7 @@ function LongDay({
           {best === waves ? say.day.all(waves) : best ? say.day.best(best, waves) : say.day.waves(waves)}
         </span>
         {open === undefined ? (
-          <Button variant="primary" aria-label={`${say.day.start}, ${longDay.title}`} onClick={() => onDay(true)}>
+          <Button variant="primary" aria-label={`${say.day.start}, ${told.title}`} onClick={() => onDay(true)}>
             <Sun size={15} aria-hidden="true" />
             {say.day.start}
           </Button>
@@ -204,13 +203,13 @@ function LongDay({
           <>
             <Button
               variant="primary"
-              aria-label={`${say.day.carryOn(open)}, ${longDay.title}`}
+              aria-label={`${say.day.carryOn(open)}, ${told.title}`}
               onClick={() => onDay(false)}
             >
               <Play size={15} fill="currentColor" aria-hidden="true" />
               {say.day.carryOn(open)}
             </Button>
-            <Button aria-label={`${say.day.over}, ${longDay.title}`} onClick={() => onDay(true)}>
+            <Button aria-label={`${say.day.over}, ${told.title}`} onClick={() => onDay(true)}>
               <RotateCcw size={15} aria-hidden="true" />
               {say.day.over}
             </Button>

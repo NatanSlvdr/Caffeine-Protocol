@@ -13,7 +13,6 @@ export function CodingPaneHeader({
   shift,
   objective,
   story,
-  briefLang,
   level,
   role,
   onRole,
@@ -30,8 +29,6 @@ export function CodingPaneHeader({
   role: RobotRole;
   onRole: (role: RobotRole) => void;
   story?: string;
-  /** The language of the title, story and goal when it isn't the page's: a wave's, still English. */
-  briefLang?: string;
   onHelp?: () => void;
   /** The routine notebook, on a shift with a routine to keep or fill. */
   onNotebook?: () => void;
@@ -64,7 +61,7 @@ export function CodingPaneHeader({
     <section className="coding-pane">
       <header className="coding-pane-heading">
         <div className="coding-title-row">
-          <h2 data-screen-title tabIndex={-1} lang={briefLang}>
+          <h2 data-screen-title tabIndex={-1}>
             {shift}
           </h2>
           <div className="coding-tools">
@@ -128,14 +125,10 @@ export function CodingPaneHeader({
             )}
           </div>
         </div>
-        {story && (
-          <p className="shift-story" lang={briefLang}>
-            {story}
-          </p>
-        )}
+        {story && <p className="shift-story">{story}</p>}
         <p className="shift-objective">
           <span>{say.goal}</span>
-          <span lang={briefLang}>{objective}</span>
+          <span>{objective}</span>
         </p>
       </header>
       <div className="robot-tabs" role="tablist" aria-label={say.robots}>

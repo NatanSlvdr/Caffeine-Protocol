@@ -87,11 +87,6 @@ export interface WorkspaceShift {
   thanks?: string;
   /** A memory from Lou's café, before Niko's time: the café is drawn in the faded colours of an old photo. */
   memory?: boolean;
-  /**
-   * The language of the title, brief and lesson note when it isn't the page's: a wave of the Long Day's are still
-   * English on a French page.
-   */
-  lang?: string;
 }
 
 export interface WorkspaceProps {
@@ -127,11 +122,6 @@ export function Workspace({
   const say = useWords(WORKSPACE_WORDS);
   const reactionSay = useWords(REACTION_WORDS);
   const failureHints = useWords(FAILURE_WORDS).hints;
-  // A wave's payoff is still English, so it says so line by line before the crew's verdict.
-  const payoff = useMemo(
-    () => (shift.lang ? outro.map((said) => ({ ...said, lang: shift.lang })) : outro),
-    [outro, shift.lang],
-  );
   const versionNames = useWords(OPTIONS_WORDS).versions;
   const pauseWords = useWords(PAUSE_WORDS),
     routeWords = useWords(ROUTE_WORDS);
@@ -447,7 +437,7 @@ export function Workspace({
           failureHints,
         )
       : scene === 'success' && result?.passed
-        ? successLines(result, role, index, level, payoff, briefSuccess, live.bestBefore, reactionSay)
+        ? successLines(result, role, index, level, outro, briefSuccess, live.bestBefore, reactionSay)
         : undefined;
   // The latest run before the one just served that played the same rounds, for the receipt to compare with.
   const latest = records.at(-1);
@@ -698,7 +688,6 @@ export function Workspace({
             shift={shift.title}
             objective={brief.objective}
             story={brief.story}
-            briefLang={shift.lang}
             onHelp={() => setModal('help')}
             onOptions={() => setModal('options')}
             onNotebook={observation ? undefined : () => setModal('notebook')}
@@ -807,7 +796,6 @@ export function Workspace({
         <DialogueBox
           lines={intro}
           kicker={shift.title}
-          lang={shift.lang}
           kickerLabel={label}
           doneLabel={say.startShift}
           instant={reduced}
@@ -820,7 +808,6 @@ export function Workspace({
           title={shift.title}
           lesson={lesson}
           brief={brief}
-          briefLang={shift.lang}
           level={level}
           role={role}
           source={source}

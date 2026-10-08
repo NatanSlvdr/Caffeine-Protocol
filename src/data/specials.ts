@@ -12,6 +12,7 @@ import type { Language } from '@/shared/language';
 import { typeset } from '@/shared/typography';
 import { extensionLevels, queryReference, referencePrograms } from './extension';
 import { validateLessonData, validateLevelData } from './campaign/validate';
+import { retold } from './told';
 import { menusFr, specialsFr, type SpecialFr } from './specials.fr';
 
 /**
@@ -493,10 +494,6 @@ const menus: readonly Menu[] = [SATURDAY];
 export const menuById = (id: string): Menu | undefined => menus.find((menu) => menu.id === id);
 
 export const specialById = (id: string): Special | undefined => specials.find((special) => special.id === id);
-
-/** Lines told again in other words: who speaks, and in what mood, stays; a line not yet told keeps its English. */
-const retold = (lines: readonly DialogueLine[], said: readonly string[]): DialogueLine[] =>
-  lines.map((each, index) => ({ ...each, text: said[index] === undefined ? each.text : typeset(said[index]) }));
 
 /** Every one of a record's words, set with French typography. */
 const typesetAll = <T extends Record<string, string>>(words: T): T =>

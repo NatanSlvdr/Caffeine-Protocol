@@ -1,13 +1,13 @@
 import { useCallback, useMemo } from 'react';
 import { lessons, CAMPAIGN_LENGTH } from '@/data';
 import { drillsIn } from '@/data/drills';
-import { longDay, waveThanks } from '@/data/longDay';
+import { longDayIn, waveThanks } from '@/data/longDay';
 import type { ProgressSave } from '@/domain';
 import { Workspace } from '@/features/workspace/Workspace';
 import { completeLevel, keepEndurance, projectEndurance, servedWave } from '@/features/campaign/save/persistence';
 import { useGame } from '@/state/GameStore';
 import { go } from '@/shared/lib/navigation';
-import { useLanguage, useUntranslated, useWords } from '@/shared/language';
+import { useLanguage, useWords } from '@/shared/language';
 import { SCREEN_WORDS } from './screenWords';
 
 /** Every wave plays as the shift after the campaign's last, like a special, so the day opens on its routines. */
@@ -20,6 +20,8 @@ const SLOT = CAMPAIGN_LENGTH;
  */
 export function LongDayShift({ number }: { number: number }) {
   const { save, update } = useGame();
+  const [language] = useLanguage();
+  const longDay = longDayIn(language);
   const wave = longDay.waves[number - 1];
   const last = wave.number === longDay.waves.length;
   const played = useMemo(() => projectEndurance(save, wave.number, SLOT), [save, wave.number]);
@@ -30,8 +32,6 @@ export function LongDayShift({ number }: { number: number }) {
   );
   const catalog = useMemo(() => [...lessons, wave.lesson], [wave]);
   const say = useWords(SCREEN_WORDS);
-  const english = useUntranslated();
-  const [language] = useLanguage();
   return (
     <Workspace
       index={SLOT}
@@ -41,8 +41,7 @@ export function LongDayShift({ number }: { number: number }) {
       shift={{
         ...wave,
         label: say.wave(wave.number, longDay.waves.length),
-        thanks: waveThanks(wave.number),
-        lang: english,
+        thanks: waveThanks(wave.number, language),
       }}
       drills={drillsIn(language)}
       onward={last ? undefined : { next: say.nextWave, stop: say.stop, onStop: () => go('/campaign') }}

@@ -24,8 +24,6 @@ export interface HelpModalProps {
   title: string;
   lesson: { note: string; solution: string; robotSolution?: RobotPrograms };
   brief: ShiftBrief;
-  /** The language of the title, lesson note and brief when it isn't the page's: a wave's, still English. */
-  briefLang?: string;
   level: LevelDefinition;
   role: RobotRole;
   /** The open robot's routine as it stands, and as it was when the shift opened. */
@@ -60,7 +58,6 @@ export function HelpModal({
   title,
   lesson,
   brief,
-  briefLang,
   level,
   role,
   source,
@@ -111,13 +108,10 @@ export function HelpModal({
       className="settings-window confirm-slip help-slip"
       kicker={say.kicker(label)}
       title={title}
-      titleLang={briefLang}
       onClose={onClose}
     >
-      <div className="lesson-note" lang={briefLang}>
-        {lesson.note}
-      </div>
-      <p lang={briefLang}>{brief.story}</p>
+      <div className="lesson-note">{lesson.note}</div>
+      <p>{brief.story}</p>
       <button
         className="settings-chip help-replay-intro"
         disabled={running}
@@ -133,7 +127,7 @@ export function HelpModal({
         </p>
       )}
       <p>
-        <strong>{say.goal}</strong> <span lang={briefLang}>{brief.objective}</span>
+        <strong>{say.goal}</strong> <span>{brief.objective}</span>
       </p>
       {!observation && (
         <>
@@ -174,7 +168,7 @@ export function HelpModal({
             <ol className="help-hints" aria-label={say.hints}>
               <li>
                 <span className="help-hint-label">{say.tiers[0]}</span>
-                <p lang={briefLang}>{brief.concept}</p>
+                <p>{brief.concept}</p>
               </li>
               {clue && (
                 <li>

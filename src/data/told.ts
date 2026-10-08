@@ -1,3 +1,4 @@
+import type { DialogueLine } from '@/domain/dialogue';
 import type { Language } from '@/shared/language';
 import { typeset } from '@/shared/typography';
 
@@ -20,3 +21,7 @@ export function toldIn<T extends { id: string }>(
   );
   return (item, language) => (language === 'fr' ? (french.get(item.id) ?? item) : item);
 }
+
+/** Lines told again in other words, set with French typography: who speaks, and in what mood, stays; a line not yet told keeps its English. */
+export const retold = (lines: readonly DialogueLine[], said: readonly string[]): DialogueLine[] =>
+  lines.map((each, index) => ({ ...each, text: said[index] === undefined ? each.text : typeset(said[index]) }));
